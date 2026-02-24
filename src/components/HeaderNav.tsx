@@ -46,6 +46,16 @@ export function HeaderNav() {
               Accueil
             </a>
             <a
+              href={`${baseUrl}/a-propos`}
+              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
+                isActive('a-propos')
+                  ? 'text-primary bg-primary/10 font-semibold'
+                  : 'text-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+            >
+              À Propos
+            </a>
+            <a
               href={`${baseUrl}/#services`}
               className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
                 isActive('services')
@@ -64,16 +74,6 @@ export function HeaderNav() {
               }`}
             >
               Contact
-            </a>
-            <a
-              href={`${baseUrl}/a-propos`}
-              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
-                isActive('a-propos')
-                  ? 'text-primary bg-primary/10 font-semibold'
-                  : 'text-foreground hover:text-primary hover:bg-muted/50'
-              }`}
-            >
-              À Propos
             </a>
             <a
               href={`${baseUrl}/connexion`}
@@ -120,6 +120,13 @@ export function HeaderNav() {
                 Accueil
               </a>
               <a
+                href={`${baseUrl}/a-propos`}
+                className={`text-foreground ${isActive('a-propos') ? 'text-primary font-semibold' : 'hover:text-primary transition font-medium'}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                À Propos
+              </a>
+              <a
                 href={`${baseUrl}/#services`}
                 className={`text-foreground ${isActive('services') ? 'text-primary font-semibold' : 'hover:text-primary transition font-medium'}`}
                 onClick={() => setIsMenuOpen(false)}
@@ -132,13 +139,6 @@ export function HeaderNav() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
-              </a>
-              <a
-                href={`${baseUrl}/a-propos`}
-                className={`text-foreground ${isActive('a-propos') ? 'text-primary font-semibold' : 'hover:text-primary transition font-medium'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                À Propos
               </a>
               <a
                 href={`${baseUrl}/connexion`}
