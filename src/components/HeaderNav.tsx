@@ -28,7 +28,7 @@ export function HeaderNav() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-row items-center justify-between h-20">
           <a href={`${baseUrl}/`} className="flex items-center">
-            <img src={`${baseUrl}/logo.png`} alt="CAPITUNE" className="h-12 w-auto object-contain" />
+            <img src={`${baseUrl}/logo.png`} alt="CAPITUNE" className="h-12 md:h-14 w-auto object-contain" />
           </a>
 
           <nav className="hidden lg:flex flex-row items-center gap-2">
