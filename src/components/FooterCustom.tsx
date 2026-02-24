@@ -31,11 +31,6 @@ export function FooterCustom() {
                 </a>
               </li>
               <li>
-                <a href={`${baseUrl}/tarifs`} className="text-muted-foreground hover:text-primary transition text-sm">
-                  Tarifs
-                </a>
-              </li>
-              <li>
                 <a href={`${baseUrl}/a-propos`} className="text-muted-foreground hover:text-primary transition text-sm">
                   À propos
                 </a>

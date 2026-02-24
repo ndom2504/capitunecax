@@ -157,6 +157,24 @@ export function DashboardHeader({ activeTab: initialTab = 'services', onTabChang
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground rounded-t-full"></div>
               )}
             </button>
+            <button 
+              className={`tab-button px-6 py-3 font-semibold transition-all rounded-xl relative ${
+                activeTab === 'tarifs' 
+                  ? 'text-primary-foreground bg-primary shadow-lg scale-105' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabClick('tarifs')}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 10v-1m-6 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Tarifs</span>
+              </div>
+              {activeTab === 'tarifs' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary-foreground rounded-t-full"></div>
+              )}
+            </button>
           </nav>
 
           {/* Profile Avatar & Dropdown */}
@@ -433,6 +451,21 @@ export function DashboardHeader({ activeTab: initialTab = 'services', onTabChang
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>FAQ</span>
+              </div>
+            </button>
+            <button 
+              className={`px-4 py-2.5 text-sm font-semibold transition-all rounded-xl whitespace-nowrap ${
+                activeTab === 'tarifs'
+                  ? 'text-primary-foreground bg-primary shadow-lg scale-105'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+              onClick={() => handleTabClick('tarifs')}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 10v-1m-6 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Tarifs</span>
               </div>
             </button>
           </nav>

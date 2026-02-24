@@ -10,8 +10,8 @@ export function HeaderNav() {
     const path = window.location.pathname;
     const hash = window.location.hash;
     
-    if (path.endsWith('/tarifs')) {
-      setActiveTab('tarifs');
+    if (path.endsWith('/contact')) {
+      setActiveTab('contact');
     } else if (path.endsWith('/a-propos')) {
       setActiveTab('a-propos');
     } else if (hash === '#services') {
@@ -56,14 +56,14 @@ export function HeaderNav() {
               Services
             </a>
             <a
-              href={`${baseUrl}/tarifs`}
+              href={`${baseUrl}/contact`}
               className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
-                isActive('tarifs')
+                isActive('contact')
                   ? 'text-primary bg-primary/10 font-semibold'
                   : 'text-foreground hover:text-primary hover:bg-muted/50'
               }`}
             >
-              Tarifs
+              Contact
             </a>
             <a
               href={`${baseUrl}/a-propos`}
@@ -127,11 +127,11 @@ export function HeaderNav() {
                 Services
               </a>
               <a
-                href={`${baseUrl}/tarifs`}
-                className={`text-foreground ${isActive('tarifs') ? 'text-primary font-semibold' : 'hover:text-primary transition font-medium'}`}
+                href={`${baseUrl}/contact`}
+                className={`text-foreground ${isActive('contact') ? 'text-primary font-semibold' : 'hover:text-primary transition font-medium'}`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                Tarifs
+                Contact
               </a>
               <a
                 href={`${baseUrl}/a-propos`}
