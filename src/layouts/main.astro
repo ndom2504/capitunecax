@@ -19,6 +19,34 @@ const { pageClass = '' } = Astro.props;
 	<!-- Dark mode class injection point - will be replaced with `dark` class based on your site palette -->
 	<body class="__DARK_MODE_CLASS__">
     <slot />
+    <script is:inline>
+      (() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const sections = Array.from(document.querySelectorAll('section'));
+
+        if (!sections.length) return;
+
+        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+          sections.forEach((section) => section.classList.add('reveal-visible'));
+          return;
+        }
+
+        sections.forEach((section) => section.classList.add('reveal-up'));
+
+        const observer = new IntersectionObserver(
+          (entries, io) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              entry.target.classList.add('reveal-visible');
+              io.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.14, rootMargin: '0px 0px -8% 0px' }
+        );
+
+        sections.forEach((section) => observer.observe(section));
+      })();
+    </script>
   </body>
 </html>
 
@@ -32,6 +60,26 @@ const { pageClass = '' } = Astro.props;
   html.splash ul { 
     padding-left: 0 !important; 
     margin: 0 !important; 
+  }
+
+  section.reveal-up {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+    transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+
+  section.reveal-up.reveal-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    section.reveal-up {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
   }
 </style>
 
