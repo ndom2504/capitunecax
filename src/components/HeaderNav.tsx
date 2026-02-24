@@ -25,84 +25,64 @@ export function HeaderNav() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-      <div className="container mx-auto">
-        <nav className="flex items-center md:items-baseline justify-between py-3 px-4 md:px-6">
-          {/* Logo */}
-          <a href={`${baseUrl}/`} className="hidden md:flex items-baseline h-11">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="flex flex-row items-center justify-between h-20">
+          <a href={`${baseUrl}/`} className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-base leading-none">C</span>
             <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
           </a>
 
-          <a href={`${baseUrl}/`} className="md:hidden flex items-center h-10">
-            <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
-          </a>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex flex-1 h-11 items-baseline ml-8">
-            <div className="flex-1 h-11 flex items-baseline justify-center gap-2">
-              <a 
-                href={`${baseUrl}/`} 
-                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
-                  isActive('accueil')
-                    ? 'text-primary bg-primary/10 font-semibold'
-                    : 'text-foreground hover:text-primary hover:bg-muted/50'
-                }`}
-              >
-                Accueil
-                {isActive('accueil') && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-                )}
-              </a>
-              <a 
-                href={`${baseUrl}/#services`} 
-                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
-                  isActive('services')
-                    ? 'text-primary bg-primary/10 font-semibold'
-                    : 'text-foreground hover:text-primary hover:bg-muted/50'
-                }`}
-              >
-                Services
-                {isActive('services') && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-                )}
-              </a>
-              <a 
-                href={`${baseUrl}/tarifs`} 
-                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
-                  isActive('tarifs')
-                    ? 'text-primary bg-primary/10 font-semibold'
-                    : 'text-foreground hover:text-primary hover:bg-muted/50'
-                }`}
-              >
-                Tarifs
-                {isActive('tarifs') && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-                )}
-              </a>
-              <a 
-                href={`${baseUrl}/a-propos`} 
-                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
-                  isActive('a-propos')
-                    ? 'text-primary bg-primary/10 font-semibold'
-                    : 'text-foreground hover:text-primary hover:bg-muted/50'
-                }`}
-              >
-                À Propos
-                {isActive('a-propos') && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-                )}
-              </a>
-            </div>
+          <nav className="hidden lg:flex flex-row items-center gap-2">
+            <a
+              href={`${baseUrl}/`}
+              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
+                isActive('accueil')
+                  ? 'text-primary bg-primary/10 font-semibold'
+                  : 'text-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+            >
+              Accueil
+            </a>
+            <a
+              href={`${baseUrl}/#services`}
+              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
+                isActive('services')
+                  ? 'text-primary bg-primary/10 font-semibold'
+                  : 'text-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+            >
+              Services
+            </a>
+            <a
+              href={`${baseUrl}/tarifs`}
+              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
+                isActive('tarifs')
+                  ? 'text-primary bg-primary/10 font-semibold'
+                  : 'text-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+            >
+              Tarifs
+            </a>
+            <a
+              href={`${baseUrl}/a-propos`}
+              className={`px-4 py-2 rounded-lg transition font-medium leading-none ${
+                isActive('a-propos')
+                  ? 'text-primary bg-primary/10 font-semibold'
+                  : 'text-foreground hover:text-primary hover:bg-muted/50'
+              }`}
+            >
+              À Propos
+            </a>
             <a
               href={`${baseUrl}/connexion`}
-              className="bg-primary text-primary-foreground px-6 h-11 inline-flex items-baseline rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-auto"
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-2"
             >
               Connexion
             </a>
-          </div>
+          </nav>
 
-          {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden p-2"
+            className="lg:hidden p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -124,11 +104,11 @@ export function HeaderNav() {
               />
             </div>
           </button>
-        </nav>
+        </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border bg-background">
+          <div className="lg:hidden border-t border-border bg-background">
             <div className="py-4 px-4 flex flex-col gap-3">
               <a
                 href={`${baseUrl}/`}
