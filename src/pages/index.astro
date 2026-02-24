@@ -14,71 +14,56 @@ import { FooterCustom } from '../components/FooterCustom';
 <HeaderNav client:only="react" />
 
 <!-- Hero Section / Accueil -->
-<section id="accueil" class="relative bg-gradient-to-br from-primary/10 to-primary/5 py-20 md:py-32 overflow-hidden">
-  <!-- Background Image with Overlay -->
-  <div class="absolute inset-0 z-0">
-    <!-- OPTION 1: Drapeau canadien et feuille d'érable -->
-    <!-- <img 
-      src="https://images.unsplash.com/photo-1519456264917-42d0aa2e0625?q=80&w=2000&auto=format&fit=crop" 
-      alt="Canada Flag Background"
-      class="w-full h-full object-cover"
-      style="filter: blur(3px);"
-    /> -->
-    
-    <!-- OPTION 2: Paysage canadien avec montagnes et lac -->
-    <!-- <img 
-      src="https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=2000&auto=format&fit=crop" 
-      alt="Canadian Landscape"
-      class="w-full h-full object-cover"
-      style="filter: blur(3px);"
-    /> -->
-    
-    <!-- OPTION 3: Skyline de Toronto avec CN Tower -->
-    <img 
-      src="https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=2000&auto=format&fit=crop" 
-      alt="Toronto Skyline"
-      class="w-full h-full object-cover"
-      style="filter: blur(2px);"
-    />
-    
-    <!-- OPTION 4: Parlement d'Ottawa -->
-    <!-- <img 
-      src="https://images.unsplash.com/photo-1519474439831-71a5880ff8f2?q=80&w=2000&auto=format&fit=crop" 
-      alt="Parliament Hill Ottawa"
-      class="w-full h-full object-cover"
-      style="filter: blur(3px);"
-    /> -->
-    
-    <!-- OPTION 5: Personne avec valise (concept voyage/immigration) -->
-    <!-- <img 
-      src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop" 
-      alt="Travel and Immigration"
-      class="w-full h-full object-cover"
-      style="filter: blur(3px);"
-    /> -->
-    
-    <!-- Dark overlay for better text readability -->
-    <div class="absolute inset-0 bg-gradient-to-br from-background/80 via-background/70 to-background/75"></div>
-  </div>
+<section id="accueil" class="bg-background border-b border-border">
+  <div class="grid lg:grid-cols-2">
+    <div class="relative h-[42vh] lg:h-[calc(100vh-6rem)] lg:sticky lg:top-24">
+      <img
+        src="https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=2000&auto=format&fit=crop"
+        alt="Toronto Skyline"
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-gradient-to-br from-black/45 via-black/25 to-black/40"></div>
+    </div>
 
-  <div class="container mx-auto px-4 md:px-6 relative z-10">
-    <div class="max-w-4xl mx-auto text-center">
-      <h1 class="text-4xl md:text-6xl font-bold mb-8 text-foreground leading-tight">
-        Votre projet Canada, structuré et sécurisé de A à Z.
-      </h1>
-      <p class="text-xl md:text-2xl mb-7 text-muted-foreground">
-        CAPITUNE vous accompagne à chaque étape : de la consultation initiale jusqu'à votre intégration réussie au Canada.
-      </p>
-      <p class="text-lg md:text-xl mb-14 text-muted-foreground">
-        Nous transformons votre projet en un plan clair, organisé et conforme.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-4 justify-center mt-4">
-        <a href="/connexion" class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg">
-          Réserver une consultation
-        </a>
-        <a href="/inscription" class="bg-background/80 backdrop-blur text-foreground px-8 py-4 rounded-lg font-semibold hover:bg-background/90 transition border-2 border-border shadow-lg">
-          Créer un compte client
-        </a>
+    <div class="bg-background">
+      <div class="h-auto lg:h-[calc(100vh-6rem)] lg:overflow-y-auto">
+        <div class="px-6 md:px-10 lg:px-14 py-10 lg:py-14">
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-foreground leading-tight">
+            Votre projet Canada, structuré et sécurisé de A à Z.
+          </h1>
+
+          <p class="text-xl md:text-2xl mb-7 text-muted-foreground">
+            CAPITUNE vous accompagne à chaque étape : de la consultation initiale jusqu'à votre intégration réussie au Canada.
+          </p>
+
+          <p class="text-lg md:text-xl mb-12 text-muted-foreground">
+            Nous transformons votre projet en un plan clair, organisé et conforme.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 mb-10">
+            <a href="/connexion" class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg text-center">
+              Réserver une consultation
+            </a>
+            <a href="/inscription" class="bg-background text-foreground px-8 py-4 rounded-lg font-semibold hover:bg-muted transition border-2 border-border shadow-lg text-center">
+              Créer un compte client
+            </a>
+          </div>
+
+          <div class="space-y-6">
+            <div class="bg-muted/30 border border-border rounded-lg p-6">
+              <h3 class="text-xl font-bold text-foreground mb-2">Analyse stratégique</h3>
+              <p class="text-muted-foreground">Évaluation complète de votre profil et orientation vers le programme le plus adapté à votre objectif.</p>
+            </div>
+            <div class="bg-muted/30 border border-border rounded-lg p-6">
+              <h3 class="text-xl font-bold text-foreground mb-2">Montage du dossier</h3>
+              <p class="text-muted-foreground">Structuration des pièces, vérification des critères et préparation d'un dossier conforme.</p>
+            </div>
+            <div class="bg-muted/30 border border-border rounded-lg p-6">
+              <h3 class="text-xl font-bold text-foreground mb-2">Suivi et intégration</h3>
+              <p class="text-muted-foreground">Accompagnement continu jusqu'à votre arrivée et votre intégration au Canada.</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -230,6 +215,65 @@ import { FooterCustom } from '../components/FooterCustom';
     <h3 class="text-lg font-bold mb-2 text-foreground">Accompagnement humain et professionnel</h3>
   </div>
 </div>
+</div>
+</section>
+
+<!-- Témoignages Section -->
+<section class="py-20 bg-background">
+<div class="container mx-auto px-4 md:px-6">
+  <div class="text-center mb-12">
+    <h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Témoignages</h2>
+    <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+      Des retours concrets de clients accompagnés par CAPITUNE
+    </p>
+  </div>
+
+  <div class="grid lg:grid-cols-3 gap-0 border border-border overflow-hidden">
+    <article class="bg-muted/30 p-10 flex flex-col min-h-[430px]">
+      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
+      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Un accompagnement exceptionnel du début à la fin.</h3>
+      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
+        Leur approche stratégique a transformé notre projet. Le dossier était structuré, clair et solide.
+      </p>
+      <div class="mt-auto flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">DM</div>
+        <div>
+          <p class="font-bold text-foreground">David M.</p>
+          <p class="text-muted-foreground italic">(Montréal)</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="bg-muted/50 p-10 flex flex-col min-h-[430px] border-l border-r border-border">
+      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
+      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Un service professionnel au-delà de nos attentes.</h3>
+      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
+        L'équipe a été réactive et précise à chaque étape. Nous avons gagné un temps précieux.
+      </p>
+      <div class="mt-auto flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">ST</div>
+        <div>
+          <p class="font-bold text-foreground">Sarah T.</p>
+          <p class="text-muted-foreground italic">(Québec)</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="bg-muted/30 p-10 flex flex-col min-h-[430px]">
+      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
+      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Des solutions concrètes qui donnent des résultats.</h3>
+      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
+        Nous avons été accompagnés avec rigueur et humanité. Le suivi a été transparent et très efficace.
+      </p>
+      <div class="mt-auto flex items-center gap-4">
+        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">ER</div>
+        <div>
+          <p class="font-bold text-foreground">Emile R.</p>
+          <p class="text-muted-foreground italic">(Laval)</p>
+        </div>
+      </div>
+    </article>
+  </div>
 </div>
 </section>
 
