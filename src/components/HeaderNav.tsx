@@ -28,7 +28,7 @@ export function HeaderNav() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-row items-center justify-between h-20 md:h-24">
           <a href={`${baseUrl}/`} className="flex flex-col items-start justify-center leading-none">
-            <img src={`${baseUrl}/logo.png`} alt="CAPITUNE" className="h-10 md:h-12 w-auto object-contain" />
+            <span className="text-2xl font-bold text-primary font-heading">CAPITUNE</span>
             <span className="hidden md:block text-muted-foreground text-sm mt-1 leading-snug">
               Votre partenaire de confiance pour l'immigration au Canada
             </span>
