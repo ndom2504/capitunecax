@@ -27,9 +27,8 @@ export function HeaderNav() {
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-row items-center justify-between h-20">
-          <a href={`${baseUrl}/`} className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-base leading-none">C</span>
-            <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
+          <a href={`${baseUrl}/`} className="flex items-center">
+            <img src={`${baseUrl}/logo.png`} alt="CAPITUNE" className="h-12 w-auto object-contain" />
           </a>
 
           <nav className="hidden lg:flex flex-row items-center gap-2">
