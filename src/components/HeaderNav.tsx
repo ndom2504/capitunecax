@@ -28,8 +28,8 @@ export function HeaderNav() {
       <div className="container mx-auto">
         <nav className="flex items-center justify-between py-4 px-4 md:px-6">
           {/* Logo */}
-          <a href={`${baseUrl}/`} className="flex items-center">
-            <span className="text-2xl font-bold text-primary font-heading">CAPITUNE</span>
+          <a href={`${baseUrl}/`} className="flex items-center h-10">
+            <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
           </a>
 
           {/* Desktop Navigation */}
@@ -37,7 +37,7 @@ export function HeaderNav() {
             <div className="flex-1 flex items-center justify-center gap-2">
               <a 
                 href={`${baseUrl}/`} 
-                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
                   isActive('accueil')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -50,7 +50,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/#services`} 
-                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
                   isActive('services')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -63,7 +63,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/tarifs`} 
-                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
                   isActive('tarifs')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -76,7 +76,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/a-propos`} 
-                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
                   isActive('a-propos')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -90,7 +90,7 @@ export function HeaderNav() {
             </div>
             <a
               href={`${baseUrl}/connexion`}
-              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg hover:bg-primary/90 transition font-semibold ml-auto"
+              className="bg-primary text-primary-foreground px-6 h-10 flex items-center rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-auto"
             >
               Connexion
             </a>
