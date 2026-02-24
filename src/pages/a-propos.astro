@@ -1,0 +1,314 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
+---
+
+<MainLayout>
+<HeaderNav client:only="react" />
+
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-primary/5 to-primary/10 py-16 md:py-24">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6 text-foreground">À Propos de CAPITUNE</h1>
+      <p class="text-xl md:text-2xl text-muted-foreground">
+        Une initiative d'Export Monde Prestige Inc. pour accompagner votre projet Canada
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Export Monde Prestige Inc. -->
+<section class="py-20 bg-background">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-foreground">🏢 Export Monde Prestige Inc.</h2>
+        <div class="prose prose-lg max-w-none text-muted-foreground space-y-4">
+          <p class="text-lg leading-relaxed">
+            <strong class="text-foreground">Export Monde Prestige Inc.</strong> est une entreprise immatriculée au Québec, spécialisée dans les services de consultation en gestion, l'accompagnement administratif et le développement de solutions numériques destinées à des projets à portée internationale.
+          </p>
+          <p class="text-lg leading-relaxed">
+            Forte d'une vision orientée vers la mobilité internationale, le capital humain et l'innovation, Export Monde Prestige Inc. développe des initiatives visant à structurer, orienter et sécuriser les parcours des personnes souhaitant accéder à des opportunités professionnelles, éducatives et économiques au Canada.
+          </p>
+        </div>
+      </div>
+
+      <!-- Le Projet CAPITUNE -->
+      <div class="mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-foreground">🚀 Le Projet CAPITUNE</h2>
+        <div class="bg-card border border-border rounded-lg p-8 mb-8">
+          <p class="text-lg leading-relaxed text-muted-foreground">
+            <strong class="text-foreground">CAPITUNE</strong> est une plateforme internationale d'orientation stratégique et d'accompagnement, conçue pour valoriser le potentiel humain et faciliter l'accès à l'expérience canadienne à travers des parcours structurés, transparents et personnalisés.
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-muted/30 rounded-lg p-6">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2 text-foreground">Consultation humaine</h3>
+            <p class="text-muted-foreground">Accompagnement personnalisé par des experts</p>
+          </div>
+
+          <div class="bg-muted/30 rounded-lg p-6">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2 text-foreground">Outils numériques intelligents</h3>
+            <p class="text-muted-foreground">Plateforme digitale intuitive et sécurisée</p>
+          </div>
+
+          <div class="bg-muted/30 rounded-lg p-6">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2 text-foreground">Programmes communautaires</h3>
+            <p class="text-muted-foreground">Formations et événements éducatifs</p>
+          </div>
+
+          <div class="bg-muted/30 rounded-lg p-6">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2 text-foreground">Événements en ligne</h3>
+            <p class="text-muted-foreground">Webinaires et sessions d'information</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mission et Vision -->
+      <div class="grid md:grid-cols-2 gap-8 mb-16">
+        <div class="bg-card border border-border rounded-lg p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">🎯</span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground">Mission</h3>
+          </div>
+          <p class="text-lg text-muted-foreground leading-relaxed">
+            <strong class="text-foreground">Aligner le potentiel humain avec les bonnes opportunités.</strong> CAPITUNE accompagne les individus dans la compréhension de leurs options, l'optimisation de leurs choix et la structuration de leur parcours vers une expérience canadienne durable et réaliste.
+          </p>
+        </div>
+
+        <div class="bg-card border border-border rounded-lg p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <span class="text-2xl">🌍</span>
+            </div>
+            <h3 class="text-2xl font-bold text-foreground">Vision</h3>
+          </div>
+          <p class="text-lg text-muted-foreground leading-relaxed mb-4">
+            Devenir une référence internationale en matière d'orientation stratégique et de capitalisation de parcours vers le Canada, en mettant l'accent sur :
+          </p>
+          <ul class="space-y-2 text-muted-foreground">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>La clarté des options</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>La responsabilisation des candidats</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>L'innovation numérique</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>L'intégrité et la conformité administrative</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Fonctionnalités clés -->
+      <div class="mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-foreground text-center">🧩 Fonctionnalités Clés de CAPITUNE</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">🔐</div>
+            <h3 class="font-bold text-foreground mb-2">Espace sécurisé</h3>
+            <p class="text-sm text-muted-foreground">Compte utilisateur protégé</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">🧭</div>
+            <h3 class="font-bold text-foreground mb-2">Analyse de profil</h3>
+            <p class="text-sm text-muted-foreground">Recommandations personnalisées</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">📊</div>
+            <h3 class="font-bold text-foreground mb-2">Visualisation</h3>
+            <p class="text-sm text-muted-foreground">Options et budget détaillés</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">📁</div>
+            <h3 class="font-bold text-foreground mb-2">Gestion documentaire</h3>
+            <p class="text-sm text-muted-foreground">Centralisation sécurisée</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">💬</div>
+            <h3 class="font-bold text-foreground mb-2">Messagerie</h3>
+            <p class="text-sm text-muted-foreground">Communication client-agent</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">🎥</div>
+            <h3 class="font-bold text-foreground mb-2">Événements live</h3>
+            <p class="text-sm text-muted-foreground">Webinaires et formations</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">🔔</div>
+            <h3 class="font-bold text-foreground mb-2">Notifications</h3>
+            <p class="text-sm text-muted-foreground">Suivi de parcours en temps réel</p>
+          </div>
+          
+          <div class="bg-card border border-border rounded-lg p-6 text-center hover:shadow-lg transition">
+            <div class="text-3xl mb-3">🧠</div>
+            <h3 class="font-bold text-foreground mb-2">Orientation intelligente</h3>
+            <p class="text-sm text-muted-foreground">Basée sur votre profil</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public cible -->
+      <div class="mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold mb-8 text-foreground text-center">👥 Public Cible</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-muted/30 rounded-lg p-6">
+            <h3 class="text-xl font-bold mb-3 text-foreground flex items-center gap-2">
+              <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Particuliers
+            </h3>
+            <p class="text-muted-foreground">Souhaitant vivre une expérience canadienne : études, travail, projets professionnels</p>
+          </div>
+          
+          <div class="bg-muted/30 rounded-lg p-6">
+            <h3 class="text-xl font-bold mb-3 text-foreground flex items-center gap-2">
+              <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Diaspora
+            </h3>
+            <p class="text-muted-foreground">Membres de la diaspora internationale</p>
+          </div>
+          
+          <div class="bg-muted/30 rounded-lg p-6">
+            <h3 class="text-xl font-bold mb-3 text-foreground flex items-center gap-2">
+              <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Professionnels
+            </h3>
+            <p class="text-muted-foreground">Jeunes professionnels et entrepreneurs</p>
+          </div>
+          
+          <div class="bg-muted/30 rounded-lg p-6">
+            <h3 class="text-xl font-bold mb-3 text-foreground flex items-center gap-2">
+              <svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Institutions
+            </h3>
+            <p class="text-muted-foreground">Organismes partenaires et communautés internationales</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Structure et Conformité -->
+      <div class="bg-card border border-border rounded-lg p-8">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6 text-foreground text-center">⚙️ Structure et Conformité</h2>
+        <div class="space-y-4 text-muted-foreground">
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg"><strong class="text-foreground">Entreprise privée québécoise</strong> immatriculée et conforme</p>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg">Activité principale : <strong class="text-foreground">Bureaux de conseillers en gestion</strong></p>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg">Activité secondaire : <strong class="text-foreground">Services d'informatique</strong></p>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg">Plateforme conforme aux <strong class="text-foreground">standards de sécurité et de protection des données</strong></p>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-primary mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-lg">Approche <strong class="text-foreground">transparente, non trompeuse et orientée responsabilisation</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-br from-primary/5 to-primary/10">
+  <div class="container mx-auto px-4 md:px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl md:text-5xl font-bold mb-6 text-foreground">Prêt à structurer votre projet Canada ?</h2>
+      <p class="text-xl text-muted-foreground mb-8">
+        Rejoignez CAPITUNE et bénéficiez d'un accompagnement professionnel et personnalisé
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/connexion" class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg">
+          Commencer maintenant
+        </a>
+        <a href="/contact" class="bg-background border-2 border-border text-foreground px-8 py-4 rounded-lg font-semibold hover:bg-muted/50 transition">
+          Nous contacter
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<FooterCustom client:only="react" />
+</MainLayout>
+
+<style>
+  section {
+    scroll-margin-top: 80px;
+  }
+</style>

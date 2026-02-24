@@ -1,0 +1,44 @@
+# Vercel Ignore File
+# Files and directories to ignore during deployment
+
+# Development
+node_modules/
+.astro/
+dist/
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Documentation (optional - remove if you want docs deployed)
+*.md
+!README.md
+
+# Cloudflare specific
+wrangler.toml
+wrangler.jsonc
+worker-configuration.d.ts
+
+# Tests
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+__tests__/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore

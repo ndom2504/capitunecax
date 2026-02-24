@@ -1,0 +1,59 @@
+import type { APIRoute } from 'astro';
+import Stripe from 'stripe';
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    const stripeKey = locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY;
+    
+    if (!stripeKey) {
+      return new Response(JSON.stringify({ error: 'Stripe not configured' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2024-12-18.acacia'
+    });
+    
+    const { amount, invoiceId, services, customerEmail, customerName } = await request.json();
+    
+    if (!amount || amount <= 0) {
+      return new Response(JSON.stringify({ error: 'Invalid amount' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'cad',
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        invoiceId: invoiceId || '',
+        services: JSON.stringify(services || []),
+        customerEmail: customerEmail || '',
+        customerName: customerName || ''
+      },
+      description: `CAPITUNE - ${invoiceId || 'Service'}`
+    });
+    
+    return new Response(JSON.stringify({ 
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error: any) {
+    console.error('Stripe payment intent error:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Payment intent creation failed' 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};

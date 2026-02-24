@@ -1,0 +1,99 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { DashboardHeader } from '../components/DashboardHeader';
+import { ServiceSelector } from '../components/ServiceSelector';
+import { ChatInterne } from '../components/ChatInterne';
+import { PaymentsTab } from '../components/PaymentsTab';
+import { DashboardFAQ } from '../components/DashboardFAQ';
+---
+
+<MainLayout>
+  <!-- Dashboard Header with Tabs and Profile - RENDERED ONCE -->
+  <DashboardHeader client:load activeTab="services" />
+
+  <!-- Tab Content -->
+  <section class="py-8 bg-background min-h-screen">
+    <div class="container mx-auto px-4 md:px-6">
+      
+      <!-- ONGLET SERVICES -->
+      <div id="tab-services" class="tab-content">
+        <ServiceSelector client:only="react" />
+      </div>
+
+      <!-- ONGLET MESSAGERIE -->
+      <div id="tab-messagerie" class="tab-content hidden">
+        <ChatInterne client:only="react" />
+      </div>
+
+      <!-- ONGLET PAIEMENTS -->
+      <div id="tab-paiements" class="tab-content hidden">
+        <PaymentsTab client:only="react" />
+      </div>
+
+      <!-- ONGLET FAQ -->
+      <div id="tab-faq" class="tab-content hidden">
+        <DashboardFAQ client:only="react" />
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Handle tab switching
+    let currentTab = 'services';
+
+    function switchTab(tabName: string) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach((tab) => {
+        tab.classList.add('hidden');
+      });
+
+      // Show selected tab
+      const selectedTab = document.getElementById(`tab-${tabName}`);
+      if (selectedTab) {
+        selectedTab.classList.remove('hidden');
+      }
+
+      currentTab = tabName;
+    }
+
+    // Listen for tab change events from DashboardHeader
+    window.addEventListener('tabChange', ((event: CustomEvent) => {
+      const { tab } = event.detail;
+      switchTab(tab);
+    }) as EventListener);
+
+    // Initialize with services tab
+    switchTab('services');
+  </script>
+</MainLayout>
+
+<style>
+  .tab-content {
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Hide scrollbar for mobile tabs */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+
+
+
+

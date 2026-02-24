@@ -1,0 +1,429 @@
+
+
+
+
+
+
+---
+import MainLayout from '../layouts/main.astro';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
+---
+
+<MainLayout>
+<HeaderNav client:only="react" />
+
+<!-- Hero Section / Accueil -->
+<section id="accueil" class="relative bg-gradient-to-br from-primary/10 to-primary/5 py-20 md:py-32 overflow-hidden">
+  <!-- Background Image with Overlay -->
+  <div class="absolute inset-0 z-0">
+    <!-- OPTION 1: Drapeau canadien et feuille d'érable -->
+    <!-- <img 
+      src="https://images.unsplash.com/photo-1519456264917-42d0aa2e0625?q=80&w=2000&auto=format&fit=crop" 
+      alt="Canada Flag Background"
+      class="w-full h-full object-cover"
+      style="filter: blur(3px);"
+    /> -->
+    
+    <!-- OPTION 2: Paysage canadien avec montagnes et lac -->
+    <!-- <img 
+      src="https://images.unsplash.com/photo-1503614472-8c93d56e92ce?q=80&w=2000&auto=format&fit=crop" 
+      alt="Canadian Landscape"
+      class="w-full h-full object-cover"
+      style="filter: blur(3px);"
+    /> -->
+    
+    <!-- OPTION 3: Skyline de Toronto avec CN Tower -->
+    <img 
+      src="https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=2000&auto=format&fit=crop" 
+      alt="Toronto Skyline"
+      class="w-full h-full object-cover"
+      style="filter: blur(2px);"
+    />
+    
+    <!-- OPTION 4: Parlement d'Ottawa -->
+    <!-- <img 
+      src="https://images.unsplash.com/photo-1519474439831-71a5880ff8f2?q=80&w=2000&auto=format&fit=crop" 
+      alt="Parliament Hill Ottawa"
+      class="w-full h-full object-cover"
+      style="filter: blur(3px);"
+    /> -->
+    
+    <!-- OPTION 5: Personne avec valise (concept voyage/immigration) -->
+    <!-- <img 
+      src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop" 
+      alt="Travel and Immigration"
+      class="w-full h-full object-cover"
+      style="filter: blur(3px);"
+    /> -->
+    
+    <!-- Dark overlay for better text readability -->
+    <div class="absolute inset-0 bg-gradient-to-br from-background/80 via-background/70 to-background/75"></div>
+  </div>
+
+  <div class="container mx-auto px-4 md:px-6 relative z-10">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
+        Votre projet Canada, structuré et sécurisé de A à Z.
+      </h1>
+      <p class="text-xl md:text-2xl mb-4 text-muted-foreground">
+        CAPITUNE vous accompagne à chaque étape : de la consultation initiale jusqu'à votre intégration réussie au Canada.
+      </p>
+      <p class="text-lg md:text-xl mb-8 text-muted-foreground">
+        Nous transformons votre projet en un plan clair, organisé et conforme.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/connexion" class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg">
+          Réserver une consultation
+        </a>
+        <a href="/inscription" class="bg-background/80 backdrop-blur text-foreground px-8 py-4 rounded-lg font-semibold hover:bg-background/90 transition border-2 border-border shadow-lg">
+          Créer un compte client
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="py-20 bg-background">
+<div class="container mx-auto px-4 md:px-6">
+<div class="text-center mb-16">
+  <h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Nos Services</h2>
+  <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+    Un accompagnement structuré et professionnel pour toutes les étapes de votre projet
+  </p>
+</div>
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+  <!-- Consultation stratégique -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Consultation stratégique</h3>
+    <p class="text-muted-foreground">
+      Un diagnostic personnalisé de votre profil pour évaluer vos chances et définir la meilleure stratégie d'immigration.
+    </p>
+  </div>
+
+  <!-- Orientation -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Orientation & Choix du programme</h3>
+    <p class="text-muted-foreground">
+      Identification du programme le plus adapté (études, travail, résidence permanente, etc.).
+    </p>
+  </div>
+
+  <!-- Montage du Dossier -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Montage complet du dossier</h3>
+    <p class="text-muted-foreground">
+      Préparation, vérification et structuration professionnelle de votre dossier.
+    </p>
+  </div>
+
+  <!-- Suivi -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Suivi & Communication</h3>
+    <p class="text-muted-foreground">
+      Accompagnement continu, suivi des délais, réponses aux demandes des autorités.
+    </p>
+  </div>
+
+  <!-- Recherche de Ressources -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Recherche d'institutions & ressources</h3>
+    <p class="text-muted-foreground">
+      Sélection d'établissements, employeurs, logements et organismes d'accueil.
+    </p>
+  </div>
+
+  <!-- Accueil et Intégration -->
+  <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
+    <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    </div>
+    <h3 class="text-xl font-bold mb-3 text-foreground">Accueil & Intégration</h3>
+    <p class="text-muted-foreground">
+      Assistance à l'installation : démarches administratives, orientation locale et intégration.
+    </p>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="py-20 bg-muted/30">
+<div class="container mx-auto px-4 md:px-6">
+<div class="text-center mb-16">
+  <h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Pourquoi CAPITUNE ?</h2>
+</div>
+
+<div class="grid md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+  <div class="text-center">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold mb-2 text-foreground">Organisation structurée</h3>
+  </div>
+
+  <div class="text-center">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold mb-2 text-foreground">Dossier conforme et optimisé</h3>
+  </div>
+
+  <div class="text-center">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold mb-2 text-foreground">Suivi transparent</h3>
+  </div>
+
+  <div class="text-center">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold mb-2 text-foreground">Gain de temps considérable</h3>
+  </div>
+
+  <div class="text-center">
+    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold mb-2 text-foreground">Accompagnement humain et professionnel</h3>
+  </div>
+</div>
+</div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="py-20 bg-background">
+<div class="container mx-auto px-4 md:px-6">
+<div class="text-center mb-16">
+<h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Questions Fréquentes</h2>
+<p class="text-lg text-muted-foreground max-w-2xl mx-auto">
+Trouvez rapidement les réponses à vos questions
+</p>
+</div>
+
+<div class="max-w-3xl mx-auto space-y-4">
+<!-- Question 1 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Quels sont les délais moyens de traitement ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Les délais varient selon le programme : de 2 à 6 mois pour un permis d'études, de 4 à 8 mois pour un permis de travail, et de 6 à 18 mois pour une résidence permanente. Nous optimisons votre dossier pour accélérer le processus.
+</div>
+</details>
+
+<!-- Question 2 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Combien coûtent vos services ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Nous proposons trois formules : Consultation à 150$, Accompagnement Standard à 1 500$, et Accompagnement Premium à 2 500$. Consultez notre <a href="/tarifs" class="text-primary hover:underline">page Tarifs</a> pour plus de détails.
+</div>
+</details>
+
+<!-- Question 3 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Est-ce que vous garantissez l'acceptation de mon dossier ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Aucun consultant ne peut garantir une acceptation à 100%. Cependant, nous optimisons chaque dossier selon les normes officielles pour maximiser vos chances de succès. Notre taux de réussite est de 95%.
+</div>
+</details>
+
+<!-- Question 4 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Puis-je vous contacter pendant le traitement de mon dossier ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Absolument ! Vous avez accès à notre messagerie interne via votre tableau de bord client. Nous répondons sous 24h maximum et vous tenons informé à chaque étape.
+</div>
+</details>
+
+<!-- Question 5 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Proposez-vous un accompagnement après l'arrivée au Canada ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Oui ! Nos services d'accueil et d'intégration incluent l'aide aux démarches administratives, l'ouverture de compte bancaire, la recherche de logement, et l'orientation dans votre nouvelle ville.
+</div>
+</details>
+
+<!-- Question 6 -->
+<details class="bg-card border border-border rounded-lg overflow-hidden group">
+<summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
+<span>Quels documents dois-je préparer ?</span>
+<svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+</svg>
+</summary>
+<div class="px-6 pb-4 text-muted-foreground">
+Les documents varient selon votre programme, mais incluent généralement : passeport, diplômes, relevés de notes, preuves financières, lettres de recommandation, et CV. Nous vous fournirons une liste personnalisée lors de la consultation.
+</div>
+</details>
+</div>
+
+<div class="text-center mt-12">
+<p class="text-muted-foreground mb-4">Vous avez d'autres questions ?</p>
+<a href="/contact" class="inline-block bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition">
+Contactez-nous
+</a>
+</div>
+</div>
+</section>
+
+<!-- Contact Section -->
+<section id="contact" class="py-20 bg-background">
+<div class="container mx-auto px-4 md:px-6">
+<div class="max-w-3xl mx-auto">
+  <div class="text-center mb-12">
+    <h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Vous avez un projet Canada ?</h2>
+    <p class="text-lg text-muted-foreground">
+      Remplissez le formulaire ci-dessous et nous vous répondrons sous 24h
+    </p>
+  </div>
+  
+  <div class="bg-card border border-border rounded-lg p-8">
+    <form class="space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium mb-2 text-foreground">Nom Complet</label>
+          <input type="text" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Votre nom" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2 text-foreground">Email</label>
+          <input type="email" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="votre@email.com" />
+        </div>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium mb-2 text-foreground">Téléphone</label>
+        <input type="tel" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="+1 (123) 456-7890" />
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium mb-2 text-foreground">Type de Service</label>
+        <select class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring">
+          <option>Consultation initiale</option>
+          <option>Montage de dossier</option>
+          <option>Suivi de dossier</option>
+          <option>Accompagnement complet</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium mb-2 text-foreground">Message</label>
+        <textarea rows="4" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Décrivez votre projet Canada..."></textarea>
+      </div>
+      
+      <button type="submit" class="w-full bg-primary text-primary-foreground py-4 rounded-lg font-semibold hover:bg-primary/90 transition">
+        Demander une consultation
+      </button>
+    </form>
+
+    <!-- Contact Info -->
+    <div class="mt-8 pt-8 border-t border-border">
+      <div class="grid md:grid-cols-4 gap-4 text-center">
+        <div>
+          <div class="text-2xl mb-2">📧</div>
+          <div class="text-sm font-medium text-foreground">Email</div>
+          <div class="text-xs text-muted-foreground">contact@capitune.com</div>
+        </div>
+        <div>
+          <div class="text-2xl mb-2">📞</div>
+          <div class="text-sm font-medium text-foreground">Téléphone</div>
+          <div class="text-xs text-muted-foreground">+1 (514) 123-4567</div>
+        </div>
+        <div>
+          <div class="text-2xl mb-2">💬</div>
+          <div class="text-sm font-medium text-foreground">WhatsApp</div>
+          <div class="text-xs text-muted-foreground">Disponible 24/7</div>
+        </div>
+        <div>
+          <div class="text-2xl mb-2">📍</div>
+          <div class="text-sm font-medium text-foreground">Localisation</div>
+          <div class="text-xs text-muted-foreground">Montréal, QC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
+<FooterCustom client:only="react" />
+</MainLayout>
+
+<style>
+section {
+scroll-margin-top: 80px;
+}
+</style>
+
+
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+{
+  "buildCommand": "astro build --config astro.config.vercel.mjs",
+  "outputDirectory": "dist",
+  "framework": "astro",
+  "devCommand": "astro dev",
+  "installCommand": "npm install",
+  "env": {
+    "NODE_VERSION": "20.x"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "src/pages/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}
