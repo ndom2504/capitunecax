@@ -26,18 +26,22 @@ export function HeaderNav() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
       <div className="container mx-auto">
-        <nav className="flex items-center justify-between py-4 px-4 md:px-6">
+        <nav className="flex items-center md:items-baseline justify-between py-3 px-4 md:px-6">
           {/* Logo */}
-          <a href={`${baseUrl}/`} className="flex items-center h-10">
+          <a href={`${baseUrl}/`} className="hidden md:flex items-baseline h-11">
+            <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
+          </a>
+
+          <a href={`${baseUrl}/`} className="md:hidden flex items-center h-10">
             <span className="text-2xl font-bold text-primary font-heading leading-none">CAPITUNE</span>
           </a>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex flex-1 items-center ml-8">
-            <div className="flex-1 flex items-center justify-center gap-2">
+          <div className="hidden md:flex flex-1 h-11 items-baseline ml-8">
+            <div className="flex-1 h-11 flex items-baseline justify-center gap-2">
               <a 
                 href={`${baseUrl}/`} 
-                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
+                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
                   isActive('accueil')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -50,7 +54,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/#services`} 
-                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
+                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
                   isActive('services')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -63,7 +67,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/tarifs`} 
-                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
+                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
                   isActive('tarifs')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -76,7 +80,7 @@ export function HeaderNav() {
               </a>
               <a 
                 href={`${baseUrl}/a-propos`} 
-                className={`px-4 h-10 flex items-center rounded-lg transition font-medium leading-none relative ${
+                className={`px-4 h-11 inline-flex items-baseline rounded-lg transition font-medium leading-none relative ${
                   isActive('a-propos')
                     ? 'text-primary bg-primary/10 font-semibold'
                     : 'text-foreground hover:text-primary hover:bg-muted/50'
@@ -90,7 +94,7 @@ export function HeaderNav() {
             </div>
             <a
               href={`${baseUrl}/connexion`}
-              className="bg-primary text-primary-foreground px-6 h-10 flex items-center rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-auto"
+              className="bg-primary text-primary-foreground px-6 h-11 inline-flex items-baseline rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-auto"
             >
               Connexion
             </a>
