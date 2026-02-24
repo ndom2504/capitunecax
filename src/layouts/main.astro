@@ -21,30 +21,48 @@ const { pageClass = '' } = Astro.props;
     <slot />
     <script is:inline>
       (() => {
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const sections = Array.from(document.querySelectorAll('section'));
+        const runRevealAnimations = () => {
+          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const sections = Array.from(document.querySelectorAll('section'));
 
-        if (!sections.length) return;
+          if (!sections.length) return;
 
-        if (prefersReducedMotion || !('IntersectionObserver' in window)) {
-          sections.forEach((section) => section.classList.add('reveal-visible'));
-          return;
+          sections.forEach((section, index) => {
+            section.classList.remove('reveal-visible');
+            section.classList.add('reveal-up');
+            section.style.transitionDelay = `${Math.min(index * 60, 240)}ms`;
+          });
+
+          if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+            sections.forEach((section) => section.classList.add('reveal-visible'));
+            return;
+          }
+
+          const observer = new IntersectionObserver(
+            (entries, io) => {
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('reveal-visible');
+                io.unobserve(entry.target);
+              });
+            },
+            { threshold: 0.14, rootMargin: '0px 0px -8% 0px' }
+          );
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              sections.forEach((section) => observer.observe(section));
+            });
+          });
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', runRevealAnimations, { once: true });
+        } else {
+          runRevealAnimations();
         }
 
-        sections.forEach((section) => section.classList.add('reveal-up'));
-
-        const observer = new IntersectionObserver(
-          (entries, io) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return;
-              entry.target.classList.add('reveal-visible');
-              io.unobserve(entry.target);
-            });
-          },
-          { threshold: 0.14, rootMargin: '0px 0px -8% 0px' }
-        );
-
-        sections.forEach((section) => observer.observe(section));
+        document.addEventListener('astro:page-load', runRevealAnimations);
       })();
     </script>
   </body>
