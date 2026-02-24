@@ -33,62 +33,64 @@ export function HeaderNav() {
           </a>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            <a 
-              href={`${baseUrl}/`} 
-              className={`px-4 py-2 rounded-lg transition font-medium relative ${
-                isActive('accueil')
-                  ? 'text-primary bg-primary/10 font-semibold'
-                  : 'text-foreground hover:text-primary hover:bg-muted/50'
-              }`}
-            >
-              Accueil
-              {isActive('accueil') && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-              )}
-            </a>
-            <a 
-              href={`${baseUrl}/#services`} 
-              className={`px-4 py-2 rounded-lg transition font-medium relative ${
-                isActive('services')
-                  ? 'text-primary bg-primary/10 font-semibold'
-                  : 'text-foreground hover:text-primary hover:bg-muted/50'
-              }`}
-            >
-              Services
-              {isActive('services') && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-              )}
-            </a>
-            <a 
-              href={`${baseUrl}/tarifs`} 
-              className={`px-4 py-2 rounded-lg transition font-medium relative ${
-                isActive('tarifs')
-                  ? 'text-primary bg-primary/10 font-semibold'
-                  : 'text-foreground hover:text-primary hover:bg-muted/50'
-              }`}
-            >
-              Tarifs
-              {isActive('tarifs') && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-              )}
-            </a>
-            <a 
-              href={`${baseUrl}/a-propos`} 
-              className={`px-4 py-2 rounded-lg transition font-medium relative ${
-                isActive('a-propos')
-                  ? 'text-primary bg-primary/10 font-semibold'
-                  : 'text-foreground hover:text-primary hover:bg-muted/50'
-              }`}
-            >
-              À Propos
-              {isActive('a-propos') && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
-              )}
-            </a>
+          <div className="hidden md:flex flex-1 items-center ml-8">
+            <div className="flex-1 flex items-center justify-center gap-2">
+              <a 
+                href={`${baseUrl}/`} 
+                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                  isActive('accueil')
+                    ? 'text-primary bg-primary/10 font-semibold'
+                    : 'text-foreground hover:text-primary hover:bg-muted/50'
+                }`}
+              >
+                Accueil
+                {isActive('accueil') && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+                )}
+              </a>
+              <a 
+                href={`${baseUrl}/#services`} 
+                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                  isActive('services')
+                    ? 'text-primary bg-primary/10 font-semibold'
+                    : 'text-foreground hover:text-primary hover:bg-muted/50'
+                }`}
+              >
+                Services
+                {isActive('services') && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+                )}
+              </a>
+              <a 
+                href={`${baseUrl}/tarifs`} 
+                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                  isActive('tarifs')
+                    ? 'text-primary bg-primary/10 font-semibold'
+                    : 'text-foreground hover:text-primary hover:bg-muted/50'
+                }`}
+              >
+                Tarifs
+                {isActive('tarifs') && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+                )}
+              </a>
+              <a 
+                href={`${baseUrl}/a-propos`} 
+                className={`px-4 py-2 rounded-lg transition font-medium relative ${
+                  isActive('a-propos')
+                    ? 'text-primary bg-primary/10 font-semibold'
+                    : 'text-foreground hover:text-primary hover:bg-muted/50'
+                }`}
+              >
+                À Propos
+                {isActive('a-propos') && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"></div>
+                )}
+              </a>
+            </div>
             <a
               href={`${baseUrl}/connexion`}
-              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg hover:bg-primary/90 transition font-semibold ml-2"
+              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg hover:bg-primary/90 transition font-semibold ml-auto"
             >
               Connexion
             </a>
