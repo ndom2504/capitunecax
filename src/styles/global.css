@@ -87,6 +87,11 @@
   );
   --sidebar-border: var(--_apps---sidebar--sidebar-border);
   --sidebar-ring: var(--_apps---sidebar--sidebar-ring);
+
+  --primary: #5C2D91;
+  --ring: #5C2D91;
+  --chart-1: #5C2D91;
+  --sidebar-primary: #5C2D91;
 }
 
 .dark {
@@ -139,6 +144,11 @@
   );
   --sidebar-border: var(--_apps---sidebar--sidebar-border-dark);
   --sidebar-ring: var(--_apps---sidebar--sidebar-ring-dark);
+
+  --primary: #6A35A8;
+  --ring: #6A35A8;
+  --chart-1: #6A35A8;
+  --sidebar-primary: #6A35A8;
 }
 
 @layer base {
