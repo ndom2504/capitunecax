@@ -12,7 +12,7 @@ export function FooterCustom() {
           <div className="md:col-span-1">
             <h2 className="text-2xl font-bold text-primary font-heading mb-4">CAPITUNE</h2>
             <p className="text-muted-foreground text-sm">
-              Votre partenaire de confiance pour l'immigration au Canada
+              Votre partenaire de confiance pour votre projet au Canada
             </p>
           </div>
 

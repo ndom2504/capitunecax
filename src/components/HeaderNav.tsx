@@ -30,7 +30,7 @@ export function HeaderNav() {
           <a href={`${baseUrl}/`} className="flex flex-col items-start justify-center leading-none">
             <span className="text-2xl font-bold text-primary font-heading">CAPITUNE</span>
             <span className="hidden md:block text-muted-foreground text-sm mt-1 leading-snug">
-              Votre partenaire de confiance pour l'immigration au Canada
+              Votre partenaire de confiance pour votre projet au Canada
             </span>
           </a>
 
