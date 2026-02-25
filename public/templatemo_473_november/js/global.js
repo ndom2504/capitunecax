@@ -63,10 +63,12 @@ function onScroll(event){
 $(document).ready(function(){
   //slider
   var sudoSlider = $("#slider").sudoSlider({
-   effect: "fade",
-   pause: 3000,
+    effect: "slideRight",
+   speed: 700,
+   pause: 3600,
    auto:true,
-   continuous:true
+   continuous:true,
+   prevNext: true
  });
 
   //mobilemenu

@@ -81,6 +81,22 @@ import { baseUrl } from '../lib/base-url';
                     </div>
                   </div>
                 </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/img/map.jpg" alt="Vue urbaine du projet Canada" /></figure>
+                    <div class="text">
+                      <div class="Icon">
+                        <ul>
+                          <li><a href="#services"><i class="fa fa-map-marker"></i>Ville</a></li>
+                          <li><a href="#contact"><i class="fa fa-users"></i>Intégration</a></li>
+                        </ul>
+                      </div>
+                      <div class="Lorem">
+                        <p>Installation locale <span>et accompagnement terrain</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
               </ul>
               <figure><img src="/templatemo_473_november/img/Shadow-img.png" alt="shadow" class="Shadow" /></figure>
             </div>
@@ -190,11 +206,45 @@ import { baseUrl } from '../lib/base-url';
             <div class="Line"></div>
             <div class="Serviceside">
               <ul>
-                <li class="Development"><a href="#services"><h4>ANALYSE DU PROJET</h4></a></li>
-                <li class="Desdin"><a href="#services"><h4>MONTAGE DU DOSSIER</h4></a></li>
-                <li class="Concept"><a href="#services"><h4>SUIVI ADMINISTRATIF</h4></a></li>
-                <li class="System"><a href="#services"><h4>INTÉGRATION</h4></a></li>
+                <li class="Development"><a href="#services" class="service-trigger active" data-service="analyse"><h4>ANALYSE DU PROJET</h4></a></li>
+                <li class="Desdin"><a href="#services" class="service-trigger" data-service="montage"><h4>MONTAGE DU DOSSIER</h4></a></li>
+                <li class="Concept"><a href="#services" class="service-trigger" data-service="suivi"><h4>SUIVI ADMINISTRATIF</h4></a></li>
+                <li class="System"><a href="#services" class="service-trigger" data-service="integration"><h4>INTÉGRATION</h4></a></li>
               </ul>
+            </div>
+
+            <div class="service-detail-panels">
+              <article class="service-panel is-visible" data-service-panel="analyse">
+                <h3>Analyse Du Projet</h3>
+                <p>
+                  Nous évaluons votre profil, vos objectifs et vos contraintes afin de définir une
+                  stratégie claire et un plan d’action réaliste pour votre projet Canada.
+                </p>
+              </article>
+
+              <article class="service-panel" data-service-panel="montage">
+                <h3>Montage Du Dossier</h3>
+                <p>
+                  Nous structurons vos pièces, vérifions la conformité des documents et préparons un
+                  dossier solide pour réduire les risques de rejet.
+                </p>
+              </article>
+
+              <article class="service-panel" data-service-panel="suivi">
+                <h3>Suivi Administratif</h3>
+                <p>
+                  Nous assurons le suivi des étapes, des délais et des réponses attendues afin de vous
+                  garder informé et réactif durant tout le processus.
+                </p>
+              </article>
+
+              <article class="service-panel" data-service-panel="integration">
+                <h3>Aide À L’Intégration</h3>
+                <p>
+                  Nous vous accompagnons dans votre installation locale, vos repères pratiques et vos
+                  premières démarches pour une arrivée plus sereine.
+                </p>
+              </article>
             </div>
           </div>
         </div>
@@ -268,9 +318,75 @@ import { baseUrl } from '../lib/base-url';
   <script is:inline src="/templatemo_473_november/js/jquery.sudoSlider.min.js"></script>
   <script is:inline src="/templatemo_473_november/js/global.js"></script>
   <script is:inline src="/templatemo_473_november/js/modernizr.js"></script>
+  <script is:inline>
+    (() => {
+      const initServicePanels = () => {
+        const triggers = Array.from(document.querySelectorAll('.service-trigger'));
+        const panels = Array.from(document.querySelectorAll('.service-panel'));
+
+        if (!triggers.length || !panels.length) return;
+
+        const showPanel = (serviceKey) => {
+          triggers.forEach((trigger) => {
+            const isActive = trigger.getAttribute('data-service') === serviceKey;
+            trigger.classList.toggle('active', isActive);
+          });
+
+          panels.forEach((panel) => {
+            const shouldShow = panel.getAttribute('data-service-panel') === serviceKey;
+            panel.classList.toggle('is-visible', shouldShow);
+          });
+        };
+
+        triggers.forEach((trigger) => {
+          trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            const serviceKey = trigger.getAttribute('data-service');
+            if (!serviceKey) return;
+            showPanel(serviceKey);
+          });
+        });
+
+        const firstService = triggers[0]?.getAttribute('data-service');
+        if (firstService) showPanel(firstService);
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initServicePanels, { once: true });
+      } else {
+        initServicePanels();
+      }
+
+      document.addEventListener('astro:page-load', initServicePanels);
+    })();
+  </script>
 </MainLayout>
 
 <style is:global>
+  #home .leftside {
+    width: 34%;
+    position: relative;
+    z-index: 2;
+  }
+
+  #home .leftside h3,
+  #home .leftside h3 span {
+    white-space: normal !important;
+    text-wrap: pretty;
+    line-height: 1.1;
+  }
+
+  #home .rightside {
+    width: 62%;
+    transform: translateX(52px);
+  }
+
+  #home .rightside .Slider figure img {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+  }
+
   #home .leftside a.secondary-cta {
     margin-left: 10px;
     background: transparent;
@@ -283,7 +399,97 @@ import { baseUrl } from '../lib/base-url';
     color: #222;
   }
 
+  #services .service-detail-panels {
+    margin-top: 34px;
+    min-height: 170px;
+    position: relative;
+  }
+
+  #services .service-panel {
+    display: none;
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 10px;
+    padding: 26px;
+    backdrop-filter: blur(2px);
+    transition: opacity 360ms ease, transform 360ms ease;
+  }
+
+  #services .service-panel.is-visible {
+    display: block;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: servicePanelIn 360ms ease;
+  }
+
+  #services .service-panel h3 {
+    white-space: normal !important;
+    color: #ffffff;
+    font-size: 28px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  #services .service-panel p {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  #services .service-trigger.active h4 {
+    color: #ff9000;
+  }
+
+  @keyframes servicePanelIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   #contact .Get_sec .Leftside fieldset .button {
     text-transform: none;
+  }
+
+  #contact .Get_sec .Leftside input.field,
+  #contact .Get_sec .Leftside textarea {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(15, 23, 42, 0.25);
+    color: #0f172a !important;
+    font-weight: 600;
+  }
+
+  #contact .Get_sec .Leftside input.field::placeholder,
+  #contact .Get_sec .Leftside textarea::placeholder {
+    color: #334155;
+    opacity: 0.9;
+  }
+
+  #contact .Get_sec .Leftside input.field:focus,
+  #contact .Get_sec .Leftside textarea:focus {
+    background: #ffffff;
+    border-color: #f88e04;
+    box-shadow: 0 0 0 2px rgba(248, 142, 4, 0.15);
+  }
+
+  @media (max-width: 1200px) {
+    #home .rightside {
+      transform: none;
+    }
+
+    #services .service-panel {
+      padding: 18px;
+    }
+
+    #services .service-panel h3 {
+      font-size: 22px;
+    }
   }
 </style>
