@@ -167,6 +167,35 @@
   
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--heading-font);
+    white-space: nowrap;
+    text-wrap: nowrap;
+    line-height: 1.1;
+  }
+
+  h1 + p,
+  h2 + p,
+  h3 + p,
+  h4 + p,
+  h5 + p,
+  h6 + p {
+    margin-top: 1rem;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  p + a,
+  p + button {
+    margin-top: 1.25rem;
+    display: inline-flex;
+  }
+
+  p + div:has(> a),
+  p + div:has(> button),
+  p + div:has(> a + a),
+  p + div:has(> button + button) {
+    margin-top: 1.25rem;
   }
   
   button {
