@@ -124,11 +124,11 @@ import { baseUrl } from '../lib/base-url';
 
 <script>
   document.getElementById('googleSignupBtn')?.addEventListener('click', () => {
-    window.location.href = `${baseUrl}/dashboard`;
+    window.location.href = '/dashboard';
   });
 
   document.getElementById('microsoftSignupBtn')?.addEventListener('click', () => {
-    window.location.href = `${baseUrl}/dashboard`;
+    window.location.href = '/dashboard';
   });
 
   document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
@@ -142,7 +142,7 @@ import { baseUrl } from '../lib/base-url';
       return;
     }
 
-    window.location.href = `${baseUrl}/dashboard`;
+    window.location.href = '/dashboard';
   });
 </script>
 
