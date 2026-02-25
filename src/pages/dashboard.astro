@@ -8,52 +8,58 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
 ---
 
 <MainLayout>
-  <!-- Dashboard Header with Tabs and Profile - RENDERED ONCE -->
-  <DashboardHeader client:load activeTab="services" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,700|Oswald:400,700" rel="stylesheet" type="text/css" />
 
-  <!-- Tab Content -->
-  <section class="py-8 bg-background min-h-screen">
-    <div class="container mx-auto px-4 md:px-6">
+  <div class="dashboard-template">
+    <!-- Dashboard Header with Tabs and Profile - RENDERED ONCE -->
+    <DashboardHeader client:load activeTab="services" />
+
+    <!-- Tab Content -->
+    <section class="dashboard-main py-8 min-h-screen">
+      <div class="container mx-auto px-4 md:px-6 dashboard-container">
+        <div class="dashboard-content-shell">
       
-      <!-- ONGLET SERVICES -->
-      <div id="tab-services" class="tab-content">
-        <ServiceSelector client:only="react" />
-      </div>
+          <!-- ONGLET SERVICES -->
+          <div id="tab-services" class="tab-content">
+            <ServiceSelector client:only="react" />
+          </div>
 
-      <!-- ONGLET MESSAGERIE -->
-      <div id="tab-messagerie" class="tab-content hidden">
-        <ChatInterne client:only="react" />
-      </div>
+          <!-- ONGLET MESSAGERIE -->
+          <div id="tab-messagerie" class="tab-content hidden">
+            <ChatInterne client:only="react" />
+          </div>
 
-      <!-- ONGLET PAIEMENTS -->
-      <div id="tab-paiements" class="tab-content hidden">
-        <PaymentsTab client:only="react" />
-      </div>
+          <!-- ONGLET PAIEMENTS -->
+          <div id="tab-paiements" class="tab-content hidden">
+            <PaymentsTab client:only="react" />
+          </div>
 
-      <!-- ONGLET FAQ -->
-      <div id="tab-faq" class="tab-content hidden">
-        <DashboardFAQ client:only="react" />
-      </div>
+          <!-- ONGLET FAQ -->
+          <div id="tab-faq" class="tab-content hidden">
+            <DashboardFAQ client:only="react" />
+          </div>
 
-      <!-- ONGLET TARIFS -->
-      <div id="tab-tarifs" class="tab-content hidden">
-        <div class="max-w-4xl mx-auto">
-          <div class="bg-card border border-border rounded-2xl p-8 shadow-sm">
-            <h2 class="text-2xl font-bold text-foreground mb-3">Nos tarifs</h2>
-            <p class="text-muted-foreground mb-6">
-              Consultez le détail de nos offres directement depuis votre espace client.
-            </p>
-            <a
-              href="/tarifs"
-              class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition"
-            >
-              Voir la page Tarifs
-            </a>
+          <!-- ONGLET TARIFS -->
+          <div id="tab-tarifs" class="tab-content hidden">
+            <div class="max-w-4xl mx-auto">
+              <div class="bg-card border border-border rounded-2xl p-8 shadow-sm">
+                <h2 class="text-2xl font-bold text-foreground mb-3">Nos tarifs</h2>
+                <p class="text-muted-foreground mb-6">
+                  Consultez le détail de nos offres directement depuis votre espace client.
+                </p>
+                <a
+                  href="/tarifs"
+                  class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition"
+                >
+                  Voir la page Tarifs
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <script>
     // Handle tab switching
@@ -86,6 +92,75 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
 </MainLayout>
 
 <style>
+  .dashboard-template {
+    background: #173f5f;
+    min-height: 100vh;
+    font-family: 'Open Sans', sans-serif;
+  }
+
+  .dashboard-template .dashboard-main {
+    position: relative;
+    background: url('/templatemo_473_november/img/Get-bg.jpg') center center no-repeat;
+    background-size: cover;
+  }
+
+  .dashboard-template .dashboard-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(9, 39, 62, 0.35);
+  }
+
+  .dashboard-template .dashboard-container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dashboard-template .dashboard-content-shell {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    padding: 18px;
+  }
+
+  .dashboard-template header {
+    background: linear-gradient(90deg, rgba(9, 29, 48, 0.95), rgba(16, 52, 80, 0.92));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(4px);
+  }
+
+  .dashboard-template header .text-foreground {
+    color: #eef4fb !important;
+  }
+
+  .dashboard-template header .text-muted-foreground {
+    color: rgba(228, 237, 246, 0.78) !important;
+  }
+
+  .dashboard-template header .tab-button {
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    font-weight: 700;
+  }
+
+  .dashboard-template header .tab-button.bg-primary {
+    background-color: #e2850a !important;
+    color: #ffffff !important;
+  }
+
+  .dashboard-template header .tab-button:not(.bg-primary) {
+    color: #d4e1ee;
+  }
+
+  .dashboard-template header .tab-button:not(.bg-primary):hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+  }
+
+  .dashboard-template #tab-tarifs .bg-card {
+    background: rgba(255, 255, 255, 0.95);
+  }
+
   .tab-content {
     animation: fadeIn 0.3s ease-in;
   }
@@ -108,6 +183,13 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  @media (max-width: 980px) {
+    .dashboard-template .dashboard-content-shell {
+      padding: 12px;
+      border-radius: 12px;
+    }
   }
 </style>
 
