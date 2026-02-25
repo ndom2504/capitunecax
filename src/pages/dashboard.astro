@@ -8,64 +8,52 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
 ---
 
 <MainLayout>
-  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
-  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
+  <!-- Dashboard Header with Tabs and Profile - RENDERED ONCE -->
+  <DashboardHeader client:load activeTab="services" />
 
-  <div class="DesignHolder dashboard-template">
-    <div class="LayoutFrame">
-      <!-- Dashboard Header with Tabs and Profile - RENDERED ONCE -->
-      <DashboardHeader client:load activeTab="services" />
-
-      <!-- Tab Content -->
-      <section class="dashboard-main py-8 min-h-screen">
-        <div class="container mx-auto px-4 md:px-6">
-          <div class="dashboard-content-shell">
+  <!-- Tab Content -->
+  <section class="py-8 bg-background min-h-screen">
+    <div class="container mx-auto px-4 md:px-6">
       
-            <!-- ONGLET SERVICES -->
-            <div id="tab-services" class="tab-content">
-              <ServiceSelector client:only="react" />
-            </div>
+      <!-- ONGLET SERVICES -->
+      <div id="tab-services" class="tab-content">
+        <ServiceSelector client:only="react" />
+      </div>
 
-            <!-- ONGLET MESSAGERIE -->
-            <div id="tab-messagerie" class="tab-content hidden">
-              <ChatInterne client:only="react" />
-            </div>
+      <!-- ONGLET MESSAGERIE -->
+      <div id="tab-messagerie" class="tab-content hidden">
+        <ChatInterne client:only="react" />
+      </div>
 
-            <!-- ONGLET PAIEMENTS -->
-            <div id="tab-paiements" class="tab-content hidden">
-              <PaymentsTab client:only="react" />
-            </div>
+      <!-- ONGLET PAIEMENTS -->
+      <div id="tab-paiements" class="tab-content hidden">
+        <PaymentsTab client:only="react" />
+      </div>
 
-            <!-- ONGLET FAQ -->
-            <div id="tab-faq" class="tab-content hidden">
-              <DashboardFAQ client:only="react" />
-            </div>
+      <!-- ONGLET FAQ -->
+      <div id="tab-faq" class="tab-content hidden">
+        <DashboardFAQ client:only="react" />
+      </div>
 
-            <!-- ONGLET TARIFS -->
-            <div id="tab-tarifs" class="tab-content hidden">
-              <div class="max-w-4xl mx-auto">
-                <div class="bg-card border border-border rounded-2xl p-8 shadow-sm">
-                  <h2 class="text-2xl font-bold text-foreground mb-3">Nos tarifs</h2>
-                  <p class="text-muted-foreground mb-6">
-                    Consultez le détail de nos offres directement depuis votre espace client.
-                  </p>
-                  <a
-                    href="/tarifs"
-                    class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition"
-                  >
-                    Voir la page Tarifs
-                  </a>
-                </div>
-              </div>
-            </div>
+      <!-- ONGLET TARIFS -->
+      <div id="tab-tarifs" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <div class="bg-card border border-border rounded-2xl p-8 shadow-sm">
+            <h2 class="text-2xl font-bold text-foreground mb-3">Nos tarifs</h2>
+            <p class="text-muted-foreground mb-6">
+              Consultez le détail de nos offres directement depuis votre espace client.
+            </p>
+            <a
+              href="/tarifs"
+              class="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition"
+            >
+              Voir la page Tarifs
+            </a>
           </div>
         </div>
-      </section>
+      </div>
     </div>
-  </div>
+  </section>
 
   <script>
     // Handle tab switching
@@ -98,71 +86,6 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
 </MainLayout>
 
 <style>
-  .dashboard-template {
-    min-height: 100vh;
-    background: #1f4b6e;
-  }
-
-  .dashboard-template > .LayoutFrame {
-    background: transparent;
-  }
-
-  .dashboard-template header {
-    background: rgba(17, 53, 82, 0.92);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(6px);
-  }
-
-  .dashboard-template .dashboard-main {
-    background: url('/templatemo_473_november/img/Get-bg.jpg') center center no-repeat;
-    background-size: cover;
-    padding-top: 26px;
-    padding-bottom: 40px;
-  }
-
-  .dashboard-template .dashboard-content-shell {
-    background: rgba(7, 30, 49, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 18px 44px rgba(5, 17, 28, 0.35);
-    padding: 20px;
-  }
-
-  .dashboard-template .tab-button {
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-
-  .dashboard-template .tab-content {
-    animation: fadeIn 0.3s ease-in;
-  }
-
-  .dashboard-template #tab-tarifs .bg-card {
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .dashboard-template .text-muted-foreground {
-    color: rgba(232, 237, 243, 0.86);
-  }
-
-  .dashboard-template .bg-card .text-muted-foreground,
-  .dashboard-template #tab-tarifs .text-muted-foreground {
-    color: #4b5f73;
-  }
-
-  .dashboard-template .bg-card,
-  .dashboard-template [class*='border-border'] {
-    border-color: rgba(255, 255, 255, 0.16);
-  }
-
-  .dashboard-template .bg-primary {
-    background-color: #e2850a !important;
-  }
-
-  .dashboard-template .hover\:bg-primary\/90:hover {
-    background-color: #f19723 !important;
-  }
-
   .tab-content {
     animation: fadeIn 0.3s ease-in;
   }
@@ -185,13 +108,6 @@ import { DashboardFAQ } from '../components/DashboardFAQ';
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  @media (max-width: 980px) {
-    .dashboard-template .dashboard-content-shell {
-      padding: 12px;
-      border-radius: 12px;
-    }
   }
 </style>
 
