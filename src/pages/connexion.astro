@@ -95,7 +95,7 @@ import { FooterCustom } from '../components/FooterCustom';
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button 
               type="button"
-              onclick="handleGoogleLogin()"
+              id="googleLoginBtn"
               class="w-full flex items-center justify-center gap-3 bg-background border border-input hover:border-primary/50 hover:bg-muted/40 text-foreground py-3 px-4 rounded-xl font-semibold transition"
             >
               <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
@@ -109,7 +109,7 @@ import { FooterCustom } from '../components/FooterCustom';
 
             <button 
               type="button"
-              onclick="handleMicrosoftLogin()"
+              id="microsoftLoginBtn"
               class="w-full flex items-center justify-center gap-3 bg-background border border-input hover:border-primary/50 hover:bg-muted/40 text-foreground py-3 px-4 rounded-xl font-semibold transition"
             >
               <svg class="w-5 h-5" viewBox="0 0 23 23" aria-hidden="true">
@@ -163,17 +163,13 @@ import { FooterCustom } from '../components/FooterCustom';
 <script>
   import { baseUrl } from '../lib/base-url';
 
-  // Handle Google Login
-  function handleGoogleLogin() {
-    // For testing: redirect directly to dashboard
+  document.getElementById('googleLoginBtn')?.addEventListener('click', () => {
     window.location.href = `${baseUrl}/dashboard`;
-  }
+  });
 
-  // Handle Microsoft Login
-  function handleMicrosoftLogin() {
-    // For testing: redirect directly to dashboard
+  document.getElementById('microsoftLoginBtn')?.addEventListener('click', () => {
     window.location.href = `${baseUrl}/dashboard`;
-  }
+  });
 
   // Handle Email/Password Login
   document.getElementById('loginForm')?.addEventListener('submit', async (e) => {

@@ -1,481 +1,289 @@
-
-
-
-
-
-
 ---
 import MainLayout from '../layouts/main.astro';
-import { HeaderNav } from '../components/HeaderNav';
-import { FooterCustom } from '../components/FooterCustom';
+import { baseUrl } from '../lib/base-url';
 ---
 
 <MainLayout>
-<HeaderNav client:only="react" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
 
-<!-- Hero Section / Accueil -->
-<section id="accueil" class="bg-background border-b border-border">
-  <div class="grid lg:grid-cols-2">
-    <div class="relative h-[42vh] lg:h-[calc(100vh-6rem)] lg:sticky lg:top-24">
-      <img
-        src="https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=2000&auto=format&fit=crop"
-        alt="Toronto Skyline"
-        class="w-full h-full object-cover hero-main-image"
-      />
-      <div class="absolute inset-0 bg-gradient-to-br from-black/45 via-black/25 to-black/40"></div>
-    </div>
-
-    <div class="bg-background">
-      <div class="h-auto lg:h-[calc(100vh-6rem)] lg:overflow-y-auto">
-        <div class="px-6 md:px-10 lg:px-14 py-10 lg:py-14">
-          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-foreground leading-tight">
-            Votre projet Canada, structuré et sécurisé de A à Z.
-          </h1>
-
-          <p class="text-xl md:text-2xl mb-7 text-muted-foreground">
-            CAPITUNE vous accompagne à chaque étape : de la consultation initiale jusqu'à votre intégration réussie au Canada.
-          </p>
-
-          <p class="text-lg md:text-xl mb-12 text-muted-foreground">
-            Nous transformons votre projet en un plan clair, organisé et conforme.
-          </p>
-
-          <div class="flex flex-col sm:flex-row gap-4 mb-10">
-            <a href="/connexion" class="bg-primary text-primary-foreground px-8 py-4 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg text-center">
-              Réserver une consultation
-            </a>
-            <a href="/inscription" class="bg-background text-foreground px-8 py-4 rounded-lg font-semibold hover:bg-muted transition border-2 border-border shadow-lg text-center">
-              Créer un compte client
-            </a>
+  <div class="DesignHolder">
+    <div class="LayoutFrame">
+      <header>
+        <div class="Center">
+          <div class="site-logo">
+            <h1><a href={`${baseUrl}/`}>CAPI<span>TUNE</span></a></h1>
           </div>
-
-          <div class="space-y-6">
-            <div class="bg-muted/30 border border-border rounded-lg p-6 service-window">
-              <h3 class="text-xl font-bold text-foreground mb-2">Analyse du projet</h3>
-              <p class="text-muted-foreground">Évaluation complète de votre profil et orientation vers le programme le plus adapté à votre objectif.</p>
-            </div>
-            <div class="bg-muted/30 border border-border rounded-lg p-6 service-window">
-              <h3 class="text-xl font-bold text-foreground mb-2">Montage du dossier</h3>
-              <p class="text-muted-foreground">Structuration des pièces, vérification des critères et préparation d'un dossier conforme.</p>
-            </div>
-            <div class="bg-muted/30 border border-border rounded-lg p-6 service-window">
-              <h3 class="text-xl font-bold text-foreground mb-2">Accompagnement et aide à l'intégration</h3>
-              <p class="text-muted-foreground">Accompagnement continu jusqu'à votre arrivée et votre intégration au Canada.</p>
+          <div id="mobile_sec">
+            <div class="mobile"><i class="fa fa-bars"></i><i class="fa fa-times"></i></div>
+            <div class="menumobile">
+              <nav class="Navigation">
+                <ul>
+                  <li class="active"><a href="#home">Accueil</a><span class="menu-item-bg"></span></li>
+                  <li><a href="#about">À propos</a><span class="menu-item-bg"></span></li>
+                  <li><a href="#services">Services</a><span class="menu-item-bg"></span></li>
+                  <li><a href="#contact">Contact</a><span class="menu-item-bg"></span></li>
+                  <li><a href={`${baseUrl}/connexion`}>Connexion</a><span class="menu-item-bg"></span></li>
+                </ul>
+              </nav>
             </div>
           </div>
+          <div class="clear"></div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </header>
 
-<!-- Services Section -->
-<section id="services" class="py-24 bg-foreground text-background">
-<div class="container mx-auto px-4 md:px-6">
-  <div class="grid md:grid-cols-2 gap-8 md:gap-12 mb-14 items-start">
-    <h2 class="text-3xl md:text-5xl font-bold leading-tight uppercase">Nos services<br/>sur mesure</h2>
-    <p class="text-base md:text-xl text-background/80 max-w-xl md:ml-auto">
-      Une méthode claire, structurée et orientée résultats pour vous accompagner de la stratégie initiale à l'intégration.
-    </p>
-  </div>
-
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Consultation stratégique</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Diagnostic personnalisé de votre profil pour définir la meilleure stratégie d'immigration.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Orientation programme</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Sélection du programme adapté : études, travail, résidence permanente et plus.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Montage du dossier</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Préparation complète et vérification rigoureuse de chaque document requis.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Suivi transparent</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Suivi des délais, réponses aux autorités et communication claire à chaque étape.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Recherche ressources</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Appui pour écoles, employeurs, logement et ressources utiles à votre projet.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[340px] service-window">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-      </div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Intégration Canada</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Assistance pratique pour votre installation et vos premières démarches sur place.</p>
-    </article>
-  </div>
-</div>
-</section>
-
-<!-- Why Choose Us Section -->
-<section class="py-24 bg-foreground text-background">
-<div class="container mx-auto px-4 md:px-6">
-  <div class="grid md:grid-cols-2 gap-8 md:gap-12 mb-14 items-start">
-    <h2 class="text-3xl md:text-5xl font-bold leading-tight uppercase">Pourquoi<br/>CAPITUNE ?</h2>
-    <p class="text-base md:text-xl text-background/80 max-w-xl md:ml-auto">
-      Une équipe engagée, une méthode claire et des résultats mesurables pour transformer votre projet en réussite.
-    </p>
-  </div>
-
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[300px]">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">◆</div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Organisation structurée</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Un plan clair, des étapes définies et une exécution rigoureuse.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[300px]">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">◉</div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Dossier optimisé</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Chaque détail est vérifié pour maximiser vos chances de succès.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[300px]">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">◍</div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Suivi transparent</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Vous suivez l'avancement en temps réel avec des échanges constants.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[300px]">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">✦</div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Gain de temps</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Nous réduisons les erreurs et accélérons vos démarches administratives.</p>
-    </article>
-
-    <article class="bg-card text-card-foreground rounded-3xl p-8 md:p-10 border border-border flex flex-col items-center text-center min-h-[300px]">
-      <div class="w-14 h-14 rounded-2xl bg-primary/15 text-primary flex items-center justify-center mb-6">●</div>
-      <h3 class="text-2xl font-bold mb-4 uppercase">Accompagnement humain</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed">Une équipe disponible, professionnelle et proche de vos besoins.</p>
-    </article>
-  </div>
-</div>
-</section>
-
-<!-- Témoignages Section -->
-<section class="py-20 bg-background">
-<div class="container mx-auto px-4 md:px-6">
-  <div class="text-center mb-12">
-    <h2 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">Témoignages</h2>
-    <p class="text-lg text-muted-foreground max-w-2xl mx-auto">
-      Des retours concrets de clients accompagnés par CAPITUNE
-    </p>
-  </div>
-
-  <div class="grid lg:grid-cols-3 gap-0 border border-border overflow-hidden">
-    <article class="bg-muted/30 p-10 flex flex-col min-h-[430px]">
-      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
-      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Un accompagnement exceptionnel du début à la fin.</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
-        Leur approche stratégique a transformé notre projet. Le dossier était structuré, clair et solide.
-      </p>
-      <div class="mt-auto flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">DM</div>
-        <div>
-          <p class="font-bold text-foreground">David M.</p>
-          <p class="text-muted-foreground italic">(Montréal)</p>
-        </div>
-      </div>
-    </article>
-
-    <article class="bg-muted/50 p-10 flex flex-col min-h-[430px] border-l border-r border-border">
-      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
-      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Un service professionnel au-delà de nos attentes.</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
-        L'équipe a été réactive et précise à chaque étape. Nous avons gagné un temps précieux.
-      </p>
-      <div class="mt-auto flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">ST</div>
-        <div>
-          <p class="font-bold text-foreground">Sarah T.</p>
-          <p class="text-muted-foreground italic">(Québec)</p>
-        </div>
-      </div>
-    </article>
-
-    <article class="bg-muted/30 p-10 flex flex-col min-h-[430px]">
-      <div class="text-6xl font-bold text-foreground leading-none mb-8">“</div>
-      <h3 class="text-3xl font-bold text-foreground mb-4 leading-tight">Des solutions concrètes qui donnent des résultats.</h3>
-      <p class="text-muted-foreground text-lg leading-relaxed mb-8">
-        Nous avons été accompagnés avec rigueur et humanité. Le suivi a été transparent et très efficace.
-      </p>
-      <div class="mt-auto flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">ER</div>
-        <div>
-          <p class="font-bold text-foreground">Emile R.</p>
-          <p class="text-muted-foreground italic">(Laval)</p>
-        </div>
-      </div>
-    </article>
-  </div>
-</div>
-</section>
-
-<!-- FAQ + Contact Split Section -->
-<section id="faq" class="py-20 bg-background">
-<div class="container mx-auto px-4 md:px-6">
-  <div class="grid lg:grid-cols-2 gap-8 items-start">
-    <div class="bg-card border border-border rounded-2xl p-6 md:p-8 h-full">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-bold mb-3 text-foreground">Questions Fréquentes</h2>
-        <p class="text-muted-foreground">Trouvez rapidement les réponses à vos questions</p>
-      </div>
-
-      <div class="space-y-4">
-        <details class="bg-background border border-border rounded-lg overflow-hidden group">
-          <summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
-            <span>Quels sont les délais moyens de traitement ?</span>
-            <svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-6 pb-4 text-muted-foreground">
-            Les délais varient selon le programme : de 2 à 6 mois pour un permis d'études, de 4 à 8 mois pour un permis de travail, et de 6 à 18 mois pour une résidence permanente. Nous optimisons votre dossier pour accélérer le processus.
-          </div>
-        </details>
-
-        <details class="bg-background border border-border rounded-lg overflow-hidden group">
-          <summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
-            <span>Combien coûtent vos services ?</span>
-            <svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-6 pb-4 text-muted-foreground">
-            Chaque projet est unique. Contactez-nous pour une proposition adaptée à vos objectifs via notre <a href="/contact" class="text-primary hover:underline">page Contact</a>.
-          </div>
-        </details>
-
-        <details class="bg-background border border-border rounded-lg overflow-hidden group">
-          <summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
-            <span>Est-ce que vous garantissez l'acceptation de mon dossier ?</span>
-            <svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-6 pb-4 text-muted-foreground">
-            Aucun consultant ne peut garantir une acceptation à 100%. Cependant, nous optimisons chaque dossier selon les normes officielles pour maximiser vos chances de succès. Notre taux de réussite est de 95%.
-          </div>
-        </details>
-
-        <details class="bg-background border border-border rounded-lg overflow-hidden group">
-          <summary class="px-6 py-4 cursor-pointer font-semibold text-foreground flex items-center justify-between hover:bg-muted/30 transition">
-            <span>Puis-je vous contacter pendant le traitement de mon dossier ?</span>
-            <svg class="w-5 h-5 text-muted-foreground group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div class="px-6 pb-4 text-muted-foreground">
-            Absolument ! Vous avez accès à notre messagerie interne via votre tableau de bord client. Nous répondons sous 24h maximum et vous tenons informé à chaque étape.
-          </div>
-        </details>
-      </div>
-
-      <div class="mt-8 text-center">
-        <p class="text-muted-foreground mb-4">Vous avez d'autres questions ?</p>
-        <a href="/contact" class="inline-block bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition">
-          Contactez-nous
-        </a>
-      </div>
-    </div>
-
-    <div id="contact" class="bg-card border border-border rounded-2xl p-6 md:p-8 h-full">
-      <div class="mb-8">
-        <h2 class="text-3xl md:text-4xl font-bold mb-3 text-foreground">Vous avez un projet Canada ?</h2>
-        <p class="text-muted-foreground">Remplissez le formulaire ci-dessous et nous vous répondrons sous 24h</p>
-      </div>
-
-      <form class="space-y-6">
-        <div class="grid md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium mb-2 text-foreground">Nom Complet</label>
-            <input type="text" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Votre nom" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-2 text-foreground">Email</label>
-            <input type="email" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="votre@email.com" />
+      <div class="Banner_sec" id="home">
+        <div class="bannerside">
+          <div class="Center">
+            <div class="leftside">
+              <h3>Votre projet<span>Canada avec CAPITUNE</span></h3>
+              <p>
+                CAPITUNE vous accompagne dans l’analyse de votre projet, la préparation du dossier,
+                le suivi administratif et votre intégration au Canada.
+              </p>
+              <a href="#about">DÉCOUVRIR</a>
+              <a href={`${baseUrl}/contact`} class="secondary-cta">NOUS CONTACTER</a>
+            </div>
+            <div class="rightside">
+              <ul id="slider">
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/img/Slider-img1.jpg" alt="CAPITUNE accompagnement" /></figure>
+                    <div class="text">
+                      <div class="Icon">
+                        <ul>
+                          <li><a href="#services"><i class="fa fa-check"></i>Projet</a></li>
+                          <li><a href="#contact"><i class="fa fa-commenting"></i>Conseil</a></li>
+                        </ul>
+                      </div>
+                      <div class="Lorem">
+                        <p>Analyse stratégique <span>et plan d’action personnalisé</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/img/Slider-img2.jpg" alt="CAPITUNE suivi" /></figure>
+                    <div class="text">
+                      <div class="Icon">
+                        <ul>
+                          <li><a href="#services"><i class="fa fa-file-text-o"></i>Dossier</a></li>
+                          <li><a href="#contact"><i class="fa fa-phone"></i>Support</a></li>
+                        </ul>
+                      </div>
+                      <div class="Lorem">
+                        <p>Montage complet <span>et suivi de votre dossier</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+              <figure><img src="/templatemo_473_november/img/Shadow-img.png" alt="shadow" class="Shadow" /></figure>
+            </div>
           </div>
         </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2 text-foreground">Téléphone</label>
-          <input type="tel" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="+1 (123) 456-7890" />
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2 text-foreground">Type de Service</label>
-          <select class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring">
-            <option>Consultation initiale</option>
-            <option>Montage de dossier</option>
-            <option>Suivi de dossier</option>
-            <option>Accompagnement complet</option>
-          </select>
-        </div>
-        
-        <div>
-          <label class="block text-sm font-medium mb-2 text-foreground">Message</label>
-          <textarea rows="4" class="w-full px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Décrivez votre projet Canada..."></textarea>
-        </div>
-        
-        <button type="submit" class="w-full bg-primary text-primary-foreground py-4 rounded-lg font-semibold hover:bg-primary/90 transition">
-          Demander une consultation
-        </button>
-      </form>
+        <div class="clear"></div>
+      </div>
 
-      <div class="mt-8 pt-8 border-t border-border">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div class="text-2xl mb-2">📧</div>
-            <div class="text-sm font-medium text-foreground">Email</div>
-            <div class="text-xs text-muted-foreground">contact@capitune.com</div>
+      <div class="bgcolor"></div>
+
+      <div id="Container">
+        <div class="About_sec" id="about">
+          <div class="Center">
+            <h2>À propos de CAPITUNE</h2>
+            <p>
+              Une initiative d’Export Monde Prestige Inc. pour structurer votre projet Canada avec
+              un accompagnement clair, professionnel et centré sur vos objectifs.
+            </p>
+            <div class="Line"></div>
+
+            <div class="Tabside">
+              <ul>
+                <li><a href="javascript:;" class="tabLink activeLink" id="cont-1">Mission</a></li>
+                <li><a href="javascript:;" class="tabLink" id="cont-2">Approche</a></li>
+                <li><a href="javascript:;" class="tabLink" id="cont-3">Résultats</a></li>
+              </ul>
+              <div class="clear"></div>
+
+              <div class="tabcontent" id="cont-1-1">
+                <div class="TabImage">
+                  <div class="img1">
+                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Mission" /></figure>
+                  </div>
+                  <div class="img2">
+                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Accompagnement" /></figure>
+                  </div>
+                </div>
+                <div class="Description">
+                  <h3>Un cadre structuré <span>pour avancer avec confiance</span></h3>
+                  <p>
+                    Nous cadrons votre projet en fonction de votre profil, des programmes disponibles
+                    et des exigences administratives à respecter.
+                  </p>
+                  <p>
+                    L’objectif est simple : construire un dossier cohérent, réduire les erreurs et
+                    accélérer vos prises de décision à chaque étape.
+                  </p>
+                </div>
+              </div>
+
+              <div class="tabcontent hide" id="cont-2-1">
+                <div class="TabImage">
+                  <div class="img1">
+                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Approche" /></figure>
+                  </div>
+                  <div class="img2">
+                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Méthode" /></figure>
+                  </div>
+                </div>
+                <div class="Description">
+                  <h3>Accompagnement opérationnel <span>de l’idée à l’exécution</span></h3>
+                  <p>
+                    De l’analyse initiale au dépôt, vous bénéficiez d’un suivi continu avec des points
+                    d’avancement, des checklists et des validations documentaires.
+                  </p>
+                  <p>
+                    Nous restons disponibles pour répondre à vos questions et ajuster votre stratégie
+                    selon les évolutions de votre situation.
+                  </p>
+                </div>
+              </div>
+
+              <div class="tabcontent hide" id="cont-3-1">
+                <div class="TabImage">
+                  <div class="img1">
+                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Résultats" /></figure>
+                  </div>
+                  <div class="img2">
+                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Suivi" /></figure>
+                  </div>
+                </div>
+                <div class="Description">
+                  <h3>Suivi et intégration <span>au-delà de la soumission</span></h3>
+                  <p>
+                    Nous vous aidons à suivre les délais, préparer les réponses demandées et organiser
+                    votre arrivée pour une intégration plus fluide.
+                  </p>
+                  <p>
+                    CAPITUNE combine conseil, méthode et proximité pour transformer votre projet en plan
+                    concret et réalisable.
+                  </p>
+                </div>
+              </div>
+
+              <div class="clear"></div>
+            </div>
           </div>
-          <div>
-            <div class="text-2xl mb-2">📞</div>
-            <div class="text-sm font-medium text-foreground">Téléphone</div>
-            <div class="text-xs text-muted-foreground">+1 (514) 123-4567</div>
+        </div>
+
+        <div class="Services_sec" id="services">
+          <div class="Center">
+            <h2>Nos services</h2>
+            <p>
+              Un accompagnement complet pour bâtir, structurer et piloter votre projet Canada avec
+              une vision claire et des actions concrètes.
+            </p>
+            <div class="Line"></div>
+            <div class="Serviceside">
+              <ul>
+                <li class="Development"><a href="#services"><h4>ANALYSE DU PROJET</h4></a></li>
+                <li class="Desdin"><a href="#services"><h4>MONTAGE DU DOSSIER</h4></a></li>
+                <li class="Concept"><a href="#services"><h4>SUIVI ADMINISTRATIF</h4></a></li>
+                <li class="System"><a href="#services"><h4>INTÉGRATION</h4></a></li>
+              </ul>
+            </div>
           </div>
-          <div>
-            <div class="text-2xl mb-2">💬</div>
-            <div class="text-sm font-medium text-foreground">WhatsApp</div>
-            <div class="text-xs text-muted-foreground">Disponible 24/7</div>
+        </div>
+
+        <div class="Contact_sec" id="contact">
+          <div class="Contactside">
+            <div class="Center">
+              <h2>Contact</h2>
+              <p>
+                Vous avez un projet Canada ? Écrivez-nous et recevez une réponse rapide pour cadrer
+                vos prochaines étapes.
+              </p>
+              <div class="Line"></div>
+            </div>
           </div>
-          <div>
-            <div class="text-2xl mb-2">📍</div>
-            <div class="text-sm font-medium text-foreground">Localisation</div>
-            <div class="text-xs text-muted-foreground">Montréal, QC</div>
+
+          <div class="Get_sec">
+            <div class="Mid">
+              <div class="Leftside">
+                <form action="#">
+                  <fieldset>
+                    <p><input type="text" value="" placeholder="NOM COMPLET" class="field" /></p>
+                    <p><input type="email" value="" placeholder="EMAIL" class="field" /></p>
+                    <p><input type="text" value="" placeholder="TYPE DE PROJET" class="field" /></p>
+                    <p><textarea cols="2" rows="2" placeholder="DÉCRIVEZ VOTRE BESOIN"></textarea></p>
+                    <p><input type="submit" value="Envoyer" class="button" /></p>
+                  </fieldset>
+                </form>
+              </div>
+
+              <div class="Rightside">
+                <h3>Parlons de votre projet</h3>
+                <address>
+                  CAPITUNE – Export Monde Prestige Inc.<br />
+                  Montréal, Québec, Canada.
+                </address>
+                <address class="Number">
+                  +1 (514) 123-4567<br />
+                  Support du lundi au vendredi
+                </address>
+                <address class="Email">
+                  <a href="mailto:contact@capitune.com">contact@capitune.com</a>
+                </address>
+                <div class="clear"></div>
+                <ul>
+                  <li><a href="#"><img src="/templatemo_473_november/img/facebook-icn.png" alt="facebook" /></a></li>
+                  <li><a href="#"><img src="/templatemo_473_november/img/twitter-icn.png" alt="twitter" /></a></li>
+                  <li><a href="#"><img src="/templatemo_473_november/img/google-plus-icn.png" alt="google plus" /></a></li>
+                </ul>
+              </div>
+            </div>
+
+            <footer>
+              <div class="Cntr">
+                <p>© {new Date().getFullYear()} CAPITUNE – Tous droits réservés.</p>
+              </div>
+            </footer>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-</section>
 
-<FooterCustom client:only="react" />
+  <div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+  </div>
+
+  <script is:inline src="/templatemo_473_november/js/jquery-1.11.0.min.js"></script>
+  <script is:inline src="/templatemo_473_november/js/jquery.sudoSlider.min.js"></script>
+  <script is:inline src="/templatemo_473_november/js/global.js"></script>
+  <script is:inline src="/templatemo_473_november/js/modernizr.js"></script>
 </MainLayout>
 
-<script is:inline>
-  (() => {
-    const runServiceWindowReveal = () => {
-      const cards = Array.from(document.querySelectorAll('#accueil .service-window'));
-      if (!cards.length) return;
+<style is:global>
+  #home .leftside a.secondary-cta {
+    margin-left: 10px;
+    background: transparent;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+  }
 
-      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  #home .leftside a.secondary-cta:hover {
+    background: #ffffff;
+    color: #222;
+  }
 
-      cards.forEach((card, index) => {
-        card.classList.remove('is-visible');
-        card.classList.add('reveal-window');
-        card.style.transitionDelay = `${Math.min(index * 120, 720)}ms`;
-      });
-
-      if (prefersReducedMotion || !('IntersectionObserver' in window)) {
-        cards.forEach((card) => card.classList.add('is-visible'));
-        return;
-      }
-
-      const observer = new IntersectionObserver(
-        (entries, io) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add('is-visible');
-            io.unobserve(entry.target);
-          });
-        },
-        { threshold: 0.2, rootMargin: '0px 0px -8% 0px' }
-      );
-
-      requestAnimationFrame(() => {
-        cards.forEach((card) => observer.observe(card));
-      });
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', runServiceWindowReveal, { once: true });
-    } else {
-      runServiceWindowReveal();
-    }
-
-    document.addEventListener('astro:page-load', runServiceWindowReveal);
-  })();
-</script>
-
-<style>
-section {
-scroll-margin-top: 80px;
-}
-
-.service-window.reveal-window {
-opacity: 0;
-transform: translate3d(0, 24px, 0) scale(0.98);
-transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
-will-change: opacity, transform;
-}
-
-.service-window.reveal-window.is-visible {
-opacity: 1;
-transform: translate3d(0, 0, 0) scale(1);
-}
-
-.hero-main-image {
-opacity: 0;
-transform: scale(1.06);
-animation: heroMainImageReveal 1s cubic-bezier(0.22, 1, 0.36, 1) 180ms forwards;
-will-change: opacity, transform;
-}
-
-@keyframes heroMainImageReveal {
-from {
-opacity: 0;
-transform: scale(1.06);
-}
-to {
-opacity: 1;
-transform: scale(1);
-}
-}
-
-@media (prefers-reduced-motion: reduce) {
-.service-window.reveal-window {
-opacity: 1 !important;
-transform: none !important;
-transition: none !important;
-}
-
-.hero-main-image {
-opacity: 1;
-transform: none;
-animation: none;
-}
-}
+  #contact .Get_sec .Leftside fieldset .button {
+    text-transform: none;
+  }
 </style>
-
-
-
-
-
-
-
-
