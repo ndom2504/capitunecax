@@ -123,6 +123,16 @@ import { baseUrl } from '../lib/base-url';
     showError('Accès refusé. Veuillez réessayer.');
   } else if (oauthError === 'InvalidState') {
     showError('Erreur de sécurité (CSRF). Veuillez réessayer.');
+  } else if (oauthError === 'MissingEmail') {
+    showError("Impossible de récupérer votre email depuis le fournisseur. Vérifiez que l'accès à l'email est autorisé et réessayez.");
+  } else if (oauthError === 'MissingDatabaseUrl') {
+    showError("Base de données non configurée (DATABASE_URL manquant). Ajoutez la variable d'environnement puis réessayez.");
+  } else if (oauthError === 'DatabaseNotInitialized') {
+    showError("Base de données configurée mais non initialisée (tables manquantes). Initialisez le schéma puis réessayez.");
+  } else if (oauthError === 'CallbackErrorGoogle') {
+    showError("Erreur serveur lors du retour Google. Réessayez dans quelques secondes (ou vérifiez les logs de déploiement).");
+  } else if (oauthError === 'CallbackErrorMicrosoft') {
+    showError("Erreur serveur lors du retour Microsoft. Réessayez dans quelques secondes (ou vérifiez les logs de déploiement).");
   } else if (oauthError?.includes('Configuration')) {
     showError(decodeURIComponent(oauthError));
   } else if (oauthError) {
