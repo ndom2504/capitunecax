@@ -3,6 +3,26 @@ import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../..
 
 const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
 
+function mapCallbackError(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err ?? '');
+
+  // Neon / Postgres
+  if (/relation\s+"?\w+"?\s+does\s+not\s+exist/i.test(message) || /42P01/.test(message)) {
+    return 'DatabaseNotInitialized';
+  }
+
+  // D1
+  if (/no\s+such\s+table/i.test(message)) {
+    return 'DatabaseNotInitialized';
+  }
+
+  if (/DATABASE_URL/i.test(message)) {
+    return 'MissingDatabaseUrl';
+  }
+
+  return 'CallbackErrorMicrosoft';
+}
+
 export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
@@ -92,93 +112,105 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     const emailStr = String(email ?? '').toLowerCase().trim();
     const name = String(profile.displayName ?? emailStr).trim();
 
+    if (!emailStr) {
+      return redirect('/connexion?error=MissingEmail');
+    }
+
     const isHttps = origin.startsWith('https');
+
+    const role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
 
     // ── Session D1 si DB disponible (prod Cloudflare) ───────────────────
     const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
-    if (db && emailStr) {
-      const role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
-      const existing = await db
-        .prepare(`SELECT id FROM users WHERE email = ?`)
-        .bind(emailStr)
-        .first<{ id: string }>();
+    if (db) {
+      try {
+        const existing = await db
+          .prepare(`SELECT id FROM users WHERE email = ?`)
+          .bind(emailStr)
+          .first<{ id: string }>();
 
-      const userId = existing?.id ?? uuid();
-      if (!existing) {
-        await db
-          .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'microsoft', ?)`)
-          .bind(userId, emailStr, name, role, profile.id ?? '')
-          .run();
-      } else {
-        await db
-          .prepare(`UPDATE users SET name = COALESCE(NULLIF(?, ''), name), oauth_provider='microsoft', oauth_id=?, updated_at=datetime('now') WHERE id=?`)
-          .bind(name, profile.id ?? '', userId)
-          .run();
+        const userId = existing?.id ?? uuid();
+        if (!existing) {
+          await db
+            .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'microsoft', ?)`)
+            .bind(userId, emailStr, name, role, profile.id ?? '')
+            .run();
+        } else {
+          await db
+            .prepare(`UPDATE users SET name = COALESCE(NULLIF(?, ''), name), oauth_provider='microsoft', oauth_id=?, updated_at=datetime('now') WHERE id=?`)
+            .bind(name, profile.id ?? '', userId)
+            .run();
+        }
+
+        const sessionToken = await createSessionAny(db, userId);
+        cookies.set('capitune_session', sessionToken, {
+          path: '/',
+          httpOnly: true,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        });
+
+        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
+          path: '/',
+          httpOnly: false,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        });
+
+        return redirect('/dashboard');
+      } catch (dbErr) {
+        console.error('[Microsoft OAuth] D1 session/store failed, falling back:', dbErr);
       }
-
-      const sessionToken = await createSessionAny(db, userId);
-      cookies.set('capitune_session', sessionToken, {
-        path: '/',
-        httpOnly: true,
-        secure: isHttps,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-
-      cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
-        path: '/',
-        httpOnly: false,
-        secure: isHttps,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-
-      return redirect('/dashboard');
     }
 
     // ── Session Neon si DATABASE_URL dispo (prod Vercel) ─────────────────
-    if (!db && emailStr && hasNeonDatabase()) {
-      const sql = await getNeonSqlClient();
-      if (!sql) return redirect('/connexion?error=MissingDatabaseUrl');
+    if (!db && hasNeonDatabase()) {
+      try {
+        const sql = await getNeonSqlClient();
+        if (!sql) return redirect('/connexion?error=MissingDatabaseUrl');
 
-      const role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
-      const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
-      const userId = existing[0]?.id ?? uuid();
+        const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
+        const userId = existing[0]?.id ?? uuid();
 
-      if (!existing[0]) {
-        await sql`
-          INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
-          VALUES (${userId}, ${emailStr}, ${name}, ${role}, 'microsoft', ${profile.id ?? ''})
-        `;
-      } else {
-        await sql`
-          UPDATE users
-          SET
-            name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
-            oauth_provider = 'microsoft',
-            oauth_id = ${profile.id ?? ''},
-            role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
-            updated_at = now()
-          WHERE id = ${userId}
-        `;
+        if (!existing[0]) {
+          await sql`
+            INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
+            VALUES (${userId}, ${emailStr}, ${name}, ${role}, 'microsoft', ${profile.id ?? ''})
+          `;
+        } else {
+          await sql`
+            UPDATE users
+            SET
+              name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+              oauth_provider = 'microsoft',
+              oauth_id = ${profile.id ?? ''},
+              role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+              updated_at = now()
+            WHERE id = ${userId}
+          `;
+        }
+
+        const sessionToken = await createSessionAny(null, userId);
+        cookies.set('capitune_session', sessionToken, {
+          path: '/',
+          httpOnly: true,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        });
+        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
+          path: '/',
+          httpOnly: false,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        });
+        return redirect('/dashboard');
+      } catch (dbErr) {
+        console.error('[Microsoft OAuth] Neon session/store failed, falling back:', dbErr);
       }
-
-      const sessionToken = await createSessionAny(null, userId);
-      cookies.set('capitune_session', sessionToken, {
-        path: '/',
-        httpOnly: true,
-        secure: isHttps,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-      cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
-        path: '/',
-        httpOnly: false,
-        secure: isHttps,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30,
-      });
-      return redirect('/dashboard');
     }
 
     // ── Fallback sans DB (ex: vercel/serverless) ────────────────────────
@@ -214,6 +246,6 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     return redirect('/dashboard');
   } catch (err) {
     console.error('[Microsoft OAuth] Callback error:', err);
-    return redirect('/connexion?error=CallbackError');
+    return redirect(`/connexion?error=${mapCallbackError(err)}`);
   }
 };
