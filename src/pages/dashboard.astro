@@ -184,6 +184,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .section-title-block h2{font-size:1.4rem;margin:0 0 8px;color:var(--cap-dark);}
       .title-line{width:50px;height:3px;background:var(--cap-orange);border-radius:2px;margin-bottom:10px;}
       .section-title-block p{color:#777;margin:0;}
+      /* ── ÉQUIPE ── */
+      .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:24px;margin-top:8px;}
+      .team-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);padding:32px 24px;text-align:center;transition:.2s;border:2px solid transparent;}
+      .team-card:hover{border-color:var(--cap-orange);transform:translateY(-3px);box-shadow:0 8px 32px rgba(255,148,8,.12);}
+      .team-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#ff9408,#e67e00);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px;}
+      .team-name{font-size:1.1rem;font-weight:700;color:var(--cap-dark);margin:0 0 4px;}
+      .team-badge{display:inline-block;background:#fff3e0;color:#e67e00;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase;}
+      .team-location{font-size:13px;color:#888;margin:0 0 12px;}
+      .team-bio{font-size:13px;color:#555;line-height:1.6;margin:0;}
+      .team-loading{text-align:center;padding:48px;color:#aaa;font-size:15px;}
+      .team-contact-btn{display:inline-block;margin-top:20px;background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;}
+      .team-contact-btn:hover{background:#e67e00;}
       .toggle-row{display:flex;gap:0;border:2px solid var(--cap-orange);border-radius:10px;overflow:hidden;width:fit-content;margin-bottom:28px;}
       .toggle-row button{padding:9px 24px;border:none;background:#fff;color:var(--cap-orange);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
       .toggle-row button.active{background:var(--cap-orange);color:#fff;}
@@ -423,6 +435,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             </li>
             <li class="dash-nav-item" data-tab="tarifs">
               <a href="#" onclick="switchTab('tarifs'); return false;"><i class="fa fa-tag"></i> Tarifs</a>
+            </li>
+            <li class="dash-nav-item" data-tab="equipe">
+              <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
             </li>
             <li class="dash-nav-item" data-tab="parametres">
               <a href="#" onclick="switchTab('parametres'); return false;"><i class="fa fa-cog"></i> Paramètres</a>
@@ -990,7 +1005,26 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         </div>
       </section>
 
-      <!-- ===== ONGLET 6 : PARAMÈTRES ===== -->
+      <!-- ===== ONGLET 6 : NOTRE ÉQUIPE ===== -->
+      <section class="tab-section" id="tab-equipe">
+        <div class="tab-hero">
+          <div class="tab-hero-inner">
+            <h1><i class="fa fa-users"></i> Notre Équipe</h1>
+            <p>Vos conseillers CAPITUNE — experts en immigration, à votre service.</p>
+          </div>
+        </div>
+        <div class="dash-container">
+          <div class="section-title-block">
+            <h2><i class="fa fa-id-badge" style="color:var(--cap-orange);"></i> Vos conseillers professionnels</h2>
+            <p>Ce sont les experts qui reçoivent et traitent vos demandes. N'hésitez pas à les contacter via la messagerie.</p>
+          </div>
+          <div id="team-grid-container">
+            <div class="team-loading"><i class="fa fa-spinner fa-spin"></i> Chargement de l'équipe…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ONGLET 7 : PARAMÈTRES ===== -->
       <section class="tab-section" id="tab-parametres">
         <div class="tab-hero">
           <div class="tab-hero-inner">
@@ -1313,6 +1347,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       window.scrollTo({top:0,behavior:'smooth'});
       if (tabId==='services') refreshServicesView();
       if (tabId==='paiements') refreshPaiementsView();
+      if (tabId==='equipe') loadTeam();
     };
 
     window.toggleProfileMenu = function() {
@@ -2330,6 +2365,44 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       switchTab('projet');
       showToast('Demande annulée. Vous pouvez démarrer un nouveau projet.', 'info');
     };
+
+    // ============================================================
+    //  NOTRE ÉQUIPE — chargement des profils pros/admins
+    // ============================================================
+    var _teamLoaded = false;
+    function loadTeam() {
+      if (_teamLoaded) return;
+      var container = document.getElementById('team-grid-container');
+      if (!container) return;
+      fetch('/api/team')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          _teamLoaded = true;
+          var members = data.team || [];
+          if (!members.length) {
+            container.innerHTML = '<div class="team-loading"><i class="fa fa-users"></i><br><br>Aucun profil disponible pour le moment.</div>';
+            return;
+          }
+          var html = '<div class="team-grid">';
+          members.forEach(function(m){
+            var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+            html += '<div class="team-card">';
+            html += '<div class="team-avatar">' + (initials||'<i class="fa fa-user"></i>') + '</div>';
+            html += '<p class="team-name">' + (m.name||'Conseiller CAPITUNE') + '</p>';
+            html += '<span class="team-badge"><i class="fa fa-star"></i> Conseiller Pro</span>';
+            if (m.location) html += '<p class="team-location"><i class="fa fa-map-marker"></i> ' + m.location + '</p>';
+            if (m.bio) html += '<p class="team-bio">' + m.bio + '</p>';
+            html += '<button class="team-contact-btn" onclick="switchTab(\'messagerie\')"><i class="fa fa-envelope"></i> Contacter</button>';
+            html += '</div>';
+          });
+          html += '</div>';
+          container.innerHTML = html;
+        })
+        .catch(function(){
+          container.innerHTML = '<div class="team-loading" style="color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> Impossible de charger l\'\u00e9quipe.</div>';
+        });
+    }
+    window.loadTeam = loadTeam;
 
     // ============================================================
     //  TOAST NOTIFICATION
