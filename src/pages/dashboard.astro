@@ -377,6 +377,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .danger-action-row{display:flex;align-items:center;justify-content:space-between;gap:16px;}
       .danger-action-label{margin:0 0 3px;font-size:13px;font-weight:700;color:#333;}
       .danger-action-sub{margin:0;font-size:12px;color:#aaa;line-height:1.4;}
+
+      /* BULLE MESSAGERIE — AGENT INTELLIGENT */
+      .agent-chat-fab{position:fixed;right:22px;bottom:22px;width:56px;height:56px;border-radius:999px;background:var(--cap-orange);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,0.25);z-index:1200;}
+      .agent-chat-fab i{font-size:22px;}
+      .agent-chat-fab:focus{outline:none;box-shadow:0 0 0 4px rgba(255,148,8,0.25),0 10px 30px rgba(0,0,0,0.25);}
+      .agent-chat-fab:hover{filter:brightness(1.02);}
       @media(max-width:768px){
         .form-row,.form-row.cols-3{grid-template-columns:1fr;}
         .packs-grid,.tarifs-grid,.payment-methods{grid-template-columns:1fr 1fr;}
@@ -1148,6 +1154,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </div>
     </footer>
 
+    <button type="button" class="agent-chat-fab" aria-label="Ouvrir la messagerie" title="Messagerie (agent intelligent)" onclick="openAgentChat()">
+      <i class="fa fa-comments"></i>
+    </button>
+
     <script type="text/javascript" src="/templatemo_473_november/js/jquery-1.11.0.min.js"></script>
     <script>
     // ============================================================
@@ -1723,6 +1733,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       input.value='';
       // Persistance D1
       dbSync('/api/messages', 'POST', { content: val, sender: 'user' });
+    };
+
+    window.openAgentChat = function() {
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('messagerie');
+      }
+      setTimeout(function(){
+        var input = document.getElementById('msgInput');
+        if (input && input.focus) input.focus();
+        var chat = document.getElementById('chatMessages');
+        if (chat) chat.scrollTop = chat.scrollHeight;
+      }, 50);
     };
 
     function hideEmptyState() {
