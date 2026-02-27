@@ -406,7 +406,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
 <div id="adm-toast"></div>
 
-<script is:inline>
+<script is:inline define:vars={{ isSuperAdmin, adminId }}>
   var _currentClient = null;
   var _currentTab    = 'messages';
   var _clientData    = null;
@@ -414,8 +414,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   var _search        = '';
   var _scope         = 'me';
   var _debounceTimer = null;
-  var _isSuper       = ${isSuperAdmin ? 'true' : 'false'};
-  var _meId          = ${JSON.stringify(adminId)};
+  var _isSuper       = !!isSuperAdmin;
+  var _meId          = String(adminId || '');
   var _prosLoaded    = false;
 
   // ── Sections ────────────────────────────────────────────────────────────
