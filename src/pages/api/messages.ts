@@ -12,6 +12,7 @@ import {
   hasNeonDatabase,
   uuid,
 } from '../../lib/db';
+import { isPremiumActive } from '../../lib/premium';
 
 export const GET: APIRoute = async ({ cookies, locals }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
@@ -27,6 +28,12 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
 
   const user = await getUserFromSessionFullAny(db, token);
   if (!user) return json({ error: 'Session expirée' }, 401);
+
+  const isPro = String((user as any)?.account_type ?? '') === 'pro';
+  const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  if (!isPro && !isAdmin && !isPremiumActive((user as any)?.premium_expires_at)) {
+    return json({ error: 'Abonnement premium requis', premium_required: true }, 402);
+  }
 
   const project = await getActiveProjectAny(db, user.id);
   if (!project) return json({ messages: [] });
@@ -53,6 +60,12 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
   const user = await getUserFromSessionFullAny(db, token);
   if (!user) return json({ error: 'Session expirée' }, 401);
+
+  const isPro = String((user as any)?.account_type ?? '') === 'pro';
+  const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  if (!isPro && !isAdmin && !isPremiumActive((user as any)?.premium_expires_at)) {
+    return json({ error: 'Abonnement premium requis', premium_required: true }, 402);
+  }
 
   const body = await request.json() as { content?: string; sender?: string; attachments?: string[] };
   const content = String(body.content ?? '').slice(0, 5000).trim();

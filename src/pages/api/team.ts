@@ -5,6 +5,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getNeonSqlClient, hasNeonDatabase, getUserFromSessionAny } from '../../lib/db';
+import { isValidCatalogId } from '../../lib/catalog';
 
 export const GET: APIRoute = async ({ cookies, locals }) => {
   // Authentification requise (client ou admin)
@@ -212,18 +213,19 @@ function safeJsonParsePackServices(input: unknown): Record<string, string[]> {
 }
 
 function sanitizePackServices(obj: Record<string, unknown>): Record<string, string[]> {
-  const allowedPacks = new Set(['essentiel', 'standard', 'premium', 'tourisme']);
-  const allowedServices = new Set(['consultation', 'orientation', 'dossier', 'suivi', 'recherche', 'integration']);
   const out: Record<string, string[]> = {};
+  let packCount = 0;
   for (const [rawPackId, rawList] of Object.entries(obj)) {
-    const packId = String(rawPackId).slice(0, 64);
-    if (!allowedPacks.has(packId)) continue;
+    if (packCount >= 50) break;
+    const packId = String(rawPackId).trim();
+    if (!isValidCatalogId(packId)) continue;
     const list = Array.isArray(rawList) ? rawList : [];
     const cleaned = list
-      .map((x) => String(x))
-      .filter((x) => allowedServices.has(x))
-      .slice(0, 50);
+      .map((x) => String(x).trim())
+      .filter((x) => isValidCatalogId(x))
+      .slice(0, 200);
     out[packId] = Array.from(new Set(cleaned));
+    packCount++;
   }
   return out;
 }

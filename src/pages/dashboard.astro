@@ -207,6 +207,23 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .settings-success-toast.show{display:flex;}
       /* SERVICES */
       .notice-box{background:#fff8f0;border:1px solid #ffd899;border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:28px;font-size:14px;color:#7a4e00;}
+
+      /* DASHBOARD (accueil) */
+      .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:18px 0 8px;}
+      .stat-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);padding:22px 20px;border:1px solid #eee;}
+      .stat-label{font-size:11px;font-weight:800;color:#888;text-transform:uppercase;letter-spacing:.8px;}
+      .stat-value{font-size:28px;font-weight:800;color:var(--cap-dark);margin-top:8px;}
+      .stat-sub{margin-top:8px;font-size:12px;color:#888;}
+      .stat-badge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:700;border-radius:999px;padding:6px 10px;border:1px solid #eee;background:#fafafa;color:#555;}
+      .stat-badge strong{color:var(--cap-orange);}
+      .trend-box{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);padding:24px 22px;border:1px solid #eee;margin-top:18px;}
+      .trend-box h3{margin:0 0 14px;font-size:1.05rem;color:var(--cap-dark);display:flex;align-items:center;gap:10px;}
+      .trend-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+      .trend-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:#fafafa;border:1px solid #eee;}
+      .trend-item span{font-weight:700;color:#444;font-size:13px;}
+      .trend-item small{font-size:12px;color:#888;}
+      @media (max-width:980px){.stats-grid{grid-template-columns:1fr 1fr;}}
+      @media (max-width:520px){.stats-grid{grid-template-columns:1fr;}}
       /* Côté client: ne jamais afficher les prix dans l'onglet Services */
       .dashboard-body:not(.is-pro-mode) #tab-services .pack-price,
       .dashboard-body:not(.is-pro-mode) #tab-services .pack-price-row,
@@ -458,7 +475,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           <ul>
             {isProMode ? (
               <>
-                <li class="dash-nav-item active" data-tab="services">
+                <li class="dash-nav-item active" data-tab="dashboard">
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-line-chart"></i> Dashboard</a>
+                </li>
+                <li class="dash-nav-item" data-tab="services">
                   <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
                 </li>
                 <li class="dash-nav-item" data-tab="messagerie">
@@ -473,7 +493,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               </>
             ) : (
               <>
-                <li class="dash-nav-item active" data-tab="projet">
+                <li class="dash-nav-item active" data-tab="dashboard">
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-line-chart"></i> Dashboard</a>
+                </li>
+                <li class="dash-nav-item" data-tab="projet">
                   <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
                 </li>
                 <li class="dash-nav-item" data-tab="services">
@@ -519,6 +542,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             <ul class="dropdown-menu-list">
               {isProMode ? (
                 <>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-line-chart"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('services'); toggleProfileMenu(); return false;"><i class="fa fa-briefcase"></i> Services</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
                   <li><a href="#" onclick="switchTab('paiements'); toggleProfileMenu(); return false;"><i class="fa fa-credit-card"></i> Paiements</a></li>
@@ -527,6 +551,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                 </>
               ) : (
                 <>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-line-chart"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-life-ring"></i> Support</a></li>
@@ -542,8 +567,83 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
     <main id="dashMain">
 
+      <!-- ===== ONGLET 0 : DASHBOARD (ACCUEIL) ===== -->
+      <section class="tab-section active" id="tab-dashboard">
+        <div class="tab-hero">
+          <div class="tab-hero-inner">
+            <h1><i class="fa fa-line-chart"></i> {isProMode ? 'Accueil Pro' : 'Votre Dashboard'}</h1>
+            <p>{isProMode ? 'Vue d\'ensemble: services, clients, transactions et performance.' : 'Indicateurs et tendances sur vos demandes.'}</p>
+          </div>
+        </div>
+        <div class="dash-container">
+          <div class="notice-box" id="dashboardHint" style="display:none;"><i class="fa fa-info-circle"></i> <span></span></div>
+
+          <div id="dashboardProBlock" style={isProMode ? '' : 'display:none'}>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Services (catalogue)</div>
+                <div class="stat-value" id="dashProServicesCatalog">0</div>
+                <div class="stat-sub">Services proposés: <strong id="dashProServicesOffered">0</strong></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Utilisateurs (clients)</div>
+                <div class="stat-value" id="dashProClients">0</div>
+                <div class="stat-sub">Dossiers: <strong id="dashProProjectsCompleted">0</strong>/<strong id="dashProProjectsTotal">0</strong> terminés</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Transactions</div>
+                <div class="stat-value" id="dashProTransactions">0</div>
+                <div class="stat-sub">Total payé: <strong id="dashProRevenue">0</strong></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Score opérationnel</div>
+                <div class="stat-value"><span id="dashProScore">0</span>/100</div>
+                <div class="stat-badge"><i class="fa fa-bolt"></i> Traitement <strong id="dashProProcessingRate">0%</strong> • Réactivité <strong id="dashProReactivityRate">0%</strong></div>
+                <div class="stat-sub">Messages en attente: <strong id="dashProPending">0</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="dashboardClientBlock" style={isProMode ? 'display:none' : ''}>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Mes demandes</div>
+                <div class="stat-value" id="dashClientRequests">0</div>
+                <div class="stat-sub">En cours: <strong id="dashClientEnCours">0</strong> • Soumis: <strong id="dashClientSoumis">0</strong> • Terminés: <strong id="dashClientTermine">0</strong></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Transactions</div>
+                <div class="stat-value" id="dashClientTransactions">0</div>
+                <div class="stat-sub">Total payé: <strong id="dashClientRevenue">0</strong></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Tendance (plateforme)</div>
+                <div class="stat-value" id="dashClientPlatform30d">0</div>
+                <div class="stat-sub">Demandes non annulées (30 jours)</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Raccourcis</div>
+                <div class="stat-value" style="font-size:16px;margin-top:14px;">
+                  <a href="#" onclick="switchTab('projet'); return false;" style="color:var(--cap-orange);font-weight:800;">Compléter mon projet</a>
+                </div>
+                <div class="stat-sub">Pour accélérer la mise en relation</div>
+              </div>
+            </div>
+
+            <div class="trend-box">
+              <h3><i class="fa fa-map-marker"></i> Destinations prisées (30 jours)</h3>
+              <ul class="trend-list" id="dashTrendingDestinations"></ul>
+            </div>
+            <div class="trend-box">
+              <h3><i class="fa fa-bar-chart"></i> Domaines les plus demandés (30 jours)</h3>
+              <ul class="trend-list" id="dashTrendingDomains"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== ONGLET 1 : PROJET ===== -->
-      <section class={"tab-section" + (isProMode ? "" : " active")} id="tab-projet" style={isProMode ? 'display:none' : ''}>
+      <section class={"tab-section"} id="tab-projet" style={isProMode ? 'display:none' : ''}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-folder-open"></i> Mon Profil Projet</h1>
@@ -794,7 +894,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 2 : SERVICES ===== -->
-      <section class={"tab-section" + (isProMode ? " active" : "")} id="tab-services">
+      <section class={"tab-section"} id="tab-services">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-briefcase"></i> Choisir Mon Service</h1>
@@ -850,79 +950,51 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <h3><i class="fa fa-tags" style="color:var(--cap-orange);"></i> Packs, services & tarifs</h3>
               <p style="margin:0 0 14px;color:#777;">Sélectionnez les services inclus dans chaque pack et renseignez le prix du pack (affiché côté client dans “Voir”).</p>
 
-              <div class="pro-offering-grid">
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Essentiel</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-essentiel" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
+                <div class="pro-offering-grid" id="proOfferingGrid">
+                  <!-- Rendu dynamique via /api/catalog -->
                 </div>
 
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Standard</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-standard" type="number" min="0" step="1" />
+                <div style="margin-top:18px;padding-top:14px;border-top:1px solid #eee;">
+                  <p style="margin:0 0 12px;color:#777;">Ajoutez un nouveau <strong>service</strong> ou un nouveau <strong>pack</strong> au catalogue global (visible côté client).</p>
+                  <div class="info-grid" style="grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="info-cell">
+                      <label>Ajouter / mettre à jour un service</label>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <input id="catalogServiceId" placeholder="ID (ex: consultation-avancee)" />
+                        <input id="catalogServiceName" placeholder="Nom (ex: Consultation avancée)" />
+                        <input id="catalogServiceIcon" placeholder="Icône (ex: 🧩)" />
+                        <input id="catalogServiceBasePrice" type="number" min="0" step="1" placeholder="Prix de base" />
+                      </div>
+                      <textarea id="catalogServiceDesc" placeholder="Description (optionnel)" style="margin-top:10px;min-height:70px;"></textarea>
+                      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                        <button class="btn-submit-projet" type="button" onclick="saveCatalogService()"><i class="fa fa-plus"></i> Enregistrer le service</button>
+                      </div>
+                      <p id="catalogServiceHint" style="margin:10px 0 0;color:#888;font-size:12px;"></p>
                     </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
 
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Premium</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-premium" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Tourisme</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-tourisme" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-integration" value="integration"> Aide à l’installation</label>
+                    <div class="info-cell">
+                      <label>Ajouter / mettre à jour un pack</label>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <input id="catalogPackId" placeholder="ID (ex: express)" />
+                        <input id="catalogPackName" placeholder="Nom (ex: Pack Express)" />
+                        <input id="catalogPackBadge" placeholder="Badge (ex: 📦)" />
+                        <input id="catalogPackPrice" type="number" min="0" step="1" placeholder="Prix du pack" />
+                      </div>
+                      <textarea id="catalogPackDesc" placeholder="Description (optionnel)" style="margin-top:10px;min-height:70px;"></textarea>
+                      <div style="margin-top:10px;">
+                        <div style="font-size:12px;color:#666;margin-bottom:8px;">Services inclus</div>
+                        <div id="catalogPackServices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+                        <label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:12px;color:#666;">
+                          <input id="catalogPackPopular" type="checkbox" /> Populaire
+                        </label>
+                      </div>
+                      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                        <button class="btn-submit-projet" type="button" onclick="saveCatalogPack()"><i class="fa fa-plus"></i> Enregistrer le pack</button>
+                      </div>
+                      <p id="catalogPackHint" style="margin:10px 0 0;color:#888;font-size:12px;"></p>
                     </div>
                   </div>
                 </div>
-              </div>
 
               <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:14px;">
                 <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer packs & tarifs</button>
@@ -965,13 +1037,8 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <div class="title-line"></div>
               <p>Composez votre accompagnement selon vos besoins specifiques.</p>
             </div>
-            <div class="services-carte-grid">
-              <div class="service-carte-item" id="carte-consultation" onclick="toggleCarte('consultation',250)"><div class="service-carte-icon">&#127919;</div><div class="service-carte-name">Consultation Strategique</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Evaluation profil, simulation</div><div class="service-carte-price">250 $</div></div>
-              <div class="service-carte-item" id="carte-orientation" onclick="toggleCarte('orientation',200)"><div class="service-carte-icon">&#128506;</div><div class="service-carte-name">Orientation Programme</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Choix du meilleur programme</div><div class="service-carte-price">200 $</div></div>
-              <div class="service-carte-item" id="carte-dossier" onclick="toggleCarte('dossier',600)"><div class="service-carte-icon">&#128193;</div><div class="service-carte-name">Montage du Dossier</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Collecte, verification, soumission</div><div class="service-carte-price">600 $</div></div>
-              <div class="service-carte-item" id="carte-suivi" onclick="toggleCarte('suivi',400)"><div class="service-carte-icon">&#128202;</div><div class="service-carte-name">Suivi Administratif</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Reponses aux autorites</div><div class="service-carte-price">400 $</div></div>
-              <div class="service-carte-item" id="carte-recherche" onclick="toggleCarte('recherche',300)"><div class="service-carte-icon">&#128269;</div><div class="service-carte-name">Recherche Employeur</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Trouver un parrainage</div><div class="service-carte-price">300 $</div></div>
-              <div class="service-carte-item" id="carte-integration" onclick="toggleCarte('integration',350)"><div class="service-carte-icon">&#127968;</div><div class="service-carte-name">Aide a l Installation</div><div style="font-size:11px;color:#999;margin-bottom:6px;">Logement, banque, reseau</div><div class="service-carte-price">350 $</div></div>
+            <div class="services-carte-grid" id="servicesCarteGrid">
+              <!-- Services injectés par JS via /api/catalog -->
             </div>
           </div>
           <div class="submit-service-bar" id="serviceSubmitBar">
@@ -1313,6 +1380,19 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                     <input type="text" id="settings-location" placeholder="Ex: Paris, France">
                   </div>
                 </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Devise</label>
+                    <select id="settings-currency">
+                      <option value="CAD">CAD</option>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                    </select>
+                    <p style="font-size:11px;color:#aaa;margin:6px 0 0;">Utilisée pour l’affichage des montants.</p>
+                  </div>
+                </div>
                 <div class="form-row cols-1">
                   <div class="form-group">
                     <label>Bio courte <span style="font-size:11px;color:#aaa;">(optionnel)</span></label>
@@ -1406,9 +1486,17 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     <div class="modal-overlay" id="modalPaiement">
       <div class="modal-box">
         <i class="fa fa-lock modal-icon"></i>
-        <h3>Paiement securise</h3>
-        <p>Integration Stripe et PayPal en cours de configuration. Vous pouvez effectuer un virement bancaire ou contacter votre conseiller.</p>
-        <button class="btn-modal" onclick="closeModal()">Fermer</button>
+        <h3>Abonnement Premium</h3>
+        <p style="margin:0 0 10px;">L’accès à la <strong>messagerie</strong>, au bouton <strong>Contacter</strong> et au <strong>chat</strong> est réservé aux comptes Premium.</p>
+        <p style="margin:0 0 16px;color:#777;">Prix : <strong>100 CAD / an</strong>.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn-modal" style="min-width:210px;" onclick="startPremiumStripe()"><i class="fa fa-credit-card"></i> Payer par carte (Stripe)</button>
+        </div>
+        <div id="premiumPayPalWrap" style="margin-top:12px;display:flex;justify-content:center;">
+          <div id="premiumPayPalButtons"></div>
+        </div>
+        <p id="premiumHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
+        <button class="btn-modal" style="background:#aaa;margin-top:14px;" onclick="closeModal()">Fermer</button>
       </div>
     </div>
 
@@ -1433,6 +1521,137 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     // CAPITUNE DASHBOARD  Logique complete du flux utilisateur
     // Ordre : Projet -> Services -> Messagerie -> Paiements -> Suivi
     // ============================================================
+
+    // État utilisateur (devise + premium)
+    window.__currencyCode = 'CAD';
+    window.__premiumActive = false;
+    window.__premiumExpiresAt = null;
+
+    function formatMoney(amount) {
+      var n = Number(amount);
+      if (!Number.isFinite(n)) n = 0;
+      var code = String(window.__currencyCode || 'CAD').toUpperCase();
+      try {
+        return new Intl.NumberFormat('fr-CA', { style: 'currency', currency: code }).format(n);
+      } catch (_e) {
+        return n.toLocaleString('fr-CA') + ' ' + code;
+      }
+    }
+
+    function escHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, function(c) {
+        return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;';
+      });
+    }
+
+    function setPremiumHint(msg, ok) {
+      var el = document.getElementById('premiumHint');
+      if (!el) return;
+      el.textContent = msg || '';
+      el.style.color = ok ? '#27ae60' : '#e74c3c';
+    }
+
+    function premiumRequired() {
+      if (typeof isProModeUI === 'function' && isProModeUI()) return false;
+      return !window.__premiumActive;
+    }
+
+    window.openPremiumModal = function(reason) {
+      var modal = document.getElementById('modalPaiement');
+      if (modal) modal.classList.add('open');
+      setPremiumHint('', true);
+      // Initialiser PayPal boutons (si SDK disponible)
+      setTimeout(function(){
+        try { if (window.ensurePremiumPayPalButtons) window.ensurePremiumPayPalButtons(); } catch(_e) {}
+      }, 50);
+    };
+
+    window.startPremiumStripe = async function() {
+      try {
+        setPremiumHint('Redirection vers Stripe…', true);
+        var r = await fetch('/api/premium/stripe-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        var j = await r.json().catch(function(){ return {}; });
+        if (!r.ok || !j.url) { setPremiumHint(j.error || 'Impossible de démarrer le paiement Stripe.', false); return; }
+        window.location.href = j.url;
+      } catch (e) {
+        setPremiumHint('Erreur réseau.', false);
+      }
+    };
+
+    window.ensurePremiumPayPalButtons = function() {
+      var wrap = document.getElementById('premiumPayPalWrap');
+      var root = document.getElementById('premiumPayPalButtons');
+      if (!wrap || !root) return;
+      if (!window.paypal || typeof window.paypal.Buttons !== 'function') {
+        // Si PayPal n'est pas chargé/configuré, on cache simplement le bloc
+        wrap.style.display = 'none';
+        return;
+      }
+      wrap.style.display = 'flex';
+      if (root.getAttribute('data-rendered') === '1') return;
+      root.setAttribute('data-rendered', '1');
+
+      window.paypal.Buttons({
+        style: { layout: 'vertical', label: 'paypal' },
+        createOrder: function() {
+          return fetch('/api/premium/paypal-create-order', { method: 'POST' })
+            .then(function(res){ return res.json().then(function(j){ return { ok: res.ok, j: j }; }); })
+            .then(function(out){
+              if (!out.ok || !out.j || !out.j.id) throw new Error(out.j && out.j.error ? out.j.error : 'Création PayPal impossible');
+              return out.j.id;
+            });
+        },
+        onApprove: function(data) {
+          setPremiumHint('Confirmation PayPal…', true);
+          return fetch('/api/premium/paypal-capture-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: data.orderID })
+          })
+            .then(function(res){ return res.json().then(function(j){ return { ok: res.ok, j: j }; }); })
+            .then(function(out){
+              if (!out.ok || !out.j || !out.j.ok) throw new Error(out.j && out.j.error ? out.j.error : 'Capture PayPal impossible');
+              window.__premiumActive = true;
+              window.__premiumExpiresAt = out.j.premium_expires_at || null;
+              setPremiumHint('Premium activé ✓', true);
+              try { if (window.closeModal) window.closeModal(); } catch(_e) {}
+              showToast('Premium activé ✓', 'success');
+            })
+            .catch(function(err){ setPremiumHint(err.message || 'Erreur PayPal.', false); });
+        },
+        onError: function(err) {
+          setPremiumHint((err && err.message) ? err.message : 'Erreur PayPal.', false);
+        }
+      }).render('#premiumPayPalButtons');
+    };
+
+    async function confirmStripePremiumIfNeeded() {
+      try {
+        var params = new URLSearchParams(window.location.search || '');
+        var status = params.get('premium');
+        var sessionId = params.get('session_id');
+        if (status !== 'success' || !sessionId) return;
+        var r = await fetch('/api/premium/stripe-confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionId })
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if (!r.ok || !j.ok) return;
+        window.__premiumActive = true;
+        window.__premiumExpiresAt = j.premium_expires_at || null;
+        showToast('Premium activé ✓', 'success');
+        // Nettoyer l'URL
+        try {
+          params.delete('premium');
+          params.delete('session_id');
+          var clean = window.location.pathname + (params.toString() ? ('?' + params.toString()) : '');
+          window.history.replaceState({}, '', clean);
+        } catch (_e) {}
+      } catch (_e) {
+        // ignore
+      }
+    }
 
     var PACKS = [
       /* ===================== TOURISME ===================== */
@@ -1519,24 +1738,24 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         var detailSvcs = p.services.map(function(s) {
           return '<label class="pack-svc-item">'
             + '<input type="checkbox" class="option" data-pid="'+p.id+'" data-sid="'+s.id+'" data-price="'+s.price+'" onchange="togglePackSvc(\''+p.id+'\',\''+s.id+'\','+s.price+', this)">'
-            + ' ' + s.name
-            + '<span class="option-price">'+s.price.toLocaleString('fr-CA')+'\u00a0$</span>'
+            + ' ' + escHtml(s.name)
+            + '<span class="option-price">'+formatMoney(s.price)+'</span>'
             + '</label>';
         }).join('');
 
-        var descHtml = (p.desc || '');
+        var descHtml = escHtml(p.desc || '');
         descHtml = descHtml.replace(/de\s+(A\s+(?:à|a)\s+Z)/gi, function(_m, grp) {
-          return 'de <span class="nowrap">' + grp + '</span>';
+          return 'de <span class="nowrap">' + escHtml(grp) + '</span>';
         });
 
         return (
           '<div class="pack-card" data-pack="'+p.id+'" id="pack-'+p.id+'" onclick="if(!event.target.closest(\'.pack-svc-item\')) setPackMode(\''+p.id+'\','+p.price+',\'full\')">'
           + '<div class="pack-head">'
-          + '<h4>'+p.name+'</h4>'
+          + '<h4>'+escHtml(p.name)+'</h4>'
           + '<p class="text-muted">'+descHtml+'</p>'
           + '</div>'
           + '<div class="pack-body">'
-          + '<div class="pack-price" data-base="'+p.price+'">'+p.price.toLocaleString('fr-CA')+' $</div>'
+          + '<div class="pack-price" data-base="'+p.price+'">'+formatMoney(p.price)+'</div>'
           + '<hr>'
           + '<div>'
           + detailSvcs
@@ -1546,6 +1765,221 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         );
       }).join('');
     }
+
+    function restorePackOptionChecks() {
+      try {
+        var items = ST.packItemsSelected || {};
+        document.querySelectorAll('.option').forEach(function(cb){
+          var pid = cb.getAttribute('data-pid');
+          var sid = cb.getAttribute('data-sid');
+          if (!pid || !sid) return;
+          cb.checked = !!(items[pid] && items[pid][sid]);
+        });
+      } catch(_e) {}
+    }
+
+    function renderCarteServicesFromCatalog() {
+      var grid = document.getElementById('servicesCarteGrid');
+      if (!grid) return;
+      var catalog = window.__catalog;
+      if (!catalog || !Array.isArray(catalog.services)) return;
+      grid.innerHTML = catalog.services.map(function(s){
+        var id = s.id;
+        var price = Number(s.basePrice || 0);
+        var icon = s.icon || '🧩';
+        var desc = s.description || '';
+        return '<div class="service-carte-item" id="carte-'+id+'" onclick="toggleCarte(\''+id+'\','+price+')">'
+          + '<div class="service-carte-icon">'+escHtml(icon)+'</div>'
+          + '<div class="service-carte-name">'+escHtml(s.name)+'</div>'
+          + (desc ? ('<div style="font-size:11px;color:#999;margin-bottom:6px;">'+escHtml(desc)+'</div>') : '')
+          + '<div class="service-carte-price">'+formatMoney(price)+'</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    function renderProOfferingFromCatalog() {
+      var root = document.getElementById('proOfferingGrid');
+      if (!root) return;
+      var catalog = window.__catalog;
+      if (!catalog || !Array.isArray(catalog.packages) || !Array.isArray(catalog.services)) return;
+      var svcs = catalog.services.slice();
+      var packs = catalog.packages.slice();
+
+      var packSvcs = window.__proInitialPackServices && typeof window.__proInitialPackServices === 'object' ? window.__proInitialPackServices : {};
+      var packPrices = window.__proInitialPackPrices && typeof window.__proInitialPackPrices === 'object' ? window.__proInitialPackPrices : {};
+
+      root.innerHTML = packs.map(function(pk){
+        var priceVal = (typeof packPrices[pk.id] === 'number' && Number.isFinite(packPrices[pk.id])) ? String(packPrices[pk.id]) : '';
+        var included = Array.isArray(packSvcs[pk.id]) ? packSvcs[pk.id] : [];
+        var checks = svcs.map(function(s){
+          var checked = included.indexOf(s.id) !== -1;
+          var cbId = 'proPackSvc-'+pk.id+'-'+s.id;
+          return '<label class="langue-checkbox" style="user-select:none;">'
+            + '<input type="checkbox" id="'+cbId+'" value="'+s.id+'" '+(checked?'checked':'')+'>'
+            + ' '+escHtml(s.name)
+            + '</label>';
+        }).join('');
+        return '<div class="pro-offering-pack">'
+          + '<div class="pro-offering-head">'+escHtml(pk.name)+'</div>'
+          + '<div class="pro-offering-body">'
+          + '<div class="pro-offering-price">'
+          + '<label>Prix ('+String(window.__currencyCode||'CAD').toUpperCase()+')</label>'
+          + '<input id="proPackPrice-'+pk.id+'" type="number" min="0" step="1" value="'+priceVal+'" />'
+          + '</div>'
+          + '<div class="pro-offering-services">'+checks+'</div>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+
+      // Injecter les checkboxes services pour le formulaire "Ajouter pack"
+      var packServicesWrap = document.getElementById('catalogPackServices');
+      if (packServicesWrap) {
+        packServicesWrap.innerHTML = svcs.map(function(s){
+          var cid = 'catPackSvc-'+s.id;
+          return '<label class="langue-checkbox" style="user-select:none;">'
+            + '<input type="checkbox" id="'+cid+'" value="'+s.id+'"> '
+            + escHtml(s.name)
+            + '</label>';
+        }).join('');
+      }
+    }
+
+    async function loadCatalog() {
+      try {
+        var r = await fetch('/api/catalog', { headers: { 'Accept': 'application/json' } });
+        if (!r.ok) return null;
+        var j = await r.json().catch(function(){ return null; });
+        if (!j) return null;
+        window.__catalog = j;
+        // Construire map services
+        try {
+          window.__catalogServiceMap = {};
+          if (Array.isArray(j.services)) {
+            j.services.forEach(function(s){ if (s && s.id) window.__catalogServiceMap[s.id] = s; });
+          }
+        } catch(_e) {}
+
+        // Convertir en PACKS pour la vue client
+        if (Array.isArray(j.packages) && Array.isArray(j.services)) {
+          var svcMap = {};
+          j.services.forEach(function(s){ svcMap[s.id] = s; });
+          PACKS = j.packages.map(function(p){
+            var services = Array.isArray(p.services) ? p.services : [];
+            return {
+              id: p.id,
+              name: p.name,
+              badge: p.badge || '📦',
+              desc: p.description || '',
+              price: Number(p.price || 0),
+              popular: !!p.popular,
+              services: services.map(function(sid){
+                var s = svcMap[sid] || { id: sid, name: sid, basePrice: 0 };
+                return { id: sid, name: s.name || sid, price: Number(s.basePrice || 0) };
+              })
+            };
+          });
+        }
+        return j;
+      } catch(_e) {
+        return null;
+      }
+    }
+
+    function rerenderServicesUI() {
+      renderPacks();
+      renderCarteServicesFromCatalog();
+      refreshServicesView();
+      restorePackOptionChecks();
+      refreshPaiementsView();
+    }
+
+    async function initCatalogAndUI() {
+      var cat = await loadCatalog();
+      if (cat) {
+        renderProOfferingFromCatalog();
+        rerenderServicesUI();
+      }
+    }
+
+    async function catalogManage(payload) {
+      var r = await fetch('/api/catalog/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var j = await r.json().catch(function(){ return {}; });
+      if (!r.ok || (j && j.error)) {
+        var msg = (j && j.error) ? j.error : 'Erreur lors de la mise à jour du catalogue.';
+        throw new Error(msg);
+      }
+      return j;
+    }
+
+    window.saveCatalogService = async function() {
+      try {
+        setHint('catalogServiceHint', 'Enregistrement…', true);
+        var id = (document.getElementById('catalogServiceId') || {}).value || '';
+        var name = (document.getElementById('catalogServiceName') || {}).value || '';
+        var description = (document.getElementById('catalogServiceDesc') || {}).value || '';
+        var icon = (document.getElementById('catalogServiceIcon') || {}).value || '';
+        var basePriceRaw = (document.getElementById('catalogServiceBasePrice') || {}).value;
+        var basePrice = parseMoney(basePriceRaw);
+        await catalogManage({
+          action: 'upsert_service',
+          service: {
+            id: String(id || '').trim(),
+            name: String(name || '').trim(),
+            description: String(description || '').trim(),
+            icon: String(icon || '').trim(),
+            basePrice: basePrice === null ? 0 : basePrice
+          }
+        });
+        setHint('catalogServiceHint', 'Service enregistré ✓', true);
+        await initCatalogAndUI();
+      } catch (e) {
+        setHint('catalogServiceHint', (e && e.message) ? e.message : 'Erreur.', false);
+      }
+    };
+
+    window.saveCatalogPack = async function() {
+      try {
+        setHint('catalogPackHint', 'Enregistrement…', true);
+        var id = (document.getElementById('catalogPackId') || {}).value || '';
+        var name = (document.getElementById('catalogPackName') || {}).value || '';
+        var description = (document.getElementById('catalogPackDesc') || {}).value || '';
+        var badge = (document.getElementById('catalogPackBadge') || {}).value || '';
+        var priceRaw = (document.getElementById('catalogPackPrice') || {}).value;
+        var price = parseMoney(priceRaw);
+        var popular = !!((document.getElementById('catalogPackPopular') || {}).checked);
+
+        var serviceIds = [];
+        document.querySelectorAll('[id^="catPackSvc-"]').forEach(function(cb){
+          try { if (cb && cb.checked && cb.value) serviceIds.push(String(cb.value)); } catch(_e) {}
+        });
+
+        await catalogManage({
+          action: 'upsert_package',
+          pkg: {
+            id: String(id || '').trim(),
+            name: String(name || '').trim(),
+            description: String(description || '').trim(),
+            badge: String(badge || '').trim(),
+            price: price === null ? 0 : price,
+            popular: popular
+          }
+        });
+        await catalogManage({
+          action: 'set_package_services',
+          packageId: String(id || '').trim(),
+          serviceIds: serviceIds
+        });
+
+        setHint('catalogPackHint', 'Pack enregistré ✓', true);
+        await initCatalogAndUI();
+      } catch (e) {
+        setHint('catalogPackHint', (e && e.message) ? e.message : 'Erreur.', false);
+      }
+    };
 
     window.togglePackDetail = function(packId) {
       var panel = document.getElementById('svclist-'+packId);
@@ -1580,10 +2014,85 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       if (sec) sec.classList.add('active');
       document.querySelectorAll('.dash-nav-item[data-tab="'+tabId+'"]').forEach(function(n){n.classList.add('active');});
       window.scrollTo({top:0,behavior:'smooth'});
+      if (tabId==='dashboard') refreshDashboardView();
       if (tabId==='services') refreshServicesView();
       if (tabId==='paiements') refreshPaiementsView();
       if (tabId==='equipe') loadTeam();
     };
+
+    async function refreshDashboardView(){
+      var box = document.getElementById('dashboardHint');
+      var boxText = box ? box.querySelector('span') : null;
+      function showHint(msg){ if(!box||!boxText) return; box.style.display=''; boxText.textContent=msg||''; }
+      function hideHint(){ if(!box) return; box.style.display='none'; }
+      function setTxt(id, v){ var el=document.getElementById(id); if(el) el.textContent=String(v ?? ''); }
+      function setHtml(id, html){ var el=document.getElementById(id); if(el) el.innerHTML=html; }
+      function fmtPct(x){ var n=Number(x||0); if(!Number.isFinite(n)) n=0; return Math.round(n*100)+'%'; }
+      function fmtMoneyValue(x){
+        try { return (typeof formatMoney==='function') ? formatMoney(Number(x||0)) : String(x||0); }
+        catch(_e){ return String(x||0); }
+      }
+
+      try {
+        hideHint();
+        var resp = await fetch('/api/dashboard/stats' + (window.location.search||''), { headers: { 'Accept':'application/json' } });
+        var payload = await resp.json().catch(function(){ return {}; });
+        if (!resp.ok || payload.error) throw new Error(payload.error || 'Impossible de charger le dashboard');
+
+        var isPro = payload.mode === 'pro';
+        var proBlock = document.getElementById('dashboardProBlock');
+        var clBlock = document.getElementById('dashboardClientBlock');
+        if (proBlock) proBlock.style.display = isPro ? '' : 'none';
+        if (clBlock) clBlock.style.display = isPro ? 'none' : '';
+
+        if (isPro) {
+          var s = payload.pro || {};
+          setTxt('dashProServicesCatalog', s.services_catalog ?? 0);
+          setTxt('dashProServicesOffered', s.services_offered ?? 0);
+          setTxt('dashProClients', s.clients ?? 0);
+          setTxt('dashProTransactions', s.transactions_paid ?? 0);
+          setTxt('dashProRevenue', fmtMoneyValue(s.revenue_paid ?? 0));
+          setTxt('dashProProjectsTotal', s.projects_total ?? 0);
+          setTxt('dashProProjectsCompleted', s.projects_completed ?? 0);
+          setTxt('dashProPending', s.pending_conversations ?? 0);
+          setTxt('dashProScore', s.operational_score ?? 0);
+          setTxt('dashProProcessingRate', fmtPct(s.processing_rate ?? 0));
+          setTxt('dashProReactivityRate', fmtPct(s.reactivity_rate ?? 0));
+          return;
+        }
+
+        var c = payload.client || {};
+        setTxt('dashClientRequests', c.my_requests_total ?? 0);
+        var bs = c.my_requests_by_status || {};
+        setTxt('dashClientEnCours', bs.en_cours ?? 0);
+        setTxt('dashClientSoumis', bs.soumis ?? 0);
+        setTxt('dashClientTermine', bs.termine ?? 0);
+        setTxt('dashClientTransactions', c.my_transactions_paid ?? 0);
+        setTxt('dashClientRevenue', fmtMoneyValue(c.my_revenue_paid ?? 0));
+        setTxt('dashClientPlatform30d', c.platform_requests_30d ?? 0);
+
+        var dest = Array.isArray(c.trending_destinations) ? c.trending_destinations : [];
+        var dom = Array.isArray(c.trending_domains) ? c.trending_domains : [];
+        setHtml('dashTrendingDestinations', dest.length
+          ? dest.map(function(it){
+              var label = String((it && it.label) ? it.label : '').trim() || '—';
+              var count = Number((it && it.count) ? it.count : 0) || 0;
+              return '<li class="trend-item"><span>'+label+'</span><small>'+count+' demande(s)</small></li>';
+            }).join('')
+          : '<li class="trend-item"><span>Pas encore de données</span><small>—</small></li>'
+        );
+        setHtml('dashTrendingDomains', dom.length
+          ? dom.map(function(it){
+              var label = String((it && it.label) ? it.label : '').trim() || '—';
+              var count = Number((it && it.count) ? it.count : 0) || 0;
+              return '<li class="trend-item"><span>'+label+'</span><small>'+count+' demande(s)</small></li>';
+            }).join('')
+          : '<li class="trend-item"><span>Pas encore de données</span><small>—</small></li>'
+        );
+      } catch (e) {
+        showHint((e && e.message) ? e.message : 'Erreur lors du chargement du dashboard');
+      }
+    }
 
     window.toggleProfileMenu = function() {
       document.getElementById('profileDropdown').classList.toggle('open');
@@ -1622,35 +2131,15 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         var comp = document.getElementById('proCompetences'); if (comp) comp.value = p.pro_competences || '';
         var exp = document.getElementById('proExperienceYears'); if (exp) exp.value = (p.pro_experience_years ?? '') === null ? '' : String(p.pro_experience_years ?? '');
 
-        // Packs -> services
+        // Packs -> services (dynamique)
         window.__proInitialPackServices = (p.pro_pack_services && typeof p.pro_pack_services === 'object') ? p.pro_pack_services : {};
-        var packSvcs = window.__proInitialPackServices || {};
-        var packs = ['essentiel','standard','premium','tourisme'];
-        var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
-        packs.forEach(function(pk){
-          var arr = Array.isArray(packSvcs[pk]) ? packSvcs[pk] : [];
-          svcIds.forEach(function(sid){
-            var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
-            if (cb) cb.checked = arr.indexOf(sid) !== -1;
-          });
-        });
 
         var prices = p.pro_pack_prices && typeof p.pro_pack_prices === 'object' ? p.pro_pack_prices : {};
         window.__proInitialPackPrices = prices;
-        var map = {
-          essentiel:['proPackPrice-essentiel','price-essentiel'],
-          standard:['proPackPrice-standard','price-standard'],
-          premium:['proPackPrice-premium','price-premium'],
-          tourisme:['proPackPrice-tourisme','price-tourisme']
-        };
-        Object.keys(map).forEach(function(k){
-          var v = prices[k];
-          map[k].forEach(function(id){
-            var el=document.getElementById(id);
-            if(!el) return;
-            el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
-          });
-        });
+        // Laisser le rendu dynamique positionner les inputs si le catalogue est chargé
+        if (window.__catalog) {
+          renderProOfferingFromCatalog();
+        }
       } catch(e) {}
 
       // Fallback statut
@@ -1678,28 +2167,34 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (lat !== undefined && lat !== null && String(lat).trim() !== '') body.location_lat = Number(lat);
         if (lng !== undefined && lng !== null && String(lng).trim() !== '') body.location_lng = Number(lng);
 
-        // Packs -> services
-        var packs = ['essentiel','standard','premium','tourisme'];
-        var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
+        // Packs -> services (dynamique depuis DOM)
         var packServices = {};
         var anyChecked = false;
-        packs.forEach(function(pk){
-          var arr = [];
-          svcIds.forEach(function(sid){
-            var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
-            if (cb && cb.checked) { arr.push(sid); anyChecked = true; }
-          });
-          if (arr.length) packServices[pk] = arr;
+        document.querySelectorAll('[id^="proPackSvc-"]').forEach(function(cb){
+          try {
+            if (!cb || !cb.id) return;
+            if (!cb.checked) return;
+            var parts = cb.id.split('-');
+            // proPackSvc-{packId}-{serviceId...}
+            if (parts.length < 3) return;
+            var packId = parts[1];
+            var svcId = parts.slice(2).join('-');
+            if (!packServices[packId]) packServices[packId] = [];
+            packServices[packId].push(svcId);
+            anyChecked = true;
+          } catch(_e) {}
         });
 
-        // Packs -> prix
+        // Packs -> prix (dynamique)
         var prices = {};
         var anyPrice = false;
-        packs.forEach(function(pk){
-          var el = document.getElementById('proPackPrice-'+pk) || document.getElementById('price-'+pk);
-          if (!el) return;
-          var v = parseMoney(el.value);
-          if (v !== null) { prices[pk] = v; anyPrice = true; }
+        document.querySelectorAll('[id^="proPackPrice-"]').forEach(function(inp){
+          try {
+            if (!inp || !inp.id) return;
+            var pk = inp.id.replace('proPackPrice-','');
+            var v = parseMoney(inp.value);
+            if (v !== null) { prices[pk] = v; anyPrice = true; }
+          } catch(_e) {}
         });
 
         // N'envoyer pack_services que si on a des données (pour éviter d'écraser un profil existant par inadvertance)
@@ -1753,8 +2248,17 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           } catch(_e) {}
 
           showToast('Position enregistrée (vous pouvez sauvegarder).', 'success');
-        }, function(){
-          showToast('Autorisation refusée ou erreur de géolocalisation.', 'error');
+        }, function(err){
+          var msg = 'Erreur de géolocalisation.';
+          try {
+            if (err && err.code === 1) msg = 'Autorisation refusée. Vérifiez les permissions du navigateur (et du système) puis réessayez.';
+            else if (err && err.code === 2) msg = 'Position indisponible. Vérifiez votre connexion et vos services de localisation.';
+            else if (err && err.code === 3) msg = 'Délai dépassé. Réessayez (ou désactivez le mode économie d\'énergie).';
+          } catch(_e) {}
+          try {
+            if (window.isSecureContext === false) msg += ' La géolocalisation nécessite HTTPS.';
+          } catch(_e2) {}
+          showToast(msg, 'error');
         }, { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
       } catch(_e) {
         showToast('Erreur de géolocalisation.', 'error');
@@ -1786,6 +2290,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       renderPacks();
       renderTarifs();
       initProMode();
+      initCatalogAndUI();
+      refreshDashboardView();
+      confirmStripePremiumIfNeeded();
       try {
         var c = document.cookie.split(';').map(function(x){return x.trim();}).find(function(x){return x.startsWith('capitune_user=');});
         if (c) {
@@ -2147,7 +2654,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     function updateServiceTotal() {
       var total=ST.packPrice;
       Object.values(ST.carte).forEach(function(p){total+=p;});
-      document.getElementById('serviceTotalAmount').textContent=total.toLocaleString('fr-CA')+' $';
+      document.getElementById('serviceTotalAmount').textContent=formatMoney(total);
       var btn=document.getElementById('btnSubmitService');
       if(btn) btn.disabled=(total===0);
     }
@@ -2184,9 +2691,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       ST.soumis=true;
       markStepDone('step-services'); markStepActive('step-messagerie');
       // Message auto dans le chat
-      var pn={'tourisme':'Pack Tourisme (250 $)','essentiel':'Pack Essentiel (250 $)','standard':'Pack Standard (750 $)','premium':'Pack Premium (1 250 $)'};
       var tn={'rp':'Résidence Permanente','travail':'Visa Travail','etudes':'Permis Études','famille':'Regroupement Familial','investissement':'Immigration Investisseur','refugie':'Protection Internationale','tourisme':'Visa Tourisme / Visiteur'};
-      var svcLabel=ST.pack?(pn[ST.pack]||ST.pack):'Services a la carte ('+total.toLocaleString('fr-CA')+' $)';
+      var pkObj = ST.pack ? PACKS.find(function(p){ return p.id===ST.pack; }) : null;
+      var svcLabel=ST.pack?( (pkObj ? pkObj.name : ST.pack) + ' ('+formatMoney(total)+')' ):'Services a la carte ('+formatMoney(total)+')';
       var projType=tn[ST.projet.type]||ST.projet.type;
       appendReceivedMessage('Bonjour ! Nous avons bien recu votre projet ('+projType+') et votre selection ('+svcLabel+'). Un conseiller vous contactera sous 24-48h pour convenir d une rencontre. En attendant, posez-nous vos questions ici !');
       var n=document.getElementById('projet-soumis-notice'); if(n) n.style.display='block';
@@ -2205,6 +2712,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     };
 
     window.openAgentChat = function() {
+      if (premiumRequired()) { window.openPremiumModal('chat'); return; }
       if (typeof window.switchTab === 'function') {
         window.switchTab('messagerie');
       }
@@ -2392,6 +2900,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     // Patch switchTab pour vider les messages en attente à l'ouverture de messagerie
     var _origSwitchTab = window.switchTab;
     window.switchTab = function(tabId) {
+      if (tabId === 'messagerie' && premiumRequired()) {
+        window.openPremiumModal('messagerie');
+        return;
+      }
       _origSwitchTab(tabId);
       if (tabId === 'messagerie' && _pendingBotMsgs.length > 0) {
         var tipDiv3 = showTypingIndicator();
@@ -2413,16 +2925,22 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var linesEl=document.getElementById('payment-lines');
       if(linesEl){
         linesEl.innerHTML='';
-        var pn2={'essentiel':'Pack Essentiel','standard':'Pack Standard','premium':'Pack Premium'};
-        if(ST.pack) linesEl.innerHTML+='<div class="payment-line"><span>'+(pn2[ST.pack]||ST.pack)+'</span><span>'+ST.packPrice.toLocaleString('fr-CA')+' $</span></div>';
-        var cl={'consultation':'Consultation Strat\u00e9gique','orientation':'Orientation Programme','dossier':'Montage Dossier','suivi':'Suivi Administratif','recherche':'Recherche Employeur','integration':'Aide Installation'};
-        Object.entries(ST.carte).forEach(function(e){linesEl.innerHTML+='<div class="payment-line"><span>'+(cl[e[0]]||e[0])+'</span><span>'+e[1].toLocaleString('fr-CA')+' $</span></div>';});
+        if(ST.pack) {
+          var pk = PACKS.find(function(p){return p.id===ST.pack;});
+          linesEl.innerHTML+='<div class="payment-line"><span>'+(pk ? pk.name : ST.pack)+'</span><span>'+formatMoney(ST.packPrice)+'</span></div>';
+        }
+        Object.entries(ST.carte).forEach(function(e){
+          var sid = e[0];
+          var svc = window.__catalogServiceMap && window.__catalogServiceMap[sid] ? window.__catalogServiceMap[sid] : null;
+          var label = svc && svc.name ? svc.name : sid;
+          linesEl.innerHTML+='<div class="payment-line"><span>'+label+'</span><span>'+formatMoney(e[1])+'</span></div>';
+        });
       }
-      var ts=total.toLocaleString('fr-CA')+' $';
+      var ts=formatMoney(total);
       var te=document.getElementById('payment-total-amount'); if(te) te.textContent=ts;
       var ba=document.getElementById('pay-btn-amount'); if(ba) ba.textContent=ts;
       // Mettre \u00e0 jour montant virement
-      var tamt=document.getElementById('transfer-amount'); if(tamt) tamt.textContent=total.toLocaleString('fr-CA')+' $ CAD';
+      var tamt=document.getElementById('transfer-amount'); if(tamt) tamt.textContent=ts + ' ' + String(window.__currencyCode||'CAD').toUpperCase();
       var tref=document.getElementById('transfer-ref');
       if(tref&&tref.textContent==='INV-...') tref.textContent='INV-'+(Date.now().toString().slice(-8));
       markStepActive('step-paiements');
@@ -2675,10 +3193,13 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var phone    = (document.getElementById('settings-phone')    ||{}).value || '';
       var location = (document.getElementById('settings-location') ||{}).value || '';
       var bio      = (document.getElementById('settings-bio')      ||{}).value || '';
+      var currency = (document.getElementById('settings-currency') ||{}).value || 'CAD';
       var prefs = { name: name, phone: phone, location: location, bio: bio };
       localStorage.setItem('capitune_prefs', JSON.stringify(prefs));
       // Persistance D1
-      dbSync('/api/user/profile', 'PUT', { name: name, phone: phone, location: location, bio: bio });
+      dbSync('/api/user/profile', 'PUT', { name: name, phone: phone, location: location, bio: bio, currency_code: currency });
+      window.__currencyCode = String(currency || 'CAD').toUpperCase();
+      try { rerenderServicesUI(); } catch(_e) {}
       // Mettre à jour le nom affiché dans le header
       if (name) {
         document.querySelectorAll('#headerName,#dropdownName').forEach(function(el){ el.textContent = name; });
@@ -2753,6 +3274,16 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (profile.notif_email !== undefined && document.getElementById('notif-email')) document.getElementById('notif-email').checked = profile.notif_email;
         if (profile.notif_rdv   !== undefined && document.getElementById('notif-rdv'))   document.getElementById('notif-rdv').checked   = profile.notif_rdv;
         if (profile.notif_msg   !== undefined && document.getElementById('notif-msg'))   document.getElementById('notif-msg').checked   = profile.notif_msg;
+
+        // Devise + premium
+        if (profile.currency_code) {
+          window.__currencyCode = String(profile.currency_code || 'CAD').toUpperCase();
+          var cur = document.getElementById('settings-currency');
+          if (cur) cur.value = window.__currencyCode;
+        }
+        window.__premiumActive = !!profile.premium_active;
+        window.__premiumExpiresAt = profile.premium_expires_at || null;
+        try { rerenderServicesUI(); } catch(_e) {}
       }).catch(function(){});
       // Bouton cancel si projet existant
       var projet = localStorage.getItem('capitune_projet');
@@ -2896,14 +3427,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (metaWrap) metaWrap.style.display = hasMeta ? '' : 'none';
 
         var svcWrap = document.getElementById('tpServices');
-        var serviceLabels = {
-          consultation: 'Consultation stratégique',
-          orientation: 'Orientation programme',
-          dossier: 'Montage du dossier',
-          suivi: 'Suivi administratif',
-          recherche: 'Recherche employeur',
-          integration: 'Aide à l\'installation'
-        };
+        function svcLabel(id) {
+          try {
+            if (window.__catalogServiceMap && window.__catalogServiceMap[id] && window.__catalogServiceMap[id].name) return window.__catalogServiceMap[id].name;
+          } catch(_e) {}
+          return id;
+        }
         var packSvcs = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
         var hasPackSvcs = packSvcs && Object.keys(packSvcs).length > 0;
         var svcs = Array.isArray(m.pro_services) ? m.pro_services : [];
@@ -2918,7 +3447,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (svcWrap) {
           if (!svcs.length) svcWrap.innerHTML = '<span style="color:#888;font-size:13px;">—</span>';
           else svcWrap.innerHTML = svcs.map(function(id){
-            return '<span class="service-pill">'+esc(serviceLabels[id] || id)+'</span>';
+            return '<span class="service-pill">'+esc(svcLabel(id))+'</span>';
           }).join('');
         }
 
@@ -2938,7 +3467,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             var includedHtml = (!included || !included.length)
               ? '<span style="color:#888;font-size:12px;">—</span>'
               : included.map(function(id){
-                  return '<span class="service-pill" style="font-size:11px;padding:4px 9px;">'+esc(serviceLabels[id] || id)+'</span>';
+                  return '<span class="service-pill" style="font-size:11px;padding:4px 9px;">'+esc(svcLabel(id))+'</span>';
                 }).join('');
             return '<div class="tarif-card">'
               + '<div class="tarif-name">'+esc(pk.name)+'</div>'

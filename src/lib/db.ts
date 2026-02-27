@@ -15,6 +15,10 @@ export interface User {
   location: string;
   bio: string;
   avatar_key: string;
+  // Devise préférée (affichage UI)
+  currency_code?: string;
+  // Abonnement premium: date d'expiration (ISO string en D1, timestamptz en Postgres)
+  premium_expires_at?: string | null;
   // Type de compte (MVP): client (particulier) vs pro (professionnel)
   account_type?: 'client' | 'pro' | string;
   // JSON stocké en TEXT (liste des ids services proposés)
