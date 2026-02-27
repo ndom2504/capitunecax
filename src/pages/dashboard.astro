@@ -1,11 +1,22 @@
 ﻿---
 // CAPITUNE  Espace Client Dashboard
 import { packagesCatalog } from '../lib/service-catalog';
+import { getUserFromSessionAny } from '../lib/db';
 
 // Vérification session côté serveur
 const session = Astro.cookies.get('capitune_session');
 if (!session?.value) {
   return Astro.redirect('/connexion');
+}
+
+// Rediriger les comptes pro/admin vers l'espace pro
+const db = ((Astro.locals.runtime?.env as Env | undefined)?.DB ?? null);
+const sessionUser = await getUserFromSessionAny(db, session.value);
+if (!sessionUser) {
+  return Astro.redirect('/connexion');
+}
+if (sessionUser.role === 'admin') {
+  return Astro.redirect('/admin');
 }
 
 // Clés publiques paiement (injectées côté client)
@@ -2374,6 +2385,14 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       if (_teamLoaded) return;
       var container = document.getElementById('team-grid-container');
       if (!container) return;
+
+      function esc(s){
+        return String(s||'').replace(/[&<>"']/g, function(c){
+          return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;';
+        });
+      }
+      function isHttpUrl(u){ return /^https?:\/\//i.test(String(u||'')); }
+
       fetch('/api/team')
         .then(function(r){ return r.json(); })
         .then(function(data){
@@ -2386,12 +2405,13 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           var html = '<div class="team-grid">';
           members.forEach(function(m){
             var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+            var avatarUrl = isHttpUrl(m.avatar_key) ? String(m.avatar_key) : '';
             html += '<div class="team-card">';
-            html += '<div class="team-avatar">' + (initials||'<i class="fa fa-user"></i>') + '</div>';
-            html += '<p class="team-name">' + (m.name||'Conseiller CAPITUNE') + '</p>';
+            html += '<div class="team-avatar">' + (avatarUrl ? ('<img src="'+esc(avatarUrl)+'" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">') : (initials||'<i class="fa fa-user"></i>')) + '</div>';
+            html += '<p class="team-name">' + esc(m.name||'Conseiller CAPITUNE') + '</p>';
             html += '<span class="team-badge"><i class="fa fa-star"></i> Conseiller Pro</span>';
-            if (m.location) html += '<p class="team-location"><i class="fa fa-map-marker"></i> ' + m.location + '</p>';
-            if (m.bio) html += '<p class="team-bio">' + m.bio + '</p>';
+            if (m.location) html += '<p class="team-location"><i class="fa fa-map-marker"></i> ' + esc(m.location) + '</p>';
+            if (m.bio) html += '<p class="team-bio">' + esc(m.bio) + '</p>';
             html += '<button class="team-contact-btn" onclick="switchTab(\'messagerie\')"><i class="fa fa-envelope"></i> Contacter</button>';
             html += '</div>';
           });

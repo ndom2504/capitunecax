@@ -102,6 +102,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
     const email = (profile.email ?? '').toLowerCase().trim();
     const name = (profile.name ?? email).trim();
+    const picture = String(profile.picture ?? '').trim();
 
     if (!email) {
       return redirect('/connexion?error=MissingEmail');
@@ -123,8 +124,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         const userId = existing?.id ?? uuid();
         if (!existing) {
           await db
-            .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'google', ?)`)
-            .bind(userId, email, name, role, profile.id ?? '')
+            .prepare(
+              `INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, 'google', ?)`
+            )
+            .bind(userId, email, name, picture, role, profile.id ?? '')
             .run();
         } else {
           await db
@@ -132,13 +135,14 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
               `UPDATE users
                SET
                  name = COALESCE(NULLIF(?, ''), name),
+                 avatar_key = COALESCE(NULLIF(?, ''), avatar_key),
                  oauth_provider='google',
                  oauth_id=?,
                  role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
                  updated_at=datetime('now')
                WHERE id=?`
             )
-            .bind(name, profile.id ?? '', role, role, userId)
+            .bind(name, picture, profile.id ?? '', role, role, userId)
             .run();
         }
 
@@ -153,7 +157,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
         cookies.set(
           'capitune_user',
-          JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }),
+          JSON.stringify({ name, email, picture, provider: 'google', role }),
           {
             path: '/',
             httpOnly: false,
@@ -181,14 +185,15 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         const userId = existing[0]?.id ?? uuid();
         if (!existing[0]) {
           await sql`
-            INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
-            VALUES (${userId}, ${email}, ${name}, ${role}, 'google', ${profile.id ?? ''})
+            INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id)
+            VALUES (${userId}, ${email}, ${name}, ${picture}, ${role}, 'google', ${profile.id ?? ''})
           `;
         } else {
           await sql`
             UPDATE users
             SET
               name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+              avatar_key = CASE WHEN ${picture} <> '' THEN ${picture} ELSE avatar_key END,
               oauth_provider = 'google',
               oauth_id = ${profile.id ?? ''},
               role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
@@ -207,7 +212,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         });
         cookies.set(
           'capitune_user',
-          JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }),
+          JSON.stringify({ name, email, picture, provider: 'google', role }),
           {
             path: '/',
             httpOnly: false,
