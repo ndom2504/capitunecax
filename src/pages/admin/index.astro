@@ -391,8 +391,21 @@ const adminName = adminUser?.name ?? 'Admin';
   // ── Stats ────────────────────────────────────────────────────────────────
   async function loadStats() {
     const r = await fetch('/api/admin/stats');
-    if (!r.ok) return;
+    if (!r.ok) {
+      try {
+        const t = await r.text();
+        console.warn('[Admin] stats failed', r.status, t);
+        toast('Stats: erreur (' + r.status + ')', true);
+      } catch {
+        toast('Stats: erreur', true);
+      }
+      return;
+    }
     const d = await r.json();
+    if (d && d.error) {
+      toast((d.error || 'Erreur') + (d.hint ? ' — ' + d.hint : ''), true);
+      return;
+    }
     document.getElementById('stat-users').textContent    = d.users;
     document.getElementById('stat-projects').textContent = d.projects;
     document.getElementById('stat-pending').textContent  = d.pending;
@@ -425,8 +438,19 @@ const adminName = adminUser?.name ?? 'Admin';
     tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
     var url = '/api/admin/clients?page=' + _page + (_search ? '&q=' + encodeURIComponent(_search) : '');
     const r = await fetch(url);
-    if (!r.ok) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Erreur de chargement</td></tr>'; return; }
+    if (!r.ok) {
+      let details = '';
+      try { details = await r.text(); } catch {}
+      console.warn('[Admin] clients failed', r.status, details);
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Erreur de chargement (' + r.status + ')</td></tr>';
+      return;
+    }
     const d = await r.json();
+    if (d && d.error) {
+      toast((d.error || 'Erreur') + (d.hint ? ' — ' + d.hint : ''), true);
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">' + esc(d.error) + (d.hint ? '<br><span style="color:var(--muted)">' + esc(d.hint) + '</span>' : '') + '</td></tr>';
+      return;
+    }
     tbody.dataset.loaded = '1';
     if (!d.clients.length) {
       tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa fa-users"></i>Aucun client trouvé</div></td></tr>';

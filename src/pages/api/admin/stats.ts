@@ -4,12 +4,37 @@
 import type { APIRoute } from 'astro';
 import { getNeonSqlClient, hasNeonDatabase } from '../../../lib/db';
 
-export const GET: APIRoute = async ({ locals }) => {
-  const db = (locals.runtime?.env as Env)?.DB ?? null;
-  const useNeon = !db && hasNeonDatabase();
-  if (!db && !useNeon) return json({ error: 'DB non disponible' }, 503);
+function mapDbError(err: unknown): { code: string; hint?: string } {
+  const message = err instanceof Error ? err.message : String(err ?? '');
 
-  if (db) {
+  if (/relation\s+"?\w+"?\s+does\s+not\s+exist/i.test(message) || /\b42P01\b/.test(message)) {
+    return {
+      code: 'DatabaseNotInitialized',
+      hint: 'Exécute migrations/0001_init_postgres.sql dans Neon (SQL Editor).',
+    };
+  }
+
+  if (/no\s+such\s+table/i.test(message)) {
+    return {
+      code: 'DatabaseNotInitialized',
+      hint: 'Exécute migrations/0001_init.sql sur D1 (wrangler d1 execute).',
+    };
+  }
+
+  if (/DATABASE_URL/i.test(message)) {
+    return { code: 'MissingDatabaseUrl', hint: 'Vérifie DATABASE_URL dans Vercel.' };
+  }
+
+  return { code: 'AdminStatsError' };
+}
+
+export const GET: APIRoute = async ({ locals }) => {
+  try {
+    const db = (locals.runtime?.env as Env)?.DB ?? null;
+    const useNeon = !db && hasNeonDatabase();
+    if (!db && !useNeon) return json({ error: 'DB non disponible' }, 503);
+
+    if (db) {
     const [users, projects, messages, payments, pending] = await Promise.all([
       db.prepare(`SELECT COUNT(*) as n FROM users WHERE role='client'`).first<{ n: number }>(),
       db.prepare(`SELECT COUNT(*) as n FROM projects WHERE status != 'annule'`).first<{ n: number }>(),
@@ -28,7 +53,7 @@ export const GET: APIRoute = async ({ locals }) => {
       .prepare(`SELECT id, name, email, created_at FROM users WHERE role='client' ORDER BY created_at DESC LIMIT 5`)
       .all<{ id: string; name: string; email: string; created_at: string }>();
 
-    return json({
+      return json({
       users:    users?.n    ?? 0,
       projects: projects?.n ?? 0,
       messages: messages?.n ?? 0,
@@ -39,8 +64,8 @@ export const GET: APIRoute = async ({ locals }) => {
     });
   }
 
-  const sql = await getNeonSqlClient();
-  if (!sql) return json({ error: 'DB non disponible' }, 503);
+    const sql = await getNeonSqlClient();
+    if (!sql) return json({ error: 'DB non disponible' }, 503);
 
   const [users, projects, messages, payments, pending] = await Promise.all([
     sql<{ n: number }>`SELECT COUNT(*)::int as n FROM users WHERE role='client'`,
@@ -54,15 +79,20 @@ export const GET: APIRoute = async ({ locals }) => {
   const recent = await sql<{ id: string; name: string; email: string; created_at: string }>
     `SELECT id::text as id, name, email, created_at::text as created_at FROM users WHERE role='client' ORDER BY created_at DESC LIMIT 5`;
 
-  return json({
-    users:    users[0]?.n    ?? 0,
-    projects: projects[0]?.n ?? 0,
-    messages: messages[0]?.n ?? 0,
-    paid:     payments[0]?.n ?? 0,
-    pending:  pending[0]?.n  ?? 0,
-    revenue:  revenue[0]?.total ?? 0,
-    recentUsers: recent,
-  });
+    return json({
+      users:    users[0]?.n    ?? 0,
+      projects: projects[0]?.n ?? 0,
+      messages: messages[0]?.n ?? 0,
+      paid:     payments[0]?.n ?? 0,
+      pending:  pending[0]?.n  ?? 0,
+      revenue:  revenue[0]?.total ?? 0,
+      recentUsers: recent,
+    });
+  } catch (err) {
+    const mapped = mapDbError(err);
+    console.error('[Admin stats] Error:', err);
+    return json({ error: mapped.code, hint: mapped.hint }, 500);
+  }
 };
 
 function json(data: unknown, status = 200) {
