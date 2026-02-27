@@ -40,16 +40,28 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   }
 
   // En dev : toujours localhost (les IPs privées sont rejetées par Google)
-  // En prod : utiliser SITE_URL ou l'origin de la requête
-  const origin = import.meta.env.DEV
-    ? 'http://localhost:3000'
-    : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+  // En prod : utiliser une origine canonique (SITE_URL) et y basculer AVANT
+  // de poser le cookie state, sinon le callback peut revenir sur un autre domaine
+  // et le cookie ne sera pas envoyé (→ InvalidState/CSRF).
+  const requestOrigin = new URL(request.url).origin;
+  const siteOrigin = import.meta.env.SITE_URL
+    ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+    : null;
+  const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
+
+  if (!import.meta.env.DEV && siteOrigin && siteOrigin !== requestOrigin) {
+    return redirect(`${siteOrigin}/api/oauth/signin/google`);
+  }
+
   const callbackUrl = `${origin}/api/oauth/callback/google`;
   const state = crypto.randomUUID();
+
+  const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_google', state, {
     path: '/',
     httpOnly: true,
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 60 * 10,
   });
@@ -69,15 +81,20 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 
-  const origin = import.meta.env.DEV
-    ? 'http://localhost:3000'
-    : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+  const requestOrigin = new URL(request.url).origin;
+  const siteOrigin = import.meta.env.SITE_URL
+    ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+    : null;
+  const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
   const callbackUrl = `${origin}/api/oauth/callback/google`;
   const state = crypto.randomUUID();
+
+  const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_google', state, {
     path: '/',
     httpOnly: true,
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 60 * 10,
   });

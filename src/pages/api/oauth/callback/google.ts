@@ -29,9 +29,11 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   try {
     const clientId = import.meta.env.AUTH_GOOGLE_ID;
     const clientSecret = import.meta.env.AUTH_GOOGLE_SECRET;
-    const origin = import.meta.env.DEV
-      ? 'http://localhost:3000'
-      : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+    const requestOrigin = new URL(request.url).origin;
+    const siteOrigin = import.meta.env.SITE_URL
+      ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+      : null;
+    const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
     const redirectUri = `${origin}/api/oauth/callback/google`;
 
     if (!clientId || !clientSecret) {

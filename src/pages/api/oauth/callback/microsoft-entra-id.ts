@@ -32,9 +32,11 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
     const clientSecret = import.meta.env.AUTH_MICROSOFT_ENTRA_SECRET ?? import.meta.env.AUTH_MICROSOFT_SECRET;
     const tenantId = import.meta.env.AUTH_MICROSOFT_ENTRA_TENANT_ID ?? 'common';
-    const origin = import.meta.env.DEV
-      ? 'http://localhost:3000'
-      : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+    const requestOrigin = new URL(request.url).origin;
+    const siteOrigin = import.meta.env.SITE_URL
+      ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+      : null;
+    const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
     const redirectUri = `${origin}/api/oauth/callback/microsoft-entra-id`;
 
     if (!clientId || !clientSecret) {

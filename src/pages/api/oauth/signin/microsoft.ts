@@ -20,15 +20,25 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     return redirect('/connexion?error=Configuration+Microsoft+OAuth+manquante');
   }
 
-  const origin = import.meta.env.DEV
-    ? 'http://localhost:3000'
-    : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+  const requestOrigin = new URL(request.url).origin;
+  const siteOrigin = import.meta.env.SITE_URL
+    ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+    : null;
+  const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
+
+  if (!import.meta.env.DEV && siteOrigin && siteOrigin !== requestOrigin) {
+    return redirect(`${siteOrigin}/api/oauth/signin/microsoft`);
+  }
+
   const callbackUrl = `${origin}/api/oauth/callback/microsoft-entra-id`;
   const state = crypto.randomUUID();
+
+  const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_microsoft', state, {
     path: '/',
     httpOnly: true,
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 60 * 10,
   });
@@ -48,15 +58,20 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     });
   }
 
-  const origin = import.meta.env.DEV
-    ? 'http://localhost:3000'
-    : (import.meta.env.SITE_URL ?? new URL(request.url).origin);
+  const requestOrigin = new URL(request.url).origin;
+  const siteOrigin = import.meta.env.SITE_URL
+    ? new URL(String(import.meta.env.SITE_URL).trim()).origin
+    : null;
+  const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
   const callbackUrl = `${origin}/api/oauth/callback/microsoft-entra-id`;
   const state = crypto.randomUUID();
+
+  const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_microsoft', state, {
     path: '/',
     httpOnly: true,
+    secure: isHttps,
     sameSite: 'lax',
     maxAge: 60 * 10,
   });
