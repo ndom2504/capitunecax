@@ -2,6 +2,15 @@ import type { APIRoute } from 'astro';
 import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../../lib/db';
 import { isAdminEmail } from '../../../../lib/admin-emails';
 
+function extractAadstsCode(text: string): string | null {
+  const m = /AADSTS\d{4,}/.exec(text);
+  return m ? m[0] : null;
+}
+
+function looksLikePlaceholder(value: string): boolean {
+  return /votre_|replace_me|example/i.test(value);
+}
+
 function mapCallbackError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err ?? '');
 
@@ -58,7 +67,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
     const redirectUri = `${origin}/api/oauth/callback/microsoft-entra-id`;
 
-    if (!clientId || !clientSecret) {
+    if (!clientId || !clientSecret || looksLikePlaceholder(String(clientId)) || looksLikePlaceholder(String(clientSecret))) {
       return redirect('/connexion?error=MissingMicrosoftCredentials');
     }
 
@@ -74,15 +83,19 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           client_secret: clientSecret,
           redirect_uri: redirectUri,
           grant_type: 'authorization_code',
-          scope: 'openid email profile',
         }),
       }
     );
 
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
-      console.error('[Microsoft OAuth] Token exchange failed:', errText);
-      return redirect('/connexion?error=TokenExchangeFailed');
+      const aadsts = extractAadstsCode(errText);
+      console.error('[Microsoft OAuth] Token exchange failed:', {
+        status: tokenRes.status,
+        aadsts,
+        body: errText,
+      });
+      return redirect(`/connexion?error=${encodeURIComponent(aadsts ? `TokenExchangeFailed_${aadsts}` : 'TokenExchangeFailed')}`);
     }
 
     const tokenData = await tokenRes.json() as { access_token?: string; error?: string };
