@@ -30,8 +30,8 @@ import { baseUrl } from '../lib/base-url';
 
       <section class="AuthHero_sec">
         <div class="Center">
-          <h1>Connexion À Votre Espace Client</h1>
-          <p>Accédez à votre suivi, vos documents et vos échanges avec CAPITUNE.</p>
+          <h1>Connexion À Votre Espace</h1>
+          <p>Choisissez votre profil puis connectez-vous.</p>
         </div>
       </section>
 
@@ -44,6 +44,20 @@ import { baseUrl } from '../lib/base-url';
 
             <form id="loginForm">
               <fieldset>
+                <div class="auth-account-type">
+                  <p class="auth-account-type-label">Je suis :</p>
+                  <div class="auth-account-type-row">
+                    <label class="auth-radio">
+                      <input type="radio" name="accountType" value="client" checked />
+                      <span>Particulier (demande de service)</span>
+                    </label>
+                    <label class="auth-radio">
+                      <input type="radio" name="accountType" value="pro" />
+                      <span>Professionnel (offre de service)</span>
+                    </label>
+                  </div>
+                </div>
+
                 <p><input type="email" id="email" required placeholder="EMAIL" class="field" /></p>
                 <p><input type="password" id="password" required placeholder="MOT DE PASSE" class="field" /></p>
 
@@ -103,6 +117,10 @@ import { baseUrl } from '../lib/base-url';
 </MainLayout>
 
 <script>
+  const getSelectedAccountType = () => {
+    return (document.querySelector('input[name="accountType"]:checked') as HTMLInputElement | null)?.value || 'client';
+  };
+
   const errorEl = document.getElementById('loginError');
   const showError = (message: string) => {
     if (!errorEl) return;
@@ -141,12 +159,14 @@ import { baseUrl } from '../lib/base-url';
 
   // Connexion Google — navigation directe vers le handler GET
   document.getElementById('googleLoginBtn')?.addEventListener('click', () => {
-    window.location.href = '/api/oauth/signin/google';
+    const t = getSelectedAccountType();
+    window.location.href = `/api/oauth/signin/google?accountType=${encodeURIComponent(t)}`;
   });
 
   // Connexion Microsoft — navigation directe vers le handler GET
   document.getElementById('microsoftLoginBtn')?.addEventListener('click', () => {
-    window.location.href = '/api/oauth/signin/microsoft';
+    const t = getSelectedAccountType();
+    window.location.href = `/api/oauth/signin/microsoft?accountType=${encodeURIComponent(t)}`;
   });
 
   // Connexion par email/mot de passe
@@ -156,13 +176,14 @@ import { baseUrl } from '../lib/base-url';
 
     const email = (document.getElementById('email') as HTMLInputElement)?.value;
     const password = (document.getElementById('password') as HTMLInputElement)?.value;
+    const accountType = getSelectedAccountType();
 
     try {
       const res = await fetch('/api/oauth/signin/credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, accountType }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -217,6 +238,12 @@ import { baseUrl } from '../lib/base-url';
     display: flex;
     gap: 18px;
   }
+
+  .auth-account-type{margin:0 0 14px;padding:12px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:10px;}
+  .auth-account-type-label{margin:0 0 10px;color:#fff;font-weight:700;font-size:13px;letter-spacing:.2px;}
+  .auth-account-type-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .auth-radio{display:flex;align-items:flex-start;gap:10px;color:#fff;font-size:13px;line-height:1.35;cursor:pointer;user-select:none;}
+  .auth-radio input{margin-top:2px;accent-color:#ff9408;}
 
   .auth-nav ul li a {
     color: #fff;

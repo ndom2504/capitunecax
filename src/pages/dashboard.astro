@@ -15,9 +15,11 @@ const sessionUser = await getUserFromSessionAny(db, session.value);
 if (!sessionUser) {
   return Astro.redirect('/connexion');
 }
-const isProMode = sessionUser.role === 'admin' && Astro.url.searchParams.get('pro') === '1';
 const allowAdminPreview = Astro.url.searchParams.get('preview') === '1';
-if (sessionUser.role === 'admin' && !(allowAdminPreview || isProMode)) {
+const isProPreview = sessionUser.role === 'admin' && Astro.url.searchParams.get('pro') === '1';
+const isProAccount = String(sessionUser.account_type ?? '') === 'pro';
+const isProMode = isProAccount || isProPreview;
+if (sessionUser.role === 'admin' && !(allowAdminPreview || isProPreview)) {
   return Astro.redirect('/admin');
 }
 
@@ -29,7 +31,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <title>CAPITUNE  Mon Espace Client</title>
+    <title>{isProMode ? 'CAPITUNE — Espace Pro' : 'CAPITUNE — Mon Espace Client'}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="/templatemo_473_november/css/media.css" type="text/css" />
@@ -444,14 +446,17 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           <ul>
             {isProMode ? (
               <>
-                <li class="dash-nav-item active" data-tab="messagerie">
-                  <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
-                </li>
-                <li class="dash-nav-item" data-tab="services">
+                <li class="dash-nav-item active" data-tab="services">
                   <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
                 </li>
-                <li class="dash-nav-item" data-tab="tarifs">
-                  <a href="#" onclick="switchTab('tarifs'); return false;"><i class="fa fa-tag"></i> Tarifs</a>
+                <li class="dash-nav-item" data-tab="messagerie">
+                  <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
+                </li>
+                <li class="dash-nav-item" data-tab="paiements">
+                  <a href="#" onclick="switchTab('paiements'); return false;"><i class="fa fa-credit-card"></i> Paiements</a>
+                </li>
+                <li class="dash-nav-item" data-tab="equipe">
+                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
                 </li>
               </>
             ) : (
@@ -495,16 +500,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <div class="dropdown-user-info">
                 <p class="dropdown-name" id="dropdownName">Mon Profil</p>
                 <p class="dropdown-email" id="dropdownEmail"></p>
-                <span class="dropdown-statut">Client Actif</span>
+                <span class="dropdown-statut" id="dropdownStatus">Client</span>
               </div>
             </div>
             <div class="dropdown-divider"></div>
             <ul class="dropdown-menu-list">
               {isProMode ? (
                 <>
-                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
                   <li><a href="#" onclick="switchTab('services'); toggleProfileMenu(); return false;"><i class="fa fa-briefcase"></i> Services</a></li>
-                  <li><a href="#" onclick="switchTab('tarifs'); toggleProfileMenu(); return false;"><i class="fa fa-tag"></i> Tarifs</a></li>
+                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
+                  <li><a href="#" onclick="switchTab('paiements'); toggleProfileMenu(); return false;"><i class="fa fa-credit-card"></i> Paiements</a></li>
+                  <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Notre Équipe</a></li>
+                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
                 </>
               ) : (
                 <>
@@ -775,7 +782,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 2 : SERVICES ===== -->
-      <section class="tab-section" id="tab-services">
+      <section class={"tab-section" + (isProMode ? " active" : "")} id="tab-services">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-briefcase"></i> Choisir Mon Service</h1>
@@ -804,19 +811,19 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                 <div class="form-group">
                   <label>Services offerts</label>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="consultation"> Consultation stratégique</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="orientation"> Orientation programme</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="dossier"> Montage du dossier</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="suivi"> Suivi administratif</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="recherche"> Recherche employeur</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="integration"> Aide à l’installation</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-consultation" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-orientation" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-dossier" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-suivi" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-recherche" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-integration" value="integration"> Aide à l’installation</label>
                   </div>
                 </div>
               </div>
               <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;">
                 <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer</button>
               </div>
-              <p id="proSaveHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
+              <p id="proProfileHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
             </div>
           </div>
 
@@ -878,7 +885,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 3 : MESSAGERIE ===== -->
-      <section class={"tab-section" + (isProMode ? " active" : "")} id="tab-messagerie">
+      <section class="tab-section" id="tab-messagerie">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-envelope"></i> Messagerie</h1>
@@ -951,7 +958,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 4 : PAIEMENTS ===== -->
-      <section class="tab-section" id="tab-paiements" style={isProMode ? 'display:none' : ''}>
+      <section class="tab-section" id="tab-paiements">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-credit-card"></i> Paiements</h1>
@@ -959,6 +966,14 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
         </div>
         <div class="dash-container">
+          <div id="pro-mode-payments" style={isProMode ? '' : 'display:none'}>
+            <div class="projet-form-card">
+              <h3><i class="fa fa-credit-card" style="color:var(--cap-orange);"></i> Paiements</h3>
+              <p style="margin:0;color:#777;">Cet onglet affichera vos paiements reçus et l’historique (à venir).</p>
+            </div>
+          </div>
+
+          <div id="client-mode-payments" style={isProMode ? 'display:none' : ''}>
           <div id="paiement-locked-view">
             <div class="paiement-locked">
               <i class="fa fa-lock"></i>
@@ -1063,37 +1078,15 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <i class="fa fa-shield"></i> Paiement 100% sécurisé &mdash; Données chiffrées SSL
             </p>
           </div>
+          </div>
         </div>
       </section>
 
-      <!-- ===== ONGLET 5 : TARIFS ===== -->
-      <section class="tab-section" id="tab-tarifs" style={isProMode ? '' : 'display:none'}>
-        <div class="tab-hero">
-          <div class="tab-hero-inner">
-            <h1><i class="fa fa-tag"></i> Tarifs</h1>
-            <p>Définissez vos tarifs (packs) visibles dans votre profil public.</p>
-          </div>
-        </div>
-        <div class="dash-container">
-          <div class="projet-form-card">
-            <h3><i class="fa fa-tag" style="color:var(--cap-orange);"></i> Prix par pack</h3>
-            <p style="margin:0 0 18px;color:#777;">Ces prix seront affichés uniquement dans votre fiche (bouton “Voir” côté client).</p>
-            <div class="info-grid" style="grid-template-columns:1fr 1fr;">
-              <div class="info-cell"><label>Pack Essentiel</label><span><input id="price-essentiel" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
-              <div class="info-cell"><label>Pack Standard</label><span><input id="price-standard" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
-              <div class="info-cell"><label>Pack Premium</label><span><input id="price-premium" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
-              <div class="info-cell"><label>Pack Tourisme</label><span><input id="price-tourisme" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
-            </div>
-            <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:16px;">
-              <button class="btn-submit-projet" type="button" onclick="saveProTarifs()"><i class="fa fa-save"></i> Enregistrer</button>
-            </div>
-            <p id="proTarifsHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
-          </div>
-        </div>
-      </section>
+      <!-- ===== ONGLET 5 : TARIFS (déplacé dans Paramètres) ===== -->
+      <section class="tab-section" id="tab-tarifs" style="display:none"></section>
 
       <!-- ===== ONGLET 6 : NOTRE ÉQUIPE ===== -->
-      <section class="tab-section" id="tab-equipe" style={isProMode ? 'display:none' : ''}>
+      <section class="tab-section" id="tab-equipe">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-users"></i> Notre Équipe</h1>
@@ -1138,7 +1131,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 7 : PARAMÈTRES ===== -->
-      <section class="tab-section" id="tab-parametres" style={isProMode ? 'display:none' : ''}>
+      <section class="tab-section" id="tab-parametres">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-cog"></i> Paramètres du Compte</h1>
@@ -1147,6 +1140,24 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         </div>
         <div class="dash-container">
           <div class="settings-grid">
+
+            <!-- TARIFS (PRO) -->
+            <div class="settings-card" id="proTarifsCard" style={isProMode ? '' : 'display:none'}>
+              <div class="settings-card-header"><i class="fa fa-tag"></i> Tarifs (packs)</div>
+              <div class="settings-card-body">
+                <p style="margin:0 0 14px;color:#777;">Ces prix sont affichés uniquement dans votre fiche (bouton “Voir” côté client).</p>
+                <div class="info-grid" style="grid-template-columns:1fr 1fr;">
+                  <div class="info-cell"><label>Pack Essentiel</label><span><input id="price-essentiel" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+                  <div class="info-cell"><label>Pack Standard</label><span><input id="price-standard" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+                  <div class="info-cell"><label>Pack Premium</label><span><input id="price-premium" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+                  <div class="info-cell"><label>Pack Tourisme</label><span><input id="price-tourisme" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:16px;">
+                  <button class="btn-submit-projet" type="button" onclick="saveProTarifs()"><i class="fa fa-save"></i> Enregistrer</button>
+                </div>
+                <p id="proTarifsHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
+              </div>
+            </div>
 
             <!-- PHOTO DE PROFIL -->
             <div class="settings-card">
@@ -1508,6 +1519,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
         });
       } catch(e) {}
+
+      // Fallback statut
+      var st2 = document.getElementById('dropdownStatus');
+      if (st2 && document.body.classList.contains('is-pro-mode')) {
+        st2.textContent = 'Professionnel';
+      }
     }
 
     window.saveProProfile = async function(){
@@ -1565,6 +1582,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           var u = JSON.parse(decodeURIComponent(c.split('=').slice(1).join('=')));
           if (u.name) document.querySelectorAll('#headerName,#dropdownName').forEach(function(el){el.textContent=u.name;});
           if (u.email) { var em=document.getElementById('dropdownEmail'); if(em) em.textContent=u.email; }
+
+          var st = document.getElementById('dropdownStatus');
+          if (st) {
+            var isPro = (u.account_type === 'pro') || document.body.classList.contains('is-pro-mode');
+            st.textContent = isPro ? 'Professionnel' : 'Client';
+          }
         }
       } catch(e) {}
 

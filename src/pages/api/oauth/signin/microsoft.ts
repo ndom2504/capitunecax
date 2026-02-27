@@ -13,6 +13,9 @@ function buildMicrosoftAuthUrl(clientId: string, tenantId: string, callbackUrl: 
 
 // GET: redirection directe vers Microsoft OAuth (navigation navigateur)
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
+  const reqUrl = new URL(request.url);
+  const accountType = reqUrl.searchParams.get('accountType') === 'pro' ? 'pro' : 'client';
+
   const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
   const tenantId = import.meta.env.AUTH_MICROSOFT_ENTRA_TENANT_ID ?? 'common';
 
@@ -27,7 +30,9 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
 
   if (!import.meta.env.DEV && siteOrigin && siteOrigin !== requestOrigin) {
-    return redirect(`${siteOrigin}/api/oauth/signin/microsoft`);
+    const target = new URL(`${siteOrigin}/api/oauth/signin/microsoft`);
+    target.searchParams.set('accountType', accountType);
+    return redirect(target.toString());
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/microsoft-entra-id`;
@@ -43,11 +48,27 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     maxAge: 60 * 10,
   });
 
+  cookies.set('oauth_account_type', accountType, {
+    path: '/',
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax',
+    maxAge: 60 * 10,
+  });
+
   return redirect(buildMicrosoftAuthUrl(clientId, tenantId, callbackUrl, state));
 };
 
 // POST: réponse JSON attendue par auth-astro/client signIn('microsoft-entra-id')
 export const POST: APIRoute = async ({ request, cookies }) => {
+  let accountType: 'client' | 'pro' = 'client';
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    accountType = String(body?.accountType ?? '').toLowerCase().trim() === 'pro' ? 'pro' : 'client';
+  } catch {
+    accountType = 'client';
+  }
+
   const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
   const tenantId = import.meta.env.AUTH_MICROSOFT_ENTRA_TENANT_ID ?? 'common';
 
@@ -69,6 +90,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_microsoft', state, {
+    path: '/',
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax',
+    maxAge: 60 * 10,
+  });
+
+  cookies.set('oauth_account_type', accountType, {
     path: '/',
     httpOnly: true,
     secure: isHttps,

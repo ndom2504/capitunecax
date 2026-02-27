@@ -15,6 +15,8 @@ export interface User {
   location: string;
   bio: string;
   avatar_key: string;
+  // Type de compte (MVP): client (particulier) vs pro (professionnel)
+  account_type?: 'client' | 'pro' | string;
   // JSON stocké en TEXT (liste des ids services proposés)
   pro_services?: string;
   // JSON stocké en TEXT (prix par pack)
@@ -91,7 +93,7 @@ export interface Message {
   created_at: string;
 }
 
-export type SessionUser = Pick<User, 'id' | 'email' | 'name' | 'role'>;
+export type SessionUser = Pick<User, 'id' | 'email' | 'name' | 'role' | 'account_type'>;
 
 // ── Détection Neon (Postgres) ────────────────────────────────────────────
 
@@ -173,16 +175,19 @@ export function getUserFromBase64Session(sessionToken: string): SessionUser | nu
       email?: string;
       name?: string;
       role?: string;
+      account_type?: string;
     };
     const email = String(data.email ?? '').toLowerCase().trim();
     if (!email) return null;
 
     const role = data.role === 'admin' ? 'admin' : 'client';
+    const account_type = data.account_type === 'pro' ? 'pro' : 'client';
     return {
       id: String(data.id ?? email),
       email,
       name: String(data.name ?? email).trim(),
       role,
+      account_type,
     };
   } catch {
     return null;
@@ -197,11 +202,11 @@ export async function getUserFromSessionAny(
   if (db && /^[0-9a-f]{64}$/.test(sessionToken)) {
     const user = await getUserFromSession(db, sessionToken);
     if (!user) return null;
-    return { id: user.id, email: user.email, name: user.name, role: user.role };
+    return { id: user.id, email: user.email, name: user.name, role: user.role, account_type: user.account_type };
   }
   if (/^[0-9a-f]{64}$/.test(sessionToken)) {
     const user = await getUserFromSessionNeon(sessionToken);
-    if (user) return { id: user.id, email: user.email, name: user.name, role: user.role };
+    if (user) return { id: user.id, email: user.email, name: user.name, role: user.role, account_type: user.account_type };
   }
   return getUserFromBase64Session(sessionToken);
 }

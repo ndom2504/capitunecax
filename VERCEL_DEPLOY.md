@@ -112,6 +112,17 @@ git push origin main
 
 ## 🔧 Configuration Post-Déploiement
 
+### 0. Initialiser / mettre à jour le schéma Postgres (Neon)
+
+Si tu utilises `DATABASE_URL` (Neon/Postgres), il faut exécuter les migrations SQL dans Neon (SQL Editor) :
+
+- `migrations/0001_init_postgres.sql` (schéma de base)
+- `migrations/0002_assignments_postgres.sql`
+- `migrations/0003_pro_profile_postgres.sql`
+- `migrations/0004_account_type_postgres.sql` (client vs professionnel)
+
+Tu peux aussi n’exécuter que la dernière si la base est déjà initialisée.
+
 ### 1. Configurer le domaine personnalisé (optionnel)
 - **Settings** → **Domains**
 - Ajouter : `capitune.ca` ou autre
@@ -130,10 +141,10 @@ git push origin main
 ### 3. Mettre à jour les URLs OAuth
 
 **Google Cloud Console** :
-- Authorized redirect URIs : `https://capituneca.vercel.app/api/auth/callback/google`
+- Authorized redirect URIs : `https://capituneca.vercel.app/api/oauth/callback/google`
 
 **Microsoft Azure** :
-- Redirect URIs : `https://capituneca.vercel.app/api/auth/callback/microsoft`
+- Redirect URIs : `https://capituneca.vercel.app/api/oauth/callback/microsoft-entra-id`
 
 ### 4. Configurer PayPal
 

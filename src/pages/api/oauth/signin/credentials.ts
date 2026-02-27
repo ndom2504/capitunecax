@@ -15,9 +15,16 @@ function nameFromEmail(email: string): string {
   return email.split('@')[0]!.replace(/[._+-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
 }
 
+function normalizeAccountType(input: unknown): 'client' | 'pro' {
+  return String(input ?? '').toLowerCase().trim() === 'pro' ? 'pro' : 'client';
+}
+
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json() as Record<string, unknown>;
+    const email = body.email;
+    const password = body.password;
+    const requestedAccountType = normalizeAccountType(body.accountType);
 
     if (!email || !password) return json({ message: 'Email et mot de passe requis.' }, 400);
     const emailStr = String(email).toLowerCase().trim();
@@ -31,21 +38,33 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     let sessionToken: string;
     let displayName: string;
     let role: string;
+    let account_type: 'client' | 'pro' = requestedAccountType;
 
     if (db) {
       const user = await db
         .prepare(`SELECT * FROM users WHERE email = ?`)
         .bind(emailStr)
-        .first<{ id: string; name: string; password_hash: string | null; role: string }>();
+        .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
 
       if (!user) {
         // Auto-inscription si le compte n'existe pas (comportement MVP)
         const userId = uuid();
         displayName = nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : 'client';
-        await db.prepare(
-          `INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)`
-        ).bind(userId, emailStr, displayName, role).run();
+        try {
+          await db.prepare(
+            `INSERT INTO users (id, email, name, role, account_type) VALUES (?, ?, ?, ?, ?)`
+          ).bind(userId, emailStr, displayName, role, requestedAccountType).run();
+        } catch (e: any) {
+          const msg = String(e?.message ?? e ?? '');
+          if (/no\s+such\s+column|account_type/i.test(msg)) {
+            await db.prepare(
+              `INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)`
+            ).bind(userId, emailStr, displayName, role).run();
+          } else {
+            throw e;
+          }
+        }
         sessionToken = await createSessionAny(db, userId);
       } else {
         // Vérification mot de passe si hash présent
@@ -55,8 +74,21 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;
+        account_type = user.account_type === 'pro' ? 'pro' : requestedAccountType;
         if (role === 'admin' && user.role !== 'admin') {
           await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(user.id).run();
+        }
+
+        // Permet de basculer le type de compte via l'écran de connexion
+        // (MVP: pas de validation/approbation).
+        try {
+          await db
+            .prepare(`UPDATE users SET account_type = ?, updated_at=datetime('now') WHERE id=?`)
+            .bind(requestedAccountType, user.id)
+            .run();
+          account_type = requestedAccountType;
+        } catch {
+          // Colonne pas encore dispo → ignorer
         }
         sessionToken = await createSessionAny(db, user.id);
       }
@@ -64,15 +96,19 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
 
-      const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string }>
-        `SELECT id, name, password_hash, role FROM users WHERE email = ${emailStr} LIMIT 1`;
+      const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
+        `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
       const user = rows[0] ?? null;
 
       if (!user) {
         const userId = uuid();
         displayName = nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : 'client';
-        await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
+        try {
+          await sql`INSERT INTO users (id, email, name, role, account_type) VALUES (${userId}, ${emailStr}, ${displayName}, ${role}, ${requestedAccountType})`;
+        } catch {
+          await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
+        }
         sessionToken = await createSessionAny(null, userId);
       } else {
         if (user.password_hash) {
@@ -81,8 +117,16 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;
+        account_type = user.account_type === 'pro' ? 'pro' : requestedAccountType;
         if (role === 'admin' && user.role !== 'admin') {
           await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
+        }
+
+        try {
+          await sql`UPDATE users SET account_type = ${requestedAccountType}, updated_at = now() WHERE id = ${user.id}`;
+          account_type = requestedAccountType;
+        } catch {
+          // Colonne pas encore dispo → ignorer
         }
         sessionToken = await createSessionAny(null, user.id);
       }
@@ -90,14 +134,15 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       // Fallback sans DB
       displayName = nameFromEmail(emailStr);
       role = isAdminEmail(emailStr) ? 'admin' : 'client';
-      const sessionData = JSON.stringify({ email: emailStr, name: displayName, role, expires: Date.now() + 7 * 86400000 });
+      account_type = requestedAccountType;
+      const sessionData = JSON.stringify({ email: emailStr, name: displayName, role, account_type, expires: Date.now() + 7 * 86400000 });
       sessionToken = btoa(encodeURIComponent(sessionData));
     }
 
     cookies.set('capitune_session', sessionToken, {
       path: '/', httpOnly: true, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });
-    cookies.set('capitune_user', JSON.stringify({ name: displayName, email: emailStr, role }), {
+    cookies.set('capitune_user', JSON.stringify({ name: displayName, email: emailStr, role, account_type }), {
       path: '/', httpOnly: false, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });
 

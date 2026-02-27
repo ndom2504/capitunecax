@@ -52,6 +52,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   const savedState = cookies.get('oauth_state_microsoft')?.value;
   cookies.delete('oauth_state_microsoft', { path: '/' });
 
+  const accountType = cookies.get('oauth_account_type')?.value === 'pro' ? 'pro' : 'client';
+  cookies.delete('oauth_account_type', { path: '/' });
+
   if (!savedState || savedState !== state) {
     return redirect('/connexion?error=InvalidState');
   }
@@ -136,31 +139,73 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
     if (db) {
       try {
-        const existing = await db
-          .prepare(`SELECT id FROM users WHERE email = ?`)
-          .bind(emailStr)
-          .first<{ id: string }>();
+        let existing: { id: string } | null | undefined;
+        try {
+          existing = await db
+            .prepare(`SELECT id, account_type FROM users WHERE email = ?`)
+            .bind(emailStr)
+            .first<{ id: string; account_type?: string | null }>();
+        } catch {
+          existing = await db
+            .prepare(`SELECT id FROM users WHERE email = ?`)
+            .bind(emailStr)
+            .first<{ id: string }>();
+        }
 
         const userId = existing?.id ?? uuid();
         if (!existing) {
-          await db
-            .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'microsoft', ?)`)
-            .bind(userId, emailStr, name, role, profile.id ?? '')
-            .run();
+          try {
+            await db
+              .prepare(`INSERT INTO users (id, email, name, role, account_type, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, 'microsoft', ?)`)
+              .bind(userId, emailStr, name, role, accountType, profile.id ?? '')
+              .run();
+          } catch (e: any) {
+            const msg = String(e?.message ?? e ?? '');
+            if (/no\s+such\s+column|account_type/i.test(msg)) {
+              await db
+                .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'microsoft', ?)`)
+                .bind(userId, emailStr, name, role, profile.id ?? '')
+                .run();
+            } else {
+              throw e;
+            }
+          }
         } else {
-          await db
-            .prepare(
-              `UPDATE users
-               SET
-                 name = COALESCE(NULLIF(?, ''), name),
-                 oauth_provider='microsoft',
-                 oauth_id=?,
-                 role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
-                 updated_at=datetime('now')
-               WHERE id=?`
-            )
-            .bind(name, profile.id ?? '', role, role, userId)
-            .run();
+          try {
+            await db
+              .prepare(
+                `UPDATE users
+                 SET
+                   name = COALESCE(NULLIF(?, ''), name),
+                   oauth_provider='microsoft',
+                   oauth_id=?,
+                   role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
+                   account_type = COALESCE(NULLIF(?, ''), account_type),
+                   updated_at=datetime('now')
+                 WHERE id=?`
+              )
+              .bind(name, profile.id ?? '', role, role, accountType, userId)
+              .run();
+          } catch (e: any) {
+            const msg = String(e?.message ?? e ?? '');
+            if (/no\s+such\s+column|account_type/i.test(msg)) {
+              await db
+                .prepare(
+                  `UPDATE users
+                   SET
+                     name = COALESCE(NULLIF(?, ''), name),
+                     oauth_provider='microsoft',
+                     oauth_id=?,
+                     role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
+                     updated_at=datetime('now')
+                   WHERE id=?`
+                )
+                .bind(name, profile.id ?? '', role, role, userId)
+                .run();
+            } else {
+              throw e;
+            }
+          }
         }
 
         const sessionToken = await createSessionAny(db, userId);
@@ -172,7 +217,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           maxAge: 60 * 60 * 24 * 30,
         });
 
-        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
+        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role, account_type: accountType }), {
           path: '/',
           httpOnly: false,
           secure: isHttps,
@@ -192,25 +237,52 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         const sql = await getNeonSqlClient();
         if (!sql) return redirect('/connexion?error=MissingDatabaseUrl');
 
-        const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
+        let existing: Array<{ id: string; account_type?: string | null }>;
+        try {
+          existing = await sql<{ id: string; account_type?: string | null }>`SELECT id, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
+        } catch {
+          const rows = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
+          existing = rows as unknown as Array<{ id: string; account_type?: string | null }>;
+        }
         const userId = existing[0]?.id ?? uuid();
 
         if (!existing[0]) {
-          await sql`
-            INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
-            VALUES (${userId}, ${emailStr}, ${name}, ${role}, 'microsoft', ${profile.id ?? ''})
-          `;
+          try {
+            await sql`
+              INSERT INTO users (id, email, name, role, account_type, oauth_provider, oauth_id)
+              VALUES (${userId}, ${emailStr}, ${name}, ${role}, ${accountType}, 'microsoft', ${profile.id ?? ''})
+            `;
+          } catch {
+            await sql`
+              INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
+              VALUES (${userId}, ${emailStr}, ${name}, ${role}, 'microsoft', ${profile.id ?? ''})
+            `;
+          }
         } else {
-          await sql`
-            UPDATE users
-            SET
-              name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
-              oauth_provider = 'microsoft',
-              oauth_id = ${profile.id ?? ''},
-              role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
-              updated_at = now()
-            WHERE id = ${userId}
-          `;
+          try {
+            await sql`
+              UPDATE users
+              SET
+                name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+                oauth_provider = 'microsoft',
+                oauth_id = ${profile.id ?? ''},
+                role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+                account_type = ${accountType},
+                updated_at = now()
+              WHERE id = ${userId}
+            `;
+          } catch {
+            await sql`
+              UPDATE users
+              SET
+                name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+                oauth_provider = 'microsoft',
+                oauth_id = ${profile.id ?? ''},
+                role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+                updated_at = now()
+              WHERE id = ${userId}
+            `;
+          }
         }
 
         const sessionToken = await createSessionAny(null, userId);
@@ -221,7 +293,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 30,
         });
-        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
+        cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role, account_type: accountType }), {
           path: '/',
           httpOnly: false,
           secure: isHttps,
@@ -241,6 +313,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
       email: emailStr,
       name,
       role,
+      account_type: accountType,
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -256,7 +329,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     });
 
     // Cookie lisible côté client
-    cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role }), {
+    cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, provider: 'microsoft', role, account_type: accountType }), {
       path: '/',
       httpOnly: false,
       secure: isHttps,

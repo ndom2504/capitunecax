@@ -30,6 +30,9 @@ function buildGoogleAuthUrl(clientId: string, callbackUrl: string, state: string
 
 // GET: redirection directe vers Google OAuth (navigation navigateur)
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
+  const reqUrl = new URL(request.url);
+  const accountType = reqUrl.searchParams.get('accountType') === 'pro' ? 'pro' : 'client';
+
   const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
   if (!clientId || !isValidGoogleClientId(clientId)) {
@@ -50,7 +53,10 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
 
   if (!import.meta.env.DEV && siteOrigin && siteOrigin !== requestOrigin) {
-    return redirect(`${siteOrigin}/api/oauth/signin/google`);
+    // Conserver le choix de type de compte
+    const target = new URL(`${siteOrigin}/api/oauth/signin/google`);
+    target.searchParams.set('accountType', accountType);
+    return redirect(target.toString());
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/google`;
@@ -66,11 +72,27 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     maxAge: 60 * 10,
   });
 
+  cookies.set('oauth_account_type', accountType, {
+    path: '/',
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax',
+    maxAge: 60 * 10,
+  });
+
   return redirect(buildGoogleAuthUrl(clientId, callbackUrl, state));
 };
 
 // POST: réponse JSON attendue par auth-astro/client signIn('google')
 export const POST: APIRoute = async ({ request, cookies }) => {
+  let accountType: 'client' | 'pro' = 'client';
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    accountType = String(body?.accountType ?? '').toLowerCase().trim() === 'pro' ? 'pro' : 'client';
+  } catch {
+    accountType = 'client';
+  }
+
   const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
   if (!clientId || !isValidGoogleClientId(clientId)) {
@@ -92,6 +114,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   const isHttps = origin.startsWith('https');
 
   cookies.set('oauth_state_google', state, {
+    path: '/',
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax',
+    maxAge: 60 * 10,
+  });
+
+  cookies.set('oauth_account_type', accountType, {
     path: '/',
     httpOnly: true,
     secure: isHttps,

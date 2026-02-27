@@ -41,6 +41,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   const savedState = cookies.get('oauth_state_google')?.value;
   cookies.delete('oauth_state_google', { path: '/' });
 
+  const accountType = cookies.get('oauth_account_type')?.value === 'pro' ? 'pro' : 'client';
+  cookies.delete('oauth_account_type', { path: '/' });
+
   if (!savedState || savedState !== state) {
     return redirect('/connexion?error=InvalidState');
   }
@@ -116,34 +119,83 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
     if (db) {
       try {
-        const existing = await db
-          .prepare(`SELECT id, name, role FROM users WHERE email = ?`)
-          .bind(email)
-          .first<{ id: string; name: string | null; role: string | null }>();
+        let existing:
+          | { id: string; name: string | null; role: string | null; account_type?: string | null }
+          | null
+          | undefined;
+        try {
+          existing = await db
+            .prepare(`SELECT id, name, role, account_type FROM users WHERE email = ?`)
+            .bind(email)
+            .first<{ id: string; name: string | null; role: string | null; account_type?: string | null }>();
+        } catch {
+          existing = await db
+            .prepare(`SELECT id, name, role FROM users WHERE email = ?`)
+            .bind(email)
+            .first<{ id: string; name: string | null; role: string | null }>();
+        }
 
         const userId = existing?.id ?? uuid();
         if (!existing) {
-          await db
-            .prepare(
-              `INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, 'google', ?)`
-            )
-            .bind(userId, email, name, picture, role, profile.id ?? '')
-            .run();
+          try {
+            await db
+              .prepare(
+                `INSERT INTO users (id, email, name, avatar_key, role, account_type, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, ?, 'google', ?)`
+              )
+              .bind(userId, email, name, picture, role, accountType, profile.id ?? '')
+              .run();
+          } catch (e: any) {
+            const msg = String(e?.message ?? e ?? '');
+            if (/no\s+such\s+column|account_type/i.test(msg)) {
+              await db
+                .prepare(
+                  `INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?, 'google', ?)`
+                )
+                .bind(userId, email, name, picture, role, profile.id ?? '')
+                .run();
+            } else {
+              throw e;
+            }
+          }
         } else {
-          await db
-            .prepare(
-              `UPDATE users
-               SET
-                 name = COALESCE(NULLIF(?, ''), name),
-                 avatar_key = COALESCE(NULLIF(?, ''), avatar_key),
-                 oauth_provider='google',
-                 oauth_id=?,
-                 role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
-                 updated_at=datetime('now')
-               WHERE id=?`
-            )
-            .bind(name, picture, profile.id ?? '', role, role, userId)
-            .run();
+          // Update minimal + tenter de mettre à jour account_type si dispo
+          try {
+            await db
+              .prepare(
+                `UPDATE users
+                 SET
+                   name = COALESCE(NULLIF(?, ''), name),
+                   avatar_key = COALESCE(NULLIF(?, ''), avatar_key),
+                   oauth_provider='google',
+                   oauth_id=?,
+                   role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
+                   account_type = COALESCE(NULLIF(?, ''), account_type),
+                   updated_at=datetime('now')
+                 WHERE id=?`
+              )
+              .bind(name, picture, profile.id ?? '', role, role, accountType, userId)
+              .run();
+          } catch (e: any) {
+            const msg = String(e?.message ?? e ?? '');
+            if (/no\s+such\s+column|account_type/i.test(msg)) {
+              await db
+                .prepare(
+                  `UPDATE users
+                   SET
+                     name = COALESCE(NULLIF(?, ''), name),
+                     avatar_key = COALESCE(NULLIF(?, ''), avatar_key),
+                     oauth_provider='google',
+                     oauth_id=?,
+                     role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
+                     updated_at=datetime('now')
+                   WHERE id=?`
+                )
+                .bind(name, picture, profile.id ?? '', role, role, userId)
+                .run();
+            } else {
+              throw e;
+            }
+          }
         }
 
         const sessionToken = await createSessionAny(db, userId);
@@ -157,7 +209,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
         cookies.set(
           'capitune_user',
-          JSON.stringify({ name, email, picture, provider: 'google', role }),
+          JSON.stringify({ name, email, picture, provider: 'google', role, account_type: accountType }),
           {
             path: '/',
             httpOnly: false,
@@ -179,27 +231,56 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         const sql = await getNeonSqlClient();
         if (!sql) return redirect('/connexion?error=MissingDatabaseUrl');
 
-        const existing = await sql<{ id: string; name: string; role: string }>
-          `SELECT id, name, role FROM users WHERE email = ${email} LIMIT 1`;
+        let existing: Array<{ id: string; name: string; role: string; account_type?: string | null }>;
+        try {
+          existing = await sql<{ id: string; name: string; role: string; account_type?: string | null }>
+            `SELECT id, name, role, account_type FROM users WHERE email = ${email} LIMIT 1`;
+        } catch {
+          const rows = await sql<{ id: string; name: string; role: string }>
+            `SELECT id, name, role FROM users WHERE email = ${email} LIMIT 1`;
+          existing = rows as unknown as Array<{ id: string; name: string; role: string; account_type?: string | null }>;
+        }
 
         const userId = existing[0]?.id ?? uuid();
         if (!existing[0]) {
-          await sql`
-            INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id)
-            VALUES (${userId}, ${email}, ${name}, ${picture}, ${role}, 'google', ${profile.id ?? ''})
-          `;
+          try {
+            await sql`
+              INSERT INTO users (id, email, name, avatar_key, role, account_type, oauth_provider, oauth_id)
+              VALUES (${userId}, ${email}, ${name}, ${picture}, ${role}, ${accountType}, 'google', ${profile.id ?? ''})
+            `;
+          } catch {
+            await sql`
+              INSERT INTO users (id, email, name, avatar_key, role, oauth_provider, oauth_id)
+              VALUES (${userId}, ${email}, ${name}, ${picture}, ${role}, 'google', ${profile.id ?? ''})
+            `;
+          }
         } else {
-          await sql`
-            UPDATE users
-            SET
-              name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
-              avatar_key = CASE WHEN ${picture} <> '' THEN ${picture} ELSE avatar_key END,
-              oauth_provider = 'google',
-              oauth_id = ${profile.id ?? ''},
-              role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
-              updated_at = now()
-            WHERE id = ${userId}
-          `;
+          try {
+            await sql`
+              UPDATE users
+              SET
+                name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+                avatar_key = CASE WHEN ${picture} <> '' THEN ${picture} ELSE avatar_key END,
+                oauth_provider = 'google',
+                oauth_id = ${profile.id ?? ''},
+                role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+                account_type = ${accountType},
+                updated_at = now()
+              WHERE id = ${userId}
+            `;
+          } catch {
+            await sql`
+              UPDATE users
+              SET
+                name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+                avatar_key = CASE WHEN ${picture} <> '' THEN ${picture} ELSE avatar_key END,
+                oauth_provider = 'google',
+                oauth_id = ${profile.id ?? ''},
+                role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+                updated_at = now()
+              WHERE id = ${userId}
+            `;
+          }
         }
 
         const sessionToken = await createSessionAny(null, userId);
@@ -212,7 +293,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         });
         cookies.set(
           'capitune_user',
-          JSON.stringify({ name, email, picture, provider: 'google', role }),
+          JSON.stringify({ name, email, picture, provider: 'google', role, account_type: accountType }),
           {
             path: '/',
             httpOnly: false,
@@ -235,6 +316,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
       name,
       picture: profile.picture,
       role,
+      account_type: accountType,
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 jours
     });
 
@@ -250,7 +332,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     });
 
     // Cookie lisible côté client pour afficher le nom/avatar
-    cookies.set('capitune_user', JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }), {
+    cookies.set('capitune_user', JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role, account_type: accountType }), {
       path: '/',
       httpOnly: false,
       secure: isHttps,

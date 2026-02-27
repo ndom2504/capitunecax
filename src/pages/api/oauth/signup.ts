@@ -12,6 +12,10 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+function normalizeAccountType(input: unknown): 'client' | 'pro' {
+  return String(input ?? '').toLowerCase().trim() === 'pro' ? 'pro' : 'client';
+}
+
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
     const data = await request.json();
@@ -30,6 +34,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const name      = `${String(data.firstName).trim()} ${String(data.lastName).trim()}`;
     const phone     = String(data.phone ?? '').slice(0, 30);
     const role      = isAdminEmail(emailStr) ? 'admin' : 'client';
+    const account_type = normalizeAccountType((data as Record<string, unknown>)?.accountType);
     const isHttps   = import.meta.env.PROD || new URL(request.url).protocol === 'https:';
 
     // ── Persistance D1 ────────────────────────────────────────────────────
@@ -53,10 +58,23 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       const hash    = await hashPassword(String(data.password), salt);
       const pwHash  = salt + ':' + hash;
 
-      await db.prepare(
-        `INSERT INTO users (id, email, password_hash, name, phone, role)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      ).bind(userId, emailStr, pwHash, name, phone, role).run();
+      try {
+        await db.prepare(
+          `INSERT INTO users (id, email, password_hash, name, phone, role, account_type)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ).bind(userId, emailStr, pwHash, name, phone, role, account_type).run();
+      } catch (e: any) {
+        const msg = String(e?.message ?? e ?? '');
+        if (/no\s+such\s+column|account_type/i.test(msg)) {
+          // Migration pas encore appliquée → fallback sans account_type
+          await db.prepare(
+            `INSERT INTO users (id, email, password_hash, name, phone, role)
+             VALUES (?, ?, ?, ?, ?, ?)`
+          ).bind(userId, emailStr, pwHash, name, phone, role).run();
+        } else {
+          throw e;
+        }
+      }
 
       sessionToken = await createSessionAny(db, userId);
     } else if (useNeon) {
@@ -73,21 +91,28 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       const hash    = await hashPassword(String(data.password), salt);
       const pwHash  = salt + ':' + hash;
 
-      await sql`
-        INSERT INTO users (id, email, password_hash, name, phone, role)
-        VALUES (${userId}, ${emailStr}, ${pwHash}, ${name}, ${phone}, ${role})
-      `;
+      try {
+        await sql`
+          INSERT INTO users (id, email, password_hash, name, phone, role, account_type)
+          VALUES (${userId}, ${emailStr}, ${pwHash}, ${name}, ${phone}, ${role}, ${account_type})
+        `;
+      } catch {
+        await sql`
+          INSERT INTO users (id, email, password_hash, name, phone, role)
+          VALUES (${userId}, ${emailStr}, ${pwHash}, ${name}, ${phone}, ${role})
+        `;
+      }
       sessionToken = await createSessionAny(null, userId);
     } else {
       // Fallback sans DB (dev sans wrangler)
-      const sessionData = JSON.stringify({ email: emailStr, name, role, expires: Date.now() + 7 * 86400000 });
+      const sessionData = JSON.stringify({ email: emailStr, name, role, account_type, expires: Date.now() + 7 * 86400000 });
       sessionToken = btoa(encodeURIComponent(sessionData));
     }
 
     cookies.set('capitune_session', sessionToken, {
       path: '/', httpOnly: true, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });
-    cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, role }), {
+    cookies.set('capitune_user', JSON.stringify({ name, email: emailStr, role, account_type }), {
       path: '/', httpOnly: false, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });
 

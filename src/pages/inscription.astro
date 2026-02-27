@@ -40,6 +40,20 @@ import { baseUrl } from '../lib/base-url';
           <div class="Leftside auth-form-side auth-form-wide">
             <form id="signupForm">
               <fieldset>
+                <div class="auth-account-type">
+                  <p class="auth-account-type-label">Je souhaite :</p>
+                  <div class="auth-account-type-row">
+                    <label class="auth-radio">
+                      <input type="radio" name="accountType" value="client" checked />
+                      <span>Demander un service (Particulier)</span>
+                    </label>
+                    <label class="auth-radio">
+                      <input type="radio" name="accountType" value="pro" />
+                      <span>Offrir un service (Professionnel)</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div class="auth-grid-2">
                   <p><input type="text" id="firstName" required placeholder="PRÉNOM" class="field" /></p>
                   <p><input type="text" id="lastName" required placeholder="NOM" class="field" /></p>
@@ -125,12 +139,18 @@ import { baseUrl } from '../lib/base-url';
 </MainLayout>
 
 <script>
+  const getSelectedAccountType = () => {
+    return (document.querySelector('input[name="accountType"]:checked') as HTMLInputElement | null)?.value || 'client';
+  };
+
   document.getElementById('googleSignupBtn')?.addEventListener('click', () => {
-    window.location.href = '/api/oauth/signin/google';
+    const t = getSelectedAccountType();
+    window.location.href = `/api/oauth/signin/google?accountType=${encodeURIComponent(t)}`;
   });
 
   document.getElementById('microsoftSignupBtn')?.addEventListener('click', () => {
-    window.location.href = '/api/oauth/signin/microsoft';
+    const t = getSelectedAccountType();
+    window.location.href = `/api/oauth/signin/microsoft?accountType=${encodeURIComponent(t)}`;
   });
 
   document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
@@ -149,13 +169,14 @@ import { baseUrl } from '../lib/base-url';
     const email = (document.getElementById('email') as HTMLInputElement).value;
     const phone = (document.getElementById('phone') as HTMLInputElement).value;
     const country = (document.getElementById('country') as HTMLSelectElement).value;
+    const accountType = (document.querySelector('input[name="accountType"]:checked') as HTMLInputElement | null)?.value || 'client';
 
     try {
       const res = await fetch('/api/oauth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ firstName, lastName, email, phone, country, password }),
+        body: JSON.stringify({ firstName, lastName, email, phone, country, password, accountType }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -218,6 +239,12 @@ import { baseUrl } from '../lib/base-url';
     white-space: normal !important;
     margin-bottom: 18px;
   }
+
+  .auth-account-type{margin:0 0 14px;padding:12px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:10px;}
+  .auth-account-type-label{margin:0 0 10px;color:#fff;font-weight:700;font-size:13px;letter-spacing:.2px;}
+  .auth-account-type-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .auth-radio{display:flex;align-items:flex-start;gap:10px;color:#fff;font-size:13px;line-height:1.35;cursor:pointer;user-select:none;}
+  .auth-radio input{margin-top:2px;accent-color:#ff9408;}
 
   .AuthHero_sec p {
     color: #e8edf3;

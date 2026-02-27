@@ -1,6 +1,6 @@
 /**
  * GET /api/team
- * Retourne les profils des conseillers/pros (role='admin') visibles aux clients connectés.
+ * Retourne les profils des conseillers/pros (role='admin' OU account_type='pro') visibles aux clients connectés.
  * Champs exposés : nom, localisation, bio, avatar, services/tarifs — PAS l'email.
  */
 import type { APIRoute } from 'astro';
@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
               COALESCE(pro_pack_prices, '{}') AS pro_pack_prices,
               created_at
             FROM users
-            WHERE role = 'admin'
+            WHERE role = 'admin' OR account_type = 'pro'
             ORDER BY created_at ASC
           `)
           .all();
@@ -82,7 +82,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
             COALESCE(pro_pack_prices, '{}') AS pro_pack_prices,
             created_at::text AS created_at
           FROM users
-          WHERE role = 'admin'
+          WHERE role = 'admin' OR account_type = 'pro'
           ORDER BY created_at ASC
         `;
       } catch {

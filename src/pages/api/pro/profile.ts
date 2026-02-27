@@ -18,7 +18,8 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
 
   const role = effectiveRoleForUser(me);
   const isAdmin = role === 'admin' || isAdminEmail(me.email);
-  if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
+  const isPro = String((me as any)?.account_type ?? '') === 'pro';
+  if (!isAdmin && !isPro) return json({ error: 'Accès refusé' }, 403);
 
   const meWithPro = me as unknown as {
     pro_services?: string;
@@ -53,7 +54,8 @@ export const PATCH: APIRoute = async ({ cookies, locals, request }) => {
 
   const role = effectiveRoleForUser(me);
   const isAdmin = role === 'admin' || isAdminEmail(me.email);
-  if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
+  const isPro = String((me as any)?.account_type ?? '') === 'pro';
+  if (!isAdmin && !isPro) return json({ error: 'Accès refusé' }, 403);
 
   let body: unknown;
   try {
