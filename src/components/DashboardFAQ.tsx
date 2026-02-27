@@ -1,6 +1,4 @@
 import React from 'react';
-import { DevLinkProvider } from '../site-components/DevLinkProvider';
-import { SectionFaq } from '../site-components/SectionFaq';
 
 export function DashboardFAQ() {
   return (
@@ -118,13 +116,6 @@ export function DashboardFAQ() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Webflow FAQ Section */}
-      <div className="border-t border-border pt-8">
-        <DevLinkProvider>
-          <SectionFaq />
-        </DevLinkProvider>
       </div>
 
       {/* Contact Support Card */}
