@@ -363,7 +363,7 @@ const adminName = adminUser?.name ?? 'Admin';
 
 <div id="adm-toast"></div>
 
-<script>
+<script is:inline>
   var _currentClient = null;
   var _currentTab    = 'messages';
   var _clientData    = null;
@@ -376,6 +376,11 @@ const adminName = adminUser?.name ?? 'Admin';
     document.getElementById('section-dashboard').style.display = name === 'dashboard' ? '' : 'none';
     document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
     document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+    // Réactiver l'item correspondant (fonctionne même quand showSection est appelé depuis un bouton)
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(el) {
+      var oc = el.getAttribute('onclick') || '';
+      if (oc.indexOf("showSection('" + name + "')") !== -1) el.classList.add('active');
+    });
     var titles = { dashboard: 'Tableau de bord', clients: 'Clients' };
     document.getElementById('page-title').textContent = titles[name] || name;
     if (name === 'clients' && !document.getElementById('clients-body').dataset.loaded) {
