@@ -793,37 +793,123 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           <div id="pro-mode-services" style={isProMode ? '' : 'display:none'}>
             <div class="section-title-block">
               <h2><i class="fa fa-briefcase" style="color:var(--cap-orange);"></i> Mes services</h2>
-              <p>Dans vos paramètres, sélectionnez vos services et votre description (visible côté client).</p>
+              <p>Configurez vos packs (services inclus + tarif) et complétez votre profil public.</p>
             </div>
             <div class="projet-form-card">
               <h3><i class="fa fa-id-badge" style="color:var(--cap-orange);"></i> Profil public</h3>
               <div class="form-row">
                 <div class="form-group">
                   <label>Localisation</label>
-                  <input id="proLocation" placeholder="Ex: Montréal, QC" />
+                  <div style="display:flex;gap:10px;align-items:center;">
+                    <input id="proLocation" placeholder="Ex: Montréal, QC" style="flex:1;" />
+                    <button class="btn-submit-projet" type="button" onclick="useMyLocation()" style="padding:10px 12px;font-size:12px;white-space:nowrap;">
+                      <i class="fa fa-location-arrow"></i> Ma position
+                    </button>
+                  </div>
+                  <input id="proLocationLat" type="hidden" />
+                  <input id="proLocationLng" type="hidden" />
                 </div>
                 <div class="form-group">
                   <label>Description</label>
                   <textarea id="proBio" placeholder="Décrivez votre expertise (visible côté client)…" style="min-height:80px"></textarea>
                 </div>
               </div>
-              <div class="form-row cols-1">
+              <div class="form-row cols-3">
                 <div class="form-group">
-                  <label>Services offerts</label>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-consultation" value="consultation"> Consultation stratégique</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-orientation" value="orientation"> Orientation programme</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-dossier" value="dossier"> Montage du dossier</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-suivi" value="suivi"> Suivi administratif</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-recherche" value="recherche"> Recherche employeur</label>
-                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proSvc-integration" value="integration"> Aide à l’installation</label>
-                  </div>
+                  <label>Diplôme</label>
+                  <input id="proDiploma" placeholder="Ex: Master, Licence, Certificat…" />
+                </div>
+                <div class="form-group">
+                  <label>Années d'expérience</label>
+                  <input id="proExperienceYears" type="number" min="0" max="80" step="1" placeholder="Ex: 5" />
+                </div>
+                <div class="form-group">
+                  <label>Compétences</label>
+                  <input id="proCompetences" placeholder="Ex: Entrée Express, PNP, CAQ…" />
                 </div>
               </div>
               <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;">
                 <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer</button>
               </div>
               <p id="proProfileHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
+            </div>
+
+            <div class="projet-form-card">
+              <h3><i class="fa fa-tags" style="color:var(--cap-orange);"></i> Packs, services & tarifs</h3>
+              <p style="margin:0 0 14px;color:#777;">Sélectionnez les services inclus dans chaque pack et renseignez le prix du pack (affiché côté client dans “Voir”).</p>
+
+              <div class="info-grid" style="grid-template-columns:1fr 1fr;">
+                <div class="info-cell">
+                  <label>Pack Essentiel — Prix</label>
+                  <span><input id="proPackPrice-essentiel" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span>
+                </div>
+                <div class="info-cell">
+                  <label>Pack Standard — Prix</label>
+                  <span><input id="proPackPrice-standard" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span>
+                </div>
+                <div class="info-cell">
+                  <label>Pack Premium — Prix</label>
+                  <span><input id="proPackPrice-premium" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span>
+                </div>
+                <div class="info-cell">
+                  <label>Pack Tourisme — Prix</label>
+                  <span><input id="proPackPrice-tourisme" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span>
+                </div>
+              </div>
+
+              <div class="form-row cols-2" style="margin-top:14px;">
+                <div class="form-group">
+                  <label>Pack Essentiel — Services inclus</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-consultation" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-orientation" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-dossier" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-suivi" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-recherche" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-integration" value="integration"> Aide à l’installation</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Pack Standard — Services inclus</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-consultation" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-orientation" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-dossier" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-suivi" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-recherche" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-integration" value="integration"> Aide à l’installation</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row cols-2" style="margin-top:8px;">
+                <div class="form-group">
+                  <label>Pack Premium — Services inclus</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-consultation" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-orientation" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-dossier" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-suivi" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-recherche" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-integration" value="integration"> Aide à l’installation</label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Pack Tourisme — Services inclus</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-consultation" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-orientation" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-dossier" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-suivi" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-recherche" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-integration" value="integration"> Aide à l’installation</label>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:14px;">
+                <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer packs & tarifs</button>
+              </div>
             </div>
           </div>
 
@@ -1114,6 +1200,14 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               </div>
               <p style="margin:0 0 18px;color:#555;line-height:1.7;" id="tpBio"></p>
 
+              <div id="tpMeta" style="display:none;background:#fff8f0;border:1px solid #ffd899;border-radius:12px;padding:12px 14px;margin:0 0 18px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                  <div><strong>Diplôme :</strong> <span id="tpDiploma"></span></div>
+                  <div><strong>Expérience :</strong> <span id="tpExperience"></span></div>
+                </div>
+                <div style="margin-top:8px;"><strong>Compétences :</strong> <span id="tpCompetences"></span></div>
+              </div>
+
               <div class="section-title-block" style="margin-top:0;">
                 <h2>Services</h2>
                 <div class="title-line"></div>
@@ -1142,7 +1236,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           <div class="settings-grid">
 
             <!-- TARIFS (PRO) -->
-            <div class="settings-card" id="proTarifsCard" style={isProMode ? '' : 'display:none'}>
+            <div class="settings-card" id="proTarifsCard" style="display:none">
               <div class="settings-card-header"><i class="fa fa-tag"></i> Tarifs (packs)</div>
               <div class="settings-card-body">
                 <p style="margin:0 0 14px;color:#777;">Ces prix sont affichés uniquement dans votre fiche (bouton “Voir” côté client).</p>
@@ -1504,19 +1598,41 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         var payload = await r.json();
         var p = (payload && payload.me) ? payload.me : payload;
         var loc = document.getElementById('proLocation'); if (loc) loc.value = p.location || '';
+        var lat = document.getElementById('proLocationLat'); if (lat) lat.value = (p.location_lat ?? '') === null ? '' : String(p.location_lat ?? '');
+        var lng = document.getElementById('proLocationLng'); if (lng) lng.value = (p.location_lng ?? '') === null ? '' : String(p.location_lng ?? '');
         var bio = document.getElementById('proBio'); if (bio) bio.value = p.bio || '';
-        var services = Array.isArray(p.pro_services) ? p.pro_services : [];
-        document.querySelectorAll('input[type=checkbox][id^="proSvc-"]').forEach(function(cb){
-          var id = cb.id.replace('proSvc-','');
-          cb.checked = services.indexOf(id) !== -1;
+        var dip = document.getElementById('proDiploma'); if (dip) dip.value = p.pro_diploma || '';
+        var comp = document.getElementById('proCompetences'); if (comp) comp.value = p.pro_competences || '';
+        var exp = document.getElementById('proExperienceYears'); if (exp) exp.value = (p.pro_experience_years ?? '') === null ? '' : String(p.pro_experience_years ?? '');
+
+        // Packs -> services
+        window.__proInitialPackServices = (p.pro_pack_services && typeof p.pro_pack_services === 'object') ? p.pro_pack_services : {};
+        var packSvcs = window.__proInitialPackServices || {};
+        var packs = ['essentiel','standard','premium','tourisme'];
+        var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
+        packs.forEach(function(pk){
+          var arr = Array.isArray(packSvcs[pk]) ? packSvcs[pk] : [];
+          svcIds.forEach(function(sid){
+            var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
+            if (cb) cb.checked = arr.indexOf(sid) !== -1;
+          });
         });
+
         var prices = p.pro_pack_prices && typeof p.pro_pack_prices === 'object' ? p.pro_pack_prices : {};
-        var map = { essentiel:'price-essentiel', standard:'price-standard', premium:'price-premium', tourisme:'price-tourisme' };
+        window.__proInitialPackPrices = prices;
+        var map = {
+          essentiel:['proPackPrice-essentiel','price-essentiel'],
+          standard:['proPackPrice-standard','price-standard'],
+          premium:['proPackPrice-premium','price-premium'],
+          tourisme:['proPackPrice-tourisme','price-tourisme']
+        };
         Object.keys(map).forEach(function(k){
-          var el=document.getElementById(map[k]);
-          if(!el) return;
           var v = prices[k];
-          el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
+          map[k].forEach(function(id){
+            var el=document.getElementById(id);
+            if(!el) return;
+            el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
+          });
         });
       } catch(e) {}
 
@@ -1531,15 +1647,56 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       if(!isProModeUI()) return;
       try {
         setHint('proProfileHint', 'Enregistrement…', true);
-        var services=[];
-        document.querySelectorAll('input[type=checkbox][id^="proSvc-"]:checked').forEach(function(cb){
-          services.push(cb.id.replace('proSvc-',''));
-        });
         var body = {
           location: (document.getElementById('proLocation')||{}).value || '',
           bio: (document.getElementById('proBio')||{}).value || '',
-          pro_services: services
+          pro_diploma: (document.getElementById('proDiploma')||{}).value || '',
+          pro_competences: (document.getElementById('proCompetences')||{}).value || '',
+          pro_experience_years: parseInt(((document.getElementById('proExperienceYears')||{}).value || ''), 10)
         };
+
+        // Géoloc (optionnelle)
+        var lat = (document.getElementById('proLocationLat')||{}).value;
+        var lng = (document.getElementById('proLocationLng')||{}).value;
+        if (lat !== undefined && lat !== null && String(lat).trim() !== '') body.location_lat = Number(lat);
+        if (lng !== undefined && lng !== null && String(lng).trim() !== '') body.location_lng = Number(lng);
+
+        // Packs -> services
+        var packs = ['essentiel','standard','premium','tourisme'];
+        var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
+        var packServices = {};
+        var anyChecked = false;
+        packs.forEach(function(pk){
+          var arr = [];
+          svcIds.forEach(function(sid){
+            var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
+            if (cb && cb.checked) { arr.push(sid); anyChecked = true; }
+          });
+          if (arr.length) packServices[pk] = arr;
+        });
+
+        // Packs -> prix
+        var prices = {};
+        var anyPrice = false;
+        packs.forEach(function(pk){
+          var el = document.getElementById('proPackPrice-'+pk) || document.getElementById('price-'+pk);
+          if (!el) return;
+          var v = parseMoney(el.value);
+          if (v !== null) { prices[pk] = v; anyPrice = true; }
+        });
+
+        // N'envoyer pack_services que si on a des données (pour éviter d'écraser un profil existant par inadvertance)
+        if (anyChecked || (window.__proInitialPackServices && Object.keys(window.__proInitialPackServices).length)) {
+          body.pro_pack_services = packServices;
+          // Maintenir pro_services (ancien champ) comme union
+          var union = [];
+          Object.keys(packServices).forEach(function(pk){ (packServices[pk]||[]).forEach(function(s){ union.push(s); }); });
+          body.pro_services = Array.from(new Set(union));
+        }
+        if (anyPrice || (window.__proInitialPackPrices && Object.keys(window.__proInitialPackPrices).length)) {
+          body.pro_pack_prices = prices;
+        }
+
         var r = await fetch('/api/pro/profile', {
           method:'PATCH',
           headers:{'Content-Type':'application/json','Accept':'application/json'},
@@ -1549,6 +1706,42 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if(!r.ok || j.error){ setHint('proProfileHint', j.error || 'Erreur lors de l\'enregistrement.', false); return; }
         setHint('proProfileHint', 'Profil enregistré.', true);
       } catch(e){ setHint('proProfileHint', 'Erreur réseau.', false); }
+    };
+
+    window.useMyLocation = function(){
+      try {
+        if (!navigator.geolocation) { showToast('Géolocalisation non supportée sur ce navigateur.', 'error'); return; }
+        showToast('Localisation en cours…', 'info');
+        navigator.geolocation.getCurrentPosition(async function(pos){
+          var lat = pos && pos.coords ? pos.coords.latitude : null;
+          var lng = pos && pos.coords ? pos.coords.longitude : null;
+          if (typeof lat !== 'number' || typeof lng !== 'number') { showToast('Impossible de récupérer la position.', 'error'); return; }
+          var latEl = document.getElementById('proLocationLat'); if (latEl) latEl.value = String(lat);
+          var lngEl = document.getElementById('proLocationLng'); if (lngEl) lngEl.value = String(lng);
+
+          // Best-effort reverse geocoding (sans clé)
+          try {
+            var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
+            var r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            var j = await r.json().catch(function(){ return null; });
+            var label = '';
+            if (j && j.address) {
+              var city = j.address.city || j.address.town || j.address.village || '';
+              var state = j.address.state || '';
+              var country = j.address.country || '';
+              label = [city, state].filter(Boolean).join(', ') || [state, country].filter(Boolean).join(', ');
+            }
+            var loc = document.getElementById('proLocation');
+            if (loc && label) loc.value = label;
+          } catch(_e) {}
+
+          showToast('Position enregistrée (vous pouvez sauvegarder).', 'success');
+        }, function(){
+          showToast('Autorisation refusée ou erreur de géolocalisation.', 'error');
+        }, { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
+      } catch(_e) {
+        showToast('Erreur de géolocalisation.', 'error');
+      }
     };
 
     window.saveProTarifs = async function(){
@@ -2673,6 +2866,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         setText('tpLocation', m.location ? ('📍 ' + m.location) : '');
         setText('tpBio', m.bio || '');
 
+        // Meta (diplôme / compétences / expérience)
+        var metaWrap = document.getElementById('tpMeta');
+        var hasMeta = false;
+        var diploma = (m.pro_diploma || '').trim();
+        var competences = (m.pro_competences || '').trim();
+        var expYears = (typeof m.pro_experience_years === 'number') ? m.pro_experience_years : Number(m.pro_experience_years);
+        var expTxt = (Number.isFinite(expYears) && expYears > 0) ? (String(Math.trunc(expYears)) + ' an(s)') : '';
+        if (diploma) { setText('tpDiploma', diploma); hasMeta = true; } else { setText('tpDiploma', '—'); }
+        if (expTxt) { setText('tpExperience', expTxt); hasMeta = true; } else { setText('tpExperience', '—'); }
+        if (competences) { setText('tpCompetences', competences); hasMeta = true; } else { setText('tpCompetences', '—'); }
+        if (metaWrap) metaWrap.style.display = hasMeta ? '' : 'none';
+
         var svcWrap = document.getElementById('tpServices');
         var serviceLabels = {
           consultation: 'Consultation stratégique',
@@ -2682,7 +2887,17 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           recherche: 'Recherche employeur',
           integration: 'Aide à l\'installation'
         };
+        var packSvcs = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
+        var hasPackSvcs = packSvcs && Object.keys(packSvcs).length > 0;
         var svcs = Array.isArray(m.pro_services) ? m.pro_services : [];
+        if (hasPackSvcs) {
+          var union = [];
+          Object.keys(packSvcs).forEach(function(pk){
+            var arr = Array.isArray(packSvcs[pk]) ? packSvcs[pk] : [];
+            arr.forEach(function(s){ union.push(s); });
+          });
+          svcs = Array.from(new Set(union));
+        }
         if (svcWrap) {
           if (!svcs.length) svcWrap.innerHTML = '<span style="color:#888;font-size:13px;">—</span>';
           else svcWrap.innerHTML = svcs.map(function(id){
@@ -2702,9 +2917,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           tarifsWrap.innerHTML = packs.map(function(pk){
             var v = prices[pk.id];
             var priceTxt = (typeof v === 'number' && Number.isFinite(v)) ? (v.toLocaleString('fr-CA') + ' $') : '—';
+            var included = hasPackSvcs && Array.isArray(packSvcs[pk.id]) ? packSvcs[pk.id] : [];
+            var includedHtml = (!included || !included.length)
+              ? '<span style="color:#888;font-size:12px;">—</span>'
+              : included.map(function(id){
+                  return '<span class="service-pill" style="font-size:11px;padding:4px 9px;">'+esc(serviceLabels[id] || id)+'</span>';
+                }).join('');
             return '<div class="tarif-card">'
               + '<div class="tarif-name">'+esc(pk.name)+'</div>'
               + '<div class="tarif-price">'+esc(priceTxt)+' <span>CAD</span></div>'
+              + '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">'
+              + includedHtml
+              + '</div>'
               + '</div>';
           }).join('');
         }

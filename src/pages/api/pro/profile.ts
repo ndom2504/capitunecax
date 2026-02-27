@@ -24,9 +24,19 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
   const meWithPro = me as unknown as {
     pro_services?: string;
     pro_pack_prices?: string;
+    pro_pack_services?: string;
+    pro_diploma?: string;
+    pro_competences?: string;
+    pro_experience_years?: number | string | null;
+    location_lat?: number | string | null;
+    location_lng?: number | string | null;
   };
   const proServices = safeJsonParseArray(meWithPro.pro_services);
   const proPackPrices = safeJsonParseObject(meWithPro.pro_pack_prices);
+  const proPackServices = safeJsonParsePackServices(meWithPro.pro_pack_services);
+  const proExperienceYears = safeNumberInt(meWithPro.pro_experience_years);
+  const locationLat = safeNumberFloat(meWithPro.location_lat);
+  const locationLng = safeNumberFloat(meWithPro.location_lng);
 
   return json({
     me: {
@@ -38,6 +48,12 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
       avatar_key: String(me.avatar_key ?? ''),
       pro_services: proServices,
       pro_pack_prices: proPackPrices,
+      pro_pack_services: proPackServices,
+      pro_diploma: String(meWithPro.pro_diploma ?? ''),
+      pro_competences: String(meWithPro.pro_competences ?? ''),
+      pro_experience_years: proExperienceYears,
+      location_lat: locationLat,
+      location_lng: locationLng,
     },
   });
 };
@@ -74,16 +90,46 @@ export const PATCH: APIRoute = async ({ cookies, locals, request }) => {
     ? sanitizePackPrices(payload.pro_pack_prices as Record<string, unknown>)
     : undefined;
 
+  const proPackServices = isPlainObject(payload.pro_pack_services)
+    ? sanitizePackServices(payload.pro_pack_services as Record<string, unknown>)
+    : undefined;
+
   const bio = typeof payload.bio === 'string' ? payload.bio.slice(0, 2000) : undefined;
   const location = typeof payload.location === 'string' ? payload.location.slice(0, 200) : undefined;
 
+  const proDiploma = typeof payload.pro_diploma === 'string' ? payload.pro_diploma.slice(0, 200) : undefined;
+  const proCompetences =
+    typeof payload.pro_competences === 'string' ? payload.pro_competences.slice(0, 2000) : undefined;
+  const proExperienceYearsRaw = payload.pro_experience_years;
+  const proExperienceYears =
+    proExperienceYearsRaw === null || proExperienceYearsRaw === undefined
+      ? undefined
+      : safeNumberInt(proExperienceYearsRaw);
+
+  const latRaw = payload.location_lat;
+  const lngRaw = payload.location_lng;
+  const locationLat = latRaw === null || latRaw === undefined ? undefined : safeLatitude(latRaw);
+  const locationLng = lngRaw === null || lngRaw === undefined ? undefined : safeLongitude(lngRaw);
+
   // Rien à faire
-  if (proServices === undefined && proPackPrices === undefined && bio === undefined && location === undefined) {
+  if (
+    proServices === undefined &&
+    proPackPrices === undefined &&
+    proPackServices === undefined &&
+    bio === undefined &&
+    location === undefined &&
+    proDiploma === undefined &&
+    proCompetences === undefined &&
+    proExperienceYears === undefined &&
+    locationLat === undefined &&
+    locationLng === undefined
+  ) {
     return json({ ok: true });
   }
 
   const nextProServices = proServices !== undefined ? JSON.stringify(proServices) : undefined;
   const nextProPackPrices = proPackPrices !== undefined ? JSON.stringify(proPackPrices) : undefined;
+  const nextProPackServices = proPackServices !== undefined ? JSON.stringify(proPackServices) : undefined;
 
   try {
     if (db) {
@@ -106,6 +152,30 @@ export const PATCH: APIRoute = async ({ cookies, locals, request }) => {
       if (nextProPackPrices !== undefined) {
         sets.push('pro_pack_prices=?');
         binds.push(nextProPackPrices);
+      }
+      if (nextProPackServices !== undefined) {
+        sets.push('pro_pack_services=?');
+        binds.push(nextProPackServices);
+      }
+      if (proDiploma !== undefined) {
+        sets.push('pro_diploma=?');
+        binds.push(proDiploma);
+      }
+      if (proCompetences !== undefined) {
+        sets.push('pro_competences=?');
+        binds.push(proCompetences);
+      }
+      if (proExperienceYears !== undefined) {
+        sets.push('pro_experience_years=?');
+        binds.push(proExperienceYears);
+      }
+      if (locationLat !== undefined) {
+        sets.push('location_lat=?');
+        binds.push(locationLat);
+      }
+      if (locationLng !== undefined) {
+        sets.push('location_lng=?');
+        binds.push(locationLng);
       }
 
       sets.push("updated_at=datetime('now')");
@@ -134,6 +204,24 @@ export const PATCH: APIRoute = async ({ cookies, locals, request }) => {
       if (nextProPackPrices !== undefined) {
         await sql`UPDATE users SET pro_pack_prices=${nextProPackPrices}, updated_at=now() WHERE id=${me.id}`;
       }
+      if (nextProPackServices !== undefined) {
+        await sql`UPDATE users SET pro_pack_services=${nextProPackServices}, updated_at=now() WHERE id=${me.id}`;
+      }
+      if (proDiploma !== undefined) {
+        await sql`UPDATE users SET pro_diploma=${proDiploma}, updated_at=now() WHERE id=${me.id}`;
+      }
+      if (proCompetences !== undefined) {
+        await sql`UPDATE users SET pro_competences=${proCompetences}, updated_at=now() WHERE id=${me.id}`;
+      }
+      if (proExperienceYears !== undefined) {
+        await sql`UPDATE users SET pro_experience_years=${proExperienceYears}, updated_at=now() WHERE id=${me.id}`;
+      }
+      if (locationLat !== undefined) {
+        await sql`UPDATE users SET location_lat=${locationLat}, updated_at=now() WHERE id=${me.id}`;
+      }
+      if (locationLng !== undefined) {
+        await sql`UPDATE users SET location_lng=${locationLng}, updated_at=now() WHERE id=${me.id}`;
+      }
 
       return json({ ok: true });
     }
@@ -146,7 +234,7 @@ export const PATCH: APIRoute = async ({ cookies, locals, request }) => {
       return json(
         {
           error:
-            "Migration DB requise: appliquez la migration 0003 (colonnes users.pro_services / users.pro_pack_prices) puis réessayez.",
+            'Migration DB requise: appliquez les migrations 0003 (profil pro) et 0005 (offre pro avancée) puis réessayez.',
         },
         500
       );
@@ -198,4 +286,62 @@ function sanitizePackPrices(obj: Record<string, unknown>): Record<string, number
     out[id] = Math.round(n * 100) / 100;
   }
   return out;
+}
+
+function safeJsonParsePackServices(input: unknown): Record<string, string[]> {
+  if (typeof input !== 'string' || !input.trim()) return {};
+  try {
+    const parsed = JSON.parse(input);
+    if (!isPlainObject(parsed)) return {};
+    return sanitizePackServices(parsed as Record<string, unknown>);
+  } catch {
+    return {};
+  }
+}
+
+function sanitizePackServices(obj: Record<string, unknown>): Record<string, string[]> {
+  const allowedPacks = new Set(['essentiel', 'standard', 'premium', 'tourisme']);
+  const allowedServices = new Set(['consultation', 'orientation', 'dossier', 'suivi', 'recherche', 'integration']);
+  const out: Record<string, string[]> = {};
+
+  for (const [rawPackId, rawList] of Object.entries(obj)) {
+    const packId = String(rawPackId).slice(0, 64);
+    if (!allowedPacks.has(packId)) continue;
+    const list = Array.isArray(rawList) ? rawList : [];
+    const cleaned = list
+      .map((x) => String(x))
+      .filter((x) => allowedServices.has(x))
+      .slice(0, 50);
+    // Dédoublonnage
+    out[packId] = Array.from(new Set(cleaned));
+  }
+  return out;
+}
+
+function safeNumberInt(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  const i = Math.trunc(n);
+  if (i < 0 || i > 80) return null;
+  return i;
+}
+
+function safeNumberFloat(value: unknown): number | null {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 1e6) / 1e6;
+}
+
+function safeLatitude(value: unknown): number | null {
+  const n = safeNumberFloat(value);
+  if (n === null) return null;
+  if (n < -90 || n > 90) return null;
+  return n;
+}
+
+function safeLongitude(value: unknown): number | null {
+  const n = safeNumberFloat(value);
+  if (n === null) return null;
+  if (n < -180 || n > 180) return null;
+  return n;
 }

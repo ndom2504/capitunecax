@@ -21,6 +21,15 @@ export interface User {
   pro_services?: string;
   // JSON stocké en TEXT (prix par pack)
   pro_pack_prices?: string;
+  // JSON stocké en TEXT: { [packId]: string[] }
+  pro_pack_services?: string;
+  // Profil pro (public)
+  pro_diploma?: string;
+  pro_competences?: string;
+  pro_experience_years?: number | null;
+  // Géolocalisation (optionnelle)
+  location_lat?: number | null;
+  location_lng?: number | null;
   role: 'client' | 'admin';
   oauth_provider: string;
   oauth_id: string;
