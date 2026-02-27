@@ -2,25 +2,34 @@
 
 ---
 import MainLayout from '../../layouts/main.astro';
+import { HeaderNav } from '../../components/HeaderNav';
+import { FooterCustom } from '../../components/FooterCustom';
 ---
 
 <MainLayout>
-  <div class="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background py-12">
+  <HeaderNav client:only="react" />
+
+  <!-- Hero -->
+  <section class="bg-gradient-to-br from-primary/10 to-primary/5 py-16 md:py-20">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-5">
+          <svg class="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-foreground mb-4">Configuration Stripe</h1>
+        <p class="text-lg md:text-xl text-muted-foreground">
+          Configurez vos clés API Stripe pour activer les paiements
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenu -->
+  <section class="py-16 md:py-20 bg-background">
     <div class="container mx-auto px-4 md:px-6">
       <div class="max-w-3xl mx-auto">
-        
-        <!-- Header -->
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-4">
-            <svg class="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
-          </div>
-          <h1 class="text-4xl font-bold text-foreground mb-3">Configuration Stripe</h1>
-          <p class="text-lg text-muted-foreground">
-            Configurez vos clés API Stripe pour activer les paiements
-          </p>
-        </div>
 
         <!-- Main Config Card -->
         <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
@@ -241,21 +250,24 @@ STRIPE_WEBHOOK_SECRET=</pre>
 
       </div>
     </div>
-  </div>
+  </section>
+
+  <FooterCustom client:only="react" />
 
   <script>
     // Environment radio buttons
     const envRadios = document.querySelectorAll('.env-radio');
     
     function updateEnvironmentUI() {
-      envRadios.forEach(radio => {
-        const radioInput = radio as HTMLInputElement;
-        const env = radioInput.dataset.env;
+      envRadios.forEach((radio) => {
+        if (!(radio instanceof HTMLInputElement)) return;
+
+        const env = radio.dataset.env || '';
         const card = document.querySelector(`[data-card="${env}"]`);
-        const radioCircle = card?.querySelector('.radio-circle');
-        const radioDot = card?.querySelector('.radio-dot');
+        const radioCircle = card ? card.querySelector('.radio-circle') : null;
+        const radioDot = card ? card.querySelector('.radio-dot') : null;
         
-        if (radioInput.checked) {
+        if (radio.checked) {
           // Checked state
           if (env === 'test') {
             card?.classList.remove('border-border');
@@ -291,12 +303,13 @@ STRIPE_WEBHOOK_SECRET=</pre>
     });
 
     // Toggle password visibility for Secret Key
-    const secretKeyInput = document.getElementById('secret-key') as HTMLInputElement;
+    const secretKeyInput = document.getElementById('secret-key');
     const toggleSecret = document.getElementById('toggle-secret');
     const eyeOpen = document.getElementById('eye-open');
     const eyeClosed = document.getElementById('eye-closed');
 
     toggleSecret?.addEventListener('click', () => {
+      if (!(secretKeyInput instanceof HTMLInputElement)) return;
       const isPassword = secretKeyInput.type === 'password';
       secretKeyInput.type = isPassword ? 'text' : 'password';
       eyeOpen?.classList.toggle('hidden');
@@ -304,12 +317,13 @@ STRIPE_WEBHOOK_SECRET=</pre>
     });
 
     // Toggle password visibility for Webhook Secret
-    const webhookInput = document.getElementById('webhook-secret') as HTMLInputElement;
+    const webhookInput = document.getElementById('webhook-secret');
     const toggleWebhook = document.getElementById('toggle-webhook');
     const webhookEyeOpen = document.getElementById('webhook-eye-open');
     const webhookEyeClosed = document.getElementById('webhook-eye-closed');
 
     toggleWebhook?.addEventListener('click', () => {
+      if (!(webhookInput instanceof HTMLInputElement)) return;
       const isPassword = webhookInput.type === 'password';
       webhookInput.type = isPassword ? 'text' : 'password';
       webhookEyeOpen?.classList.toggle('hidden');
@@ -318,9 +332,13 @@ STRIPE_WEBHOOK_SECRET=</pre>
 
     // Update .env preview
     function updateEnvPreview() {
-      const publishableKey = (document.getElementById('publishable-key') as HTMLInputElement).value;
-      const secretKey = (document.getElementById('secret-key') as HTMLInputElement).value;
-      const webhookSecret = (document.getElementById('webhook-secret') as HTMLInputElement).value;
+      const publishableEl = document.getElementById('publishable-key');
+      const secretEl = document.getElementById('secret-key');
+      const webhookEl = document.getElementById('webhook-secret');
+
+      const publishableKey = publishableEl instanceof HTMLInputElement ? publishableEl.value : '';
+      const secretKey = secretEl instanceof HTMLInputElement ? secretEl.value : '';
+      const webhookSecret = webhookEl instanceof HTMLInputElement ? webhookEl.value : '';
 
       const envContent = `# Ajoutez ces lignes à votre fichier .env
 
@@ -359,8 +377,9 @@ STRIPE_WEBHOOK_SECRET=${webhookSecret || 'whsec_...'}`;
     const form = document.getElementById('stripe-config-form');
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      
-      const formData = new FormData(e.target as HTMLFormElement);
+
+      if (!(e.target instanceof HTMLFormElement)) return;
+      const formData = new FormData(e.target);
       const config = {
         publishableKey: formData.get('publishableKey'),
         secretKey: formData.get('secretKey'),
