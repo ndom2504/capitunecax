@@ -23,9 +23,8 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const me = await getUserFromSessionFullAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
 
-  const isPro = String((me as any)?.account_type ?? '') === 'pro';
   const isAdmin = String((me as any)?.role ?? '') === 'admin';
-  if (!isPro && !isAdmin) return json({ error: 'Accès refusé' }, 403);
+  if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
 
   let body: any;
   try {

@@ -950,51 +950,79 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <h3><i class="fa fa-tags" style="color:var(--cap-orange);"></i> Packs, services & tarifs</h3>
               <p style="margin:0 0 14px;color:#777;">Sélectionnez les services inclus dans chaque pack et renseignez le prix du pack (affiché côté client dans “Voir”).</p>
 
-                <div class="pro-offering-grid" id="proOfferingGrid">
-                  <!-- Rendu dynamique via /api/catalog -->
-                </div>
-
-                <div style="margin-top:18px;padding-top:14px;border-top:1px solid #eee;">
-                  <p style="margin:0 0 12px;color:#777;">Ajoutez un nouveau <strong>service</strong> ou un nouveau <strong>pack</strong> au catalogue global (visible côté client).</p>
-                  <div class="info-grid" style="grid-template-columns:1fr 1fr;gap:14px;">
-                    <div class="info-cell">
-                      <label>Ajouter / mettre à jour un service</label>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <input id="catalogServiceId" placeholder="ID (ex: consultation-avancee)" />
-                        <input id="catalogServiceName" placeholder="Nom (ex: Consultation avancée)" />
-                        <input id="catalogServiceIcon" placeholder="Icône (ex: 🧩)" />
-                        <input id="catalogServiceBasePrice" type="number" min="0" step="1" placeholder="Prix de base" />
-                      </div>
-                      <textarea id="catalogServiceDesc" placeholder="Description (optionnel)" style="margin-top:10px;min-height:70px;"></textarea>
-                      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-                        <button class="btn-submit-projet" type="button" onclick="saveCatalogService()"><i class="fa fa-plus"></i> Enregistrer le service</button>
-                      </div>
-                      <p id="catalogServiceHint" style="margin:10px 0 0;color:#888;font-size:12px;"></p>
+              <div class="pro-offering-grid" id="proOfferingGrid">
+                <div class="pro-offering-pack">
+                  <div class="pro-offering-head">Pack Essentiel</div>
+                  <div class="pro-offering-body">
+                    <div class="pro-offering-price">
+                      <label>Prix (CAD)</label>
+                      <input id="proPackPrice-essentiel" type="number" min="0" step="1" />
                     </div>
-
-                    <div class="info-cell">
-                      <label>Ajouter / mettre à jour un pack</label>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <input id="catalogPackId" placeholder="ID (ex: express)" />
-                        <input id="catalogPackName" placeholder="Nom (ex: Pack Express)" />
-                        <input id="catalogPackBadge" placeholder="Badge (ex: 📦)" />
-                        <input id="catalogPackPrice" type="number" min="0" step="1" placeholder="Prix du pack" />
-                      </div>
-                      <textarea id="catalogPackDesc" placeholder="Description (optionnel)" style="margin-top:10px;min-height:70px;"></textarea>
-                      <div style="margin-top:10px;">
-                        <div style="font-size:12px;color:#666;margin-bottom:8px;">Services inclus</div>
-                        <div id="catalogPackServices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-                        <label style="display:flex;gap:10px;align-items:center;margin-top:10px;font-size:12px;color:#666;">
-                          <input id="catalogPackPopular" type="checkbox" /> Populaire
-                        </label>
-                      </div>
-                      <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-                        <button class="btn-submit-projet" type="button" onclick="saveCatalogPack()"><i class="fa fa-plus"></i> Enregistrer le pack</button>
-                      </div>
-                      <p id="catalogPackHint" style="margin:10px 0 0;color:#888;font-size:12px;"></p>
+                    <div class="pro-offering-services">
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-consultation" value="consultation"> Consultation stratégique</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-orientation" value="orientation"> Orientation programme</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-dossier" value="dossier"> Montage du dossier</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-suivi" value="suivi"> Suivi administratif</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-recherche" value="recherche"> Recherche employeur</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-integration" value="integration"> Aide à l’installation</label>
                     </div>
                   </div>
                 </div>
+
+                <div class="pro-offering-pack">
+                  <div class="pro-offering-head">Pack Standard</div>
+                  <div class="pro-offering-body">
+                    <div class="pro-offering-price">
+                      <label>Prix (CAD)</label>
+                      <input id="proPackPrice-standard" type="number" min="0" step="1" />
+                    </div>
+                    <div class="pro-offering-services">
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-consultation" value="consultation"> Consultation stratégique</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-orientation" value="orientation"> Orientation programme</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-dossier" value="dossier"> Montage du dossier</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-suivi" value="suivi"> Suivi administratif</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-recherche" value="recherche"> Recherche employeur</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-integration" value="integration"> Aide à l’installation</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pro-offering-pack">
+                  <div class="pro-offering-head">Pack Premium</div>
+                  <div class="pro-offering-body">
+                    <div class="pro-offering-price">
+                      <label>Prix (CAD)</label>
+                      <input id="proPackPrice-premium" type="number" min="0" step="1" />
+                    </div>
+                    <div class="pro-offering-services">
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-consultation" value="consultation"> Consultation stratégique</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-orientation" value="orientation"> Orientation programme</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-dossier" value="dossier"> Montage du dossier</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-suivi" value="suivi"> Suivi administratif</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-recherche" value="recherche"> Recherche employeur</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-integration" value="integration"> Aide à l’installation</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pro-offering-pack">
+                  <div class="pro-offering-head">Pack Tourisme</div>
+                  <div class="pro-offering-body">
+                    <div class="pro-offering-price">
+                      <label>Prix (CAD)</label>
+                      <input id="proPackPrice-tourisme" type="number" min="0" step="1" />
+                    </div>
+                    <div class="pro-offering-services">
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-consultation" value="consultation"> Consultation stratégique</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-orientation" value="orientation"> Orientation programme</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-dossier" value="dossier"> Montage du dossier</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-suivi" value="suivi"> Suivi administratif</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-recherche" value="recherche"> Recherche employeur</label>
+                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-integration" value="integration"> Aide à l’installation</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:14px;">
                 <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer packs & tarifs</button>
@@ -1797,53 +1825,6 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       }).join('');
     }
 
-    function renderProOfferingFromCatalog() {
-      var root = document.getElementById('proOfferingGrid');
-      if (!root) return;
-      var catalog = window.__catalog;
-      if (!catalog || !Array.isArray(catalog.packages) || !Array.isArray(catalog.services)) return;
-      var svcs = catalog.services.slice();
-      var packs = catalog.packages.slice();
-
-      var packSvcs = window.__proInitialPackServices && typeof window.__proInitialPackServices === 'object' ? window.__proInitialPackServices : {};
-      var packPrices = window.__proInitialPackPrices && typeof window.__proInitialPackPrices === 'object' ? window.__proInitialPackPrices : {};
-
-      root.innerHTML = packs.map(function(pk){
-        var priceVal = (typeof packPrices[pk.id] === 'number' && Number.isFinite(packPrices[pk.id])) ? String(packPrices[pk.id]) : '';
-        var included = Array.isArray(packSvcs[pk.id]) ? packSvcs[pk.id] : [];
-        var checks = svcs.map(function(s){
-          var checked = included.indexOf(s.id) !== -1;
-          var cbId = 'proPackSvc-'+pk.id+'-'+s.id;
-          return '<label class="langue-checkbox" style="user-select:none;">'
-            + '<input type="checkbox" id="'+cbId+'" value="'+s.id+'" '+(checked?'checked':'')+'>'
-            + ' '+escHtml(s.name)
-            + '</label>';
-        }).join('');
-        return '<div class="pro-offering-pack">'
-          + '<div class="pro-offering-head">'+escHtml(pk.name)+'</div>'
-          + '<div class="pro-offering-body">'
-          + '<div class="pro-offering-price">'
-          + '<label>Prix ('+String(window.__currencyCode||'CAD').toUpperCase()+')</label>'
-          + '<input id="proPackPrice-'+pk.id+'" type="number" min="0" step="1" value="'+priceVal+'" />'
-          + '</div>'
-          + '<div class="pro-offering-services">'+checks+'</div>'
-          + '</div>'
-          + '</div>';
-      }).join('');
-
-      // Injecter les checkboxes services pour le formulaire "Ajouter pack"
-      var packServicesWrap = document.getElementById('catalogPackServices');
-      if (packServicesWrap) {
-        packServicesWrap.innerHTML = svcs.map(function(s){
-          var cid = 'catPackSvc-'+s.id;
-          return '<label class="langue-checkbox" style="user-select:none;">'
-            + '<input type="checkbox" id="'+cid+'" value="'+s.id+'"> '
-            + escHtml(s.name)
-            + '</label>';
-        }).join('');
-      }
-    }
-
     async function loadCatalog() {
       try {
         var r = await fetch('/api/catalog', { headers: { 'Accept': 'application/json' } });
@@ -1896,90 +1877,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     async function initCatalogAndUI() {
       var cat = await loadCatalog();
       if (cat) {
-        renderProOfferingFromCatalog();
         rerenderServicesUI();
       }
     }
-
-    async function catalogManage(payload) {
-      var r = await fetch('/api/catalog/manage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      var j = await r.json().catch(function(){ return {}; });
-      if (!r.ok || (j && j.error)) {
-        var msg = (j && j.error) ? j.error : 'Erreur lors de la mise à jour du catalogue.';
-        throw new Error(msg);
-      }
-      return j;
-    }
-
-    window.saveCatalogService = async function() {
-      try {
-        setHint('catalogServiceHint', 'Enregistrement…', true);
-        var id = (document.getElementById('catalogServiceId') || {}).value || '';
-        var name = (document.getElementById('catalogServiceName') || {}).value || '';
-        var description = (document.getElementById('catalogServiceDesc') || {}).value || '';
-        var icon = (document.getElementById('catalogServiceIcon') || {}).value || '';
-        var basePriceRaw = (document.getElementById('catalogServiceBasePrice') || {}).value;
-        var basePrice = parseMoney(basePriceRaw);
-        await catalogManage({
-          action: 'upsert_service',
-          service: {
-            id: String(id || '').trim(),
-            name: String(name || '').trim(),
-            description: String(description || '').trim(),
-            icon: String(icon || '').trim(),
-            basePrice: basePrice === null ? 0 : basePrice
-          }
-        });
-        setHint('catalogServiceHint', 'Service enregistré ✓', true);
-        await initCatalogAndUI();
-      } catch (e) {
-        setHint('catalogServiceHint', (e && e.message) ? e.message : 'Erreur.', false);
-      }
-    };
-
-    window.saveCatalogPack = async function() {
-      try {
-        setHint('catalogPackHint', 'Enregistrement…', true);
-        var id = (document.getElementById('catalogPackId') || {}).value || '';
-        var name = (document.getElementById('catalogPackName') || {}).value || '';
-        var description = (document.getElementById('catalogPackDesc') || {}).value || '';
-        var badge = (document.getElementById('catalogPackBadge') || {}).value || '';
-        var priceRaw = (document.getElementById('catalogPackPrice') || {}).value;
-        var price = parseMoney(priceRaw);
-        var popular = !!((document.getElementById('catalogPackPopular') || {}).checked);
-
-        var serviceIds = [];
-        document.querySelectorAll('[id^="catPackSvc-"]').forEach(function(cb){
-          try { if (cb && cb.checked && cb.value) serviceIds.push(String(cb.value)); } catch(_e) {}
-        });
-
-        await catalogManage({
-          action: 'upsert_package',
-          pkg: {
-            id: String(id || '').trim(),
-            name: String(name || '').trim(),
-            description: String(description || '').trim(),
-            badge: String(badge || '').trim(),
-            price: price === null ? 0 : price,
-            popular: popular
-          }
-        });
-        await catalogManage({
-          action: 'set_package_services',
-          packageId: String(id || '').trim(),
-          serviceIds: serviceIds
-        });
-
-        setHint('catalogPackHint', 'Pack enregistré ✓', true);
-        await initCatalogAndUI();
-      } catch (e) {
-        setHint('catalogPackHint', (e && e.message) ? e.message : 'Erreur.', false);
-      }
-    };
 
     window.togglePackDetail = function(packId) {
       var panel = document.getElementById('svclist-'+packId);
@@ -2136,10 +2036,23 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
         var prices = p.pro_pack_prices && typeof p.pro_pack_prices === 'object' ? p.pro_pack_prices : {};
         window.__proInitialPackPrices = prices;
-        // Laisser le rendu dynamique positionner les inputs si le catalogue est chargé
-        if (window.__catalog) {
-          renderProOfferingFromCatalog();
-        }
+
+        // Remplir le formulaire simple (4 packs fixes)
+        try {
+          var packSvcs = window.__proInitialPackServices || {};
+          var packs = ['essentiel','standard','premium','tourisme'];
+          var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
+          packs.forEach(function(pk){
+            var arr = Array.isArray(packSvcs[pk]) ? packSvcs[pk] : [];
+            svcIds.forEach(function(sid){
+              var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
+              if (cb) cb.checked = arr.indexOf(sid) !== -1;
+            });
+            var v = prices[pk];
+            var el = document.getElementById('proPackPrice-'+pk);
+            if (el) el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
+          });
+        } catch(_e) {}
       } catch(e) {}
 
       // Fallback statut
@@ -2167,34 +2080,28 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (lat !== undefined && lat !== null && String(lat).trim() !== '') body.location_lat = Number(lat);
         if (lng !== undefined && lng !== null && String(lng).trim() !== '') body.location_lng = Number(lng);
 
-        // Packs -> services (dynamique depuis DOM)
+        // Packs -> services (4 packs fixes)
+        var packs = ['essentiel','standard','premium','tourisme'];
+        var svcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
         var packServices = {};
         var anyChecked = false;
-        document.querySelectorAll('[id^="proPackSvc-"]').forEach(function(cb){
-          try {
-            if (!cb || !cb.id) return;
-            if (!cb.checked) return;
-            var parts = cb.id.split('-');
-            // proPackSvc-{packId}-{serviceId...}
-            if (parts.length < 3) return;
-            var packId = parts[1];
-            var svcId = parts.slice(2).join('-');
-            if (!packServices[packId]) packServices[packId] = [];
-            packServices[packId].push(svcId);
-            anyChecked = true;
-          } catch(_e) {}
+        packs.forEach(function(pk){
+          var arr = [];
+          svcIds.forEach(function(sid){
+            var cb = document.getElementById('proPackSvc-'+pk+'-'+sid);
+            if (cb && cb.checked) { arr.push(sid); anyChecked = true; }
+          });
+          if (arr.length) packServices[pk] = arr;
         });
 
-        // Packs -> prix (dynamique)
+        // Packs -> prix (4 packs fixes)
         var prices = {};
         var anyPrice = false;
-        document.querySelectorAll('[id^="proPackPrice-"]').forEach(function(inp){
-          try {
-            if (!inp || !inp.id) return;
-            var pk = inp.id.replace('proPackPrice-','');
-            var v = parseMoney(inp.value);
-            if (v !== null) { prices[pk] = v; anyPrice = true; }
-          } catch(_e) {}
+        packs.forEach(function(pk){
+          var el = document.getElementById('proPackPrice-'+pk);
+          if (!el) return;
+          var v = parseMoney(el.value);
+          if (v !== null) { prices[pk] = v; anyPrice = true; }
         });
 
         // N'envoyer pack_services que si on a des données (pour éviter d'écraser un profil existant par inadvertance)
