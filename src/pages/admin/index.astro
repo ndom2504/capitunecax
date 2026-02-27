@@ -1,9 +1,9 @@
 ---
 // Protection front supplémentaire (le middleware couvre déjà /admin)
-import { getUserFromSession } from '../../lib/db';
+import { getUserFromSessionFullAny } from '../../lib/db';
 const db = (Astro.locals.runtime?.env as Env | undefined)?.DB ?? null;
 const token = Astro.cookies.get('capitune_session')?.value ?? '';
-const adminUser = db ? await getUserFromSession(db, token) : null;
+const adminUser = await getUserFromSessionFullAny(db, token);
 const adminName = adminUser?.name ?? 'Admin';
 ---
 <!doctype html>

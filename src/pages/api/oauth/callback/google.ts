@@ -1,6 +1,9 @@
 import type { APIRoute } from 'astro';
+import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../../lib/db';
 
-export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
+
+export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
@@ -76,18 +79,118 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
       picture?: string;
     };
 
-    // Création de la session (cookie httpOnly sécurisé)
+    const email = (profile.email ?? '').toLowerCase().trim();
+    const name = (profile.name ?? email).trim();
+
+    const isHttps = origin.startsWith('https');
+
+    // ── Session D1 si DB disponible (prod Cloudflare) ───────────────────
+    const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
+    if (db && email) {
+      const role = ADMIN_EMAILS.includes(email) ? 'admin' : 'client';
+      const existing = await db
+        .prepare(`SELECT id, name, role FROM users WHERE email = ?`)
+        .bind(email)
+        .first<{ id: string; name: string | null; role: string | null }>();
+
+      const userId = existing?.id ?? uuid();
+      if (!existing) {
+        await db
+          .prepare(`INSERT INTO users (id, email, name, role, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, 'google', ?)`)
+          .bind(userId, email, name, role, profile.id ?? '')
+          .run();
+      } else {
+        await db
+          .prepare(`UPDATE users SET name = COALESCE(NULLIF(?, ''), name), oauth_provider='google', oauth_id=?, role=COALESCE(role, ?), updated_at=datetime('now') WHERE id=?`)
+          .bind(name, profile.id ?? '', role, userId)
+          .run();
+      }
+
+      const sessionToken = await createSessionAny(db, userId);
+      cookies.set('capitune_session', sessionToken, {
+        path: '/',
+        httpOnly: true,
+        secure: isHttps,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30,
+      });
+
+      cookies.set(
+        'capitune_user',
+        JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }),
+        {
+          path: '/',
+          httpOnly: false,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        }
+      );
+
+      return redirect('/dashboard');
+    }
+
+    // ── Session Neon si DATABASE_URL dispo (prod Vercel) ─────────────────
+    if (!db && email && hasNeonDatabase()) {
+      const sql = await getNeonSqlClient();
+      if (!sql) return redirect('/connexion?error=MissingDatabaseUrl');
+
+      const role = ADMIN_EMAILS.includes(email) ? 'admin' : 'client';
+      const existing = await sql<{ id: string; name: string; role: string }>
+        `SELECT id, name, role FROM users WHERE email = ${email} LIMIT 1`;
+
+      const userId = existing[0]?.id ?? uuid();
+      if (!existing[0]) {
+        await sql`
+          INSERT INTO users (id, email, name, role, oauth_provider, oauth_id)
+          VALUES (${userId}, ${email}, ${name}, ${role}, 'google', ${profile.id ?? ''})
+        `;
+      } else {
+        await sql`
+          UPDATE users
+          SET
+            name = CASE WHEN ${name} <> '' THEN ${name} ELSE name END,
+            oauth_provider = 'google',
+            oauth_id = ${profile.id ?? ''},
+            role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
+            updated_at = now()
+          WHERE id = ${userId}
+        `;
+      }
+
+      const sessionToken = await createSessionAny(null, userId);
+      cookies.set('capitune_session', sessionToken, {
+        path: '/',
+        httpOnly: true,
+        secure: isHttps,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30,
+      });
+      cookies.set(
+        'capitune_user',
+        JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }),
+        {
+          path: '/',
+          httpOnly: false,
+          secure: isHttps,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30,
+        }
+      );
+      return redirect('/dashboard');
+    }
+
+    // ── Fallback sans DB (ex: vercel/serverless) ────────────────────────
     const sessionData = JSON.stringify({
       provider: 'google',
       id: profile.id,
-      email: profile.email,
-      name: profile.name,
+      email,
+      name,
       picture: profile.picture,
-      role: ['info@misterdil.ca','divinegismille@gmail.com'].includes((profile.email||'').toLowerCase()) ? 'admin' : 'user',
+      role: ADMIN_EMAILS.includes(email) ? 'admin' : 'client',
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 jours
     });
 
-    const isHttps = origin.startsWith('https');
     // btoa() est compatible Cloudflare Workers (pas de Buffer Node.js)
     const sessionToken = btoa(encodeURIComponent(sessionData));
 
@@ -100,7 +203,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect }) => {
     });
 
     // Cookie lisible côté client pour afficher le nom/avatar
-    cookies.set('capitune_user', JSON.stringify({ name: profile.name, email: profile.email, picture: profile.picture, provider: 'google', role: ['info@misterdil.ca','divinegismille@gmail.com'].includes((profile.email||'').toLowerCase()) ? 'admin' : 'user' }), {
+    cookies.set('capitune_user', JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role: ADMIN_EMAILS.includes(email) ? 'admin' : 'user' }), {
       path: '/',
       httpOnly: false,
       secure: isHttps,

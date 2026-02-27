@@ -1,11 +1,14 @@
 import type { APIRoute } from 'astro';
-import { deleteSession } from '../../../lib/db';
+import { deleteSessionAny } from '../../../lib/db';
 
 async function logout(cookies: Parameters<APIRoute>[0]['cookies'], locals: Parameters<APIRoute>[0]['locals']) {
   const token = cookies.get('capitune_session')?.value;
   const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
   if (db && token && /^[0-9a-f]{64}$/.test(token)) {
-    await deleteSession(db, token);
+    await deleteSessionAny(db, token);
+  } else if (!db && token && /^[0-9a-f]{64}$/.test(token)) {
+    // Vercel + Neon: session en DB Postgres
+    await deleteSessionAny(null, token);
   }
   cookies.delete('capitune_session', { path: '/' });
   cookies.delete('capitune_user',    { path: '/' });

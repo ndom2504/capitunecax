@@ -1,4 +1,5 @@
 import type {MiddlewareHandler} from 'astro';
+import { getUserFromSessionAny } from './lib/db';
 
 const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
 
@@ -18,18 +19,13 @@ export const onRequest: MiddlewareHandler = async (ctx, next) => {
     const token = ctx.cookies.get('capitune_session')?.value;
     if (!token) return null;
     const db = (ctx.locals.runtime?.env as Env | undefined)?.DB ?? null;
-    if (db && /^[0-9a-f]{64}$/.test(token)) {
-      const row = await db
-        .prepare(`SELECT u.email, u.role FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.id = ? AND s.expires_at > datetime('now')`)
-        .bind(token)
-        .first<{ email: string; role: string }>();
-      return row ?? null;
-    }
-    // Fallback ancien format base64
-    try {
-      const data = JSON.parse(decodeURIComponent(atob(token)));
-      return { email: data.email as string, role: ADMIN_EMAILS.includes(data.email) ? 'admin' : 'client' };
-    } catch { return null; }
+    const user = await getUserFromSessionAny(db, token);
+    if (!user) return null;
+
+    // Garde-fou: si la session vient d'un vieux token base64 sans role,
+    // on applique la whitelist pour préserver l'accès admin.
+    const role = user.role === 'admin' || ADMIN_EMAILS.includes(user.email) ? 'admin' : 'client';
+    return { email: user.email, role };
   }
 
   // Protection dashboard
@@ -37,10 +33,8 @@ export const onRequest: MiddlewareHandler = async (ctx, next) => {
     const token = ctx.cookies.get('capitune_session')?.value;
     if (!token) return ctx.redirect('/connexion');
     const db = (ctx.locals.runtime?.env as Env | undefined)?.DB ?? null;
-    if (db && /^[0-9a-f]{64}$/.test(token)) {
-      const row = await db.prepare(`SELECT user_id FROM sessions WHERE id = ? AND expires_at > datetime('now')`).bind(token).first();
-      if (!row) return ctx.redirect('/connexion');
-    }
+    const user = await getUserFromSessionAny(db, token);
+    if (!user) return ctx.redirect('/connexion');
   }
 
   // Protection admin (/admin/* et /api/admin/*)

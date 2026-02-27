@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createSession, uuid } from '../../../lib/db';
+import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../lib/db';
 
 /**
  * Génère un hash de mot de passe (SHA-256 + salt simple).
@@ -38,6 +38,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
     // ── Persistance D1 ────────────────────────────────────────────────────
     const db = (locals.runtime?.env as Env)?.DB ?? null;
+    const useNeon = !db && hasNeonDatabase();
     let sessionToken: string;
 
     if (db) {
@@ -61,7 +62,26 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
          VALUES (?, ?, ?, ?, ?, ?)`
       ).bind(userId, emailStr, pwHash, name, phone, role).run();
 
-      sessionToken = await createSession(db, userId);
+      sessionToken = await createSessionAny(db, userId);
+    } else if (useNeon) {
+      const sql = await getNeonSqlClient();
+      if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
+
+      const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
+      if (existing[0]) {
+        return json({ message: 'Un compte avec cet email existe déjà.' }, 409);
+      }
+
+      const userId  = uuid();
+      const salt    = crypto.randomUUID();
+      const hash    = await hashPassword(String(data.password), salt);
+      const pwHash  = salt + ':' + hash;
+
+      await sql`
+        INSERT INTO users (id, email, password_hash, name, phone, role)
+        VALUES (${userId}, ${emailStr}, ${pwHash}, ${name}, ${phone}, ${role})
+      `;
+      sessionToken = await createSessionAny(null, userId);
     } else {
       // Fallback sans DB (dev sans wrangler)
       const sessionData = JSON.stringify({ email: emailStr, name, role, expires: Date.now() + 7 * 86400000 });

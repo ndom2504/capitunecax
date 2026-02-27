@@ -241,3 +241,10 @@
   background-color: var(--primary) !important;
   opacity: 0.9;
 }
+
+/* Masquer le badge Webflow en production (évite l'affichage “Webflow”) */
+.w-webflow-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}

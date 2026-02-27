@@ -2,36 +2,72 @@
  * GET /api/admin/client/[id] — Fiche complète d'un client
  */
 import type { APIRoute } from 'astro';
+import { getNeonSqlClient, hasNeonDatabase } from '../../../../lib/db';
 
 export const GET: APIRoute = async ({ params, locals }) => {
-  const db = (locals.runtime?.env as Env)?.DB;
-  if (!db) return json({ error: 'DB non disponible' }, 503);
+  const db = (locals.runtime?.env as Env)?.DB ?? null;
+  const useNeon = !db && hasNeonDatabase();
+  if (!db && !useNeon) return json({ error: 'DB non disponible' }, 503);
 
   const { id } = params;
   if (!id) return json({ error: 'ID manquant' }, 400);
 
-  const [user, projects, messages, payments] = await Promise.all([
-    db.prepare(`SELECT id, name, email, phone, location, bio, role, created_at FROM users WHERE id=?`)
-      .bind(id).first<Record<string, unknown>>(),
+  if (db) {
+    const [user, projects, messages, payments] = await Promise.all([
+      db.prepare(`SELECT id, name, email, phone, location, bio, role, created_at FROM users WHERE id=?`)
+        .bind(id).first<Record<string, unknown>>(),
 
-    db.prepare(`SELECT p.*, ps.pack_id, ps.pack_price, ps.carte FROM projects p LEFT JOIN project_services ps ON ps.project_id=p.id WHERE p.user_id=? ORDER BY p.updated_at DESC`)
-      .bind(id).all<Record<string, unknown>>(),
+      db.prepare(`SELECT p.*, ps.pack_id, ps.pack_price, ps.carte FROM projects p LEFT JOIN project_services ps ON ps.project_id=p.id WHERE p.user_id=? ORDER BY p.updated_at DESC`)
+        .bind(id).all<Record<string, unknown>>(),
 
-    db.prepare(`SELECT * FROM messages WHERE user_id=? ORDER BY created_at ASC LIMIT 200`)
-      .bind(id).all<Record<string, unknown>>(),
+      db.prepare(`SELECT * FROM messages WHERE user_id=? ORDER BY created_at ASC LIMIT 200`)
+        .bind(id).all<Record<string, unknown>>(),
 
-    db.prepare(`SELECT * FROM payments WHERE user_id=? ORDER BY created_at DESC`)
-      .bind(id).all<Record<string, unknown>>(),
+      db.prepare(`SELECT * FROM payments WHERE user_id=? ORDER BY created_at DESC`)
+        .bind(id).all<Record<string, unknown>>(),
+    ]);
+
+    if (!user) return json({ error: 'Client introuvable' }, 404);
+
+    return json({
+      user,
+      projects:  projects.results,
+      messages:  messages.results,
+      payments:  payments.results,
+    });
+  }
+
+  const sql = await getNeonSqlClient();
+  if (!sql) return json({ error: 'DB non disponible' }, 503);
+
+  const [userRows, projects, messages, payments] = await Promise.all([
+    sql<Record<string, unknown>>`
+      SELECT id::text as id, name, email, phone, location, bio, role, created_at::text as created_at
+      FROM users WHERE id = ${id} LIMIT 1
+    `,
+    sql<Record<string, unknown>>`
+      SELECT p.*, ps.pack_id, (ps.pack_price::float8) as pack_price, ps.carte
+      FROM projects p
+      LEFT JOIN project_services ps ON ps.project_id = p.id
+      WHERE p.user_id = ${id}
+      ORDER BY p.updated_at DESC
+    `,
+    sql<Record<string, unknown>>`
+      SELECT *, created_at::text as created_at
+      FROM messages WHERE user_id = ${id}
+      ORDER BY created_at ASC
+      LIMIT 200
+    `,
+    sql<Record<string, unknown>>`
+      SELECT *, created_at::text as created_at
+      FROM payments WHERE user_id = ${id}
+      ORDER BY created_at DESC
+    `,
   ]);
 
+  const user = userRows[0] ?? null;
   if (!user) return json({ error: 'Client introuvable' }, 404);
-
-  return json({
-    user,
-    projects:  projects.results,
-    messages:  messages.results,
-    payments:  payments.results,
-  });
+  return json({ user, projects, messages, payments });
 };
 
 function json(data: unknown, status = 200) {

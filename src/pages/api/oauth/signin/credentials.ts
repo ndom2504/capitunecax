@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createSession, uuid } from '../../../../lib/db';
+import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../../lib/db';
 
 async function verifyPassword(stored: string, input: string): Promise<boolean> {
   const [salt, hash] = stored.split(':');
@@ -28,6 +28,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
     // ── Authentification D1 ───────────────────────────────────────────────
     const db = (locals.runtime?.env as Env)?.DB ?? null;
+    const useNeon = !db && hasNeonDatabase();
     let sessionToken: string;
     let displayName: string;
     let role: string;
@@ -46,7 +47,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         await db.prepare(
           `INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)`
         ).bind(userId, emailStr, displayName, role).run();
-        sessionToken = await createSession(db, userId);
+        sessionToken = await createSessionAny(db, userId);
       } else {
         // Vérification mot de passe si hash présent
         if (user.password_hash) {
@@ -55,7 +56,30 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = user.role;
-        sessionToken = await createSession(db, user.id);
+        sessionToken = await createSessionAny(db, user.id);
+      }
+    } else if (useNeon) {
+      const sql = await getNeonSqlClient();
+      if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
+
+      const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string }>
+        `SELECT id, name, password_hash, role FROM users WHERE email = ${emailStr} LIMIT 1`;
+      const user = rows[0] ?? null;
+
+      if (!user) {
+        const userId = uuid();
+        displayName = nameFromEmail(emailStr);
+        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
+        await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
+        sessionToken = await createSessionAny(null, userId);
+      } else {
+        if (user.password_hash) {
+          const valid = await verifyPassword(user.password_hash, String(password));
+          if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
+        }
+        displayName = user.name || nameFromEmail(emailStr);
+        role = user.role;
+        sessionToken = await createSessionAny(null, user.id);
       }
     } else {
       // Fallback sans DB

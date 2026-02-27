@@ -1,5 +1,5 @@
 import {defineConfig} from 'astro/config';
-import vercel from '@astrojs/vercel/serverless';
+import vercel from '@astrojs/vercel';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -56,7 +56,9 @@ export default defineConfig({
     strictPort: true,
   },
   adapter: vercel({
-    webAnalytics: { enabled: true }
+    // Désactivé car peut causer un 404 sur /_vercel/insights/script.js
+    // si le site n'est pas servi directement par l'infrastructure Vercel.
+    webAnalytics: { enabled: false }
   }),
   integrations: [
     react(),
