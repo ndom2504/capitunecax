@@ -255,16 +255,16 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     <small style="color:var(--muted);font-size:11px;font-weight:400;">Panneau Admin</small>
   </div>
   <nav class="sidebar-nav">
-    <a class="nav-item active" onclick="showSection('dashboard')">
+    <a class="nav-item active" href="#dashboard" onclick="showSection('dashboard'); return false;">
       <i class="fa fa-chart-pie"></i> Tableau de bord
     </a>
-    <a class="nav-item" onclick="showSection('clients')">
+    <a class="nav-item" href="#clients" onclick="showSection('clients'); return false;">
       <i class="fa fa-users"></i> Clients
     </a>
     <a class="nav-item" href="/admin/stripe-configuration">
       <i class="fa fa-credit-card"></i> Stripe
     </a>
-    <a class="nav-item" href="/dashboard">
+    <a class="nav-item" href="/dashboard?preview=1">
       <i class="fa fa-arrow-left"></i> Espace client
     </a>
     <a class="nav-item" href="/api/oauth/signout" style="margin-top:auto;">

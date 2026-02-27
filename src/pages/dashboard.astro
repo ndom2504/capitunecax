@@ -15,7 +15,8 @@ const sessionUser = await getUserFromSessionAny(db, session.value);
 if (!sessionUser) {
   return Astro.redirect('/connexion');
 }
-if (sessionUser.role === 'admin') {
+const allowAdminPreview = Astro.url.searchParams.get('preview') === '1';
+if (sessionUser.role === 'admin' && !allowAdminPreview) {
   return Astro.redirect('/admin');
 }
 
