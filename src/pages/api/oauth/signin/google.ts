@@ -8,6 +8,14 @@ function isValidGoogleClientId(id: string): boolean {
   return id.endsWith('.apps.googleusercontent.com');
 }
 
+function normalizeGoogleClientId(raw: string | undefined): string {
+  // Vercel UI / .env peuvent inclure des espaces ou des guillemets
+  // (ex: "xxx.apps.googleusercontent.com").
+  return String(raw ?? '')
+    .trim()
+    .replace(/^['"]+|['"]+$/g, '');
+}
+
 function buildGoogleAuthUrl(clientId: string, callbackUrl: string, state: string): string {
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrl.searchParams.set('client_id', clientId);
@@ -22,7 +30,7 @@ function buildGoogleAuthUrl(clientId: string, callbackUrl: string, state: string
 
 // GET: redirection directe vers Google OAuth (navigation navigateur)
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
-  const clientId = import.meta.env.AUTH_GOOGLE_ID;
+  const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
   if (!clientId || !isValidGoogleClientId(clientId)) {
     const msg = !clientId
@@ -51,7 +59,7 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
 
 // POST: réponse JSON attendue par auth-astro/client signIn('google')
 export const POST: APIRoute = async ({ request, cookies }) => {
-  const clientId = import.meta.env.AUTH_GOOGLE_ID;
+  const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
   if (!clientId || !isValidGoogleClientId(clientId)) {
     const msg = !clientId ? 'AUTH_GOOGLE_ID manquant' : 'AUTH_GOOGLE_ID invalide — format attendu : NNN.apps.googleusercontent.com';
