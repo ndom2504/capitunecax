@@ -55,7 +55,10 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
         displayName = user.name || nameFromEmail(emailStr);
-        role = user.role;
+        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : user.role;
+        if (role === 'admin' && user.role !== 'admin') {
+          await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(user.id).run();
+        }
         sessionToken = await createSessionAny(db, user.id);
       }
     } else if (useNeon) {
@@ -78,7 +81,10 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
         displayName = user.name || nameFromEmail(emailStr);
-        role = user.role;
+        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : user.role;
+        if (role === 'admin' && user.role !== 'admin') {
+          await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
+        }
         sessionToken = await createSessionAny(null, user.id);
       }
     } else {

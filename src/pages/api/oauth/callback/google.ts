@@ -129,8 +129,17 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
             .run();
         } else {
           await db
-            .prepare(`UPDATE users SET name = COALESCE(NULLIF(?, ''), name), oauth_provider='google', oauth_id=?, role=COALESCE(role, ?), updated_at=datetime('now') WHERE id=?`)
-            .bind(name, profile.id ?? '', role, userId)
+            .prepare(
+              `UPDATE users
+               SET
+                 name = COALESCE(NULLIF(?, ''), name),
+                 oauth_provider='google',
+                 oauth_id=?,
+                 role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
+                 updated_at=datetime('now')
+               WHERE id=?`
+            )
+            .bind(name, profile.id ?? '', role, role, userId)
             .run();
         }
 
