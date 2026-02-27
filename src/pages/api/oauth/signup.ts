@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../lib/db';
+import { isAdminEmail } from '../../../lib/admin-emails';
 
 /**
  * Génère un hash de mot de passe (SHA-256 + salt simple).
@@ -9,11 +10,6 @@ async function hashPassword(password: string, salt: string): Promise<string> {
   const encoded = new TextEncoder().encode(salt + password);
   const buf = await crypto.subtle.digest('SHA-256', encoded);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
-function getRole(email: string): 'admin' | 'client' {
-  return ADMIN_EMAILS.includes(email.toLowerCase().trim()) ? 'admin' : 'client';
 }
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
@@ -33,7 +29,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const emailStr  = String(data.email).toLowerCase().trim();
     const name      = `${String(data.firstName).trim()} ${String(data.lastName).trim()}`;
     const phone     = String(data.phone ?? '').slice(0, 30);
-    const role      = getRole(emailStr);
+    const role      = isAdminEmail(emailStr) ? 'admin' : 'client';
     const isHttps   = import.meta.env.PROD || new URL(request.url).protocol === 'https:';
 
     // ── Persistance D1 ────────────────────────────────────────────────────

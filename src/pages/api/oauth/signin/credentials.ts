@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../../lib/db';
+import { isAdminEmail } from '../../../../lib/admin-emails';
 
 async function verifyPassword(stored: string, input: string): Promise<boolean> {
   const [salt, hash] = stored.split(':');
@@ -13,8 +14,6 @@ async function verifyPassword(stored: string, input: string): Promise<boolean> {
 function nameFromEmail(email: string): string {
   return email.split('@')[0]!.replace(/[._+-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
 }
-
-const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
 
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
@@ -43,7 +42,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         // Auto-inscription si le compte n'existe pas (comportement MVP)
         const userId = uuid();
         displayName = nameFromEmail(emailStr);
-        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
+        role = isAdminEmail(emailStr) ? 'admin' : 'client';
         await db.prepare(
           `INSERT INTO users (id, email, name, role) VALUES (?, ?, ?, ?)`
         ).bind(userId, emailStr, displayName, role).run();
@@ -55,7 +54,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
         displayName = user.name || nameFromEmail(emailStr);
-        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : user.role;
+        role = isAdminEmail(emailStr) ? 'admin' : user.role;
         if (role === 'admin' && user.role !== 'admin') {
           await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(user.id).run();
         }
@@ -72,7 +71,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       if (!user) {
         const userId = uuid();
         displayName = nameFromEmail(emailStr);
-        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
+        role = isAdminEmail(emailStr) ? 'admin' : 'client';
         await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
         sessionToken = await createSessionAny(null, userId);
       } else {
@@ -81,7 +80,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
         displayName = user.name || nameFromEmail(emailStr);
-        role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : user.role;
+        role = isAdminEmail(emailStr) ? 'admin' : user.role;
         if (role === 'admin' && user.role !== 'admin') {
           await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
         }
@@ -90,7 +89,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     } else {
       // Fallback sans DB
       displayName = nameFromEmail(emailStr);
-      role = ADMIN_EMAILS.includes(emailStr) ? 'admin' : 'client';
+      role = isAdminEmail(emailStr) ? 'admin' : 'client';
       const sessionData = JSON.stringify({ email: emailStr, name: displayName, role, expires: Date.now() + 7 * 86400000 });
       sessionToken = btoa(encodeURIComponent(sessionData));
     }

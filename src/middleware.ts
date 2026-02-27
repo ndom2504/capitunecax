@@ -1,7 +1,6 @@
 import type {MiddlewareHandler} from 'astro';
 import { getUserFromSessionAny } from './lib/db';
-
-const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
+import { effectiveRoleForUser, isAdminEmail } from './lib/admin-emails';
 
 export const onRequest: MiddlewareHandler = async (ctx, next) => {
   const {request} = ctx;
@@ -24,7 +23,7 @@ export const onRequest: MiddlewareHandler = async (ctx, next) => {
 
     // Garde-fou: si la session vient d'un vieux token base64 sans role,
     // on applique la whitelist pour préserver l'accès admin.
-    const role = user.role === 'admin' || ADMIN_EMAILS.includes(user.email) ? 'admin' : 'client';
+    const role = effectiveRoleForUser(user);
     return { email: user.email, role };
   }
 
@@ -41,7 +40,7 @@ export const onRequest: MiddlewareHandler = async (ctx, next) => {
   if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/admin')) {
     const user = await resolveUser();
     if (!user) return ctx.redirect('/connexion?redirect=' + encodeURIComponent(url.pathname));
-    const isAdmin = user.role === 'admin' || ADMIN_EMAILS.includes(user.email);
+    const isAdmin = user.role === 'admin' || isAdminEmail(user.email);
     if (!isAdmin) {
       return new Response('<h1>403 — Accès refusé</h1>', { status: 403, headers: { 'Content-Type': 'text/html' } });
     }

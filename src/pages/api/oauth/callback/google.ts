@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../../lib/db';
-
-const ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
+import { isAdminEmail } from '../../../../lib/admin-emails';
 
 function mapCallbackError(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err ?? '');
@@ -110,7 +109,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
     const isHttps = origin.startsWith('https');
 
-    const role = ADMIN_EMAILS.includes(email) ? 'admin' : 'client';
+    const role = isAdminEmail(email) ? 'admin' : 'client';
 
     // ── Session D1 si DB disponible (prod Cloudflare) ───────────────────
     const db = (locals.runtime?.env as Env | undefined)?.DB ?? null;
@@ -230,7 +229,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
       email,
       name,
       picture: profile.picture,
-      role: ADMIN_EMAILS.includes(email) ? 'admin' : 'client',
+      role,
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 jours
     });
 
@@ -246,7 +245,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     });
 
     // Cookie lisible côté client pour afficher le nom/avatar
-    cookies.set('capitune_user', JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role: ADMIN_EMAILS.includes(email) ? 'admin' : 'user' }), {
+    cookies.set('capitune_user', JSON.stringify({ name, email, picture: profile.picture, provider: 'google', role }), {
       path: '/',
       httpOnly: false,
       secure: isHttps,
