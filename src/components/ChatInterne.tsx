@@ -10,29 +10,8 @@ interface Message {
 }
 
 export function ChatInterne() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: 'consultant',
-      text: 'Bonjour ! Je suis Marie, votre conseillère en immigration. Comment puis-je vous aider aujourd\'hui ?',
-      timestamp: new Date(Date.now() - 3600000),
-      status: 'read'
-    },
-    {
-      id: 2,
-      sender: 'client',
-      text: 'Bonjour Marie, j\'aimerais savoir où en est mon dossier de permis d\'études.',
-      timestamp: new Date(Date.now() - 3000000),
-      status: 'read'
-    },
-    {
-      id: 3,
-      sender: 'consultant',
-      text: 'Votre dossier a été soumis il y a 2 semaines et est actuellement en cours de traitement par les autorités canadiennes. Tout est en ordre !',
-      timestamp: new Date(Date.now() - 2400000),
-      status: 'read'
-    }
-  ]);
+  // Chat vide — les messages réels seront chargés depuis le backend
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -180,6 +159,15 @@ export function ChatInterne() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/20">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+              <svg className="w-14 h-14 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <p className="text-sm font-medium">Aucun message pour le moment</p>
+              <p className="text-xs opacity-70">Commencez la conversation ou envoyez un document</p>
+            </div>
+          )}
           {messages.map((message, index) => {
             const showDate = index === 0 || 
               formatDate(messages[index - 1].timestamp) !== formatDate(message.timestamp);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { baseUrl } from '../lib/base-url';
+import { formatMoney, publicConfig } from '../lib/public-config';
 
 interface PayPalButtonProps {
   amount: number;
@@ -18,6 +19,7 @@ export function PayPalButton({
   onError 
 }: PayPalButtonProps) {
   const clientId = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || 'test';
+  const currency = (publicConfig.paymentCurrency || 'CAD').toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -26,10 +28,7 @@ export function PayPalButton({
           <div>
             <p className="text-sm text-muted-foreground mb-1">Montant à payer</p>
             <p className="text-2xl font-bold text-primary">
-              {new Intl.NumberFormat('fr-CA', { 
-                style: 'currency', 
-                currency: 'CAD' 
-              }).format(amount)}
+              {formatMoney(amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="text-4xl">
@@ -43,7 +42,7 @@ export function PayPalButton({
         <PayPalScriptProvider 
           options={{ 
             clientId,
-            currency: 'CAD',
+            currency,
             intent: 'capture'
           }}
         >

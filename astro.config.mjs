@@ -57,7 +57,7 @@ export default defineConfig({
   },
   adapter: cloudflare({
     platformProxy: {
-      enabled: false,
+      enabled: true,
     },
   }),
   integrations: [

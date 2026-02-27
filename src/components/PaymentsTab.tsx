@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { PaymentModal } from './PaymentModal';
+import { formatMoney } from '../lib/public-config';
+import { getServiceById } from '../lib/service-catalog';
+
+type InvoiceService = {
+  id: string;
+  name: string;
+};
 
 interface Invoice {
   id: string;
@@ -10,12 +17,14 @@ interface Invoice {
   issuedDate: string;
   dueDate?: string;
   paidDate?: string;
-  services: any[];
+  services: InvoiceService[];
 }
 
 export function PaymentsTab() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  const getServiceName = (serviceId: string): string => getServiceById(serviceId)?.name ?? serviceId;
 
   // Mock data - Replace with real data from your backend
   const invoices: Invoice[] = [
@@ -28,9 +37,9 @@ export function PaymentsTab() {
       issuedDate: '15 janvier 2026',
       dueDate: '15 février 2026',
       services: [
-        { id: 'consultation', name: 'Consultation' },
-        { id: 'orientation', name: 'Orientation' },
-        { id: 'dossier', name: 'Montage du dossier' }
+        { id: 'consultation', name: getServiceName('consultation') },
+        { id: 'orientation', name: getServiceName('orientation') },
+        { id: 'dossier', name: getServiceName('dossier') },
       ]
     },
     {
@@ -42,7 +51,7 @@ export function PaymentsTab() {
       issuedDate: '5 janvier 2026',
       paidDate: '5 janvier 2026',
       services: [
-        { id: 'consultation', name: 'Consultation stratégique' }
+        { id: 'consultation', name: getServiceName('consultation') },
       ]
     }
   ];
@@ -55,14 +64,11 @@ export function PaymentsTab() {
     .filter(inv => inv.status === 'paid')
     .reduce((sum, inv) => sum + inv.amount, 0);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
+  const formatPrice = (price: number) =>
+    formatMoney(price, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
-  };
+      maximumFractionDigits: 2,
+    });
 
   const handlePayNow = (invoice: Invoice) => {
     setSelectedInvoice(invoice);

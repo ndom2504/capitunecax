@@ -3,6 +3,8 @@
 import MainLayout from '../layouts/main.astro';
 import { HeaderNav } from '../components/HeaderNav';
 import { FooterCustom } from '../components/FooterCustom';
+import { packagesCatalog, servicesCatalog, getDefaultServiceTotal } from '../lib/service-catalog';
+import { formatMoney, publicConfig } from '../lib/public-config';
 ---
 
 <MainLayout>
@@ -17,7 +19,7 @@ import { FooterCustom } from '../components/FooterCustom';
           Des services transparents et adaptés à votre projet d'immigration
         </p>
         <p class="text-sm text-muted-foreground mt-2">
-          Tous les prix sont en dollars canadiens (CAD)
+          Tous les prix sont affichés en {publicConfig.paymentCurrency}
         </p>
       </div>
     </div>
@@ -32,166 +34,71 @@ import { FooterCustom } from '../components/FooterCustom';
       </div>
 
       <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        
-        <!-- Pack Découverte -->
-        <div class="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition">
-          <div class="mb-6">
-            <h3 class="text-2xl font-bold text-foreground mb-2">Pack Découverte</h3>
-            <p class="text-sm text-muted-foreground">
-              Pour évaluer votre projet et obtenir un plan d'action
-            </p>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-4xl font-bold text-foreground mb-1">250 $</div>
-            <div class="text-sm text-muted-foreground">CAD</div>
-          </div>
 
-          <div class="space-y-3 mb-8">
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Consultation d'orientation initiale</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Diagnostic approfondi</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Rapport personnalisé</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Plan d'action détaillé</span>
-            </div>
-          </div>
+        {packagesCatalog.map((pkg) => {
+          const isPopular = !!pkg.popular;
+          const isLast = pkg.id === 'premium';
+          const cardClass = isPopular
+            ? 'bg-primary text-primary-foreground rounded-lg p-8 hover:shadow-2xl transition relative'
+            : isLast
+              ? 'bg-card border-2 border-primary/20 rounded-lg p-8 hover:shadow-lg transition'
+              : 'bg-card border border-border rounded-lg p-8 hover:shadow-lg transition';
 
-          <a href="/connexion" class="block w-full text-center bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold hover:bg-secondary/90 transition">
-            Choisir ce pack
-          </a>
-        </div>
+          const ctaClass = isPopular
+            ? 'block w-full text-center bg-primary-foreground text-primary py-3 rounded-lg font-semibold hover:opacity-90 transition'
+            : isLast
+              ? 'block w-full text-center bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:bg-primary/90 transition'
+              : 'block w-full text-center bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold hover:bg-secondary/90 transition';
 
-        <!-- Pack Projet (Popular) -->
-        <div class="bg-primary text-primary-foreground rounded-lg p-8 hover:shadow-2xl transition relative">
-          <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-            Le plus populaire
-          </div>
-          
-          <div class="mb-6">
-            <h3 class="text-2xl font-bold mb-2">Pack Projet</h3>
-            <p class="text-sm opacity-90">
-              Accompagnement complet du diagnostic à la soumission
-            </p>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-4xl font-bold mb-1">1 000 $</div>
-            <div class="text-sm opacity-90">CAD</div>
-          </div>
+          const checkClass = isPopular
+            ? 'w-5 h-5 flex-shrink-0 mt-0.5'
+            : 'w-5 h-5 text-primary flex-shrink-0 mt-0.5';
 
-          <div class="space-y-3 mb-8">
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm">Diagnostic approfondi</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm">Montage complet du dossier</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm">Relecture et vérification</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm">Suivi du dossier (3 mois)</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm">Support prioritaire</span>
-            </div>
-          </div>
+          const featureTextClass = isPopular ? 'text-sm' : 'text-sm text-muted-foreground';
 
-          <a href="/connexion" class="block w-full text-center bg-primary-foreground text-primary py-3 rounded-lg font-semibold hover:opacity-90 transition">
-            Choisir ce pack
-          </a>
-        </div>
+          return (
+            <div class={cardClass}>
+              {isPopular && (
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-secondary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                  Le plus populaire
+                </div>
+              )}
 
-        <!-- Pack Tranquillité -->
-        <div class="bg-card border-2 border-primary/20 rounded-lg p-8 hover:shadow-lg transition">
-          <div class="mb-6">
-            <h3 class="text-2xl font-bold text-foreground mb-2">Pack Tranquillité</h3>
-            <p class="text-sm text-muted-foreground">
-              Service VIP complet jusqu'à l'intégration
-            </p>
-          </div>
-          
-          <div class="mb-6">
-            <div class="text-4xl font-bold text-foreground mb-1">1 500 $</div>
-            <div class="text-sm text-muted-foreground">CAD</div>
-          </div>
+              <div class="mb-6">
+                <h3 class={isPopular ? 'text-2xl font-bold mb-2' : 'text-2xl font-bold text-foreground mb-2'}>
+                  {pkg.badge} {pkg.name}
+                </h3>
+                <p class={isPopular ? 'text-sm opacity-90' : 'text-sm text-muted-foreground'}>
+                  {pkg.description}
+                </p>
+              </div>
 
-          <div class="space-y-3 mb-8">
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Tous les services clés</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Recherche d'institutions</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Aide à la recherche de logement</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Accueil & intégration</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Support premium</span>
-            </div>
-            <div class="flex items-start gap-3">
-              <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-muted-foreground">Assistance à l'arrivée</span>
-            </div>
-          </div>
+              <div class="mb-6">
+                <div class={isPopular ? 'text-4xl font-bold mb-1' : 'text-4xl font-bold text-foreground mb-1'}>
+                  {formatMoney(pkg.price)}
+                </div>
+                <div class={isPopular ? 'text-sm opacity-90' : 'text-sm text-muted-foreground'}>
+                  {publicConfig.paymentCurrency}
+                </div>
+              </div>
 
-          <a href="/connexion" class="block w-full text-center bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:bg-primary/90 transition">
-            Choisir ce pack
-          </a>
-        </div>
+              <div class="space-y-3 mb-8">
+                {pkg.features.map((feature) => (
+                  <div class="flex items-start gap-3">
+                    <svg class={checkClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class={featureTextClass}>{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <a href="/connexion" class={ctaClass}>
+                Choisir ce pack
+              </a>
+            </div>
+          );
+        })}
       </div>
     </div>
   </section>
@@ -206,131 +113,20 @@ import { FooterCustom } from '../components/FooterCustom';
         </div>
 
         <div class="grid md:grid-cols-2 gap-6">
-          <!-- Consultation & Diagnostic -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Consultation d'orientation initiale</h3>
-                <p class="text-sm text-muted-foreground">Analyse de profil, conseils, orientation programme</p>
+          {servicesCatalog.map((service) => (
+            <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <h3 class="font-bold text-foreground mb-1">{service.icon} {service.name}</h3>
+                  <p class="text-sm text-muted-foreground">{service.description}</p>
+                </div>
+                <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">
+                  {formatMoney(getDefaultServiceTotal(service.id))}
+                </div>
               </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">70 $</div>
+              <p class="text-xs text-muted-foreground">Total estimé (tous sous-services inclus par défaut)</p>
             </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Diagnostic approfondi</h3>
-                <p class="text-sm text-muted-foreground">Étude complète et rapport personnalisé</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">100 $</div>
-            </div>
-          </div>
-
-          <!-- Préparation dossier -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Préparation du dossier immigration</h3>
-                <p class="text-sm text-muted-foreground">Constitution, remplissage et organisation du dossier</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">700 $</div>
-            </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Relecture et correction du dossier</h3>
-                <p class="text-sm text-muted-foreground">Vérification complète avant envoi officiel</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">100 $</div>
-            </div>
-          </div>
-
-          <!-- Coaching & Préparation -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Coaching / Simulation d'entretiens</h3>
-                <p class="text-sm text-muted-foreground">Préparation entretiens ambassade/écoles/employeurs</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">90 $/h</div>
-            </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Suivi du dossier & relance</h3>
-                <p class="text-sm text-muted-foreground">Suivi post-dépôt, relance et assistance (3 mois)</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">300 $</div>
-            </div>
-          </div>
-
-          <!-- Services spécialisés -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Assistance recherche d'un garant</h3>
-                <p class="text-sm text-muted-foreground">Recherche et mise en relation avec garants financiers</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">220 $</div>
-            </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Aide à la recherche de logement</h3>
-                <p class="text-sm text-muted-foreground">Conseils, contacts et accompagnement logement</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">350 $</div>
-            </div>
-          </div>
-
-          <!-- Ateliers & Intégration -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Atelier préparation à la vie au Canada</h3>
-                <p class="text-sm text-muted-foreground">Webinaire, adaptation, conseils pratiques</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">120 $</div>
-            </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Accueil & intégration</h3>
-                <p class="text-sm text-muted-foreground">Accueil à l'arrivée, orientation, supports et démarches</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">600 $</div>
-            </div>
-          </div>
-
-          <!-- Demandes spécifiques -->
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Demandes spécifiques</h3>
-                <p class="text-sm text-muted-foreground">Permis de travail/études, regroupement familial</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">500 $</div>
-            </div>
-          </div>
-
-          <div class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition">
-            <div class="flex items-start justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-foreground mb-1">Recherche d'institutions d'accueil</h3>
-                <p class="text-sm text-muted-foreground">Appui et orientation écoles/employeurs</p>
-              </div>
-              <div class="text-xl font-bold text-primary whitespace-nowrap ml-4">260 $</div>
-            </div>
-          </div>
+          ))}
         </div>
 
         <!-- Support Premium -->

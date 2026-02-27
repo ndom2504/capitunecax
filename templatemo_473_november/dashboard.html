@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>CAPITUNE — Mon Espace Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!-- Template CSS -->
+    <link rel="stylesheet" href="css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="css/media.css" type="text/css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="css/dashboard.css" type="text/css" />
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300' rel='stylesheet' type='text/css'>
+</head>
+
+<body class="dashboard-body">
+
+<!-- ======= LOADER ======= -->
+<div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+</div>
+
+<!-- ======= HEADER ======= -->
+<header class="dash-header" id="dashHeader">
+    <div class="dash-header-inner">
+        <!-- Logo -->
+        <div class="dash-logo">
+            <a href="dashboard.html" style="display:flex;align-items:center;gap:10px;line-height:0;">
+                <img src="logo/Logo%20moderne%20de%20CAPITUNE%20avec%20d%C3%A9grad%C3%A9.png" alt="CAPITUNE" style="height:52px;width:auto;display:block;">
+                <small style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;letter-spacing:1px;text-transform:uppercase;line-height:1;">Espace Client</small>
+            </a>
+        </div>
+
+        <!-- Navigation desktop -->
+        <nav class="dash-nav" id="dashNav">
+            <ul>
+                <li class="dash-nav-item active" data-tab="services">
+                    <a href="#" onclick="switchTab('services'); return false;">
+                        <i class="fa fa-briefcase"></i> Services
+                    </a>
+                </li>
+                <li class="dash-nav-item" data-tab="messagerie">
+                    <a href="#" onclick="switchTab('messagerie'); return false;">
+                        <i class="fa fa-envelope"></i> Messagerie
+                        <span class="badge">3</span>
+                    </a>
+                </li>
+                <li class="dash-nav-item" data-tab="paiements">
+                    <a href="#" onclick="switchTab('paiements'); return false;">
+                        <i class="fa fa-credit-card"></i> Paiements
+                    </a>
+                </li>
+                <li class="dash-nav-item" data-tab="faq">
+                    <a href="#" onclick="switchTab('faq'); return false;">
+                        <i class="fa fa-question-circle"></i> FAQ
+                    </a>
+                </li>
+                <li class="dash-nav-item" data-tab="tarifs">
+                    <a href="#" onclick="switchTab('tarifs'); return false;">
+                        <i class="fa fa-tag"></i> Tarifs
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Profil -->
+        <div class="dash-profile-wrap" id="profileWrap">
+            <button class="dash-profile-btn" onclick="toggleProfileMenu()">
+                <div class="avatar-ring">
+                    <div class="avatar-placeholder" id="avatarDisplay">
+                        <i class="fa fa-user"></i>
+                    </div>
+                </div>
+                <div class="profile-info-header">
+                    <span class="profile-name" id="headerName">Sophie Martin</span>
+                    <span class="profile-status online"><i class="fa fa-circle"></i> En ligne</span>
+                </div>
+                <i class="fa fa-chevron-down caret"></i>
+            </button>
+
+            <!-- Dropdown menu profil -->
+            <div class="profile-dropdown" id="profileDropdown">
+                <div class="dropdown-header">
+                    <div class="dropdown-avatar" id="dropdownAvatar">
+                        <i class="fa fa-user"></i>
+                    </div>
+                    <div class="dropdown-user-info">
+                        <p class="dropdown-name" id="dropdownName">Sophie Martin</p>
+                        <p class="dropdown-email" id="dropdownEmail">sophie@example.com</p>
+                        <span class="dropdown-statut">Client Actif</span>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <ul class="dropdown-menu-list">
+                    <li><a href="#" onclick="openEditProfile(); return false;"><i class="fa fa-pencil"></i> Modifier le profil</a></li>
+                    <li><a href="#" onclick="triggerAvatarUpload(); return false;"><i class="fa fa-camera"></i> Changer la photo</a></li>
+                    <li><a href="#"><i class="fa fa-cog"></i> Paramètres</a></li>
+                    <li><a href="#"><i class="fa fa-folder"></i> Mes documents</a></li>
+                    <li><a href="#"><i class="fa fa-life-ring"></i> Support</a></li>
+                </ul>
+                <div class="dropdown-divider"></div>
+                <a href="connexion.html" class="dropdown-logout"><i class="fa fa-sign-out"></i> Déconnexion</a>
+            </div>
+        </div>
+
+        <!-- Burger mobile -->
+        <button class="dash-burger" id="dashBurger" onclick="toggleMobileNav()">
+            <i class="fa fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- Navigation mobile -->
+    <div class="dash-mobile-nav" id="dashMobileNav">
+        <ul>
+            <li class="active" data-tab="services" onclick="switchTab('services')">
+                <i class="fa fa-briefcase"></i> Services <span class="mobile-badge">Actif</span>
+            </li>
+            <li data-tab="messagerie" onclick="switchTab('messagerie')">
+                <i class="fa fa-envelope"></i> Messagerie <span class="badge">3</span>
+            </li>
+            <li data-tab="paiements" onclick="switchTab('paiements')">
+                <i class="fa fa-credit-card"></i> Paiements
+            </li>
+            <li data-tab="faq" onclick="switchTab('faq')">
+                <i class="fa fa-question-circle"></i> FAQ
+            </li>
+            <li data-tab="tarifs" onclick="switchTab('tarifs')">
+                <i class="fa fa-tag"></i> Tarifs
+            </li>
+        </ul>
+    </div>
+</header>
+
+<!-- ======= MAIN DASHBOARD ======= -->
+<main class="dash-main" id="dashMain">
+
+    <!-- ============================================================ -->
+    <!-- TAB : SERVICES                                               -->
+    <!-- ============================================================ -->
+    <section class="tab-section active" id="tab-services">
+        <div class="tab-hero">
+            <div class="tab-hero-inner">
+                <h1><i class="fa fa-briefcase"></i> Mes Services</h1>
+                <p>Choisissez, configurez et suivez votre accompagnement vers le Canada.</p>
+            </div>
+        </div>
+
+        <div class="dash-container">
+            <!-- Statut global -->
+            <div class="progress-overview">
+                <div class="progress-card">
+                    <div class="progress-icon" style="background:#ff9408;">
+                        <i class="fa fa-map-marker"></i>
+                    </div>
+                    <div class="progress-info">
+                        <span class="progress-label">Étape Actuelle</span>
+                        <span class="progress-value">Évaluation du profil</span>
+                    </div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-icon" style="background:#27ae60;">
+                        <i class="fa fa-check-circle"></i>
+                    </div>
+                    <div class="progress-info">
+                        <span class="progress-label">Avancement Global</span>
+                        <span class="progress-value">35%</span>
+                    </div>
+                    <div class="mini-bar"><div class="mini-bar-fill" style="width:35%;"></div></div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-icon" style="background:#2980b9;">
+                        <i class="fa fa-calendar"></i>
+                    </div>
+                    <div class="progress-info">
+                        <span class="progress-label">Prochain RDV</span>
+                        <span class="progress-value">12 Mars 2026</span>
+                    </div>
+                </div>
+                <div class="progress-card">
+                    <div class="progress-icon" style="background:#8e44ad;">
+                        <i class="fa fa-file-text"></i>
+                    </div>
+                    <div class="progress-info">
+                        <span class="progress-label">Documents soumis</span>
+                        <span class="progress-value">4 / 9</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sélection des services -->
+            <div class="section-title-block">
+                <h2>Choisir vos Prestations</h2>
+                <div class="title-line"></div>
+                <p>Sélectionnez les services qui correspondent à votre projet d'immigration au Canada.</p>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card selected">
+                    <div class="service-card-icon"><i class="fa fa-star"></i></div>
+                    <h3>Accompagnement Complet</h3>
+                    <p>Suivi personnalisé de A à Z : évaluation, documents, candidature, arrivée.</p>
+                    <ul class="service-features">
+                        <li><i class="fa fa-check"></i> Évaluation du profil</li>
+                        <li><i class="fa fa-check"></i> Préparation des documents</li>
+                        <li><i class="fa fa-check"></i> Soumission de la demande</li>
+                        <li><i class="fa fa-check"></i> Suivi jusqu'à l'arrivée</li>
+                    </ul>
+                    <div class="service-card-footer">
+                        <span class="service-badge active">Sélectionné</span>
+                        <button class="btn-service" onclick="configService(this)">Configurer <i class="fa fa-sliders"></i></button>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-icon"><i class="fa fa-search"></i></div>
+                    <h3>Évaluation Express</h3>
+                    <p>Analyse rapide de votre éligibilité aux programmes d'immigration canadiens.</p>
+                    <ul class="service-features">
+                        <li><i class="fa fa-check"></i> Rapport d'éligibilité</li>
+                        <li><i class="fa fa-check"></i> Recommandations</li>
+                        <li><i class="fa fa-check"></i> Plan d'action</li>
+                        <li><i class="fa fa-times text-muted"></i> Suivi continu</li>
+                    </ul>
+                    <div class="service-card-footer">
+                        <span class="service-badge">Disponible</span>
+                        <button class="btn-service" onclick="selectService(this)">Ajouter <i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-icon"><i class="fa fa-building"></i></div>
+                    <h3>Visa Travail & Études</h3>
+                    <p>Préparation et dépôt de votre dossier de permis de travail ou d'études.</p>
+                    <ul class="service-features">
+                        <li><i class="fa fa-check"></i> Étude de faisabilité</li>
+                        <li><i class="fa fa-check"></i> Constitution du dossier</li>
+                        <li><i class="fa fa-check"></i> Préparation entretien</li>
+                        <li><i class="fa fa-check"></i> Suivi de la demande</li>
+                    </ul>
+                    <div class="service-card-footer">
+                        <span class="service-badge">Disponible</span>
+                        <button class="btn-service" onclick="selectService(this)">Ajouter <i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-icon"><i class="fa fa-home"></i></div>
+                    <h3>Installation <span class="badge-new">Nouveau</span></h3>
+                    <p>Aide à la recherche de logement, ouverture de compte, intégration locale.</p>
+                    <ul class="service-features">
+                        <li><i class="fa fa-check"></i> Recherche logement</li>
+                        <li><i class="fa fa-check"></i> Banque & Assurances</li>
+                        <li><i class="fa fa-check"></i> Réseau local</li>
+                        <li><i class="fa fa-check"></i> Guide d'arrivée</li>
+                    </ul>
+                    <div class="service-card-footer">
+                        <span class="service-badge">Disponible</span>
+                        <button class="btn-service" onclick="selectService(this)">Ajouter <i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline de suivi -->
+            <div class="section-title-block" style="margin-top:60px;">
+                <h2>Suivi de Votre Parcours</h2>
+                <div class="title-line"></div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item done">
+                    <div class="timeline-dot"><i class="fa fa-check"></i></div>
+                    <div class="timeline-content">
+                        <h4>Inscription & Profil</h4>
+                        <p>Compte créé et informations de base renseignées.</p>
+                        <span class="timeline-date">10 Jan 2026</span>
+                    </div>
+                </div>
+                <div class="timeline-item done">
+                    <div class="timeline-dot"><i class="fa fa-check"></i></div>
+                    <div class="timeline-content">
+                        <h4>Évaluation du Profil</h4>
+                        <p>Analyse de vos diplômes, expériences et situation familiale.</p>
+                        <span class="timeline-date">18 Jan 2026</span>
+                    </div>
+                </div>
+                <div class="timeline-item active">
+                    <div class="timeline-dot"><i class="fa fa-clock-o"></i></div>
+                    <div class="timeline-content">
+                        <h4>Constitution du Dossier</h4>
+                        <p>Collecte et vérification des pièces justificatives requises.</p>
+                        <span class="timeline-date">En cours — 4/9 docs</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"><i class="fa fa-lock"></i></div>
+                    <div class="timeline-content">
+                        <h4>Soumission de la Demande</h4>
+                        <p>Dépôt officiel de votre dossier auprès des autorités canadiennes.</p>
+                        <span class="timeline-date">À venir</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"><i class="fa fa-lock"></i></div>
+                    <div class="timeline-content">
+                        <h4>Arrivée au Canada</h4>
+                        <p>Accueil, installation et intégration dans votre ville de destination.</p>
+                        <span class="timeline-date">À venir</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB : MESSAGERIE                                             -->
+    <!-- ============================================================ -->
+    <section class="tab-section" id="tab-messagerie">
+        <div class="tab-hero">
+            <div class="tab-hero-inner">
+                <h1><i class="fa fa-envelope"></i> Messagerie</h1>
+                <p>Échangez directement avec votre conseiller CAPITUNE.</p>
+            </div>
+        </div>
+
+        <div class="dash-container">
+            <div class="messaging-layout">
+                <!-- Liste des conversations -->
+                <div class="msg-sidebar">
+                    <div class="msg-search">
+                        <input type="text" placeholder="Rechercher...">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <ul class="conversation-list">
+                        <li class="conv-item active">
+                            <div class="conv-avatar team"><i class="fa fa-users"></i></div>
+                            <div class="conv-info">
+                                <span class="conv-name">Équipe CAPITUNE</span>
+                                <span class="conv-preview">Bonjour Sophie, nous avons...</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">14h22</span>
+                                <span class="conv-badge">3</span>
+                            </div>
+                        </li>
+                        <li class="conv-item">
+                            <div class="conv-avatar"><i class="fa fa-user"></i></div>
+                            <div class="conv-info">
+                                <span class="conv-name">Conseiller Juridique</span>
+                                <span class="conv-preview">Votre dossier nécessite...</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">Hier</span>
+                            </div>
+                        </li>
+                        <li class="conv-item">
+                            <div class="conv-avatar support"><i class="fa fa-headphones"></i></div>
+                            <div class="conv-info">
+                                <span class="conv-name">Support Technique</span>
+                                <span class="conv-preview">Ticket #1042 résolu ✓</span>
+                            </div>
+                            <div class="conv-meta">
+                                <span class="conv-time">Lun.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Zone de chat -->
+                <div class="msg-chat">
+                    <div class="chat-header">
+                        <div class="chat-header-avatar team"><i class="fa fa-users"></i></div>
+                        <div class="chat-header-info">
+                            <h3>Équipe CAPITUNE</h3>
+                            <span class="online-dot"><i class="fa fa-circle"></i> En ligne</span>
+                        </div>
+                        <div class="chat-actions">
+                            <button><i class="fa fa-phone"></i></button>
+                            <button><i class="fa fa-paperclip"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-date-sep">Aujourd'hui</div>
+
+                        <div class="message received">
+                            <div class="msg-avatar team"><i class="fa fa-users"></i></div>
+                            <div class="msg-bubble">
+                                <p>Bonjour Sophie ! Nous avons bien reçu vos 4 documents. Il en manque encore 5 pour finaliser votre dossier.</p>
+                                <span class="msg-time">14h15</span>
+                            </div>
+                        </div>
+
+                        <div class="message received">
+                            <div class="msg-avatar team"><i class="fa fa-users"></i></div>
+                            <div class="msg-bubble">
+                                <p>Pourriez-vous nous envoyer votre <strong>acte de naissance traduit</strong> et votre <strong>relevé de notes universitaire</strong> ?</p>
+                                <span class="msg-time">14h16</span>
+                            </div>
+                        </div>
+
+                        <div class="message sent">
+                            <div class="msg-bubble">
+                                <p>Bonjour ! Oui bien sûr, je les prépare et vous les envoie d'ici demain.</p>
+                                <span class="msg-time">14h20</span>
+                            </div>
+                        </div>
+
+                        <div class="message received">
+                            <div class="msg-avatar team"><i class="fa fa-users"></i></div>
+                            <div class="msg-bubble">
+                                <p>Parfait ! N'hésitez pas à passer par la section <em>Documents</em> de votre profil pour les uploader directement.</p>
+                                <span class="msg-time">14h22</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area">
+                        <button class="attach-btn"><i class="fa fa-paperclip"></i></button>
+                        <input type="text" id="msgInput" placeholder="Écrire un message..." onkeydown="if(event.key==='Enter') sendMessage()">
+                        <button class="send-btn" onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB : PAIEMENTS                                              -->
+    <!-- ============================================================ -->
+    <section class="tab-section" id="tab-paiements">
+        <div class="tab-hero">
+            <div class="tab-hero-inner">
+                <h1><i class="fa fa-credit-card"></i> Paiements</h1>
+                <p>Gérez vos transactions et suivez le solde de votre dossier.</p>
+            </div>
+        </div>
+
+        <div class="dash-container">
+            <!-- Résumé financier -->
+            <div class="payment-summary">
+                <div class="pay-summary-card paid">
+                    <i class="fa fa-check-circle"></i>
+                    <div>
+                        <span class="pay-sum-label">Total Payé</span>
+                        <span class="pay-sum-amount">1 200 €</span>
+                    </div>
+                </div>
+                <div class="pay-summary-card pending">
+                    <i class="fa fa-clock-o"></i>
+                    <div>
+                        <span class="pay-sum-label">En Attente</span>
+                        <span class="pay-sum-amount">800 €</span>
+                    </div>
+                </div>
+                <div class="pay-summary-card total">
+                    <i class="fa fa-calculator"></i>
+                    <div>
+                        <span class="pay-sum-label">Total Dossier</span>
+                        <span class="pay-sum-amount">2 000 €</span>
+                    </div>
+                </div>
+                <div class="pay-summary-card progress-pay">
+                    <i class="fa fa-pie-chart"></i>
+                    <div>
+                        <span class="pay-sum-label">Avancement Paiement</span>
+                        <div class="pay-progress-bar">
+                            <div class="pay-progress-fill" style="width:60%;"></div>
+                        </div>
+                        <span class="pay-sum-amount small">60%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action de paiement   -->
+            <div class="pay-action-block">
+                <div class="section-title-block">
+                    <h2>Prochain Versement</h2>
+                    <div class="title-line"></div>
+                </div>
+                <div class="next-payment-card">
+                    <div class="next-pay-info">
+                        <h3>Tranche 2 — Constitution du dossier</h3>
+                        <p>Échéance : <strong>15 Mars 2026</strong></p>
+                        <p>Montant : <strong class="amount-highlight">400 €</strong></p>
+                    </div>
+                    <button class="btn-pay" onclick="initiatePayment()">
+                        <i class="fa fa-lock"></i> Payer maintenant
+                    </button>
+                </div>
+            </div>
+
+            <!-- Historique -->
+            <div class="section-title-block" style="margin-top:40px;">
+                <h2>Historique des Transactions</h2>
+                <div class="title-line"></div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="pay-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>Méthode</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Reçu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>001</td>
+                            <td>Tranche 1 — Acompte inscription</td>
+                            <td>10 Jan 2026</td>
+                            <td>Carte Bancaire</td>
+                            <td>500 €</td>
+                            <td><span class="pay-status paid">Payé</span></td>
+                            <td><a href="#" class="btn-receipt"><i class="fa fa-download"></i></a></td>
+                        </tr>
+                        <tr>
+                            <td>002</td>
+                            <td>Tranche 1 — Évaluation du profil</td>
+                            <td>20 Jan 2026</td>
+                            <td>Virement</td>
+                            <td>700 €</td>
+                            <td><span class="pay-status paid">Payé</span></td>
+                            <td><a href="#" class="btn-receipt"><i class="fa fa-download"></i></a></td>
+                        </tr>
+                        <tr>
+                            <td>003</td>
+                            <td>Tranche 2 — Constitution du dossier</td>
+                            <td>15 Mar 2026</td>
+                            <td>—</td>
+                            <td>400 €</td>
+                            <td><span class="pay-status pending">À régler</span></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>004</td>
+                            <td>Tranche 3 — Soumission & suivi</td>
+                            <td>À définir</td>
+                            <td>—</td>
+                            <td>400 €</td>
+                            <td><span class="pay-status upcoming">À venir</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB : FAQ                                                    -->
+    <!-- ============================================================ -->
+    <section class="tab-section" id="tab-faq">
+        <div class="tab-hero">
+            <div class="tab-hero-inner">
+                <h1><i class="fa fa-question-circle"></i> Foire Aux Questions</h1>
+                <p>Les réponses à vos questions les plus fréquentes sur votre projet Canada.</p>
+            </div>
+        </div>
+
+        <div class="dash-container">
+            <div class="faq-search-wrap">
+                <input type="text" id="faqSearch" placeholder="Rechercher une question..." oninput="filterFAQ(this.value)">
+                <i class="fa fa-search"></i>
+            </div>
+
+            <div class="faq-categories">
+                <button class="faq-cat active" onclick="filterFAQCat(this, 'all')">Toutes</button>
+                <button class="faq-cat" onclick="filterFAQCat(this, 'immigration')">Immigration</button>
+                <button class="faq-cat" onclick="filterFAQCat(this, 'paiement')">Paiement</button>
+                <button class="faq-cat" onclick="filterFAQCat(this, 'documents')">Documents</button>
+                <button class="faq-cat" onclick="filterFAQCat(this, 'compte')">Compte</button>
+            </div>
+
+            <div class="faq-list" id="faqList">
+
+                <div class="faq-item" data-cat="immigration">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Quels programmes d'immigration canadiens sont accessibles pour moi ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Plusieurs voies existent : Entrée Express (Travailleurs qualifiés), Programme des candidats des provinces (PCP), Réunification familiale, Visa étudiant, etc. CAPITUNE analyse votre profil pour identifier les meilleures options.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="immigration">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Combien de temps dure le processus d'immigration complet ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Cela dépend du programme choisi. En moyenne, Entrée Express prend 6 à 12 mois, le PCP 12 à 18 mois. CAPITUNE vous donne une estimation personnalisée basée sur votre situation.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="documents">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Quels documents dois-je préparer en priorité ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Passeport valide, diplômes et relevés de notes traduits, preuves d'expérience professionnelle, acte de naissance, casier judiciaire, résultats de tests linguistiques (IELTS/TEF). La liste complète est disponible dans votre espace service.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="documents">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Les traductions de documents doivent-elles être certifiées ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Oui, IRCC exige des traductions officielles réalisées par un traducteur certifié. CAPITUNE peut vous recommander des prestataires agréés.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="paiement">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Comment sont échelonnés les paiements ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Les paiements CAPITUNE sont divisés en tranches liées aux étapes de votre dossier. Vous ne payez que lorsqu'une étape est validée. Aucun paiement n'est demandé en avance pour des étapes non entamées.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="paiement">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Quels moyens de paiement acceptez-vous ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Carte bancaire (Visa, Mastercard), virement bancaire SEPA, PayPal. Toutes les transactions sont sécurisées et cryptées.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="compte">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Comment modifier mon email ou mon mot de passe ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Rendez-vous dans votre menu Profil (en haut à droite) puis "Paramètres". Vous pouvez y modifier vos identifiants de connexion à tout moment.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item" data-cat="compte">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Qui peut voir les informations de mon dossier ?</span>
+                        <i class="fa fa-plus"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Uniquement vous et les membres de l'équipe CAPITUNE affectés à votre dossier. Vos données sont stockées de façon sécurisée et ne sont jamais partagées avec des tiers.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="faq-contact-cta">
+                <i class="fa fa-comments-o"></i>
+                <h3>Vous ne trouvez pas votre réponse ?</h3>
+                <p>Notre équipe est disponible pour vous répondre directement.</p>
+                <button class="btn-cta" onclick="switchTab('messagerie')">Contacter l'équipe</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- TAB : TARIFS                                                 -->
+    <!-- ============================================================ -->
+    <section class="tab-section" id="tab-tarifs">
+        <div class="tab-hero">
+            <div class="tab-hero-inner">
+                <h1><i class="fa fa-tag"></i> Nos Tarifs</h1>
+                <p>Des formules adaptées à chaque étape de votre projet Canada.</p>
+            </div>
+        </div>
+
+        <div class="dash-container">
+            <div class="section-title-block">
+                <h2>Choisissez Votre Formule</h2>
+                <div class="title-line"></div>
+                <p>Tous les forfaits incluent un accès à votre espace client CAPITUNE et un suivi personnalisé.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Essentiel -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <span class="pricing-tier">Essentiel</span>
+                        <div class="pricing-price">
+                            <span class="price-amount">490 <span class="currency">€</span></span>
+                        </div>
+                        <p class="pricing-subtitle">Pour évaluer votre projet</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fa fa-check"></i> Évaluation du profil</li>
+                        <li><i class="fa fa-check"></i> Rapport d'éligibilité</li>
+                        <li><i class="fa fa-check"></i> 1 consultation (60 min)</li>
+                        <li><i class="fa fa-check"></i> Plan d'action personnalisé</li>
+                        <li class="muted"><i class="fa fa-times"></i> Constitution du dossier</li>
+                        <li class="muted"><i class="fa fa-times"></i> Soumission officielle</li>
+                        <li class="muted"><i class="fa fa-times"></i> Suivi post-arrivée</li>
+                    </ul>
+                    <div class="pricing-action">
+                        <button class="btn-pricing" onclick="selectPlan('Essentiel')">Choisir ce plan</button>
+                    </div>
+                </div>
+
+                <!-- Avancé — highlight -->
+                <div class="pricing-card featured">
+                    <div class="pricing-badge">Recommandé</div>
+                    <div class="pricing-header">
+                        <span class="pricing-tier">Avancé</span>
+                        <div class="pricing-price">
+                            <span class="price-amount">1 200 <span class="currency">€</span></span>
+                        </div>
+                        <p class="pricing-subtitle">Pour préparer votre dossier</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fa fa-check"></i> Tout le plan Essentiel</li>
+                        <li><i class="fa fa-check"></i> Constitution du dossier</li>
+                        <li><i class="fa fa-check"></i> Vérification des documents</li>
+                        <li><i class="fa fa-check"></i> 3 consultations illimitées</li>
+                        <li><i class="fa fa-check"></i> Messagerie prioritaire</li>
+                        <li class="muted"><i class="fa fa-times"></i> Soumission officielle</li>
+                        <li class="muted"><i class="fa fa-times"></i> Suivi post-arrivée</li>
+                    </ul>
+                    <div class="pricing-action">
+                        <button class="btn-pricing featured-btn" onclick="selectPlan('Avancé')">Votre plan actuel</button>
+                    </div>
+                </div>
+
+                <!-- Complet -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <span class="pricing-tier">Complet</span>
+                        <div class="pricing-price">
+                            <span class="price-amount">2 000 <span class="currency">€</span></span>
+                        </div>
+                        <p class="pricing-subtitle">De A à Z jusqu'au Canada</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fa fa-check"></i> Tout le plan Avancé</li>
+                        <li><i class="fa fa-check"></i> Soumission officielle</li>
+                        <li><i class="fa fa-check"></i> Suivi de la demande</li>
+                        <li><i class="fa fa-check"></i> Aide à l'installation</li>
+                        <li><i class="fa fa-check"></i> 6 mois de support post-arrivée</li>
+                        <li><i class="fa fa-check"></i> Accès à la communauté</li>
+                        <li><i class="fa fa-check"></i> Garantie remboursement</li>
+                    </ul>
+                    <div class="pricing-action">
+                        <button class="btn-pricing" onclick="selectPlan('Complet')">Passer au Complet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Garantie -->
+            <div class="guarantee-block">
+                <i class="fa fa-shield"></i>
+                <div>
+                    <h3>Garantie Satisfaction CAPITUNE</h3>
+                    <p>Si votre demande n'aboutit pas par notre faute, nous vous remboursons nos honoraires. Votre projet, notre responsabilité.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- ======= MODAL : EDIT PROFILE ======= -->
+<div class="modal-overlay" id="profileModal" onclick="closeIfOutside(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fa fa-pencil"></i> Modifier mon profil</h3>
+            <button class="modal-close" onclick="closeEditProfile()"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="avatar-edit-section">
+                <div class="avatar-preview" id="avatarPreview">
+                    <i class="fa fa-user" id="avatarIcon"></i>
+                    <img id="avatarImg" src="" alt="" style="display:none;">
+                </div>
+                <button class="btn-avatar-change" onclick="triggerAvatarUpload()">
+                    <i class="fa fa-camera"></i> Changer la photo
+                </button>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+            </div>
+            <form class="profile-form" onsubmit="saveProfile(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Prénom</label>
+                        <input type="text" id="editFirstName" placeholder="Sophie" value="Sophie">
+                    </div>
+                    <div class="form-group">
+                        <label>Nom</label>
+                        <input type="text" id="editLastName" placeholder="Martin" value="Martin">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" placeholder="sophie@example.com" value="sophie@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="tel" id="editPhone" placeholder="+33 6 00 00 00 00">
+                </div>
+                <div class="form-group">
+                    <label>Pays d'origine</label>
+                    <input type="text" id="editCountry" placeholder="France" value="France">
+                </div>
+                <div class="form-group">
+                    <label>Ville de destination souhaitée</label>
+                    <input type="text" id="editDestination" placeholder="Montréal, Toronto...">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditProfile()">Annuler</button>
+                    <button type="submit" class="btn-save">Enregistrer <i class="fa fa-check"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ======= FOOTER ======= -->
+<footer class="dash-footer">
+    <div class="dash-footer-inner">
+        <p>© 2026 <strong>CAPITUNE</strong> — Tous droits réservés. Votre projet Canada, notre engagement.</p>
+        <nav>
+            <a href="#">Mentions légales</a>
+            <a href="#">Confidentialité</a>
+            <a href="#">Support</a>
+        </nav>
+    </div>
+</footer>
+
+<!-- ======= LOADER JS ======= -->
+<script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="js/modernizr.js"></script>
+
+<script>
+/* ============================
+   LOADER
+   ============================ */
+window.addEventListener('load', function () {
+    document.body.classList.add('loaded');
+});
+
+/* ============================
+   TAB SWITCHING
+   ============================ */
+function switchTab(tabId) {
+    // Hide all
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.dash-nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.dash-mobile-nav li').forEach(n => n.classList.remove('active'));
+
+    // Show target
+    document.getElementById('tab-' + tabId).classList.add('active');
+
+    // Activate nav link desktop
+    document.querySelectorAll('.dash-nav-item[data-tab="' + tabId + '"]').forEach(n => n.classList.add('active'));
+    document.querySelectorAll('.dash-mobile-nav li[data-tab="' + tabId + '"]').forEach(n => n.classList.add('active'));
+
+    // Close mobile nav
+    document.getElementById('dashMobileNav').classList.remove('open');
+    document.getElementById('dashBurger').classList.remove('open');
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================
+   MOBILE NAV
+   ============================ */
+function toggleMobileNav() {
+    const nav = document.getElementById('dashMobileNav');
+    const burger = document.getElementById('dashBurger');
+    nav.classList.toggle('open');
+    burger.classList.toggle('open');
+}
+
+/* ============================
+   PROFILE DROPDOWN
+   ============================ */
+function toggleProfileMenu() {
+    const dd = document.getElementById('profileDropdown');
+    dd.classList.toggle('open');
+}
+
+document.addEventListener('click', function (e) {
+    const wrap = document.getElementById('profileWrap');
+    if (!wrap.contains(e.target)) {
+        document.getElementById('profileDropdown').classList.remove('open');
+    }
+});
+
+/* ============================
+   AVATAR UPLOAD
+   ============================ */
+function triggerAvatarUpload() {
+    document.getElementById('avatarInput').click();
+}
+
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const src = e.target.result;
+        const img = document.getElementById('avatarImg');
+        const icon = document.getElementById('avatarIcon');
+        img.src = src;
+        img.style.display = 'block';
+        icon.style.display = 'none';
+
+        // Update header avatar
+        const headerAvatar = document.getElementById('avatarDisplay');
+        headerAvatar.innerHTML = '<img src="' + src + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+
+        // Update dropdown avatar
+        const dropdownAvatar = document.getElementById('dropdownAvatar');
+        dropdownAvatar.innerHTML = '<img src="' + src + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ============================
+   EDIT PROFILE MODAL
+   ============================ */
+function openEditProfile() {
+    document.getElementById('profileDropdown').classList.remove('open');
+    document.getElementById('profileModal').classList.add('open');
+}
+
+function closeEditProfile() {
+    document.getElementById('profileModal').classList.remove('open');
+}
+
+function closeIfOutside(event) {
+    if (event.target === document.getElementById('profileModal')) closeEditProfile();
+}
+
+function saveProfile(e) {
+    e.preventDefault();
+    const first = document.getElementById('editFirstName').value;
+    const last = document.getElementById('editLastName').value;
+    const email = document.getElementById('editEmail').value;
+    const fullName = first + ' ' + last;
+
+    document.getElementById('headerName').textContent = fullName;
+    document.getElementById('dropdownName').textContent = fullName;
+    document.getElementById('dropdownEmail').textContent = email;
+
+    closeEditProfile();
+    showToast('Profil mis à jour avec succès !');
+}
+
+/* ============================
+   FAQ
+   ============================ */
+function toggleFAQ(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+}
+
+function filterFAQ(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('.faq-item').forEach(item => {
+        const text = item.querySelector('.faq-question span').textContent.toLowerCase();
+        item.style.display = text.includes(q) ? '' : 'none';
+    });
+}
+
+function filterFAQCat(btn, cat) {
+    document.querySelectorAll('.faq-cat').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.faq-item').forEach(item => {
+        if (cat === 'all' || item.dataset.cat === cat) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+/* ============================
+   MESSAGERIE
+   ============================ */
+function sendMessage() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'message sent';
+    const now = new Date();
+    const time = now.getHours() + 'h' + String(now.getMinutes()).padStart(2, '0');
+    div.innerHTML = '<div class="msg-bubble"><p>' + escapeHtml(text) + '</p><span class="msg-time">' + time + '</span></div>';
+    container.appendChild(div);
+    input.value = '';
+    container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(t) {
+    return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ============================
+   PAIEMENTS
+   ============================ */
+function initiatePayment() {
+    showToast('Redirection vers le paiement sécurisé...');
+}
+
+/* ============================
+   TARIFS
+   ============================ */
+function selectPlan(name) {
+    showToast('Vous avez sélectionné le plan ' + name + '. Notre équipe vous contactera sous 24h.');
+}
+
+/* ============================
+   SERVICES
+   ============================ */
+function selectService(btn) {
+    const card = btn.closest('.service-card');
+    card.classList.add('selected');
+    card.querySelector('.service-badge').textContent = 'Sélectionné';
+    card.querySelector('.service-badge').className = 'service-badge active';
+    btn.textContent = '';
+    btn.innerHTML = 'Configurer <i class="fa fa-sliders"></i>';
+    btn.onclick = function() { configService(btn); };
+    showToast('Service ajouté à votre dossier.');
+}
+
+function configService(btn) {
+    showToast('Accès à la configuration — bientôt disponible.');
+}
+
+/* ============================
+   TOAST NOTIFICATION
+   ============================ */
+function showToast(msg) {
+    const existing = document.querySelector('.dash-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'dash-toast';
+    toast.innerHTML = '<i class="fa fa-check-circle"></i> ' + msg;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.classList.add('show'), 50);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
+}
+
+/* ============================
+   HEADER SHRINK ON SCROLL
+   ============================ */
+window.addEventListener('scroll', function () {
+    const header = document.getElementById('dashHeader');
+    if (window.scrollY > 30) {
+        header.classList.add('smaller');
+    } else {
+        header.classList.remove('smaller');
+    }
+});
+</script>
+
+</body>
+</html>

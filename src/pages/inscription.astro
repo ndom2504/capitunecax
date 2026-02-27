@@ -15,7 +15,7 @@ import { baseUrl } from '../lib/base-url';
       <header class="auth-header">
         <div class="Center">
           <div class="site-logo">
-            <h1><a href={`${baseUrl}/`}>CAPI<span>TUNE</span></a></h1>
+            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
           </div>
           <nav class="Navigation auth-nav">
             <ul>
@@ -112,9 +112,11 @@ import { baseUrl } from '../lib/base-url';
 
           <div class="Rightside auth-info-side">
             <h3>Votre Espace Personnel</h3>
-            <address>Suivi De Dossier En Temps Réel</address>
-            <address class="Number">Documents Sécurisés Et Historique</address>
-            <address class="Email"><a href={`${baseUrl}/connexion`}>Messagerie Directe Avec Nos Consultants</a></address>
+            <address><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Suivi de dossier en temps réel</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Documents sécurisés et historique</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Messagerie directe avec nos consultants</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Paiements sécurisés par tranches</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Accès à la FAQ et aux ressources</address>
           </div>
         </div>
       </section>
@@ -124,11 +126,11 @@ import { baseUrl } from '../lib/base-url';
 
 <script>
   document.getElementById('googleSignupBtn')?.addEventListener('click', () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/api/oauth/signin/google';
   });
 
   document.getElementById('microsoftSignupBtn')?.addEventListener('click', () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/api/oauth/signin/microsoft';
   });
 
   document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
@@ -142,7 +144,30 @@ import { baseUrl } from '../lib/base-url';
       return;
     }
 
-    window.location.href = '/dashboard';
+    const firstName = (document.getElementById('firstName') as HTMLInputElement).value;
+    const lastName = (document.getElementById('lastName') as HTMLInputElement).value;
+    const email = (document.getElementById('email') as HTMLInputElement).value;
+    const phone = (document.getElementById('phone') as HTMLInputElement).value;
+    const country = (document.getElementById('country') as HTMLSelectElement).value;
+
+    try {
+      const res = await fetch('/api/oauth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ firstName, lastName, email, phone, country, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.message || 'Une erreur est survenue lors de la création du compte.');
+        return;
+      }
+
+      window.location.href = '/dashboard';
+    } catch (err) {
+      alert('Une erreur est survenue. Réessayez.');
+    }
   });
 </script>
 
@@ -154,7 +179,14 @@ import { baseUrl } from '../lib/base-url';
 
   .auth-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0,0,0,0.35) !important;
   }
+
+  .site-logo a { display:inline-block; line-height:0; }
+  .site-logo img { height: 64px; width: auto; display:block; }
+  header.auth-header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
+  header.auth-header.smaller .site-logo { height: 60px; }
+  header.auth-header.smaller .site-logo img { height: 36px; }
 
   .auth-nav {
     float: right;

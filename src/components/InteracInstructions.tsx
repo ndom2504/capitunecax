@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatMoney } from '../lib/public-config';
 
 interface InteracInstructionsProps {
   amount: number;
@@ -8,7 +9,7 @@ interface InteracInstructionsProps {
 
 export function InteracInstructions({ amount, invoiceNumber, onConfirm }: InteracInstructionsProps) {
   const [copied, setCopied] = useState<string | null>(null);
-  const interacEmail = import.meta.env.INTERAC_EMAIL || 'paiements@capitune.com';
+  const interacEmail = import.meta.env.PUBLIC_INTERAC_EMAIL || import.meta.env.INTERAC_EMAIL || 'paiements@capitune.com';
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -17,12 +18,10 @@ export function InteracInstructions({ amount, invoiceNumber, onConfirm }: Intera
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
+    return formatMoney(price, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
+      maximumFractionDigits: 2,
+    });
   };
 
   return (

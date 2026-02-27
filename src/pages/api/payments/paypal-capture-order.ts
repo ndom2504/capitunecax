@@ -22,8 +22,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
     
     const auth = Buffer.from(`${clientId}:${secret}`).toString('base64');
+    const paypalEnv = locals?.runtime?.env?.PAYPAL_ENV || import.meta.env.PAYPAL_ENV || 'live';
+    const paypalBase = paypalEnv === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
     
-    const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+    const response = await fetch(`${paypalBase}/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

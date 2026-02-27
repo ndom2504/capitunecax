@@ -3,6 +3,7 @@ import { StripeCardForm } from './StripeCardForm';
 import { PayPalButton } from './PayPalButton';
 import { InteracInstructions } from './InteracInstructions';
 import { BankTransferInstructions } from './BankTransferInstructions';
+import { formatMoney } from '../lib/public-config';
 
 type PaymentMethod = 'card' | 'paypal' | 'interac' | 'bank_transfer';
 
@@ -32,12 +33,10 @@ export function PaymentModal({
   if (!isOpen) return null;
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
+    return formatMoney(price, {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+      maximumFractionDigits: 0,
+    });
   };
 
   const paymentMethods = [

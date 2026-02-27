@@ -1,8 +1,12 @@
 import React from 'react';
 import { baseUrl } from '../lib/base-url';
+import { servicesCatalog } from '../lib/service-catalog';
+import { getContactAddressLines, publicConfig } from '../lib/public-config';
 
 export function FooterCustom() {
   const currentYear = new Date().getFullYear();
+  const addressLines = getContactAddressLines();
+  const locationLine = addressLines[addressLines.length - 1] ?? 'Montréal, QC, Canada';
 
   return (
     <footer className="bg-muted/30 border-t border-border">
@@ -47,12 +51,11 @@ export function FooterCustom() {
           <div>
             <h3 className="font-bold text-foreground mb-4">Nos Services</h3>
             <ul className="space-y-2">
-              <li className="text-muted-foreground text-sm">Consultation</li>
-              <li className="text-muted-foreground text-sm">Orientation</li>
-              <li className="text-muted-foreground text-sm">Montage de dossier</li>
-              <li className="text-muted-foreground text-sm">Suivi de dossier</li>
-              <li className="text-muted-foreground text-sm">Recherche de ressources</li>
-              <li className="text-muted-foreground text-sm">Accueil et intégration</li>
+              {servicesCatalog.map((service) => (
+                <li key={service.id} className="text-muted-foreground text-sm">
+                  {service.name}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -61,13 +64,13 @@ export function FooterCustom() {
             <h3 className="font-bold text-foreground mb-4">Contact</h3>
             <ul className="space-y-2">
               <li className="text-muted-foreground text-sm">
-                📧 contact@capitune.com
+                📧 {publicConfig.contactEmail}
               </li>
               <li className="text-muted-foreground text-sm">
-                📞 +1 (514) 123-4567
+                📞 {publicConfig.contactPhone}
               </li>
               <li className="text-muted-foreground text-sm">
-                📍 Montréal, QC, Canada
+                📍 {locationLine}
               </li>
             </ul>
             

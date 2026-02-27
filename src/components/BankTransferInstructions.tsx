@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatMoney } from '../lib/public-config';
 
 interface BankTransferInstructionsProps {
   amount: number;
@@ -10,11 +11,11 @@ export function BankTransferInstructions({ amount, invoiceNumber, onConfirm }: B
   const [copied, setCopied] = useState<string | null>(null);
 
   const bankInfo = {
-    accountName: import.meta.env.BANK_ACCOUNT_NAME || 'Export Monde Prestige Inc.',
-    bankName: import.meta.env.BANK_NAME || 'Banque TD',
-    transit: import.meta.env.BANK_TRANSIT || '12345',
-    institution: import.meta.env.BANK_INSTITUTION || '004',
-    account: import.meta.env.BANK_ACCOUNT || '1234567'
+    accountName: import.meta.env.PUBLIC_BANK_ACCOUNT_NAME || import.meta.env.BANK_ACCOUNT_NAME || 'Export Monde Prestige Inc.',
+    bankName: import.meta.env.PUBLIC_BANK_NAME || import.meta.env.BANK_NAME || 'Banque TD',
+    transit: import.meta.env.PUBLIC_BANK_TRANSIT || import.meta.env.BANK_TRANSIT || '12345',
+    institution: import.meta.env.PUBLIC_BANK_INSTITUTION || import.meta.env.BANK_INSTITUTION || '004',
+    account: import.meta.env.PUBLIC_BANK_ACCOUNT || import.meta.env.BANK_ACCOUNT || '1234567'
   };
 
   const copyToClipboard = (text: string, field: string) => {
@@ -24,12 +25,10 @@ export function BankTransferInstructions({ amount, invoiceNumber, onConfirm }: B
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
+    return formatMoney(price, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(price);
+      maximumFractionDigits: 2,
+    });
   };
 
   return (

@@ -1,0 +1,663 @@
+---
+// Protection front supplémentaire (le middleware couvre déjà /admin)
+import { getUserFromSession } from '../../lib/db';
+const db = (Astro.locals.runtime?.env as Env | undefined)?.DB ?? null;
+const token = Astro.cookies.get('capitune_session')?.value ?? '';
+const adminUser = db ? await getUserFromSession(db, token) : null;
+const adminName = adminUser?.name ?? 'Admin';
+---
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — CAPITUNE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --surface: #1a1d27;
+      --card:    #20243a;
+      --border:  #2e3349;
+      --text:    #e6e9f4;
+      --muted:   #8891b4;
+      --accent:  #ff9408;
+      --green:   #2ecc71;
+      --red:     #e74c3c;
+      --blue:    #3498db;
+      --yellow:  #f1c40f;
+      --radius:  12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; display: flex; }
+
+    /* ── Sidebar ─────────────────────────────── */
+    .sidebar {
+      width: 220px; min-height: 100vh; background: var(--surface);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo img { height: 36px; }
+    .sidebar-logo span { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 20px;
+      color: var(--muted); cursor: pointer; transition: all .18s; border-radius: 0;
+      font-weight: 500; text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(255,148,8,.1); color: var(--accent); }
+    .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    .sidebar-footer strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 13px; }
+
+    /* ── Main ───────────────────────────────── */
+    .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .badge-notif {
+      background: var(--red); color: #fff; border-radius: 50%; width: 20px; height: 20px;
+      font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700;
+    }
+    .content { padding: 28px 32px; }
+
+    /* ── Stats cards ─────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; display: flex; align-items: center; gap: 16px;
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .stat-icon.orange { background: rgba(255,148,8,.15); color: var(--accent); }
+    .stat-icon.green  { background: rgba(46,204,113,.15); color: var(--green); }
+    .stat-icon.blue   { background: rgba(52,152,219,.15); color: var(--blue); }
+    .stat-icon.red    { background: rgba(231,76,60,.15);  color: var(--red); }
+    .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .stat-value { font-size: 26px; font-weight: 700; line-height: 1; }
+
+    /* ── Table clients ───────────────────────── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title { font-size: 16px; font-weight: 600; }
+    .search-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 14px; color: var(--text); font-size: 13px; width: 260px; outline: none;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .search-box::placeholder { color: var(--muted); }
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface); }
+    th { padding: 12px 16px; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    td { padding: 13px 16px; border-top: 1px solid var(--border); vertical-align: middle; }
+    tr.client-row { cursor: pointer; transition: background .15s; }
+    tr.client-row:hover { background: rgba(255,255,255,.03); }
+    .avatar-sm {
+      width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0;
+    }
+    .client-name { font-weight: 600; }
+    .client-email { color: var(--muted); font-size: 12px; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+    }
+    .pill-soumis   { background: rgba(52,152,219,.15);  color: var(--blue); }
+    .pill-en_cours { background: rgba(241,196,15,.15);  color: var(--yellow); }
+    .pill-termine  { background: rgba(46,204,113,.15);  color: var(--green); }
+    .pill-annule   { background: rgba(231,76,60,.15);   color: var(--red); }
+    .pill-aucun    { background: rgba(136,145,180,.1);  color: var(--muted); }
+    .msg-preview { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+    .btn-sm {
+      padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 600;
+      background: rgba(255,148,8,.15); color: var(--accent); transition: background .15s;
+    }
+    .btn-sm:hover { background: var(--accent); color: #fff; }
+
+    /* ── Drawer client ───────────────────────── */
+    .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; top: 0; right: -700px; bottom: 0; width: 680px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 201; transition: right .3s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .drawer.open { right: 0; }
+    .drawer-head {
+      padding: 20px 28px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .drawer-client-info { display: flex; align-items: center; gap: 14px; }
+    .avatar-lg {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .drawer-name { font-size: 16px; font-weight: 700; }
+    .drawer-email { color: var(--muted); font-size: 13px; }
+    .btn-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; }
+    .btn-close:hover { color: var(--text); }
+
+    .drawer-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .dtab {
+      padding: 13px 20px; font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; border-bottom: 2px solid transparent; transition: all .18s;
+    }
+    .dtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .dtab:hover { color: var(--text); }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
+    .drawer-section { margin-bottom: 24px; }
+    .drawer-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 12px; }
+
+    /* Messages inside drawer */
+    .msg-list { display: flex; flex-direction: column; gap: 10px; }
+    .msg-item {
+      max-width: 82%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5;
+    }
+    .msg-item.user { background: var(--card); border-bottom-left-radius: 4px; align-self: flex-start; }
+    .msg-item.admin { background: rgba(255,148,8,.15); border-bottom-right-radius: 4px; align-self: flex-end; color: #ffd09a; }
+    .msg-item.bot  { background: rgba(52,152,219,.1); border-bottom-left-radius: 4px; align-self: flex-start; color: #a8d4f5; }
+    .msg-time { font-size: 10px; color: var(--muted); margin-top: 4px; display: block; }
+
+    /* Reply form */
+    .reply-bar {
+      border-top: 1px solid var(--border); padding: 16px 28px; display: flex; gap: 10px;
+      flex-shrink: 0; background: var(--surface);
+    }
+    .reply-input {
+      flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 14px; color: var(--text); font-size: 13px; resize: none; outline: none; min-height: 42px; max-height: 140px;
+    }
+    .reply-input:focus { border-color: var(--accent); }
+    .btn-send {
+      background: var(--accent); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .btn-send:hover { background: #e08400; }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-cell { background: var(--card); border-radius: 8px; padding: 12px 14px; }
+    .info-cell label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .info-cell span { display: block; font-weight: 600; margin-top: 3px; }
+
+    /* Status select */
+    .status-select {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; outline: none;
+    }
+    .status-select:focus { border-color: var(--accent); }
+
+    /* Pagination */
+    .pagination { display: flex; gap: 6px; align-items: center; margin-top: 16px; justify-content: flex-end; }
+    .page-btn {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      border-radius: 6px; padding: 5px 12px; font-size: 13px; cursor: pointer;
+    }
+    .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Empty */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+
+    /* Loading spinner */
+    .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 40px auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    #adm-toast {
+      position: fixed; bottom: 24px; right: 24px; background: var(--green);
+      color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      z-index: 999; display: none; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>CAPITUNE</span><br>
+    <small style="color:var(--muted);font-size:11px;font-weight:400;">Panneau Admin</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="showSection('dashboard')">
+      <i class="fa fa-chart-pie"></i> Tableau de bord
+    </a>
+    <a class="nav-item" onclick="showSection('clients')">
+      <i class="fa fa-users"></i> Clients
+    </a>
+    <a class="nav-item" href="/admin/stripe-config">
+      <i class="fa fa-credit-card"></i> Stripe
+    </a>
+    <a class="nav-item" href="/dashboard">
+      <i class="fa fa-arrow-left"></i> Espace client
+    </a>
+    <a class="nav-item" href="/api/oauth/signout" style="margin-top:auto;">
+      <i class="fa fa-sign-out-alt"></i> Déconnexion
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <strong>{adminName}</strong>
+    Administrateur
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="topbar">
+    <h1 id="page-title">Tableau de bord</h1>
+    <div class="topbar-right">
+      <span style="color:var(--muted);font-size:12px;" id="pending-badge"></span>
+      <a href="/api/oauth/signout" style="color:var(--muted);font-size:12px;text-decoration:none;">
+        <i class="fa fa-sign-out-alt"></i> Déconnexion
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SECTION DASHBOARD -->
+    <div id="section-dashboard">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon orange"><i class="fa fa-users"></i></div>
+          <div><div class="stat-label">Clients</div><div class="stat-value" id="stat-users">—</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fa fa-folder-open"></i></div>
+          <div><div class="stat-label">Projets actifs</div><div class="stat-value" id="stat-projects">—</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red"><i class="fa fa-envelope"></i></div>
+          <div><div class="stat-label">Messages en attente</div><div class="stat-value" id="stat-pending">—</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fa fa-dollar-sign"></i></div>
+          <div><div class="stat-label">Revenus (payé)</div><div class="stat-value" id="stat-revenue">—</div></div>
+        </div>
+      </div>
+
+      <!-- Derniers clients -->
+      <div class="section-header">
+        <div class="section-title">Derniers inscrits</div>
+        <button class="btn-sm" onclick="showSection('clients')">Voir tous →</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nom</th><th>Email</th><th>Inscrit le</th><th></th></tr></thead>
+          <tbody id="recent-users-body">
+            <tr><td colspan="4"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION CLIENTS -->
+    <div id="section-clients" style="display:none">
+      <div class="section-header">
+        <div class="section-title">Clients</div>
+        <input class="search-box" id="client-search" placeholder="🔍  Rechercher nom ou email..." oninput="debounceSearch()" />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Projet</th>
+              <th>Statut</th>
+              <th>Dernier message</th>
+              <th>Revenus</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="clients-body">
+            <tr><td colspan="6"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+<!-- Drawer fiche client -->
+<div class="drawer" id="client-drawer">
+  <div class="drawer-head">
+    <div class="drawer-client-info">
+      <div class="avatar-lg" id="dr-avatar">?</div>
+      <div>
+        <div class="drawer-name" id="dr-name">Client</div>
+        <div class="drawer-email" id="dr-email">—</div>
+      </div>
+    </div>
+    <button class="btn-close" onclick="closeDrawer()"><i class="fa fa-times"></i></button>
+  </div>
+  <div class="drawer-tabs">
+    <div class="dtab active" onclick="switchDTab('messages')"> <i class="fa fa-comments"></i> Messages</div>
+    <div class="dtab" onclick="switchDTab('projet')"><i class="fa fa-folder"></i> Projet</div>
+    <div class="dtab" onclick="switchDTab('profil')"><i class="fa fa-user"></i> Profil</div>
+    <div class="dtab" onclick="switchDTab('paiements')"><i class="fa fa-credit-card"></i> Paiements</div>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <div class="spinner"></div>
+  </div>
+  <div class="reply-bar" id="reply-bar">
+    <textarea class="reply-input" id="reply-input" placeholder="Répondre au client..." rows="1"
+      onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendReply();}"></textarea>
+    <button class="btn-send" onclick="sendReply()"><i class="fa fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<div id="adm-toast"></div>
+
+<script>
+  var _currentClient = null;
+  var _currentTab    = 'messages';
+  var _clientData    = null;
+  var _page          = 1;
+  var _search        = '';
+  var _debounceTimer = null;
+
+  // ── Sections ────────────────────────────────────────────────────────────
+  function showSection(name) {
+    document.getElementById('section-dashboard').style.display = name === 'dashboard' ? '' : 'none';
+    document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
+    document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+    var titles = { dashboard: 'Tableau de bord', clients: 'Clients' };
+    document.getElementById('page-title').textContent = titles[name] || name;
+    if (name === 'clients' && !document.getElementById('clients-body').dataset.loaded) {
+      loadClients();
+    }
+  }
+
+  // ── Stats ────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    const r = await fetch('/api/admin/stats');
+    if (!r.ok) return;
+    const d = await r.json();
+    document.getElementById('stat-users').textContent    = d.users;
+    document.getElementById('stat-projects').textContent = d.projects;
+    document.getElementById('stat-pending').textContent  = d.pending;
+    document.getElementById('stat-revenue').textContent  = '$' + Number(d.revenue).toFixed(0);
+    if (d.pending > 0) {
+      document.getElementById('pending-badge').innerHTML = '<span class="badge-notif">' + d.pending + '</span> non-répondus';
+    }
+    // Derniers inscrits
+    var tbody = document.getElementById('recent-users-body');
+    if (!d.recentUsers || !d.recentUsers.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Aucun client</td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.recentUsers.map(function(u) {
+      var initials = (u.name || u.email).charAt(0).toUpperCase();
+      var date = new Date(u.created_at).toLocaleDateString('fr-CA');
+      return '<tr class="client-row" onclick="openClient(\''+u.id+'\')">'
+        + '<td><div style="display:flex;align-items:center;gap:10px"><div class="avatar-sm">'+initials+'</div>'
+        + '<span class="client-name">'+esc(u.name || '—')+'</span></div></td>'
+        + '<td class="client-email">'+esc(u.email)+'</td>'
+        + '<td style="color:var(--muted);font-size:12px">'+date+'</td>'
+        + '<td><button class="btn-sm" onclick="event.stopPropagation();openClient(\''+u.id+'\')">Voir</button></td>'
+        + '</tr>';
+    }).join('');
+  }
+
+  // ── Clients list ─────────────────────────────────────────────────────────
+  async function loadClients() {
+    var tbody = document.getElementById('clients-body');
+    tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+    var url = '/api/admin/clients?page=' + _page + (_search ? '&q=' + encodeURIComponent(_search) : '');
+    const r = await fetch(url);
+    if (!r.ok) { tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Erreur de chargement</td></tr>'; return; }
+    const d = await r.json();
+    tbody.dataset.loaded = '1';
+    if (!d.clients.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa fa-users"></i>Aucun client trouvé</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = d.clients.map(function(c) {
+      var initials = (c.name || c.email).charAt(0).toUpperCase();
+      var type = c.project_type ? c.project_type.replace(/_/g,' ') : '—';
+      var status = c.project_status || 'aucun';
+      var pillClass = 'pill-' + status;
+      var pillLabel = { soumis:'Soumis', en_cours:'En cours', termine:'Terminé', annule:'Annulé', aucun:'Aucun' }[status] || status;
+      var lastMsg = c.last_msg ? esc(String(c.last_msg).slice(0, 60)) + (String(c.last_msg).length > 60 ? '…' : '') : '<em>—</em>';
+      var paid = c.total_paid ? '$' + Number(c.total_paid).toFixed(0) : '—';
+      return '<tr class="client-row" onclick="openClient(\''+c.id+'\')">'
+        + '<td><div style="display:flex;align-items:center;gap:10px">'
+        + '<div class="avatar-sm">'+initials+'</div>'
+        + '<div><div class="client-name">'+esc(c.name||'—')+'</div><div class="client-email">'+esc(c.email)+'</div></div></div></td>'
+        + '<td style="font-size:12px">'+esc(type)+'</td>'
+        + '<td><span class="status-pill '+pillClass+'">'+pillLabel+'</span></td>'
+        + '<td class="msg-preview">'+lastMsg+'</td>'
+        + '<td style="color:var(--green);font-weight:600">'+paid+'</td>'
+        + '<td><button class="btn-sm" onclick="event.stopPropagation();openClient(\''+c.id+'\')"><i class="fa fa-eye"></i> Voir</button></td>'
+        + '</tr>';
+    }).join('');
+    // Pagination
+    renderPagination(d.page, d.pages);
+  }
+
+  function renderPagination(page, pages) {
+    var el = document.getElementById('pagination');
+    if (pages <= 1) { el.innerHTML = ''; return; }
+    var html = '';
+    if (page > 1) html += '<button class="page-btn" onclick="goPage(' + (page-1) + ')">‹ Préc</button>';
+    for (var i = Math.max(1, page-2); i <= Math.min(pages, page+2); i++) {
+      html += '<button class="page-btn' + (i===page?' active':'') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+    }
+    if (page < pages) html += '<button class="page-btn" onclick="goPage(' + (page+1) + ')">Suiv ›</button>';
+    el.innerHTML = html;
+  }
+
+  function goPage(p) { _page = p; loadClients(); }
+
+  function debounceSearch() {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(function() {
+      _search = document.getElementById('client-search').value;
+      _page = 1;
+      loadClients();
+    }, 350);
+  }
+
+  // ── Drawer ────────────────────────────────────────────────────────────────
+  async function openClient(id) {
+    _currentClient = id;
+    _currentTab = 'messages';
+    document.getElementById('drawer-overlay').classList.add('open');
+    document.getElementById('client-drawer').classList.add('open');
+    document.getElementById('drawer-body').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('dr-name').textContent  = 'Chargement…';
+    document.getElementById('dr-email').textContent = '';
+
+    const r = await fetch('/api/admin/client/' + id);
+    if (!r.ok) { document.getElementById('drawer-body').innerHTML = '<p style="color:var(--red);padding:20px">Erreur</p>'; return; }
+    _clientData = await r.json();
+
+    var u = _clientData.user;
+    document.getElementById('dr-name').textContent  = u.name || '—';
+    document.getElementById('dr-email').textContent = u.email;
+    document.getElementById('dr-avatar').textContent = (u.name || u.email).charAt(0).toUpperCase();
+
+    renderDrawerTab('messages');
+    // Activer le 1er onglet
+    document.querySelectorAll('.dtab').forEach(function(el, i){ el.classList.toggle('active', i===0); });
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer-overlay').classList.remove('open');
+    document.getElementById('client-drawer').classList.remove('open');
+    _currentClient = null;
+    _clientData = null;
+  }
+
+  function switchDTab(tab) {
+    _currentTab = tab;
+    document.querySelectorAll('.dtab').forEach(function(el){
+      el.classList.toggle('active', el.textContent.trim().toLowerCase().includes(tab.slice(0,5)));
+    });
+    var replyBar = document.getElementById('reply-bar');
+    replyBar.style.display = tab === 'messages' ? '' : 'none';
+    renderDrawerTab(tab);
+  }
+
+  function renderDrawerTab(tab) {
+    var body = document.getElementById('drawer-body');
+    if (!_clientData) return;
+    if (tab === 'messages')  body.innerHTML = renderMessages();
+    if (tab === 'projet')    body.innerHTML = renderProjet();
+    if (tab === 'profil')    body.innerHTML = renderProfil();
+    if (tab === 'paiements') body.innerHTML = renderPaiements();
+    // Scroll messages vers le bas
+    if (tab === 'messages') body.scrollTop = body.scrollHeight;
+  }
+
+  function renderMessages() {
+    var msgs = _clientData.messages || [];
+    if (!msgs.length) return '<div class="empty-state"><i class="fa fa-comment-slash"></i>Aucun message</div>';
+    return '<div class="msg-list">' + msgs.map(function(m) {
+      var cls = m.sender === 'user' ? 'user' : m.sender === 'admin' ? 'admin' : 'bot';
+      var label = m.sender === 'user' ? '' : m.sender === 'admin' ? '<small>Admin</small> ' : '<small>Bot</small> ';
+      var time = new Date(m.created_at).toLocaleString('fr-CA', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      return '<div class="msg-item ' + cls + '">' + label + esc(m.content) + '<span class="msg-time">' + time + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  function renderProjet() {
+    var projs = _clientData.projects || [];
+    if (!projs.length) return '<div class="empty-state"><i class="fa fa-folder-open"></i>Aucun projet</div>';
+    return projs.map(function(p) {
+      var status = p.status || 'en_cours';
+      var pillClass = 'pill-' + status;
+      var statusLabels = { soumis:'Soumis', en_cours:'En cours', termine:'Terminé', annule:'Annulé' };
+      return '<div class="drawer-section">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        + '<span class="drawer-section-title">Projet</span>'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+        + '<span class="status-pill '+pillClass+'">'+esc(statusLabels[status]||status)+'</span>'
+        + '<select class="status-select" onchange="updateStatus(\''+p.id+'\', this.value)">'
+        + ['en_cours','soumis','termine','annule'].map(function(s) {
+            return '<option value="'+s+'"'+(s===status?' selected':'')+'>'+statusLabels[s]+'</option>';
+          }).join('')
+        + '</select></div></div>'
+        + '<div class="info-grid">'
+        + infoCell('Type', p.type) + infoCell('Province', p.province) + infoCell('Pays cible', p.pays)
+        + infoCell('Diplôme', p.diplome) + infoCell('Délai', p.delai) + infoCell('Personnes', p.nbpersonnes)
+        + (p.pack_id ? infoCell('Pack', p.pack_id + ' — $' + p.pack_price) : '')
+        + '</div>'
+        + (p.notes ? '<div style="margin-top:12px;background:var(--card);border-radius:8px;padding:14px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Notes :</strong> ' + esc(p.notes) + '</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  function renderProfil() {
+    var u = _clientData.user;
+    return '<div class="drawer-section"><div class="drawer-section-title">Informations</div>'
+      + '<div class="info-grid">'
+      + infoCell('Nom', u.name) + infoCell('Email', u.email)
+      + infoCell('Téléphone', u.phone || '—') + infoCell('Ville / Pays', u.location || '—')
+      + infoCell('Rôle', u.role) + infoCell('Inscrit le', new Date(u.created_at).toLocaleDateString('fr-CA'))
+      + '</div>'
+      + (u.bio ? '<div style="margin-top:12px;background:var(--card);border-radius:8px;padding:14px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Bio :</strong> ' + esc(u.bio) + '</div>' : '')
+      + '</div>';
+  }
+
+  function renderPaiements() {
+    var pays = _clientData.payments || [];
+    if (!pays.length) return '<div class="empty-state"><i class="fa fa-receipt"></i>Aucun paiement</div>';
+    return '<div class="drawer-section"><div class="drawer-section-title">Paiements</div>'
+      + pays.map(function(p) {
+          var stPill = p.status === 'paid' ? 'pill-termine' : p.status === 'failed' ? 'pill-annule' : 'pill-en_cours';
+          var stLabel = { paid:'Payé', failed:'Échoué', pending:'En attente', refunded:'Remboursé' }[p.status] || p.status;
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--card);border-radius:8px;margin-bottom:8px">'
+            + '<div><div style="font-weight:600">' + esc(p.method) + '</div><div style="color:var(--muted);font-size:11px">' + new Date(p.created_at).toLocaleDateString('fr-CA') + '</div></div>'
+            + '<div style="display:flex;align-items:center;gap:12px">'
+            + '<span style="font-weight:700;color:var(--green)">$' + Number(p.amount).toFixed(2) + ' ' + esc(p.currency) + '</span>'
+            + '<span class="status-pill '+stPill+'">'+stLabel+'</span>'
+            + '</div></div>';
+        }).join('')
+      + '</div>';
+  }
+
+  function infoCell(label, value) {
+    return '<div class="info-cell"><label>' + label + '</label><span>' + esc(String(value || '—')) + '</span></div>';
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  async function sendReply() {
+    var input = document.getElementById('reply-input');
+    var content = input.value.trim();
+    if (!content || !_currentClient) return;
+    input.value = '';
+    const r = await fetch('/api/admin/reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: _currentClient, content }),
+    });
+    if (r.ok) {
+      // Ajouter le message localement sans recharger
+      if (!_clientData.messages) _clientData.messages = [];
+      _clientData.messages.push({ sender: 'admin', content, created_at: new Date().toISOString() });
+      renderDrawerTab('messages');
+      toast('Message envoyé ✓');
+    } else {
+      toast('Erreur envoi', true);
+    }
+  }
+
+  async function updateStatus(projectId, status) {
+    const r = await fetch('/api/admin/project/' + projectId + '/status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (r.ok) {
+      toast('Statut mis à jour ✓');
+      // Mettre à jour localement
+      var proj = _clientData.projects.find(function(p){ return p.id === projectId; });
+      if (proj) proj.status = status;
+    } else {
+      toast('Erreur mise à jour', true);
+    }
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, error) {
+    var t = document.getElementById('adm-toast');
+    t.textContent = msg;
+    t.style.background = error ? '#e74c3c' : '#2ecc71';
+    t.style.display = 'block';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function(){ t.style.display = 'none'; }, 3000);
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadStats();
+
+  // Masquer reply-bar par défaut sur les autres onglets
+  document.querySelectorAll('.dtab').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var tab = el.textContent.toLowerCase();
+      document.getElementById('reply-bar').style.display = tab.includes('mess') ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

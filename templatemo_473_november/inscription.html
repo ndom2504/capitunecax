@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <title>CAPITUNE — Créer un compte</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="css/media.css" type="text/css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300' rel='stylesheet' type='text/css'>
+    <style>
+        body { background: #1f4b6e; }
+        .DesignHolder { background: #1f4b6e; min-height: 100vh; }
+        header { background: rgba(0,0,0,0.35) !important; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        .site-logo a { display:inline-block; line-height:0; }
+        .site-logo img { height: 64px; width: auto; display:block; }
+        header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
+        header.smaller .site-logo { height: 60px; }
+        header.smaller .site-logo img { height: 36px; }
+        .auth-nav { float: right; margin-top: 32px; }
+        .auth-nav ul { list-style: none; margin: 0; display: flex; gap: 6px; }
+        .auth-nav li { float: none; height: auto; padding: 0; margin: 0; }
+        .auth-nav li a { padding: 8px 18px; font-size: 13px; color: rgba(255,255,255,0.75); font-family: 'Open Sans', sans-serif; font-weight: 600; text-transform: uppercase; text-decoration: none; border-radius: 4px; transition: all 0.2s; }
+        .auth-nav li a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .auth-nav li.active a { color: #fff; background: #ff9408; }
+
+        .AuthHero_sec { padding: 140px 0 40px; text-align: center; }
+        .AuthHero_sec .Center { max-width: 1100px; margin: auto; }
+        .AuthHero_sec h1 { color: #fff; font-family: 'Oswald', sans-serif; font-size: 48px; font-weight: 400; text-transform: uppercase; line-height: 1.05; margin-bottom: 16px; }
+        .AuthHero_sec h1 span { color: #ff9408; }
+        .AuthHero_sec p { color: #e8edf3; font-size: 18px; max-width: 640px; margin: 0 auto; }
+
+        .auth-sec { background: url('img/Get-bg.jpg') center center no-repeat; background-size: cover; }
+        .auth-sec .Mid { padding: 60px 0 80px; max-width: 1100px; margin: auto; overflow: hidden; }
+
+        .auth-form-wide { width: 58% !important; }
+        .auth-form-wide .field { background: rgba(255,255,255,0.95) !important; color: #102a43 !important; font-weight: 600; border: 1px solid rgba(16,42,67,0.18) !important; }
+        .auth-form-wide select.field { font-family: 'Open Sans', sans-serif; font-size: 12px; appearance: none; -webkit-appearance: none; }
+        .auth-form-wide .button { background: #ff9408 !important; font-size: 15px; letter-spacing: 1px; }
+        .auth-form-wide .button:hover { background: #e0820a !important; }
+
+        .auth-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .auth-grid-2 p { margin: 0 !important; }
+
+        .password-note { margin-top: -8px !important; margin-bottom: 12px !important; color: rgba(255,255,255,0.6); font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.4px; }
+
+        .auth-terms { margin-bottom: 14px !important; }
+        .terms-wrap { display: flex; align-items: flex-start; gap: 10px; color: #fff; font-size: 12px; font-weight: 600; text-transform: uppercase; line-height: 1.5; cursor: pointer; }
+        .terms-wrap a { color: #ffb049; text-decoration: none; }
+        .terms-wrap a:hover { color: #fff; }
+        .remember-check { width: 14px; height: 14px; margin-top: 2px; cursor: pointer; }
+
+        .auth-subline { margin-top: 12px; text-align: center; }
+        .auth-subline p { color: #d9e4ef; font-size: 14px; padding: 0; }
+        .auth-subline a { color: #ffb049; font-weight: 700; text-decoration: none; }
+        .auth-subline a:hover { color: #fff; }
+
+        .auth-divider { margin: 22px 0 18px; text-align: center; position: relative; }
+        .auth-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 1px solid rgba(255,255,255,0.22); }
+        .auth-divider span { position: relative; z-index: 1; color: #fff; background: rgba(20,55,84,0.75); padding: 0 14px; text-transform: uppercase; font-size: 12px; font-weight: 700; }
+
+        .auth-social-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .auth-social-btn { border: 1px solid rgba(255,255,255,0.32); background: rgba(255,255,255,0.12); color: #fff; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; font-size: 13px; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease; letter-spacing: 0.5px; }
+        .auth-social-btn:hover { background: rgba(255,255,255,0.22); }
+        .auth-social-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .auth-info-side { width: 36% !important; padding-top: 20px; }
+        .auth-info-side h3 { font-size: 40px !important; line-height: 1.05 !important; white-space: normal !important; padding-bottom: 24px !important; color: #f88e04 !important; }
+        .auth-info-side address { color: #ebedf1; font-size: 15px; line-height: 1.6; }
+        .auth-info-side address.Number { padding-left: 0 !important; background: none !important; }
+
+        .auth-error { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #ff6b6b; padding: 10px 14px; border-radius: 4px; font-size: 13px; font-weight: 600; margin-bottom: 14px; display: none; }
+        .auth-error.show { display: block; }
+
+        /* Loader */
+        #loader-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; }
+        #loader { display: block; position: relative; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; border: 3px solid transparent; border-top-color: #3498db; animation: spin 2s linear infinite; z-index: 1001; }
+        #loader:before { content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px; border-radius: 50%; border: 3px solid transparent; border-top-color: #e74c3c; animation: spin 3s linear infinite; }
+        #loader:after { content: ""; position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; border-radius: 50%; border: 3px solid transparent; border-top-color: #f9c922; animation: spin 1.5s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loader-wrapper .loader-section { position: fixed; top: 0; width: 51%; height: 100%; background: #222; z-index: 1000; }
+        #loader-wrapper .loader-section.section-left { left: 0; }
+        #loader-wrapper .loader-section.section-right { right: 0; }
+        .loaded #loader-wrapper .loader-section.section-left { transform: translateX(-100%); transition: all 0.7s 0.3s cubic-bezier(0.645,0.045,0.355,1.000); }
+        .loaded #loader-wrapper .loader-section.section-right { transform: translateX(100%); transition: all 0.7s 0.3s cubic-bezier(0.645,0.045,0.355,1.000); }
+        .loaded #loader { opacity: 0; transition: all 0.3s ease-out; }
+        .loaded #loader-wrapper { visibility: hidden; transform: translateY(-100%); transition: all 0.3s 1s ease-out; }
+
+        @media (max-width: 980px) {
+            .auth-nav { float: none; margin: 14px 0 18px; }
+            .auth-nav ul { justify-content: center; flex-wrap: wrap; }
+            .AuthHero_sec h1 { font-size: 32px; }
+            .auth-form-wide, .auth-info-side { width: 100% !important; }
+            .auth-grid-2, .auth-social-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="DesignHolder">
+    <div class="LayoutFrame">
+
+        <!-- Header -->
+        <header>
+            <div class="Center">
+                <div class="site-logo">
+                    <a href="index.html"><img src="logo/Logo%20moderne%20de%20CAPITUNE%20avec%20d%C3%A9grad%C3%A9.png" alt="CAPITUNE"></a>
+                </div>
+                <nav class="auth-nav">
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="connexion.html">Connexion</a></li>
+                        <li class="active"><a href="inscription.html">Inscription</a></li>
+                    </ul>
+                </nav>
+                <div class="clear"></div>
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <section class="AuthHero_sec">
+            <div class="Center">
+                <h1>Créer Votre Compte <span>CAPITUNE</span></h1>
+                <p>Démarrez votre projet Canada avec un espace personnel sécurisé dédié à votre parcours.</p>
+            </div>
+        </section>
+
+        <!-- Formulaire -->
+        <section class="Get_sec auth-sec">
+            <div class="Mid">
+                <div class="Leftside auth-form-wide">
+
+                    <div class="auth-error" id="signupError"></div>
+
+                    <form id="signupForm">
+                        <fieldset>
+                            <div class="auth-grid-2">
+                                <p><input type="text" id="firstName" required placeholder="PRÉNOM" class="field" /></p>
+                                <p><input type="text" id="lastName" required placeholder="NOM" class="field" /></p>
+                            </div>
+
+                            <p><input type="email" id="email" required placeholder="EMAIL" class="field" /></p>
+                            <p><input type="tel" id="phone" placeholder="TÉLÉPHONE" class="field" /></p>
+
+                            <p>
+                                <select id="country" required class="field">
+                                    <option value="">PAYS DE RÉSIDENCE</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="FR">France</option>
+                                    <option value="SN">Sénégal</option>
+                                    <option value="CM">Cameroun</option>
+                                    <option value="CI">Côte d'Ivoire</option>
+                                    <option value="MA">Maroc</option>
+                                    <option value="DZ">Algérie</option>
+                                    <option value="TN">Tunisie</option>
+                                    <option value="BE">Belgique</option>
+                                    <option value="CH">Suisse</option>
+                                    <option value="OTHER">Autre</option>
+                                </select>
+                            </p>
+
+                            <p><input type="password" id="password" required minlength="8" placeholder="MOT DE PASSE" class="field" /></p>
+                            <p><input type="password" id="confirmPassword" required placeholder="CONFIRMER LE MOT DE PASSE" class="field" /></p>
+                            <p class="password-note"><i class="fa fa-info-circle"></i> Minimum 8 caractères</p>
+
+                            <p class="auth-terms">
+                                <label for="terms" class="terms-wrap">
+                                    <input type="checkbox" id="terms" required class="remember-check" />
+                                    <span>J'accepte les <a href="#">conditions d'utilisation</a> et la <a href="#">politique de confidentialité</a></span>
+                                </label>
+                            </p>
+
+                            <p><input type="submit" value="Créer Mon Compte" class="button" /></p>
+                        </fieldset>
+                    </form>
+
+                    <div class="auth-subline">
+                        <p>Vous avez déjà un compte ? <a href="connexion.html">Se connecter</a></p>
+                    </div>
+
+                    <div class="auth-divider"><span>Ou via</span></div>
+
+                    <div class="auth-social-grid">
+                        <button type="button" id="googleSignupBtn" class="auth-social-btn">
+                            <svg class="auth-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            <span>Google</span>
+                        </button>
+                        <button type="button" id="microsoftSignupBtn" class="auth-social-btn">
+                            <svg class="auth-social-icon" viewBox="0 0 23 23" aria-hidden="true">
+                                <path fill="#f35325" d="M1 1h10v10H1z"/>
+                                <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                                <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                            </svg>
+                            <span>Microsoft</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="Rightside auth-info-side">
+                    <h3>Votre Espace Personnel</h3>
+                    <address><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Suivi de dossier en temps réel</address>
+                    <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Documents sécurisés et historique</address>
+                    <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Messagerie directe avec nos consultants</address>
+                    <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Paiements sécurisés par tranches</address>
+                    <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Accès à la FAQ et aux ressources</address>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<div id="loader-wrapper">
+    <div id="loader"></div>
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+</div>
+
+<script src="js/jquery-1.11.0.min.js"></script>
+<script src="js/modernizr.js"></script>
+<script>
+    window.addEventListener('load', function() { document.body.classList.add('loaded'); });
+
+    document.getElementById('googleSignupBtn').addEventListener('click', function() {
+        window.location.href = 'dashboard.html';
+    });
+
+    document.getElementById('microsoftSignupBtn').addEventListener('click', function() {
+        window.location.href = 'dashboard.html';
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var password = document.getElementById('password').value;
+        var confirmPassword = document.getElementById('confirmPassword').value;
+        var errorEl = document.getElementById('signupError');
+
+        errorEl.classList.remove('show');
+
+        if (password !== confirmPassword) {
+            errorEl.innerHTML = '<i class="fa fa-exclamation-circle"></i> Les mots de passe ne correspondent pas.';
+            errorEl.classList.add('show');
+            return;
+        }
+
+        if (password.length < 8) {
+            errorEl.innerHTML = '<i class="fa fa-exclamation-circle"></i> Le mot de passe doit contenir au moins 8 caractères.';
+            errorEl.classList.add('show');
+            return;
+        }
+
+        var btn = this.querySelector('.button');
+        btn.value = 'Création du compte...';
+        btn.disabled = true;
+        setTimeout(function() { window.location.href = 'dashboard.html'; }, 1000);
+    });
+</script>
+
+</body>
+</html>

@@ -4,6 +4,12 @@ import Stripe from 'stripe';
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const stripeKey = locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY;
+    const configuredCurrency =
+      locals?.runtime?.env?.PAYMENT_CURRENCY ||
+      import.meta.env.PAYMENT_CURRENCY ||
+      import.meta.env.PUBLIC_PAYMENT_CURRENCY ||
+      'CAD';
+    const currency = String(configuredCurrency).toLowerCase();
     
     if (!stripeKey) {
       return new Response(JSON.stringify({ error: 'Stripe not configured' }), { 
@@ -27,7 +33,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
-      currency: 'cad',
+      currency,
       automatic_payment_methods: {
         enabled: true,
       },

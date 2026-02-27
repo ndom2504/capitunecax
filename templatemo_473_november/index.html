@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    
+    <!-- Title Tag -->
+    <title>CAPITUNE — Votre Projet Canada</title>
+    <!-- <<Mobile Viewport Code>> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+            
+    <!-- <<Attched Stylesheets>> -->
+    <link rel="stylesheet" href="css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="css/media.css" type="text/css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Oswald:400,700,300' rel='stylesheet' type='text/css'>
+    <style>
+      .site-logo a { display:inline-block; line-height:0; }
+      .site-logo img { height: 64px; width: auto; display:block; }
+      header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
+      header.smaller .site-logo { height: 60px; }
+      header.smaller .site-logo img { height: 36px; }
+      /* TabImage superposition fix */
+      .About_sec .Tabside .TabImage { height: 295px; }
+      .About_sec .Tabside .TabImage .img1 img,
+      .About_sec .Tabside .TabImage .img2 img {
+        width: 192px;
+        height: 210px;
+        object-fit: cover;
+        object-position: center;
+      }
+      .secondary-cta { margin-left:10px; background:transparent!important; border:1px solid #fff!important; color:#fff!important; }
+      .secondary-cta:hover { background:#fff!important; color:#222!important; }
+      .service-detail-panels { margin-top:34px; min-height:160px; }
+      .service-panel { display:none; opacity:0; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:26px; }
+      .service-panel.is-visible { display:block; opacity:1; }
+      .service-panel h3 { color:#fff; font-size:26px; text-transform:uppercase; margin-bottom:10px; }
+      .service-panel p { color:rgba(255,255,255,0.92); font-size:16px; line-height:1.65; margin:0; }
+      .service-trigger.active h4 { color:#ff9000; }
+      #home .rightside .Slider figure img { width:100%; height:480px; object-fit:cover; }
+      /* TabImage : superposition animée */
+      .About_sec .Tabside .TabImage { height: 320px !important; }
+      .About_sec .Tabside .TabImage .img1 img,
+      .About_sec .Tabside .TabImage .img2 img {
+        width: 300px !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: unset !important;
+        border: 4px solid #fff !important;
+        box-shadow: 0 10px 32px rgba(0,0,0,0.22);
+        border-radius: 4px;
+      }
+      .About_sec .Tabside .TabImage .img1 { animation: tabimg-swap-a 6s ease-in-out infinite alternate; }
+      .About_sec .Tabside .TabImage .img2 { animation: tabimg-swap-b 6s ease-in-out infinite alternate; }
+      @keyframes tabimg-swap-a {
+        0%   { z-index:2; transform: scale(1)    translateY(0px);  opacity:1;    }
+        42%  { z-index:2; transform: scale(1.04) translateY(-8px); opacity:1;    }
+        52%  { z-index:1;                                           opacity:0.78; }
+        100% { z-index:1; transform: scale(1)    translateY(0px);  opacity:0.78; }
+      }
+      @keyframes tabimg-swap-b {
+        0%   { z-index:1; transform: scale(1)    translateY(0px);  opacity:0.78; }
+        48%  { z-index:1;                                           opacity:0.78; }
+        58%  { z-index:2; transform: scale(1.04) translateY(-8px); opacity:1;    }
+        100% { z-index:2; transform: scale(1)    translateY(0px);  opacity:1;    }
+      }
+      /* Contact form contrast */
+      .Get_sec .Leftside .field,
+      .Get_sec .Leftside textarea {
+        background: rgba(255,255,255,0.97) !important;
+        color: #102a43 !important;
+        font-weight: 600;
+        border: 1px solid rgba(16,42,67,0.22) !important;
+      }
+      .Get_sec .Leftside textarea { resize: vertical; min-height: 110px; }
+      .Get_sec .Leftside .button { background: #ff9408 !important; font-size: 14px; letter-spacing: 1px; }
+      .Get_sec .Leftside .button:hover { background: #e0820a !important; }
+    </style>
+
+</head>
+<body>
+
+<!-- \\ Begin Holder \\ -->
+<div class="DesignHolder">
+	<!-- \\ Begin Frame \\ -->
+	<div class="LayoutFrame">
+        <!-- \\ Begin Header \\ -->
+        <header>
+            <div class="Center">
+                <div class="site-logo">
+                    <a href="index.html"><img src="logo/Logo%20moderne%20de%20CAPITUNE%20avec%20d%C3%A9grad%C3%A9.png" alt="CAPITUNE"></a>
+                </div>
+               <div id="mobile_sec">
+               <div class="mobile"><i class="fa fa-bars"></i><i class="fa fa-times"></i></div>
+                <div class="menumobile">
+                    <!-- \\ Begin Navigation \\ -->
+                    <nav class="Navigation">
+                        <ul>
+                            <li class="active">
+                                <a href="#home">Accueil</a>
+                                <span class="menu-item-bg"></span>
+                            </li>
+                            <li>
+                                <a href="#about">À Propos</a>
+                                <span class="menu-item-bg"></span>
+                            </li>
+                            <li>
+                                <a href="#services">Services</a>
+                                <span class="menu-item-bg"></span>
+                            </li>
+                            <li>
+                                <a href="#contact">Contact</a>
+                                <span class="menu-item-bg"></span>
+                            </li>
+                            <li>
+                                <a href="connexion.html">Connexion</a>
+                                <span class="menu-item-bg"></span>
+                            </li>
+                        </ul>
+                    </nav>
+                    <!-- // End Navigation // -->
+				</div>
+				</div>
+                <div class="clear"></div>
+            </div>
+        </header>
+        <!-- // End Header // -->
+        <!-- \\ Begin Banner Section \\ -->
+        <div class="Banner_sec" id="home">
+            <!--  \\ Begin banner Side -->
+            <div class="bannerside">
+	            <div class="Center">
+                    <!--  \\ Begin Left Side -->
+                    <div class="leftside">
+                        <h3>Votre Projet Canada<span>avec CAPITUNE</span></h3>
+                        <p>Nous structurons votre démarche d'immigration au Canada : analyse du profil, montage du dossier, suivi administratif et intégration locale, étape par étape.</p>
+                        <a href="#about">Découvrir</a>
+                        <a href="#contact" class="secondary-cta">Nous contacter</a>
+                    </div>                        								
+                    <!--  // End Left Side // -->
+                    <!--  \\ Begin Right Side -->
+                    <div class="rightside">
+                    	<ul id="slider">
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/cn-tower-toronto.jpg" alt="Toronto"></figure>
+                                    <div class="text"><div class="Lorem"><p>Toronto <span>Ontario</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/canadian-flag-against-cloudy-sky.jpg" alt="Drapeau canadien"></figure>
+                                    <div class="text"><div class="Lorem"><p>Rêve <span>canadien</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/festivio-ottawa-815375_1920.jpg" alt="Ottawa"></figure>
+                                    <div class="text"><div class="Lorem"><p>Ottawa <span>capitale</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/photo-of-a-cityscape-with-a-ferris-wheel.jpg" alt="Paysage urbain"></figure>
+                                    <div class="text"><div class="Lorem"><p>Ville <span>dynamique</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/happy-canada-day.jpg" alt="Fête du Canada"></figure>
+                                    <div class="text"><div class="Lorem"><p>Intégration <span>locale</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/canada-flag-couple.jpg" alt="Couple au Canada"></figure>
+                                    <div class="text"><div class="Lorem"><p>Nouveau <span>départ</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/toronto-city-hall-sign.jpg" alt="Toronto City Hall"></figure>
+                                    <div class="text"><div class="Lorem"><p>Montage <span>du dossier</span></p></div></div>
+                                </div>
+                            </li>
+                    		<li>
+                                <div class="Slider">
+                                    <figure><img src="side/16301694-canada-5148191_1920.jpg" alt="Paysage Canada"></figure>
+                                    <div class="text"><div class="Lorem"><p>Analyse <span>stratégique</span></p></div></div>
+                                </div>
+                            </li>
+						</ul>
+            	        <figure><img src="img/Shadow-img.png" alt="image" class="Shadow"></figure>                                                        
+                    </div>
+                    <!--  // End Right Side // -->
+	            </div>
+            </div>
+            <!--  // End banner Side // -->
+            <div class="clear"></div>
+        </div>
+        <!-- // End Banner Section // -->
+         <div class="bgcolor"></div>
+        <!-- \\ Begin Container \\ -->
+        <div id="Container">
+            <!-- \\ Begin About Section \\ -->
+            <div class="About_sec" id="about">
+                <div class="Center">
+                    <h2>À Propos De CAPITUNE</h2>
+                    <p>Une initiative d'Export Monde Prestige Inc. pour structurer votre projet Canada avec un accompagnement clair, professionnel et centré sur vos objectifs.</p>
+                    <div class="Line"></div>	
+                    <!-- \\ Begin Tab side \\ -->
+                    <div class="Tabside">
+                        <ul>
+                            <li><a href="javascript:;" class="tabLink activeLink" id="cont-1">Mission</a></li>
+                            <li><a href="javascript:;" class="tabLink" id="cont-2">Approche</a></li>
+                            <li><a href="javascript:;" class="tabLink" id="cont-3">Résultats</a></li>
+                        </ul>
+                      <div class="clear"></div>
+                        <div class="tabcontent" id="cont-1-1">
+                            <div class="TabImage">
+                                <div class="img1">
+                                    <figure><img src="asset/ChatGPT%20Image%2010%20f%C3%A9vr.%202026%2C%2000%20h%2007%20min%2005%20s.png" alt="Mission CAPITUNE"></figure>
+                                </div>
+                                <div class="img2">
+                                    <figure><img src="asset/ChatGPT%20Image%2020%20f%C3%A9vr.%202026%2C%2008%20h%2022%20min%2048%20s.png" alt="Accompagnement"></figure>
+                                </div>
+                            </div>
+                            <div class="Description">
+                                <h3>Un cadre structuré<span>pour avancer avec confiance</span></h3>
+                                <p>Nous cadrons votre projet en fonction de votre profil, des programmes disponibles et des exigences administratives à respecter.</p>
+                                <p>L'objectif est simple : construire un dossier cohérent, réduire les erreurs et accélérer vos prises de décision à chaque étape.</p>
+                            </div>
+                        </div>
+                        <div class="tabcontent hide" id="cont-2-1">
+                            <div class="TabImage">
+                                <div class="img1">
+                                    <figure><img src="asset/ChatGPT%20Image%2020%20f%C3%A9vr.%202026%2C%2008%20h%2022%20min%2048%20s.png" alt="Approche CAPITUNE"></figure>
+                                </div>
+                                <div class="img2">
+                                    <figure><img src="asset/t%C3%A9l%C3%A9charger.png" alt="Méthode"></figure>
+                                </div>
+                            </div>
+                            <div class="Description">
+                                <h3>Accompagnement opérationnel<span>de l'idée à l'exécution</span></h3>
+                                <p>De l'analyse initiale au dépôt, vous bénéficiez d'un suivi continu avec des points d'avancement, des checklists et des validations documentaires.</p>
+                                <p>Nous restons disponibles pour répondre à vos questions et ajuster votre stratégie selon les évolutions de votre situation.</p>
+                            </div>
+                        </div>
+                        <div class="tabcontent hide" id="cont-3-1">
+                            <div class="TabImage">
+                                <div class="img1">
+                                    <figure><img src="asset/t%C3%A9l%C3%A9charger.png" alt="Résultats"></figure>
+                                </div>
+                                <div class="img2">
+                                    <figure><img src="asset/ChatGPT%20Image%2010%20f%C3%A9vr.%202026%2C%2000%20h%2007%20min%2005%20s.png" alt="Suivi"></figure>
+                                </div>
+                            </div>
+                            <div class="Description">
+                                <h3>Suivi et intégration<span>au-delà de la soumission</span></h3>
+                                <p>Nous vous aidons à suivre les délais, préparer les réponses demandées et organiser votre arrivée pour une intégration plus fluide.</p>
+                                <p>CAPITUNE combine conseil, méthode et proximité pour transformer votre projet en plan concret et réalisable.</p>
+                            </div>
+                        </div>
+                        <div class="clear"></div>	
+                    </div>                    
+                    <!-- // End Tab Side // -->
+                </div>
+            </div>
+            <!-- // End About Section // -->
+        <!-- \\ Begin Services Section \\ -->
+        <div class="Services_sec" id="services">
+            <div class="Center">
+                <h2>Nos Services</h2>
+                <p>Un accompagnement complet pour bâtir, structurer et piloter votre projet Canada avec une vision claire et des actions concrètes.</p>
+                <div class="Line"></div>
+                <div class="Serviceside">
+                    <ul>
+                        <li class="Development"><a href="#services" class="service-trigger active" data-service="analyse"><h4>ANALYSE DU PROJET</h4></a></li>
+                        <li class="Desdin"><a href="#services" class="service-trigger" data-service="montage"><h4>MONTAGE DU DOSSIER</h4></a></li>
+                        <li class="Concept"><a href="#services" class="service-trigger" data-service="suivi"><h4>SUIVI ADMINISTRATIF</h4></a></li>
+                        <li class="System"><a href="#services" class="service-trigger" data-service="integration"><h4>INTÉGRATION</h4></a></li>
+                    </ul>
+                </div>
+                <div class="service-detail-panels">
+                    <article class="service-panel is-visible" data-service-panel="analyse">
+                        <h3>Analyse Du Projet</h3>
+                        <p>Analyser et définir la meilleure stratégie, puis choisir le bon programme officiel pour construire un plan clair et réaliste pour votre projet Canada.</p>
+                    </article>
+                    <article class="service-panel" data-service-panel="montage">
+                        <h3>Montage Complet du Dossier</h3>
+                        <p>Préparer et structurer tous les documents : pièces, formulaires, cohérence et conformité, pour réduire les risques d'erreur ou de rejet.</p>
+                    </article>
+                    <article class="service-panel" data-service-panel="suivi">
+                        <h3>Suivi &amp; Communication</h3>
+                        <p>Gérer les échanges avec les autorités : suivi des étapes, délais et demandes additionnelles pour rester informé et réactif.</p>
+                    </article>
+                    <article class="service-panel" data-service-panel="integration">
+                        <h3>Accueil &amp; Intégration</h3>
+                        <p>Installation au Canada : logement, démarches essentielles (NAS, banque, assurance) et repères pratiques pour une arrivée plus sereine.</p>
+                    </article>
+                </div>
+                <!-- // End Services Side // -->
+            </div>                
+        </div>
+        <!-- // End Services Section // -->
+        <!-- \\ Begin Contact Section \\ -->
+        <div class="Contact_sec" id="contact">
+            <div class="Contactside">
+                <div class="Center">
+                    <h2>Contact</h2>
+                    <p>Vous avez un projet Canada ? Écrivez-nous et recevez une réponse rapide<br>pour cadrer vos prochaines étapes avec CAPITUNE.</p>
+                    <div class="Line"></div>
+                </div>  
+
+            </div>
+
+                <div class="Map">
+                    <iframe
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=-73.7%2C45.4%2C-73.45%2C45.6&layer=mapnik&marker=45.5017%2C-73.5673"
+                        width="100%" height="100%"
+                        style="border:0; display:block;"
+                        allowfullscreen
+                        loading="lazy"
+                        title="CAPITUNE — Montréal, Québec">
+                    </iframe>
+                </div>
+                
+                <!-- \\ Begin Get Section \\ -->
+                <div class="Get_sec">
+                    <div class="Mid">					
+                        <!-- \\ Begin Left Side \\ -->
+                        <div class="Leftside">
+                            <form action="#">
+                                <fieldset>
+                                    <p><input type="text" value="" placeholder="NOM COMPLET" class="field"></p>
+                                    <p><input type="email" value="" placeholder="EMAIL" class="field"></p>
+                                    <p><input type="text" value="" placeholder="TYPE DE PROJET" class="field"></p>
+                                    <p><textarea cols="2" rows="2" placeholder="DÉCRIVEZ VOTRE BESOIN"></textarea></p>
+                                    <p><input type="submit" value="Envoyer" class="button"></p>
+                                </fieldset>
+                            </form>
+                        </div>
+                        <!-- // End Left Side // -->
+                        <!-- \\ Begin Right Side \\ -->
+                        <div class="Rightside">
+                            <h3>Parlons de votre projet !</h3>
+                                <address>
+                                    93 Rue des Castels, Lévis, QC G6V 2B8<br>
+                                    CAPITUNE – Export Monde Prestige Inc.<br>
+                                    Montréal, Québec, Canada.
+                                </address>
+                                <address class="Number">
+                                    +1 581 443 9464
+                                </address>
+                                <address class="Email">
+                                    <a href="mailto:contact@capitune.com">contact@capitune.com</a>
+                                </address>	
+                                <div class="clear"></div>
+                                <ul>
+                                    <li><a href="https://www.facebook.com/profile.php?id=61587490209250&amp;sk=about" target="_blank" rel="noopener"><img src="img/facebook-icn.png" alt="facebook"></a></li>
+                                    <li><a href="#"><img src="img/twitter-icn.png" alt="image"></a></li>
+                                    <li><a href="#"><img src="img/google-plus-icn.png" alt="image"></a></li>
+                                </ul>
+                        </div>
+                        <!-- // End Right Side // -->
+                    </div>
+                    <!-- \\ Begin Footer \\-->
+                    <footer>
+                        <div class="Cntr">
+                            <p>© 2026 <strong>CAPITUNE</strong> – Tous droits réservés. | <a href="connexion.html" style="color:#a9abad;">Espace Client</a></p>
+                        </div>
+                    </footer>
+                    <!-- // End Footer // -->
+                </div>
+                <!-- // End Get Section // -->
+            
+            </div>
+            <!-- // End Contact Section // -->
+        </div>
+        <!-- // End Container // -->
+	</div>
+	<!-- // End Layout Frame // -->
+</div>
+<!-- // End Design Holder // -->
+<div id="loader-wrapper">
+<div id="loader"></div>
+
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+
+</div>
+
+<!-- <<Attched Javascripts>> -->
+<script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="js/jquery.sudoSlider.min.js"></script>
+<script type="text/javascript" src="js/global.js"></script>
+<script type="text/javascript" src="js/modernizr.js"></script>
+<script>
+  (function() {
+    var triggers = document.querySelectorAll('.service-trigger');
+    var panels = document.querySelectorAll('.service-panel');
+    function showPanel(key) {
+      triggers.forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-service') === key); });
+      panels.forEach(function(p) { p.classList.toggle('is-visible', p.getAttribute('data-service-panel') === key); });
+    }
+    triggers.forEach(function(t) {
+      t.addEventListener('click', function(e) { e.preventDefault(); showPanel(t.getAttribute('data-service')); });
+    });
+    if (triggers[0]) showPanel(triggers[0].getAttribute('data-service'));
+  })();
+</script>
+
+</body>
+</html>

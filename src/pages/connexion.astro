@@ -15,7 +15,7 @@ import { baseUrl } from '../lib/base-url';
       <header class="auth-header">
         <div class="Center">
           <div class="site-logo">
-            <h1><a href={`${baseUrl}/`}>CAPI<span>TUNE</span></a></h1>
+            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
           </div>
           <nav class="Navigation auth-nav">
             <ul>
@@ -38,6 +38,10 @@ import { baseUrl } from '../lib/base-url';
       <section class="Get_sec auth-sec">
         <div class="Mid">
           <div class="Leftside auth-form-side">
+            <div class="auth-error" id="loginError">
+              <i class="fa fa-exclamation-circle"></i> Email ou mot de passe incorrect.
+            </div>
+
             <form id="loginForm">
               <fieldset>
                 <p><input type="email" id="email" required placeholder="EMAIL" class="field" /></p>
@@ -86,9 +90,11 @@ import { baseUrl } from '../lib/base-url';
 
           <div class="Rightside auth-info-side">
             <h3>Pourquoi Vous Connecter ?</h3>
-            <address>Suivi De Dossier En Temps Réel</address>
-            <address class="Number">Accès Sécurisé Aux Documents</address>
-            <address class="Email"><a href={`${baseUrl}/dashboard`}>Messagerie Et Rendez-Vous</a></address>
+            <address><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Suivi de dossier en temps réel</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Accès sécurisé à vos documents</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Messagerie et rendez-vous</address>
+            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Gestion des paiements</address>
+            <address class="Email"><a href={`${baseUrl}/inscription`}>Pas encore de compte ? →</a></address>
           </div>
         </div>
       </section>
@@ -97,17 +103,68 @@ import { baseUrl } from '../lib/base-url';
 </MainLayout>
 
 <script>
+  const errorEl = document.getElementById('loginError');
+  const showError = (message: string) => {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.classList.add('show');
+  };
+  const hideError = () => {
+    if (!errorEl) return;
+    errorEl.classList.remove('show');
+  };
+
+  // Afficher les erreurs OAuth depuis l'URL (?error=)
+  const params = new URLSearchParams(window.location.search);
+  const oauthError = params.get('error');
+  if (oauthError === 'OAuthAccountNotLinked') {
+    showError('Ce compte est déjà associé à une autre méthode de connexion.');
+  } else if (oauthError === 'access_denied') {
+    showError('Accès refusé. Veuillez réessayer.');
+  } else if (oauthError === 'InvalidState') {
+    showError('Erreur de sécurité (CSRF). Veuillez réessayer.');
+  } else if (oauthError?.includes('Configuration')) {
+    showError(decodeURIComponent(oauthError));
+  } else if (oauthError) {
+    showError(`Erreur de connexion : ${decodeURIComponent(oauthError)}`);
+  }
+
+  // Connexion Google — navigation directe vers le handler GET
   document.getElementById('googleLoginBtn')?.addEventListener('click', () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/api/oauth/signin/google';
   });
 
+  // Connexion Microsoft — navigation directe vers le handler GET
   document.getElementById('microsoftLoginBtn')?.addEventListener('click', () => {
-    window.location.href = '/dashboard';
+    window.location.href = '/api/oauth/signin/microsoft';
   });
 
+  // Connexion par email/mot de passe
   document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    window.location.href = '/dashboard';
+    hideError();
+
+    const email = (document.getElementById('email') as HTMLInputElement)?.value;
+    const password = (document.getElementById('password') as HTMLInputElement)?.value;
+
+    try {
+      const res = await fetch('/api/oauth/signin/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showError((data as { message?: string })?.message || 'Email ou mot de passe incorrect.');
+        return;
+      }
+
+      window.location.href = '/dashboard';
+    } catch (err) {
+      showError('Une erreur est survenue. Réessayez.');
+    }
   });
 </script>
 
@@ -119,7 +176,27 @@ import { baseUrl } from '../lib/base-url';
 
   .auth-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0,0,0,0.35) !important;
   }
+
+  .site-logo a { display:inline-block; line-height:0; }
+  .site-logo img { height: 64px; width: auto; display:block; }
+  header.auth-header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
+  header.auth-header.smaller .site-logo { height: 60px; }
+  header.auth-header.smaller .site-logo img { height: 36px; }
+
+  .auth-error {
+    background: rgba(231,76,60,0.15);
+    border: 1px solid rgba(231,76,60,0.4);
+    color: #ff6b6b;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .auth-error.show { display: block; }
 
   .auth-nav {
     float: right;

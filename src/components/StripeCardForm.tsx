@@ -7,6 +7,7 @@ import {
   useElements 
 } from '@stripe/react-stripe-js';
 import { baseUrl } from '../lib/base-url';
+import { formatMoney } from '../lib/public-config';
 
 const stripePromise = loadStripe(import.meta.env.PUBLIC_STRIPE_PUBLIC_KEY || 'pk_test_placeholder');
 
@@ -65,10 +66,7 @@ function CheckoutForm({ amount, invoiceId, onSuccess, onError }: CheckoutFormPro
         <div>
           <p className="text-sm text-muted-foreground">Montant à payer</p>
           <p className="text-2xl font-bold text-primary">
-            {new Intl.NumberFormat('fr-CA', { 
-              style: 'currency', 
-              currency: 'CAD' 
-            }).format(amount)}
+            {formatMoney(amount)}
           </p>
         </div>
         

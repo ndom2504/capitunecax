@@ -16,7 +16,17 @@
 	},
 	"observability": {
 		"enabled": true
-	}
+	},
+
+	// Base de données D1 (SQLite serverless Cloudflare)
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "capitune-db",
+			"database_id": "local"
+		}
+	]
+
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

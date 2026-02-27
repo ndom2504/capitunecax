@@ -1,6 +1,54 @@
 ---
 import MainLayout from '../layouts/main.astro';
 import { baseUrl } from '../lib/base-url';
+import { getServiceById } from '../lib/service-catalog';
+import { publicConfig, getContactAddressLines } from '../lib/public-config';
+
+const consultation = getServiceById('consultation');
+const orientation = getServiceById('orientation');
+const dossier = getServiceById('dossier');
+const suivi = getServiceById('suivi');
+const integration = getServiceById('integration');
+
+const addressLines = getContactAddressLines();
+
+const landingServices = [
+  {
+    key: 'analyse',
+    liClass: 'Development',
+    navLabel: 'ANALYSE DU PROJET',
+    title: 'Analyse du projet',
+    description:
+      `${consultation?.description ?? "Analyser votre profil"} et ${orientation?.description ?? 'choisir le bon programme'} pour construire une stratégie claire et réaliste.`,
+  },
+  {
+    key: 'montage',
+    liClass: 'Desdin',
+    navLabel: 'MONTAGE DU DOSSIER',
+    title: dossier?.name ?? 'Montage du dossier',
+    description:
+      dossier?.description ??
+      'Nous structurons vos pièces, vérifions la conformité des documents et préparons un dossier solide.',
+  },
+  {
+    key: 'suivi',
+    liClass: 'Concept',
+    navLabel: 'SUIVI ADMINISTRATIF',
+    title: suivi?.name ?? 'Suivi administratif',
+    description:
+      suivi?.description ??
+      'Nous assurons le suivi des étapes, délais et réponses attendues afin de vous garder informé et réactif.',
+  },
+  {
+    key: 'integration',
+    liClass: 'System',
+    navLabel: 'INTÉGRATION',
+    title: integration?.name ?? 'Aide à l’intégration',
+    description:
+      integration?.description ??
+      'Nous vous accompagnons dans l’installation locale et les premières démarches pour une arrivée plus sereine.',
+  },
+];
 ---
 
 <MainLayout>
@@ -10,12 +58,20 @@ import { baseUrl } from '../lib/base-url';
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
 
+  <style is:global>
+    .site-logo a { display:inline-block; line-height:0; }
+    .site-logo img { height: 64px; width: auto; display:block; }
+    header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
+    header.smaller .site-logo { height: 60px; }
+    header.smaller .site-logo img { height: 36px; }
+  </style>
+
   <div class="DesignHolder">
     <div class="LayoutFrame">
       <header>
         <div class="Center">
           <div class="site-logo">
-            <h1><a href={`${baseUrl}/`}>CAPI<span>TUNE</span></a></h1>
+            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
           </div>
           <div id="mobile_sec">
             <div class="mobile"><i class="fa fa-bars"></i><i class="fa fa-times"></i></div>
@@ -39,11 +95,8 @@ import { baseUrl } from '../lib/base-url';
         <div class="bannerside">
           <div class="Center">
             <div class="leftside">
-              <h3>Votre projet<span>Canada avec CAPITUNE</span></h3>
-              <p>
-                CAPITUNE vous accompagne dans l’analyse de votre projet, la préparation du dossier,
-                le suivi administratif et votre intégration au Canada.
-              </p>
+              <h3>Votre Projet Canada<span>avec CAPITUNE</span></h3>
+              <p>Nous structurons votre démarche d'immigration au Canada : analyse du profil, montage du dossier, suivi administratif et intégration locale, étape par étape.</p>
               <a href="#about">DÉCOUVRIR</a>
               <a href={`${baseUrl}/contact`} class="secondary-cta">NOUS CONTACTER</a>
             </div>
@@ -51,50 +104,50 @@ import { baseUrl } from '../lib/base-url';
               <ul id="slider">
                 <li>
                   <div class="Slider">
-                    <figure><img src="/templatemo_473_november/img/Slider-img1.jpg" alt="CAPITUNE accompagnement" /></figure>
-                    <div class="text">
-                      <div class="Icon">
-                        <ul>
-                          <li><a href="#services"><i class="fa fa-check"></i>Projet</a></li>
-                          <li><a href="#contact"><i class="fa fa-commenting"></i>Conseil</a></li>
-                        </ul>
-                      </div>
-                      <div class="Lorem">
-                        <p>Analyse stratégique <span>et plan d’action personnalisé</span></p>
-                      </div>
-                    </div>
+                    <figure><img src="/templatemo_473_november/side/cn-tower-toronto.jpg" alt="Toronto" /></figure>
+                    <div class="text"><div class="Lorem"><p>Toronto <span>Ontario</span></p></div></div>
                   </div>
                 </li>
                 <li>
                   <div class="Slider">
-                    <figure><img src="/templatemo_473_november/img/Slider-img2.jpg" alt="CAPITUNE suivi" /></figure>
-                    <div class="text">
-                      <div class="Icon">
-                        <ul>
-                          <li><a href="#services"><i class="fa fa-file-text-o"></i>Dossier</a></li>
-                          <li><a href="#contact"><i class="fa fa-phone"></i>Support</a></li>
-                        </ul>
-                      </div>
-                      <div class="Lorem">
-                        <p>Montage complet <span>et suivi de votre dossier</span></p>
-                      </div>
-                    </div>
+                    <figure><img src="/templatemo_473_november/side/canadian-flag-against-cloudy-sky.jpg" alt="Drapeau canadien" /></figure>
+                    <div class="text"><div class="Lorem"><p>Rêve <span>canadien</span></p></div></div>
                   </div>
                 </li>
                 <li>
                   <div class="Slider">
-                    <figure><img src="/templatemo_473_november/img/map.jpg" alt="Vue urbaine du projet Canada" /></figure>
-                    <div class="text">
-                      <div class="Icon">
-                        <ul>
-                          <li><a href="#services"><i class="fa fa-map-marker"></i>Ville</a></li>
-                          <li><a href="#contact"><i class="fa fa-users"></i>Intégration</a></li>
-                        </ul>
-                      </div>
-                      <div class="Lorem">
-                        <p>Installation locale <span>et accompagnement terrain</span></p>
-                      </div>
-                    </div>
+                    <figure><img src="/templatemo_473_november/side/festivio-ottawa-815375_1920.jpg" alt="Ottawa" /></figure>
+                    <div class="text"><div class="Lorem"><p>Ottawa <span>capitale</span></p></div></div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/side/photo-of-a-cityscape-with-a-ferris-wheel.jpg" alt="Paysage urbain" /></figure>
+                    <div class="text"><div class="Lorem"><p>Ville <span>dynamique</span></p></div></div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/side/happy-canada-day.jpg" alt="Fête du Canada" /></figure>
+                    <div class="text"><div class="Lorem"><p>Intégration <span>locale</span></p></div></div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/side/canada-flag-couple.jpg" alt="Couple au Canada" /></figure>
+                    <div class="text"><div class="Lorem"><p>Nouveau <span>départ</span></p></div></div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/side/toronto-city-hall-sign.jpg" alt="Toronto City Hall" /></figure>
+                    <div class="text"><div class="Lorem"><p>Montage <span>du dossier</span></p></div></div>
+                  </div>
+                </li>
+                <li>
+                  <div class="Slider">
+                    <figure><img src="/templatemo_473_november/side/16301694-canada-5148191_1920.jpg" alt="Paysage Canada" /></figure>
+                    <div class="text"><div class="Lorem"><p>Analyse <span>stratégique</span></p></div></div>
                   </div>
                 </li>
               </ul>
@@ -110,7 +163,7 @@ import { baseUrl } from '../lib/base-url';
       <div id="Container">
         <div class="About_sec" id="about">
           <div class="Center">
-            <h2>À propos de CAPITUNE</h2>
+            <h2>À Propos De CAPITUNE</h2>
             <p>
               Une initiative d’Export Monde Prestige Inc. pour structurer votre projet Canada avec
               un accompagnement clair, professionnel et centré sur vos objectifs.
@@ -128,10 +181,10 @@ import { baseUrl } from '../lib/base-url';
               <div class="tabcontent" id="cont-1-1">
                 <div class="TabImage">
                   <div class="img1">
-                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Mission" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/ChatGPT Image 10 févr. 2026, 00 h 07 min 05 s.png" alt="Mission CAPITUNE" /></figure>
                   </div>
                   <div class="img2">
-                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Accompagnement" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/ChatGPT Image 20 févr. 2026, 08 h 22 min 48 s.png" alt="Accompagnement" /></figure>
                   </div>
                 </div>
                 <div class="Description">
@@ -150,10 +203,10 @@ import { baseUrl } from '../lib/base-url';
               <div class="tabcontent hide" id="cont-2-1">
                 <div class="TabImage">
                   <div class="img1">
-                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Approche" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/ChatGPT Image 20 févr. 2026, 08 h 22 min 48 s.png" alt="Approche CAPITUNE" /></figure>
                   </div>
                   <div class="img2">
-                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Méthode" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/télécharger.png" alt="Méthode" /></figure>
                   </div>
                 </div>
                 <div class="Description">
@@ -172,10 +225,10 @@ import { baseUrl } from '../lib/base-url';
               <div class="tabcontent hide" id="cont-3-1">
                 <div class="TabImage">
                   <div class="img1">
-                    <figure><img src="/templatemo_473_november/img/about-img2.jpg" alt="Résultats" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/télécharger.png" alt="Résultats" /></figure>
                   </div>
                   <div class="img2">
-                    <figure><img src="/templatemo_473_november/img/about-img1.jpg" alt="Suivi" /></figure>
+                    <figure><img src="/templatemo_473_november/asset/ChatGPT Image 10 févr. 2026, 00 h 07 min 05 s.png" alt="Suivi" /></figure>
                   </div>
                 </div>
                 <div class="Description">
@@ -206,45 +259,23 @@ import { baseUrl } from '../lib/base-url';
             <div class="Line"></div>
             <div class="Serviceside">
               <ul>
-                <li class="Development"><a href="#services" class="service-trigger active" data-service="analyse"><h4>ANALYSE DU PROJET</h4></a></li>
-                <li class="Desdin"><a href="#services" class="service-trigger" data-service="montage"><h4>MONTAGE DU DOSSIER</h4></a></li>
-                <li class="Concept"><a href="#services" class="service-trigger" data-service="suivi"><h4>SUIVI ADMINISTRATIF</h4></a></li>
-                <li class="System"><a href="#services" class="service-trigger" data-service="integration"><h4>INTÉGRATION</h4></a></li>
+                {landingServices.map((service, index) => (
+                  <li class={service.liClass}>
+                    <a href="#services" class={`service-trigger ${index === 0 ? 'active' : ''}`} data-service={service.key}>
+                      <h4>{service.navLabel}</h4>
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div class="service-detail-panels">
-              <article class="service-panel is-visible" data-service-panel="analyse">
-                <h3>Analyse Du Projet</h3>
-                <p>
-                  Nous évaluons votre profil, vos objectifs et vos contraintes afin de définir une
-                  stratégie claire et un plan d’action réaliste pour votre projet Canada.
-                </p>
-              </article>
-
-              <article class="service-panel" data-service-panel="montage">
-                <h3>Montage Du Dossier</h3>
-                <p>
-                  Nous structurons vos pièces, vérifions la conformité des documents et préparons un
-                  dossier solide pour réduire les risques de rejet.
-                </p>
-              </article>
-
-              <article class="service-panel" data-service-panel="suivi">
-                <h3>Suivi Administratif</h3>
-                <p>
-                  Nous assurons le suivi des étapes, des délais et des réponses attendues afin de vous
-                  garder informé et réactif durant tout le processus.
-                </p>
-              </article>
-
-              <article class="service-panel" data-service-panel="integration">
-                <h3>Aide À L’Intégration</h3>
-                <p>
-                  Nous vous accompagnons dans votre installation locale, vos repères pratiques et vos
-                  premières démarches pour une arrivée plus sereine.
-                </p>
-              </article>
+              {landingServices.map((service, index) => (
+                <article class={`service-panel ${index === 0 ? 'is-visible' : ''}`} data-service-panel={service.key}>
+                  <h3>{service.title}</h3>
+                  <p>{service.description}</p>
+                </article>
+              ))}
             </div>
           </div>
         </div>
@@ -253,12 +284,20 @@ import { baseUrl } from '../lib/base-url';
           <div class="Contactside">
             <div class="Center">
               <h2>Contact</h2>
-              <p>
-                Vous avez un projet Canada ? Écrivez-nous et recevez une réponse rapide pour cadrer
-                vos prochaines étapes.
-              </p>
+              <p>Vous avez un projet Canada ? Écrivez-nous et recevez une réponse rapide<br />pour cadrer vos prochaines étapes avec CAPITUNE.</p>
               <div class="Line"></div>
             </div>
+          </div>
+
+          <div class="Map" style="width:100%;height:360px;">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-73.7%2C45.4%2C-73.45%2C45.6&layer=mapnik&marker=45.5017%2C-73.5673"
+              width="100%" height="100%"
+              style="border:0; display:block;"
+              allowfullscreen
+              loading="lazy"
+              title="CAPITUNE — Montréal, Québec">
+            </iframe>
           </div>
 
           <div class="Get_sec">
@@ -276,21 +315,24 @@ import { baseUrl } from '../lib/base-url';
               </div>
 
               <div class="Rightside">
-                <h3>Parlons de votre projet</h3>
+                <h3>Parlons de votre projet !</h3>
                 <address>
-                  CAPITUNE – Export Monde Prestige Inc.<br />
-                  Montréal, Québec, Canada.
+                  {addressLines.map((line, idx) => (
+                    <span>
+                      {line}
+                      {idx < addressLines.length - 1 ? <br /> : null}
+                    </span>
+                  ))}
                 </address>
                 <address class="Number">
-                  +1 (514) 123-4567<br />
-                  Support du lundi au vendredi
+                  {publicConfig.contactPhone}
                 </address>
                 <address class="Email">
-                  <a href="mailto:contact@capitune.com">contact@capitune.com</a>
+                  <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
                 </address>
                 <div class="clear"></div>
                 <ul>
-                  <li><a href="#"><img src="/templatemo_473_november/img/facebook-icn.png" alt="facebook" /></a></li>
+                  <li><a href="https://www.facebook.com/profile.php?id=61587490209250&sk=about" target="_blank" rel="noopener"><img src="/templatemo_473_november/img/facebook-icn.png" alt="facebook" /></a></li>
                   <li><a href="#"><img src="/templatemo_473_november/img/twitter-icn.png" alt="twitter" /></a></li>
                   <li><a href="#"><img src="/templatemo_473_november/img/google-plus-icn.png" alt="google plus" /></a></li>
                 </ul>
@@ -299,7 +341,7 @@ import { baseUrl } from '../lib/base-url';
 
             <footer>
               <div class="Cntr">
-                <p>© {new Date().getFullYear()} CAPITUNE – Tous droits réservés.</p>
+                <p>© 2026 <strong>CAPITUNE</strong> – Tous droits réservés. | <a href={`${baseUrl}/connexion`} style="color:#a9abad;">Espace Client</a></p>
               </div>
             </footer>
           </div>
@@ -385,6 +427,33 @@ import { baseUrl } from '../lib/base-url';
     width: 100%;
     height: 500px;
     object-fit: cover;
+  }
+
+  /* TabImage superposition fix */
+  .About_sec .Tabside .TabImage { height: 320px !important; }
+  .About_sec .Tabside .TabImage .img1 img,
+  .About_sec .Tabside .TabImage .img2 img {
+    width: 300px !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: unset !important;
+    border: 4px solid #fff !important;
+    box-shadow: 0 10px 32px rgba(0,0,0,0.22);
+    border-radius: 4px;
+  }
+  .About_sec .Tabside .TabImage .img1 { animation: tabimg-swap-a 6s ease-in-out infinite alternate; }
+  .About_sec .Tabside .TabImage .img2 { animation: tabimg-swap-b 6s ease-in-out infinite alternate; }
+  @keyframes tabimg-swap-a {
+    0%   { z-index:2; transform: scale(1)    translateY(0px);  opacity:1;    }
+    42%  { z-index:2; transform: scale(1.04) translateY(-8px); opacity:1;    }
+    52%  { z-index:1;                                           opacity:0.78; }
+    100% { z-index:1; transform: scale(1)    translateY(0px);  opacity:0.78; }
+  }
+  @keyframes tabimg-swap-b {
+    0%   { z-index:1; transform: scale(1)    translateY(0px);  opacity:0.78; }
+    48%  { z-index:1;                                           opacity:0.78; }
+    58%  { z-index:2; transform: scale(1.04) translateY(-8px); opacity:1;    }
+    100% { z-index:2; transform: scale(1)    translateY(0px);  opacity:1;    }
   }
 
   #home .leftside a.secondary-cta {

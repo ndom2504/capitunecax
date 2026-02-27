@@ -4,6 +4,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const clientId = locals?.runtime?.env?.PAYPAL_CLIENT_ID || import.meta.env.PAYPAL_CLIENT_ID;
     const secret = locals?.runtime?.env?.PAYPAL_SECRET || import.meta.env.PAYPAL_SECRET;
+    const configuredCurrency =
+      locals?.runtime?.env?.PAYMENT_CURRENCY ||
+      import.meta.env.PAYMENT_CURRENCY ||
+      import.meta.env.PUBLIC_PAYMENT_CURRENCY ||
+      'CAD';
+    const currencyCode = String(configuredCurrency).toUpperCase();
     
     if (!clientId || !secret) {
       return new Response(JSON.stringify({ error: 'PayPal not configured' }), { 
@@ -22,8 +28,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
     
     const auth = Buffer.from(`${clientId}:${secret}`).toString('base64');
+    const paypalEnv = locals?.runtime?.env?.PAYPAL_ENV || import.meta.env.PAYPAL_ENV || 'live';
+    const paypalBase = paypalEnv === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
     
-    const response = await fetch('https://api-m.sandbox.paypal.com/v2/checkout/orders', {
+    const response = await fetch(`${paypalBase}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +41,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         intent: 'CAPTURE',
         purchase_units: [{
           amount: {
-            currency_code: 'CAD',
+            currency_code: currencyCode,
             value: amount.toFixed(2)
           },
           description: description || `CAPITUNE - ${invoiceId}`,

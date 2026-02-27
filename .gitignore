@@ -34,3 +34,9 @@ lost+found/
 
 # local vercel artifacts
 .vercel/
+
+# local dev artifacts / sensitive
+.vscode/
+cookies.txt
+headers_login.txt
+login.json
