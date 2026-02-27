@@ -1,384 +1,392 @@
 ---
-import MainLayout from '../../layouts/main.astro';
-import { HeaderNav } from '../../components/HeaderNav';
-import { FooterCustom } from '../../components/FooterCustom';
-
-const UPDATED_AT = '2026-02-27';
+import { getUserFromSessionFullAny } from '../../lib/db';
+const db = (Astro.locals.runtime?.env as Env | undefined)?.DB ?? null;
+const token = Astro.cookies.get('capitune_session')?.value ?? '';
+const adminUser = await getUserFromSessionFullAny(db, token);
+const adminName = adminUser?.name ?? 'Admin';
 ---
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stripe — Admin CAPITUNE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg:      #0f1117;
+      --surface: #1a1d27;
+      --card:    #20243a;
+      --border:  #2e3349;
+      --text:    #e6e9f4;
+      --muted:   #8891b4;
+      --accent:  #ff9408;
+      --green:   #2ecc71;
+      --red:     #e74c3c;
+      --blue:    #3498db;
+      --yellow:  #f1c40f;
+      --radius:  12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; display: flex; }
 
-<MainLayout>
-  <HeaderNav client:load />
+    /* Sidebar */
+    .sidebar {
+      width: 220px; min-height: 100vh; background: var(--surface);
+      border-right: 1px solid var(--border); display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px; padding: 11px 20px;
+      color: var(--muted); cursor: pointer; transition: all .18s;
+      font-weight: 500; text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(255,148,8,.1); color: var(--accent); }
+    .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    .sidebar-footer strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 13px; }
 
-  <!-- Hero -->
-  <section class="bg-gradient-to-br from-primary/10 to-primary/5 py-12 md:py-16">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-3xl mx-auto">
-        <div class="flex flex-col gap-4">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="text-sm text-muted-foreground">
-              <a href="/admin" class="hover:text-primary transition">Admin</a>
-              <span class="mx-2">/</span>
-              <span>Stripe</span>
-            </div>
-            <div class="text-xs px-3 py-1.5 rounded-full border border-border bg-background text-muted-foreground">
-              Mise à jour: {UPDATED_AT}
-            </div>
-          </div>
+    /* Main */
+    .main { margin-left: 220px; flex: 1; min-height: 100vh; }
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .content { padding: 28px 32px; max-width: 820px; }
 
-          <div class="flex items-start gap-4">
-            <div class="inline-flex items-center justify-center w-14 h-14 bg-primary/10 rounded-xl flex-shrink-0">
-              <svg class="w-7 h-7 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-            </div>
-            <div>
-              <h1 class="text-3xl md:text-4xl font-bold text-foreground">Configuration Stripe</h1>
-              <p class="text-muted-foreground mt-2">
-                Saisissez vos clés Stripe et copiez les variables à ajouter dans votre environnement.
-              </p>
-            </div>
-          </div>
-        </div>
+    /* Cards */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px; margin-bottom: 20px;
+    }
+    .card-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .card-title i { color: var(--accent); }
+
+    /* Form elements */
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 7px; }
+    .field label span.req { color: var(--red); margin-left: 2px; }
+    .field-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; color: var(--text);
+      font-family: 'Courier New', monospace; font-size: 13px; outline: none; transition: border-color .18s;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .field-hint code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
+    .input-wrap { position: relative; }
+    .input-wrap .field-input { padding-right: 44px; }
+    .toggle-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; line-height: 1;
+    }
+    .toggle-btn:hover { color: var(--text); }
+    .toggle-btn svg { width: 18px; height: 18px; display: block; }
+
+    /* Radio env */
+    .radio-group { display: flex; gap: 12px; }
+    .radio-opt { flex: 1; cursor: pointer; }
+    .radio-opt input { display: none; }
+    .radio-card {
+      border: 2px solid var(--border); border-radius: 10px; padding: 12px 16px;
+      transition: all .18s; background: var(--bg);
+    }
+    .radio-opt input:checked + .radio-card {
+      border-color: var(--accent); background: rgba(255,148,8,.07);
+    }
+    .radio-card-head { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .radio-card p { font-size: 11px; color: var(--muted); margin-top: 4px; margin-left: 24px; }
+
+    /* Alert */
+    .alert { border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px; }
+    .alert-yellow { background: rgba(241,196,15,.1); border: 1px solid rgba(241,196,15,.3); color: var(--yellow); }
+    .alert-blue   { background: rgba(52,152,219,.1);  border: 1px solid rgba(52,152,219,.3);  color: var(--blue); }
+    .alert svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; }
+    .alert-body strong { display: block; font-size: 13px; margin-bottom: 3px; }
+    .alert-body p, .alert-body ol { font-size: 12px; opacity: .9; }
+    .alert-body ol { padding-left: 16px; }
+    .alert-body ol li { margin-bottom: 3px; }
+    .alert-body a { color: inherit; text-decoration: underline; }
+
+    /* Env preview */
+    .env-preview {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 14px 16px; font-family: 'Courier New', monospace; font-size: 12px;
+      color: var(--muted); overflow-x: auto; white-space: pre;
+    }
+    .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .preview-header span { font-size: 13px; font-weight: 600; color: var(--text); }
+
+    /* Success banner */
+    .success-banner {
+      background: rgba(46,204,113,.12); border: 1px solid rgba(46,204,113,.3);
+      border-radius: 10px; padding: 12px 16px; color: var(--green);
+      display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;
+    }
+    .success-banner svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 22px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 7px; transition: background .18s;
+    }
+    .btn-primary:hover { background: #e08400; }
+    .btn-secondary {
+      background: var(--surface); color: var(--text); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+      transition: border-color .18s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-copy {
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 7px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: all .18s;
+    }
+    .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-copy svg { width: 14px; height: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>CAPITUNE</span><br>
+    <small style="color:var(--muted);font-size:11px;font-weight:400;">Panneau Admin</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="/admin">
+      <i class="fa fa-chart-pie"></i> Tableau de bord
+    </a>
+    <a class="nav-item" href="/admin#clients">
+      <i class="fa fa-users"></i> Clients
+    </a>
+    <a class="nav-item active" href="/admin/stripe-configuration">
+      <i class="fa fa-credit-card"></i> Stripe
+    </a>
+    <a class="nav-item" href="/dashboard">
+      <i class="fa fa-arrow-left"></i> Espace client
+    </a>
+    <a class="nav-item" href="/api/oauth/signout" style="margin-top:auto;">
+      <i class="fa fa-sign-out-alt"></i> Déconnexion
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <strong>{adminName}</strong>
+    Administrateur
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="topbar">
+    <h1><i class="fa fa-credit-card" style="color:var(--accent);margin-right:10px;"></i>Configuration Stripe</h1>
+    <div class="topbar-right">
+      <a href="/api/oauth/signout" style="color:var(--muted);font-size:12px;text-decoration:none;">
+        <i class="fa fa-sign-out-alt"></i> Déconnexion
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Alerte sécurité -->
+    <div class="alert alert-yellow">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <div class="alert-body">
+        <strong>Informations sensibles</strong>
+        <p>Ces clés API sont confidentielles. Ne les partagez jamais publiquement.</p>
       </div>
     </div>
-  </section>
 
-  <!-- Contenu -->
-  <section class="py-12 md:py-16 bg-background">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-3xl mx-auto space-y-6">
+    <!-- Formulaire -->
+    <div class="card">
+      <div class="card-title"><i class="fa fa-key"></i> Clés API</div>
+      <form id="stripe-config-form" autocomplete="off">
 
-        <!-- Alert -->
-        <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-5">
-          <div class="flex items-start gap-3">
-            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <div class="font-semibold text-yellow-700 dark:text-yellow-500">Informations sensibles</div>
-              <div class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
-                Ces clés API sont confidentielles. Ne les partagez jamais publiquement.
+        <div class="field">
+          <label>Clé Publique (Publishable Key) <span class="req">*</span></label>
+          <input type="text" id="publishable-key" name="publishableKey"
+            placeholder="pk_test_..." class="field-input" autocomplete="off" required />
+          <div class="field-hint">Commence par <code>pk_test_</code> (test) ou <code>pk_live_</code> (production)</div>
+        </div>
+
+        <div class="field">
+          <label>Clé Secrète (Secret Key) <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input type="password" id="secret-key" name="secretKey"
+              placeholder="sk_test_..." class="field-input" autocomplete="new-password" required />
+            <button type="button" id="toggle-secret" class="toggle-btn" aria-label="Afficher/Masquer">
+              <svg id="eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <svg id="eye-closed" style="display:none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+            </button>
+          </div>
+          <div class="field-hint">Commence par <code>sk_test_</code> (test) ou <code>sk_live_</code> (production)</div>
+        </div>
+
+        <div class="field">
+          <label>Webhook Secret (Optionnel)</label>
+          <div class="input-wrap">
+            <input type="password" id="webhook-secret" name="webhookSecret"
+              placeholder="whsec_..." class="field-input" autocomplete="new-password" />
+            <button type="button" id="toggle-webhook" class="toggle-btn" aria-label="Afficher/Masquer">
+              <svg id="webhook-eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              <svg id="webhook-eye-closed" style="display:none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+            </button>
+          </div>
+          <div class="field-hint">Nécessaire pour les webhooks. Commence par <code>whsec_</code></div>
+        </div>
+
+        <div class="field">
+          <label>Environnement</label>
+          <div class="radio-group">
+            <label class="radio-opt">
+              <input type="radio" name="environment" value="test" checked />
+              <div class="radio-card">
+                <div class="radio-card-head">🧪 Test</div>
+                <p>Pour les tests de développement</p>
               </div>
-            </div>
+            </label>
+            <label class="radio-opt">
+              <input type="radio" name="environment" value="live" />
+              <div class="radio-card">
+                <div class="radio-card-head">🚀 Production</div>
+                <p>Pour les vrais paiements</p>
+              </div>
+            </label>
           </div>
         </div>
 
-        <!-- Form card -->
-        <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
-          <div class="p-6 md:p-8">
-            <form id="stripe-config-form" class="space-y-6">
-              <!-- Publishable Key -->
-              <div>
-                <label class="block text-sm font-semibold text-foreground mb-2">
-                  Clé Publique (Publishable Key)
-                  <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="publishable-key"
-                  name="publishableKey"
-                  placeholder="pk_test_..."
-                  class="w-full px-4 py-3 bg-background border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition font-mono text-sm"
-                  required
-                />
-                <p class="mt-2 text-xs text-muted-foreground">
-                  Commence par <code class="bg-muted px-1.5 py-0.5 rounded">pk_test_</code> (test) ou <code class="bg-muted px-1.5 py-0.5 rounded">pk_live_</code> (production)
-                </p>
-              </div>
-
-              <!-- Secret Key -->
-              <div>
-                <label class="block text-sm font-semibold text-foreground mb-2">
-                  Clé Secrète (Secret Key)
-                  <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                  <input
-                    type="password"
-                    id="secret-key"
-                    name="secretKey"
-                    placeholder="sk_test_..."
-                    class="w-full px-4 py-3 bg-background border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition font-mono text-sm"
-                    required
-                  />
-                  <button
-                    type="button"
-                    id="toggle-secret"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
-                    aria-label="Afficher/Masquer"
-                  >
-                    <svg id="eye-open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <svg id="eye-closed" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  </button>
-                </div>
-                <p class="mt-2 text-xs text-muted-foreground">
-                  Commence par <code class="bg-muted px-1.5 py-0.5 rounded">sk_test_</code> (test) ou <code class="bg-muted px-1.5 py-0.5 rounded">sk_live_</code> (production)
-                </p>
-              </div>
-
-              <!-- Webhook Secret -->
-              <div>
-                <label class="block text-sm font-semibold text-foreground mb-2">Webhook Secret (Optionnel)</label>
-                <div class="relative">
-                  <input
-                    type="password"
-                    id="webhook-secret"
-                    name="webhookSecret"
-                    placeholder="whsec_..."
-                    class="w-full px-4 py-3 bg-background border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition font-mono text-sm"
-                  />
-                  <button
-                    type="button"
-                    id="toggle-webhook"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
-                    aria-label="Afficher/Masquer"
-                  >
-                    <svg id="webhook-eye-open" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <svg id="webhook-eye-closed" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  </button>
-                </div>
-                <p class="mt-2 text-xs text-muted-foreground">
-                  Nécessaire pour recevoir les événements de paiement. Commence par <code class="bg-muted px-1.5 py-0.5 rounded">whsec_</code>
-                </p>
-              </div>
-
-              <!-- Environment -->
-              <div>
-                <label class="block text-sm font-semibold text-foreground mb-3">Environnement</label>
-                <div class="flex gap-4">
-                  <label class="flex-1 relative cursor-pointer">
-                    <input type="radio" name="environment" value="test" checked class="sr-only env-radio" data-env="test" />
-                    <div class="env-card bg-background border-2 border-border rounded-lg px-4 py-3 transition" data-card="test">
-                      <div class="flex items-center gap-2">
-                        <div class="radio-circle w-4 h-4 border-2 border-border rounded-full flex items-center justify-center transition">
-                          <div class="radio-dot w-2 h-2 bg-primary rounded-full opacity-0 transition"></div>
-                        </div>
-                        <span class="font-semibold text-foreground">🧪 Test</span>
-                      </div>
-                      <p class="text-xs text-muted-foreground mt-1 ml-6">Pour les tests de développement</p>
-                    </div>
-                  </label>
-                  <label class="flex-1 relative cursor-pointer">
-                    <input type="radio" name="environment" value="live" class="sr-only env-radio" data-env="live" />
-                    <div class="env-card bg-background border-2 border-border rounded-lg px-4 py-3 transition" data-card="live">
-                      <div class="flex items-center gap-2">
-                        <div class="radio-circle w-4 h-4 border-2 border-border rounded-full flex items-center justify-center transition">
-                          <div class="radio-dot w-2 h-2 bg-green-500 rounded-full opacity-0 transition"></div>
-                        </div>
-                        <span class="font-semibold text-foreground">🚀 Production</span>
-                      </div>
-                      <p class="text-xs text-muted-foreground mt-1 ml-6">Pour les vrais paiements</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Success Message -->
-              <div id="success-message" class="hidden bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3">
-                <div class="flex items-center gap-2 text-green-700 dark:text-green-400">
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span class="font-semibold">Configuration enregistrée avec succès !</span>
-                </div>
-              </div>
-
-              <!-- Buttons -->
-              <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                  type="submit"
-                  class="flex-1 bg-primary text-primary-foreground px-6 py-3.5 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                >
-                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Enregistrer la configuration
-                </button>
-                <a href="/admin" class="px-6 py-3.5 bg-muted text-foreground rounded-lg font-semibold hover:bg-muted/80 transition text-center">
-                  Retour Admin
-                </a>
-              </div>
-            </form>
-          </div>
+        <div id="success-message" class="success-banner" style="display:none;margin-bottom:16px;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          Configuration enregistrée avec succès !
         </div>
 
-        <!-- Help + env preview -->
-        <div class="grid gap-6">
-          <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
-            <div class="flex items-start gap-3">
-              <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h3 class="font-semibold text-blue-700 dark:text-blue-400 mb-2">Où trouver vos clés Stripe ?</h3>
-                <ol class="text-sm text-blue-600 dark:text-blue-300 space-y-2 list-decimal list-inside">
-                  <li>Connectez-vous à votre compte Stripe : <a href="https://dashboard.stripe.com" target="_blank" class="underline font-semibold">dashboard.stripe.com</a></li>
-                  <li>Allez dans <strong>Développeurs</strong> → <strong>Clés API</strong></li>
-                  <li>Copiez votre <strong>Clé publique</strong> et <strong>Clé secrète</strong></li>
-                  <li>Pour le webhook secret : <strong>Développeurs</strong> → <strong>Webhooks</strong> → Créer un endpoint</li>
-                </ol>
-              </div>
-            </div>
-          </div>
+        <div class="btn-row">
+          <button type="submit" class="btn-primary">
+            <svg style="width:15px;height:15px" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Enregistrer
+          </button>
+          <a href="/admin" class="btn-secondary">
+            <i class="fa fa-arrow-left"></i> Retour
+          </a>
+        </div>
+      </form>
+    </div>
 
-          <div class="bg-card border border-border rounded-xl p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-semibold text-foreground">Aperçu du fichier .env</h3>
-              <button
-                id="copy-env"
-                class="text-sm bg-muted hover:bg-muted/80 px-3 py-1.5 rounded-lg transition flex items-center gap-2"
-                type="button"
-              >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copier
-              </button>
-            </div>
-            <pre id="env-preview" class="bg-muted/50 rounded-lg p-4 text-xs font-mono text-muted-foreground overflow-x-auto border border-border"># Ajoutez ces lignes à votre fichier .env
+    <!-- Aide Stripe -->
+    <div class="alert alert-blue">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div class="alert-body">
+        <strong>Où trouver vos clés Stripe ?</strong>
+        <ol>
+          <li>Connectez-vous sur <a href="https://dashboard.stripe.com" target="_blank">dashboard.stripe.com</a></li>
+          <li>Allez dans <strong>Développeurs → Clés API</strong></li>
+          <li>Copiez la <strong>Clé publique</strong> et la <strong>Clé secrète</strong></li>
+          <li>Pour le webhook : <strong>Développeurs → Webhooks → Créer un endpoint</strong></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Aperçu .env -->
+    <div class="card">
+      <div class="preview-header">
+        <span><i class="fa fa-file-code" style="color:var(--accent);margin-right:6px;"></i>Aperçu .env</span>
+        <button id="copy-env" class="btn-copy" type="button">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Copier
+        </button>
+      </div>
+      <div id="env-preview" class="env-preview"># Ajoutez ces lignes dans votre fichier .env
 
 STRIPE_PUBLIC_KEY=
 STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=</pre>
-          </div>
-        </div>
-      </div>
+STRIPE_WEBHOOK_SECRET=</div>
     </div>
-  </section>
 
-  <FooterCustom client:load />
+  </div><!-- /.content -->
+</main><!-- /.main -->
 
-  <script type="module">
-    const envRadios = document.querySelectorAll('.env-radio');
+<script>
+  // Toggle visibility secret key
+  const secretInput = document.getElementById('secret-key');
+  document.getElementById('toggle-secret')?.addEventListener('click', () => {
+    if (!(secretInput instanceof HTMLInputElement)) return;
+    const show = secretInput.type === 'password';
+    secretInput.type = show ? 'text' : 'password';
+    const open = document.getElementById('eye-open');
+    const closed = document.getElementById('eye-closed');
+    if (open) open.style.display = show ? 'none' : 'block';
+    if (closed) closed.style.display = show ? 'block' : 'none';
+  });
 
-    function updateEnvironmentUI() {
-      envRadios.forEach((radio) => {
-        if (!(radio instanceof HTMLInputElement)) return;
+  // Toggle visibility webhook
+  const webhookInput = document.getElementById('webhook-secret');
+  document.getElementById('toggle-webhook')?.addEventListener('click', () => {
+    if (!(webhookInput instanceof HTMLInputElement)) return;
+    const show = webhookInput.type === 'password';
+    webhookInput.type = show ? 'text' : 'password';
+    const open = document.getElementById('webhook-eye-open');
+    const closed = document.getElementById('webhook-eye-closed');
+    if (open) open.style.display = show ? 'none' : 'block';
+    if (closed) closed.style.display = show ? 'block' : 'none';
+  });
 
-        const env = radio.dataset.env || '';
-        const card = document.querySelector(`[data-card="${env}"]`);
-        const radioCircle = card ? card.querySelector('.radio-circle') : null;
-        const radioDot = card ? card.querySelector('.radio-dot') : null;
-
-        if (radio.checked) {
-          if (env === 'test') {
-            card?.classList.remove('border-border');
-            card?.classList.add('border-primary', 'bg-primary/5');
-            radioCircle?.classList.remove('border-border');
-            radioCircle?.classList.add('border-primary', 'bg-primary');
-          } else {
-            card?.classList.remove('border-border');
-            card?.classList.add('border-green-500', 'bg-green-500/5');
-            radioCircle?.classList.remove('border-border');
-            radioCircle?.classList.add('border-green-500', 'bg-green-500');
-          }
-          radioDot?.classList.remove('opacity-0');
-          radioDot?.classList.add('opacity-100');
-        } else {
-          card?.classList.remove('border-primary', 'bg-primary/5', 'border-green-500', 'bg-green-500/5');
-          card?.classList.add('border-border');
-          radioCircle?.classList.remove('border-primary', 'bg-primary', 'border-green-500', 'bg-green-500');
-          radioCircle?.classList.add('border-border');
-          radioDot?.classList.remove('opacity-100');
-          radioDot?.classList.add('opacity-0');
-        }
-      });
+  // Live preview .env
+  function updateEnvPreview() {
+    const pub = document.getElementById('publishable-key');
+    const sec = document.getElementById('secret-key');
+    const whk = document.getElementById('webhook-secret');
+    const pubVal = pub instanceof HTMLInputElement ? pub.value : '';
+    const secVal = sec instanceof HTMLInputElement ? sec.value : '';
+    const whkVal = whk instanceof HTMLInputElement ? whk.value : '';
+    const preview = document.getElementById('env-preview');
+    if (preview) {
+      preview.textContent =
+        `# Ajoutez ces lignes dans votre fichier .env\n\nSTRIPE_PUBLIC_KEY=${pubVal || 'pk_test_...'}\nSTRIPE_SECRET_KEY=${secVal || 'sk_test_...'}\nSTRIPE_WEBHOOK_SECRET=${whkVal || 'whsec_...'}`;
     }
+  }
+  ['publishable-key', 'secret-key', 'webhook-secret'].forEach(id =>
+    document.getElementById(id)?.addEventListener('input', updateEnvPreview)
+  );
 
-    updateEnvironmentUI();
-    envRadios.forEach((radio) => radio.addEventListener('change', updateEnvironmentUI));
+  // Copy .env
+  document.getElementById('copy-env')?.addEventListener('click', () => {
+    const preview = document.getElementById('env-preview');
+    if (!preview) return;
+    navigator.clipboard.writeText(preview.textContent || '');
+    const btn = document.getElementById('copy-env');
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-check"></i> Copié !';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
 
-    const secretKeyInput = document.getElementById('secret-key');
-    const toggleSecret = document.getElementById('toggle-secret');
-    const eyeOpen = document.getElementById('eye-open');
-    const eyeClosed = document.getElementById('eye-closed');
-
-    toggleSecret?.addEventListener('click', () => {
-      if (!(secretKeyInput instanceof HTMLInputElement)) return;
-      const isPassword = secretKeyInput.type === 'password';
-      secretKeyInput.type = isPassword ? 'text' : 'password';
-      eyeOpen?.classList.toggle('hidden');
-      eyeClosed?.classList.toggle('hidden');
-    });
-
-    const webhookInput = document.getElementById('webhook-secret');
-    const toggleWebhook = document.getElementById('toggle-webhook');
-    const webhookEyeOpen = document.getElementById('webhook-eye-open');
-    const webhookEyeClosed = document.getElementById('webhook-eye-closed');
-
-    toggleWebhook?.addEventListener('click', () => {
-      if (!(webhookInput instanceof HTMLInputElement)) return;
-      const isPassword = webhookInput.type === 'password';
-      webhookInput.type = isPassword ? 'text' : 'password';
-      webhookEyeOpen?.classList.toggle('hidden');
-      webhookEyeClosed?.classList.toggle('hidden');
-    });
-
-    function updateEnvPreview() {
-      const publishableEl = document.getElementById('publishable-key');
-      const secretEl = document.getElementById('secret-key');
-      const webhookEl = document.getElementById('webhook-secret');
-
-      const publishableKey = publishableEl instanceof HTMLInputElement ? publishableEl.value : '';
-      const secretKey = secretEl instanceof HTMLInputElement ? secretEl.value : '';
-      const webhookSecret = webhookEl instanceof HTMLInputElement ? webhookEl.value : '';
-
-      const envContent = `# Ajoutez ces lignes à votre fichier .env\n\nSTRIPE_PUBLIC_KEY=${publishableKey || 'pk_test_...'}\nSTRIPE_SECRET_KEY=${secretKey || 'sk_test_...'}\nSTRIPE_WEBHOOK_SECRET=${webhookSecret || 'whsec_...'}`;
-      const preview = document.getElementById('env-preview');
-      if (preview) preview.textContent = envContent;
+  // Form submit
+  const form = document.getElementById('stripe-config-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!(e.target instanceof HTMLFormElement)) return;
+    const fd = new FormData(e.target);
+    console.log('Stripe Config:', Object.fromEntries(fd));
+    const msg = document.getElementById('success-message');
+    if (msg) {
+      msg.style.display = 'flex';
+      msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => { msg.style.display = 'none'; }, 5000);
     }
-
-    ['publishable-key', 'secret-key', 'webhook-secret'].forEach((id) => {
-      document.getElementById(id)?.addEventListener('input', updateEnvPreview);
-    });
-
-    document.getElementById('copy-env')?.addEventListener('click', () => {
-      const preview = document.getElementById('env-preview');
-      if (!preview) return;
-      navigator.clipboard.writeText(preview.textContent || '');
-
-      const button = document.getElementById('copy-env');
-      if (!button) return;
-      const originalText = button.innerHTML;
-      button.innerHTML = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copié !';
-      setTimeout(() => {
-        button.innerHTML = originalText;
-      }, 2000);
-    });
-
-    const form = document.getElementById('stripe-config-form');
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!(e.target instanceof HTMLFormElement)) return;
-
-      const formData = new FormData(e.target);
-      const config = {
-        publishableKey: formData.get('publishableKey'),
-        secretKey: formData.get('secretKey'),
-        webhookSecret: formData.get('webhookSecret'),
-        environment: formData.get('environment'),
-      };
-
-      console.log('Stripe Configuration:', config);
-
-      const successMessage = document.getElementById('success-message');
-      successMessage?.classList.remove('hidden');
-      successMessage?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => {
-        successMessage?.classList.add('hidden');
-      }, 5000);
-
-      updateEnvPreview();
-    });
-  </script>
-</MainLayout>
+    updateEnvPreview();
+  });
+</script>
+</body>
+</html>
