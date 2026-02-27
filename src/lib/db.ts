@@ -15,6 +15,10 @@ export interface User {
   location: string;
   bio: string;
   avatar_key: string;
+  // JSON stocké en TEXT (liste des ids services proposés)
+  pro_services?: string;
+  // JSON stocké en TEXT (prix par pack)
+  pro_pack_prices?: string;
   role: 'client' | 'admin';
   oauth_provider: string;
   oauth_id: string;

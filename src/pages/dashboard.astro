@@ -15,8 +15,9 @@ const sessionUser = await getUserFromSessionAny(db, session.value);
 if (!sessionUser) {
   return Astro.redirect('/connexion');
 }
+const isProMode = sessionUser.role === 'admin' && Astro.url.searchParams.get('pro') === '1';
 const allowAdminPreview = Astro.url.searchParams.get('preview') === '1';
-if (sessionUser.role === 'admin' && !allowAdminPreview) {
+if (sessionUser.role === 'admin' && !(allowAdminPreview || isProMode)) {
   return Astro.redirect('/admin');
 }
 
@@ -192,6 +193,13 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .settings-success-toast.show{display:flex;}
       /* SERVICES */
       .notice-box{background:#fff8f0;border:1px solid #ffd899;border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;margin-bottom:28px;font-size:14px;color:#7a4e00;}
+      /* Côté client: ne jamais afficher les prix dans l'onglet Services */
+      .dashboard-body:not(.is-pro-mode) #tab-services .pack-price,
+      .dashboard-body:not(.is-pro-mode) #tab-services .pack-price-row,
+      .dashboard-body:not(.is-pro-mode) #tab-services .option-price,
+      .dashboard-body:not(.is-pro-mode) #tab-services .service-carte-price,
+      .dashboard-body:not(.is-pro-mode) #tab-services .submit-service-bar .total-label,
+      .dashboard-body:not(.is-pro-mode) #tab-services .submit-service-bar .total-amount{display:none !important;}
       .section-title-block{margin-bottom:28px;}
       .section-title-block h2{font-size:1.4rem;margin:0 0 8px;color:var(--cap-dark);}
       .title-line{width:50px;height:3px;background:var(--cap-orange);border-radius:2px;margin-bottom:10px;}
@@ -208,6 +216,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .team-loading{text-align:center;padding:48px;color:#aaa;font-size:15px;}
       .team-contact-btn{display:inline-block;margin-top:20px;background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;}
       .team-contact-btn:hover{background:#e67e00;}
+      .service-pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;background:#fff8f0;border:1px solid #ffd899;color:#7a4e00;font-size:12px;font-weight:700;}
       .toggle-row{display:flex;gap:0;border:2px solid var(--cap-orange);border-radius:10px;overflow:hidden;width:fit-content;margin-bottom:28px;}
       .toggle-row button{padding:9px 24px;border:none;background:#fff;color:var(--cap-orange);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
       .toggle-row button.active{background:var(--cap-orange);color:#fff;}
@@ -420,7 +429,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       }
     </style>
   </head>
-  <body class="dashboard-body">
+  <body class={"dashboard-body" + (isProMode ? " is-pro-mode" : "") }>
 
     <!-- HEADER -->
     <header class="dash-header" id="dashHeader">
@@ -428,32 +437,45 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         <div class="dash-logo">
           <a href="/dashboard">
             <img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" style="height:46px;width:auto;">
-            <small style="font-size:10px;color:rgba(255,255,255,0.55);font-weight:600;letter-spacing:1px;text-transform:uppercase;">Espace Client</small>
+            <small style="font-size:10px;color:rgba(255,255,255,0.55);font-weight:600;letter-spacing:1px;text-transform:uppercase;">{isProMode ? 'Espace Pro' : 'Espace Client'}</small>
           </a>
         </div>
         <nav class="dash-nav" id="dashNav">
           <ul>
-            <li class="dash-nav-item active" data-tab="projet">
-              <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
-            </li>
-            <li class="dash-nav-item" data-tab="services">
-              <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
-            </li>
-            <li class="dash-nav-item" data-tab="messagerie">
-              <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
-            </li>
-            <li class="dash-nav-item" data-tab="paiements">
-              <a href="#" onclick="switchTab('paiements'); return false;"><i class="fa fa-credit-card"></i> Paiements</a>
-            </li>
-            <li class="dash-nav-item" data-tab="tarifs">
-              <a href="#" onclick="switchTab('tarifs'); return false;"><i class="fa fa-tag"></i> Tarifs</a>
-            </li>
-            <li class="dash-nav-item" data-tab="equipe">
-              <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
-            </li>
-            <li class="dash-nav-item" data-tab="parametres">
-              <a href="#" onclick="switchTab('parametres'); return false;"><i class="fa fa-cog"></i> Paramètres</a>
-            </li>
+            {isProMode ? (
+              <>
+                <li class="dash-nav-item active" data-tab="messagerie">
+                  <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
+                </li>
+                <li class="dash-nav-item" data-tab="services">
+                  <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
+                </li>
+                <li class="dash-nav-item" data-tab="tarifs">
+                  <a href="#" onclick="switchTab('tarifs'); return false;"><i class="fa fa-tag"></i> Tarifs</a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li class="dash-nav-item active" data-tab="projet">
+                  <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
+                </li>
+                <li class="dash-nav-item" data-tab="services">
+                  <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
+                </li>
+                <li class="dash-nav-item" data-tab="messagerie">
+                  <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
+                </li>
+                <li class="dash-nav-item" data-tab="paiements">
+                  <a href="#" onclick="switchTab('paiements'); return false;"><i class="fa fa-credit-card"></i> Paiements</a>
+                </li>
+                <li class="dash-nav-item" data-tab="equipe">
+                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
+                </li>
+                <li class="dash-nav-item" data-tab="parametres">
+                  <a href="#" onclick="switchTab('parametres'); return false;"><i class="fa fa-cog"></i> Paramètres</a>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
         <div class="dash-profile-wrap" id="profileWrap" style="position:relative;">
@@ -478,9 +500,19 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             </div>
             <div class="dropdown-divider"></div>
             <ul class="dropdown-menu-list">
-              <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
-              <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
-              <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-life-ring"></i> Support</a></li>
+              {isProMode ? (
+                <>
+                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
+                  <li><a href="#" onclick="switchTab('services'); toggleProfileMenu(); return false;"><i class="fa fa-briefcase"></i> Services</a></li>
+                  <li><a href="#" onclick="switchTab('tarifs'); toggleProfileMenu(); return false;"><i class="fa fa-tag"></i> Tarifs</a></li>
+                </>
+              ) : (
+                <>
+                  <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
+                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
+                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-life-ring"></i> Support</a></li>
+                </>
+              )}
             </ul>
             <div class="dropdown-divider"></div>
             <a href="/api/oauth/signout" class="dropdown-logout"><i class="fa fa-sign-out"></i> Déconnexion</a>
@@ -492,7 +524,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     <main id="dashMain">
 
       <!-- ===== ONGLET 1 : PROJET ===== -->
-      <section class="tab-section active" id="tab-projet">
+      <section class={"tab-section" + (isProMode ? "" : " active")} id="tab-projet" style={isProMode ? 'display:none' : ''}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-folder-open"></i> Mon Profil Projet</h1>
@@ -751,6 +783,44 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
         </div>
         <div class="dash-container">
+          <div id="pro-mode-services" style={isProMode ? '' : 'display:none'}>
+            <div class="section-title-block">
+              <h2><i class="fa fa-briefcase" style="color:var(--cap-orange);"></i> Mes services</h2>
+              <p>Dans vos paramètres, sélectionnez vos services et votre description (visible côté client).</p>
+            </div>
+            <div class="projet-form-card">
+              <h3><i class="fa fa-id-badge" style="color:var(--cap-orange);"></i> Profil public</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Localisation</label>
+                  <input id="proLocation" placeholder="Ex: Montréal, QC" />
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea id="proBio" placeholder="Décrivez votre expertise (visible côté client)…" style="min-height:80px"></textarea>
+                </div>
+              </div>
+              <div class="form-row cols-1">
+                <div class="form-group">
+                  <label>Services offerts</label>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="consultation"> Consultation stratégique</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="orientation"> Orientation programme</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="dossier"> Montage du dossier</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="suivi"> Suivi administratif</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="recherche"> Recherche employeur</label>
+                    <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" class="proSvc" value="integration"> Aide à l’installation</label>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;">
+                <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer</button>
+              </div>
+              <p id="proSaveHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
+            </div>
+          </div>
+
+          <div id="client-mode-services" style={isProMode ? 'display:none' : ''}>
           <div id="services-no-projet" class="notice-box" style="display:none;">
             <i class="fa fa-exclamation-circle"></i>
             <span>Commencez par <strong>remplir votre profil projet</strong> pour que nous puissions vous recommander le service adapte.
@@ -803,11 +873,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               Soumettre mon projet
             </button>
           </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== ONGLET 3 : MESSAGERIE ===== -->
-      <section class="tab-section" id="tab-messagerie">
+      <section class={"tab-section" + (isProMode ? " active" : "")} id="tab-messagerie">
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-envelope"></i> Messagerie</h1>
@@ -815,6 +886,15 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
         </div>
         <div class="dash-container">
+          <div id="pro-mode-messages" style={isProMode ? '' : 'display:none'}>
+            <div class="projet-form-card">
+              <h3><i class="fa fa-envelope" style="color:var(--cap-orange);"></i> Messagerie</h3>
+              <p style="margin:0 0 16px;color:#777;">Ouvrez la messagerie clients depuis votre panneau pro.</p>
+              <a href="/admin" class="btn-submit-projet" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;"><i class="fa fa-arrow-right"></i> Ouvrir la messagerie</a>
+            </div>
+          </div>
+
+          <div id="client-mode-messages" style={isProMode ? 'display:none' : ''}>
           <div id="rdv-notice" style="display:none;" class="rdv-notice">
             <i class="fa fa-calendar-check-o"></i>
             <div>
@@ -866,11 +946,12 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               </div>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== ONGLET 4 : PAIEMENTS ===== -->
-      <section class="tab-section" id="tab-paiements">
+      <section class="tab-section" id="tab-paiements" style={isProMode ? 'display:none' : ''}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-credit-card"></i> Paiements</h1>
@@ -986,39 +1067,33 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       </section>
 
       <!-- ===== ONGLET 5 : TARIFS ===== -->
-      <section class="tab-section" id="tab-tarifs">
+      <section class="tab-section" id="tab-tarifs" style={isProMode ? '' : 'display:none'}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
-            <h1><i class="fa fa-tag"></i> Tarifs et Prestations</h1>
-            <p>Tous nos forfaits transparents pour votre projet Canada.</p>
+            <h1><i class="fa fa-tag"></i> Tarifs</h1>
+            <p>Définissez vos tarifs (packs) visibles dans votre profil public.</p>
           </div>
         </div>
         <div class="dash-container">
-          <div class="section-title-block">
-            <h2>Packs d Accompagnement</h2>
-            <div class="title-line"></div>
-            <p>Forfaits complets pour un accompagnement de bout en bout.</p>
-          </div>
-          <div class="tarifs-grid" id="tarifsGrid">
-            <!-- injecte par JS -->
-          </div>
-          <div class="section-title-block" style="margin-top:48px;">
-            <h2>Services a la Carte</h2>
-            <div class="title-line"></div>
-          </div>
-          <div class="services-carte-grid">
-            <div class="service-carte-item"><div class="service-carte-icon">&#127919;</div><div class="service-carte-name">Consultation Strategique</div><div class="service-carte-price">250 $</div></div>
-            <div class="service-carte-item"><div class="service-carte-icon">&#128506;</div><div class="service-carte-name">Orientation Programme</div><div class="service-carte-price">200 $</div></div>
-            <div class="service-carte-item"><div class="service-carte-icon">&#128193;</div><div class="service-carte-name">Montage du Dossier</div><div class="service-carte-price">600 $</div></div>
-            <div class="service-carte-item"><div class="service-carte-icon">&#128202;</div><div class="service-carte-name">Suivi Administratif</div><div class="service-carte-price">400 $</div></div>
-            <div class="service-carte-item"><div class="service-carte-icon">&#128269;</div><div class="service-carte-name">Recherche Employeur</div><div class="service-carte-price">300 $</div></div>
-            <div class="service-carte-item"><div class="service-carte-icon">&#127968;</div><div class="service-carte-name">Aide a l Installation</div><div class="service-carte-price">350 $</div></div>
+          <div class="projet-form-card">
+            <h3><i class="fa fa-tag" style="color:var(--cap-orange);"></i> Prix par pack</h3>
+            <p style="margin:0 0 18px;color:#777;">Ces prix seront affichés uniquement dans votre fiche (bouton “Voir” côté client).</p>
+            <div class="info-grid" style="grid-template-columns:1fr 1fr;">
+              <div class="info-cell"><label>Pack Essentiel</label><span><input id="price-essentiel" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+              <div class="info-cell"><label>Pack Standard</label><span><input id="price-standard" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+              <div class="info-cell"><label>Pack Premium</label><span><input id="price-premium" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+              <div class="info-cell"><label>Pack Tourisme</label><span><input id="price-tourisme" type="number" min="0" step="1" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #ddd;" /></span></div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:16px;">
+              <button class="btn-submit-projet" type="button" onclick="saveProTarifs()"><i class="fa fa-save"></i> Enregistrer</button>
+            </div>
+            <p id="proTarifsHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
           </div>
         </div>
       </section>
 
       <!-- ===== ONGLET 6 : NOTRE ÉQUIPE ===== -->
-      <section class="tab-section" id="tab-equipe">
+      <section class="tab-section" id="tab-equipe" style={isProMode ? 'display:none' : ''}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-users"></i> Notre Équipe</h1>
@@ -1033,11 +1108,37 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           <div id="team-grid-container">
             <div class="team-loading"><i class="fa fa-spinner fa-spin"></i> Chargement de l'équipe…</div>
           </div>
+
+          <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()">
+            <div class="modal-box" style="max-width:720px;text-align:left;" onclick="event.stopPropagation()">
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+                <div class="team-avatar" id="tpAvatar" style="width:64px;height:64px;margin:0;"></div>
+                <div style="flex:1;">
+                  <h3 style="margin:0 0 4px;" id="tpName">—</h3>
+                  <p style="margin:0;color:#888;font-size:13px;" id="tpLocation">—</p>
+                </div>
+                <button class="btn-modal-cancel" type="button" onclick="closeTeamProfile()">Fermer</button>
+              </div>
+              <p style="margin:0 0 18px;color:#555;line-height:1.7;" id="tpBio"></p>
+
+              <div class="section-title-block" style="margin-top:0;">
+                <h2>Services</h2>
+                <div class="title-line"></div>
+              </div>
+              <div id="tpServices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+
+              <div class="section-title-block" style="margin-top:28px;">
+                <h2>Tarifs (packs)</h2>
+                <div class="title-line"></div>
+              </div>
+              <div class="tarifs-grid" id="tpTarifs"></div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== ONGLET 7 : PARAMÈTRES ===== -->
-      <section class="tab-section" id="tab-parametres">
+      <section class="tab-section" id="tab-parametres" style={isProMode ? 'display:none' : ''}>
         <div class="tab-hero">
           <div class="tab-hero-inner">
             <h1><i class="fa fa-cog"></i> Paramètres du Compte</h1>
@@ -1366,10 +1467,98 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       document.getElementById('profileDropdown').classList.toggle('open');
     };
 
+    // ============================================================
+    //  MODE PRO — édition profil + tarifs
+    // ============================================================
+    function isProModeUI(){ return document.body.classList.contains('is-pro-mode'); }
+    function setText(id, text){ var el=document.getElementById(id); if(el) el.textContent = text; }
+    function setHint(id, msg, ok){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.textContent = msg || '';
+      el.style.color = ok ? '#27ae60' : '#e74c3c';
+    }
+    function parseMoney(value){
+      var s=String(value||'').trim().replace(/\s/g,'').replace(',', '.');
+      if(!s) return null;
+      var n=Number(s);
+      return Number.isFinite(n) && n >= 0 ? n : null;
+    }
+
+    async function initProMode(){
+      if(!isProModeUI()) return;
+      try {
+        var r = await fetch('/api/pro/profile', { headers: { 'Accept': 'application/json' } });
+        if (!r.ok) return;
+        var payload = await r.json();
+        var p = (payload && payload.me) ? payload.me : payload;
+        var loc = document.getElementById('proLocation'); if (loc) loc.value = p.location || '';
+        var bio = document.getElementById('proBio'); if (bio) bio.value = p.bio || '';
+        var services = Array.isArray(p.pro_services) ? p.pro_services : [];
+        document.querySelectorAll('input[type=checkbox][id^="proSvc-"]').forEach(function(cb){
+          var id = cb.id.replace('proSvc-','');
+          cb.checked = services.indexOf(id) !== -1;
+        });
+        var prices = p.pro_pack_prices && typeof p.pro_pack_prices === 'object' ? p.pro_pack_prices : {};
+        var map = { essentiel:'price-essentiel', standard:'price-standard', premium:'price-premium', tourisme:'price-tourisme' };
+        Object.keys(map).forEach(function(k){
+          var el=document.getElementById(map[k]);
+          if(!el) return;
+          var v = prices[k];
+          el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
+        });
+      } catch(e) {}
+    }
+
+    window.saveProProfile = async function(){
+      if(!isProModeUI()) return;
+      try {
+        setHint('proProfileHint', 'Enregistrement…', true);
+        var services=[];
+        document.querySelectorAll('input[type=checkbox][id^="proSvc-"]:checked').forEach(function(cb){
+          services.push(cb.id.replace('proSvc-',''));
+        });
+        var body = {
+          location: (document.getElementById('proLocation')||{}).value || '',
+          bio: (document.getElementById('proBio')||{}).value || '',
+          pro_services: services
+        };
+        var r = await fetch('/api/pro/profile', {
+          method:'PATCH',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify(body)
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if(!r.ok || j.error){ setHint('proProfileHint', j.error || 'Erreur lors de l\'enregistrement.', false); return; }
+        setHint('proProfileHint', 'Profil enregistré.', true);
+      } catch(e){ setHint('proProfileHint', 'Erreur réseau.', false); }
+    };
+
+    window.saveProTarifs = async function(){
+      if(!isProModeUI()) return;
+      try {
+        setHint('proTarifsHint', 'Enregistrement…', true);
+        var prices = {};
+        var e = parseMoney((document.getElementById('price-essentiel')||{}).value); if (e !== null) prices.essentiel = e;
+        var s = parseMoney((document.getElementById('price-standard')||{}).value); if (s !== null) prices.standard = s;
+        var p = parseMoney((document.getElementById('price-premium')||{}).value); if (p !== null) prices.premium = p;
+        var t = parseMoney((document.getElementById('price-tourisme')||{}).value); if (t !== null) prices.tourisme = t;
+        var r = await fetch('/api/pro/profile', {
+          method:'PATCH',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({ pro_pack_prices: prices })
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if(!r.ok || j.error){ setHint('proTarifsHint', j.error || 'Erreur lors de l\'enregistrement.', false); return; }
+        setHint('proTarifsHint', 'Tarifs enregistrés.', true);
+      } catch(e){ setHint('proTarifsHint', 'Erreur réseau.', false); }
+    };
+
     //  Cookie session 
     document.addEventListener('DOMContentLoaded', function() {
       renderPacks();
       renderTarifs();
+      initProMode();
       try {
         var c = document.cookie.split(';').map(function(x){return x.trim();}).find(function(x){return x.startsWith('capitune_user=');});
         if (c) {
@@ -2399,12 +2588,13 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         .then(function(data){
           _teamLoaded = true;
           var members = data.team || [];
+          window.__teamMembers = members;
           if (!members.length) {
             container.innerHTML = '<div class="team-loading"><i class="fa fa-users"></i><br><br>Aucun profil disponible pour le moment.</div>';
             return;
           }
           var html = '<div class="team-grid">';
-          members.forEach(function(m){
+          members.forEach(function(m, idx){
             var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
             var avatarUrl = isHttpUrl(m.avatar_key) ? String(m.avatar_key) : '';
             html += '<div class="team-card">';
@@ -2413,7 +2603,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             html += '<span class="team-badge"><i class="fa fa-star"></i> Conseiller Pro</span>';
             if (m.location) html += '<p class="team-location"><i class="fa fa-map-marker"></i> ' + esc(m.location) + '</p>';
             if (m.bio) html += '<p class="team-bio">' + esc(m.bio) + '</p>';
-            html += '<button class="team-contact-btn" onclick="switchTab(\'messagerie\')"><i class="fa fa-envelope"></i> Contacter</button>';
+            html += '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;">';
+            html += '<button class="team-contact-btn" style="margin-top:0;" onclick="openTeamProfile('+idx+'); return false;"><i class="fa fa-eye"></i> Voir</button>';
+            html += '<button class="team-contact-btn" style="margin-top:0;" onclick="switchTab(\'messagerie\'); return false;"><i class="fa fa-envelope"></i> Contacter</button>';
+            html += '</div>';
             html += '</div>';
           });
           html += '</div>';
@@ -2424,6 +2617,78 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         });
     }
     window.loadTeam = loadTeam;
+
+    window.closeTeamProfile = function(){
+      if (window.closeModal) window.closeModal();
+      var modal = document.getElementById('teamProfileModal');
+      if (modal) modal.classList.remove('open');
+    };
+
+    window.openTeamProfile = function(idx){
+      try {
+        var members = window.__teamMembers || [];
+        var m = members[idx];
+        if (!m) return;
+        var modal = document.getElementById('teamProfileModal');
+        if (!modal) return;
+
+        function esc(s){
+          return String(s||'').replace(/[&<>"']/g, function(c){
+            return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;';
+          });
+        }
+        function isHttpUrl(u){ return /^https?:\/\//i.test(String(u||'')); }
+        var avatarUrl = isHttpUrl(m.avatar_key) ? String(m.avatar_key) : '';
+        var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+        var tpA = document.getElementById('tpAvatar');
+        if (tpA) {
+          tpA.innerHTML = avatarUrl
+            ? ('<img src="'+esc(avatarUrl)+'" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">')
+            : esc(initials||'?');
+        }
+        setText('tpName', m.name || 'Conseiller CAPITUNE');
+        setText('tpLocation', m.location ? ('📍 ' + m.location) : '');
+        setText('tpBio', m.bio || '');
+
+        var svcWrap = document.getElementById('tpServices');
+        var serviceLabels = {
+          consultation: 'Consultation stratégique',
+          orientation: 'Orientation programme',
+          dossier: 'Montage du dossier',
+          suivi: 'Suivi administratif',
+          recherche: 'Recherche employeur',
+          integration: 'Aide à l\'installation'
+        };
+        var svcs = Array.isArray(m.pro_services) ? m.pro_services : [];
+        if (svcWrap) {
+          if (!svcs.length) svcWrap.innerHTML = '<span style="color:#888;font-size:13px;">—</span>';
+          else svcWrap.innerHTML = svcs.map(function(id){
+            return '<span class="service-pill">'+esc(serviceLabels[id] || id)+'</span>';
+          }).join('');
+        }
+
+        var tarifsWrap = document.getElementById('tpTarifs');
+        var prices = (m.pro_pack_prices && typeof m.pro_pack_prices === 'object') ? m.pro_pack_prices : {};
+        var packs = [
+          { id:'essentiel', name:'Essentiel' },
+          { id:'standard', name:'Standard' },
+          { id:'premium', name:'Premium' },
+          { id:'tourisme', name:'Tourisme' }
+        ];
+        if (tarifsWrap) {
+          tarifsWrap.innerHTML = packs.map(function(pk){
+            var v = prices[pk.id];
+            var priceTxt = (typeof v === 'number' && Number.isFinite(v)) ? (v.toLocaleString('fr-CA') + ' $') : '—';
+            return '<div class="tarif-card">'
+              + '<div class="tarif-name">'+esc(pk.name)+'</div>'
+              + '<div class="tarif-price">'+esc(priceTxt)+' <span>CAD</span></div>'
+              + '</div>';
+          }).join('');
+        }
+
+        modal.classList.add('open');
+      } catch(e) {}
+    };
 
     // ============================================================
     //  TOAST NOTIFICATION
