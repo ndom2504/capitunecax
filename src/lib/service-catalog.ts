@@ -75,6 +75,37 @@ export const packagesCatalog: readonly Package[] = [
       'Support VIP 7j/7',
     ],
   },
+  {
+    id: 'tourisme',
+    name: 'Pack Tourisme',
+    description: 'Visa visiteur & guide sur place',
+    badge: '✈️',
+    price: 250,
+    services: ['consultation', 'orientation'],
+    features: [
+      "Analyse admissibilité visa touriste/visiteur",
+      'Montage dossier visiteur complet (AVE / TRV)',
+      'Lettre d\'invitation professionnelle rédigée',
+      'Guide procédures arrivée & frontière CBSA',
+      'Assistance démarches admin sur place (1 mois)',
+    ],
+  },
+  {
+    id: 'emploi',
+    name: 'Pack Emploi',
+    description: 'Trouver et obtenir un emploi au Canada',
+    badge: '💼',
+    price: 800,
+    services: ['consultation', 'orientation', 'dossier', 'recherche'],
+    features: [
+      "Analyse admissibilité permis de travail",
+      'Orientation LMIA, permis fermé/ouvert',
+      'Montage complet du dossier permis travail',
+      "Recherche d'employeurs qualifiés avec LMIA",
+      'Suivi dossier & réponses autorités',
+      'Support dédié emploi 6 mois',
+    ],
+  },
 ] as const;
 
 export const servicesCatalog: readonly Service[] = [
