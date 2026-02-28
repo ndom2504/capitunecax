@@ -2499,15 +2499,28 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           body.pro_pack_prices = prices;
         }
 
+        var btn = document.getElementById('btnSaveProProfile');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enregistrement…'; }
         var r = await fetch('/api/pro/profile', {
           method:'PATCH',
           headers:{'Content-Type':'application/json','Accept':'application/json'},
           body: JSON.stringify(body)
         });
         var j = await r.json().catch(function(){ return {}; });
-        if(!r.ok || j.error){ setHint('proProfileHint', j.error || 'Erreur lors de l\'enregistrement.', false); return; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-save"></i> Enregistrer packs &amp; tarifs'; }
+        if(!r.ok || j.error){
+          setHint('proProfileHint', j.error || 'Erreur lors de l\'enregistrement.', false);
+          showToast(j.error || 'Erreur lors de l\'enregistrement.', 'error');
+          return;
+        }
         setHint('proProfileHint', 'Profil enregistré.', true);
-      } catch(e){ setHint('proProfileHint', 'Erreur réseau.', false); }
+        showToast('✅ Packs & tarifs enregistrés avec succès !');
+      } catch(e){
+        var btn2 = document.getElementById('btnSaveProProfile');
+        if (btn2) { btn2.disabled = false; btn2.innerHTML = '<i class="fa fa-save"></i> Enregistrer packs &amp; tarifs'; }
+        setHint('proProfileHint', 'Erreur réseau.', false);
+        showToast('Erreur réseau. Veuillez réessayer.', 'error');
+      }
     };
 
     window.useMyLocation = function(){
