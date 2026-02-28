@@ -1674,7 +1674,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
 
           <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()">
-            <div class="modal-box" style="max-width:720px;text-align:left;position:relative;" onclick="event.stopPropagation()">
+            <div class="modal-box" style="max-width:min(1140px,96vw);width:95%;text-align:left;position:relative;" onclick="event.stopPropagation()">
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
                 <div class="team-avatar" id="tpAvatar" style="width:64px;height:64px;margin:0;"></div>
                 <div style="flex:1;">
@@ -4030,9 +4030,11 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           { id:'essentiel', name:'Essentiel' },
           { id:'standard', name:'Standard' },
           { id:'premium', name:'Premium' },
-          { id:'tourisme', name:'Tourisme' }
+          { id:'tourisme', name:'Tourisme' },
+          { id:'emploi', name:'Emploi' }
         ];
         if (tarifsWrap) {
+          tarifsWrap.style.gridTemplateColumns = 'repeat(auto-fill,minmax(160px,1fr))';
           tarifsWrap.innerHTML = packs.map(function(pk){
             var v = prices[pk.id];
             var priceTxt = (typeof v === 'number' && Number.isFinite(v)) ? (v.toLocaleString('fr-CA') + ' $') : '—';

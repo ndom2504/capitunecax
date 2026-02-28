@@ -13,7 +13,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const me = await getUserFromSessionFullAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
 
-  const stripeKey = locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY;
+  const stripeKey = (locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY || '').trim();
   const configuredCurrency =
     locals?.runtime?.env?.PAYMENT_CURRENCY ||
     import.meta.env.PAYMENT_CURRENCY ||
