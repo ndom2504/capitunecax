@@ -2209,7 +2209,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               '<ul class="cs-svc-list">' + svcsHtml + '</ul>' +
               '<div class="cs-bottom">' +
                 '<span class="cs-subtotal-label">Sous-total sélectionné</span>' +
-                '<span class="cs-subtotal-val" id="cs-sub-'+p.id+'">'+formatMoney(p.price)+'</span>' +
+                '<span class="cs-subtotal-val" id="cs-sub-'+p.id+'">'+formatMoney(0)+'</span>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -3090,7 +3090,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
     window.saveProject = function() {
       var type = document.getElementById('proj-type').value;
-      if (!type) { alert('Veuillez sélectionner un type de projet.'); return; }
+      if (!type) { showToast('Veuillez sélectionner un type de projet pour continuer.', 'info'); return; }
       var langues=[];
       document.querySelectorAll('.langue-checkbox input:checked').forEach(function(i){langues.push(i.value);});
       var domaineVal=document.getElementById('proj-domaine').value;
@@ -3157,6 +3157,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       ST.packPrice=parseInt(packPrice,10);
       ST.packItemsSelected={};
       document.querySelectorAll('.option').forEach(function(cb){cb.checked=false;});
+      // Mettre à jour le sous-total affiché dans la carte du carousel
+      var subElPack = document.getElementById('cs-sub-'+packId);
+      if (subElPack) subElPack.textContent = formatMoney(ST.packPrice);
       updateServiceTotal();
     };
 
@@ -3235,7 +3238,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     }
 
     window.submitService = function() {
-      if(!ST.projet||!ST.projet.type) { alert('Veuillez d abord remplir votre profil projet !'); switchTab('projet'); return; }
+      if(!ST.projet||!ST.projet.type) { showToast('📋 Complétez d\'abord votre profil projet — on vous y emmène !', 'info'); setTimeout(function(){ switchTab('projet'); }, 600); return; }
       var total=ST.packPrice; Object.values(ST.carte).forEach(function(p){total+=p;});
       if(total===0) return;
       var svc={packId:ST.pack,packPrice:ST.packPrice,carte:ST.carte,total:total,submittedAt:new Date().toISOString()};
@@ -3523,8 +3526,8 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
     window.processPayment = async function() {
       var total = computeTotal();
-      if (total <= 0) { alert('Aucun service sélectionné.'); return; }
-      if (ST.paye) { alert('Ce dossier est déjà payé.'); return; }
+      if (total <= 0) { showToast('Veuillez sélectionner au moins un service avant de payer.', 'info'); return; }
+      if (ST.paye) { showToast('✅ Ce dossier a déjà été payé.', 'info'); return; }
       var method = ST.payMethod;
       var btn = document.getElementById('btn-pay-stripe');
       if (method === 'card') {
@@ -3564,13 +3567,13 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
     window.confirmTransfer = function() {
       var total=computeTotal();
-      if(total<=0){alert('Aucun service sélectionné.');return;}
+      if(total<=0){showToast('Veuillez sélectionner au moins un service avant de payer.','info');return;}
       onPaymentSuccess('transfer', null);
     };
 
     window.confirmCrypto = function() {
       var total=computeTotal();
-      if(total<=0){alert('Aucun service sélectionné.');return;}
+      if(total<=0){showToast('Veuillez sélectionner au moins un service avant de payer.','info');return;}
       onPaymentSuccess('crypto', null);
     };
 
