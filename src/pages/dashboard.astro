@@ -917,7 +917,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                 <div class="form-group">
                   <label>Localisation</label>
                   <div style="display:flex;gap:10px;align-items:center;">
-                    <input id="proLocation" placeholder="Ex: Montréal, QC" style="flex:1;" />
+                    <div style="position:relative;flex:1;min-width:220px;">
+                      <input id="proLocation" placeholder="Ex: Montréal, Canada" style="width:100%;" autocomplete="off" />
+                      <div id="proLocationCountrySuggest" style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:50;display:none;background:#fff;border:1px solid rgba(0,0,0,0.12);border-radius:10px;overflow:hidden;max-height:240px;overflow-y:auto;"></div>
+                    </div>
                     <button class="btn-submit-projet" type="button" onclick="useMyLocation()" style="padding:10px 12px;font-size:12px;white-space:nowrap;">
                       <i class="fa fa-location-arrow"></i> Ma position
                     </button>
@@ -2237,12 +2240,138 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       } catch(e){ setHint('proTarifsHint', 'Erreur réseau.', false); }
     };
 
+    function initCountryAutocomplete(){
+      try {
+        var input = document.getElementById('proLocation');
+        var suggest = document.getElementById('proLocationCountrySuggest');
+        if (!input || !suggest) return;
+
+        var countriesFr = [
+          'Afghanistan','Afrique du Sud','Albanie','Algérie','Allemagne','Andorre','Angola','Antigua-et-Barbuda','Arabie saoudite','Argentine','Arménie','Australie','Autriche','Azerbaïdjan',
+          'Bahamas','Bahreïn','Bangladesh','Barbade','Belgique','Belize','Bénin','Bhoutan','Biélorussie','Bolivie','Bosnie-Herzégovine','Botswana','Brésil','Brunei','Bulgarie','Burkina Faso','Burundi',
+          'Cambodge','Cameroun','Canada','Cap-Vert','Chili','Chine','Chypre','Colombie','Comores','Congo','Congo (RDC)','Corée du Nord','Corée du Sud','Costa Rica','Côte d\'Ivoire','Croatie','Cuba',
+          'Danemark','Djibouti','Dominique','République dominicaine',
+          'Égypte','Émirats arabes unis','Équateur','Érythrée','Espagne','Estonie','Eswatini','États-Unis','Éthiopie',
+          'Fidji','Finlande','France',
+          'Gabon','Gambie','Géorgie','Ghana','Grèce','Grenade','Guatemala','Guinée','Guinée équatoriale','Guinée-Bissau','Guyana',
+          'Haïti','Honduras','Hongrie',
+          'Inde','Indonésie','Irak','Iran','Irlande','Islande','Israël','Italie',
+          'Jamaïque','Japon','Jordanie',
+          'Kazakhstan','Kenya','Kirghizistan','Kiribati','Koweït',
+          'Laos','Lesotho','Lettonie','Liban','Liberia','Libye','Liechtenstein','Lituanie','Luxembourg',
+          'Macédoine du Nord','Madagascar','Malaisie','Malawi','Maldives','Mali','Malte','Maroc','Îles Marshall','Maurice','Mauritanie','Mexique','Micronésie','Moldavie','Monaco','Mongolie','Monténégro','Mozambique','Myanmar',
+          'Namibie','Nauru','Népal','Nicaragua','Niger','Nigeria','Norvège','Nouvelle-Zélande',
+          'Oman','Ouganda','Ouzbékistan',
+          'Pakistan','Palaos','Panama','Papouasie-Nouvelle-Guinée','Paraguay','Pays-Bas','Pérou','Philippines','Pologne','Portugal','Qatar',
+          'Roumanie','Royaume-Uni','Russie','Rwanda',
+          'Saint-Christophe-et-Niévès','Sainte-Lucie','Saint-Marin','Saint-Vincent-et-les-Grenadines','Salomon','Salvador','Samoa','Sao Tomé-et-Principe','Sénégal','Serbie','Seychelles','Sierra Leone','Singapour','Slovaquie','Slovénie','Somalie','Soudan','Soudan du Sud','Sri Lanka','Suède','Suisse','Suriname','Syrie',
+          'Tadjikistan','Tanzanie','Tchad','Tchéquie','Thaïlande','Timor oriental','Togo','Tonga','Trinité-et-Tobago','Tunisie','Turkménistan','Turquie','Tuvalu',
+          'Ukraine','Uruguay',
+          'Vanuatu','Vatican','Venezuela','Viêt Nam',
+          'Yémen',
+          'Zambie','Zimbabwe'
+        ];
+
+        function norm(s){
+          try {
+            return String(s || '')
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+          } catch(_e) {
+            return String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+          }
+        }
+
+        function getCountryFragment(value){
+          var raw = String(value || '');
+          var idx = raw.lastIndexOf(',');
+          if (idx >= 0) return raw.slice(idx + 1).trim();
+          return raw.trim();
+        }
+
+        function render(matches, rawValue){
+          if (!matches || !matches.length) {
+            suggest.style.display = 'none';
+            suggest.innerHTML = '';
+            return;
+          }
+          suggest.innerHTML = '';
+          matches.slice(0, 10).forEach(function(country){
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = country;
+            btn.style.display = 'block';
+            btn.style.width = '100%';
+            btn.style.textAlign = 'left';
+            btn.style.padding = '10px 12px';
+            btn.style.border = '0';
+            btn.style.background = 'transparent';
+            btn.style.cursor = 'pointer';
+            btn.onmouseenter = function(){ btn.style.background = 'rgba(0,0,0,0.04)'; };
+            btn.onmouseleave = function(){ btn.style.background = 'transparent'; };
+            btn.onmousedown = function(ev){
+              try { ev.preventDefault(); } catch(_e) {}
+              var raw = String(rawValue || input.value || '');
+              var commaIdx = raw.lastIndexOf(',');
+              if (commaIdx >= 0) {
+                var left = raw.slice(0, commaIdx).trim();
+                input.value = left + ', ' + country;
+              } else {
+                input.value = country;
+              }
+              suggest.style.display = 'none';
+              suggest.innerHTML = '';
+              try { input.focus(); } catch(_e2) {}
+            };
+            suggest.appendChild(btn);
+          });
+          suggest.style.display = 'block';
+        }
+
+        function update(){
+          var raw = String(input.value || '');
+          var frag = getCountryFragment(raw);
+          if (!frag || frag.length < 1) { render([], raw); return; }
+
+          var fragN = norm(frag);
+          // Si l'utilisateur tape plutôt une ville (sans virgule), éviter de spammer: on suggère quand même,
+          // mais ça devient vraiment utile après une virgule (ville, pays).
+          var matches = countriesFr.filter(function(c){ return norm(c).startsWith(fragN); });
+          render(matches, raw);
+        }
+
+        input.addEventListener('input', function(){
+          update();
+        });
+        input.addEventListener('focus', function(){
+          update();
+        });
+        input.addEventListener('blur', function(){
+          setTimeout(function(){
+            try { suggest.style.display = 'none'; suggest.innerHTML = ''; } catch(_e) {}
+          }, 120);
+        });
+        document.addEventListener('click', function(ev){
+          try {
+            if (!suggest.contains(ev.target) && ev.target !== input) {
+              suggest.style.display = 'none';
+              suggest.innerHTML = '';
+            }
+          } catch(_e) {}
+        });
+      } catch(_e) {}
+    }
+
     //  Cookie session 
     document.addEventListener('DOMContentLoaded', function() {
       renderPacks();
       renderTarifs();
       initProMode();
       initCatalogAndUI();
+      initCountryAutocomplete();
       refreshDashboardView();
       confirmStripePremiumIfNeeded();
       try {
