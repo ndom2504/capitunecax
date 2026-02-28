@@ -101,7 +101,7 @@ export function FooterCustom() {
             © {currentYear} CAPITUNE. Tous droits réservés.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-sm text-muted-foreground hover:text-primary transition">
+            <a href={`${baseUrl}/confidentialite`} className="text-sm text-muted-foreground hover:text-primary transition">
               Politique de confidentialité
             </a>
             <a href="#" className="text-sm text-muted-foreground hover:text-primary transition">

@@ -1,0 +1,69 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
+import { getContactAddressLines, publicConfig } from '../lib/public-config';
+
+const addressLines = getContactAddressLines();
+const locationLine = addressLines[addressLines.length - 1] ?? '';
+---
+
+<MainLayout>
+  <HeaderNav client:only="react" />
+
+  <section class="bg-gradient-to-br from-primary/10 to-primary/5 py-16 md:py-20">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-foreground">Mentions légales</h1>
+        <p class="text-xl text-muted-foreground">
+          Informations légales et éditeur du site CAPITUNE.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-background">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto space-y-10">
+        <div class="bg-card border border-border rounded-lg p-8">
+          <h2 class="text-2xl font-bold text-foreground mb-4">Éditeur</h2>
+          <p class="text-muted-foreground">
+            CAPITUNE
+            {locationLine ? ` — ${locationLine}` : ''}
+          </p>
+          <p class="text-muted-foreground mt-2">
+            Contact : <a class="text-primary hover:underline" href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+          </p>
+        </div>
+
+        <div class="bg-card border border-border rounded-lg p-8">
+          <h2 class="text-2xl font-bold text-foreground mb-4">Hébergement</h2>
+          <p class="text-muted-foreground">
+            Hébergement assuré via l’infrastructure de déploiement du projet (selon l’environnement de production).
+          </p>
+        </div>
+
+        <div class="bg-card border border-border rounded-lg p-8">
+          <h2 class="text-2xl font-bold text-foreground mb-4">Propriété intellectuelle</h2>
+          <p class="text-muted-foreground">
+            Les contenus (textes, visuels, logos, éléments graphiques) sont protégés. Toute reproduction non autorisée est interdite.
+          </p>
+        </div>
+
+        <div class="bg-card border border-border rounded-lg p-8">
+          <h2 class="text-2xl font-bold text-foreground mb-4">Données personnelles</h2>
+          <p class="text-muted-foreground">
+            Pour en savoir plus sur la collecte et le traitement des données, consultez la page
+            <a class="text-primary hover:underline" href="/confidentialite"> Politique de confidentialité</a>.
+          </p>
+        </div>
+
+        <div class="text-sm text-muted-foreground text-center">
+          Pour toute question, contactez-nous à <a class="text-primary hover:underline" href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <FooterCustom />
+</MainLayout>
