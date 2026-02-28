@@ -3232,6 +3232,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         document.querySelectorAll('.cs-btn').forEach(function(b){b.classList.remove('selected-pack');b.textContent='\u2713 Choisir ce pack';});
         var c=document.getElementById('pack-'+ST.pack);
         if(c){c.classList.add('selected-pack');c.textContent='\u2705 Pack s\u00e9lectionn\u00e9';}
+        // Synchroniser le sous-total du carousel avec l'état restauré
+        var subRestored = document.getElementById('cs-sub-'+ST.pack);
+        if (subRestored) subRestored.textContent = formatMoney(ST.packPrice);
       }
       Object.keys(ST.carte).forEach(function(id){ var c=document.getElementById('carte-'+id); if(c) c.classList.add('selected'); });
       updateServiceTotal();
