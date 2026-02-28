@@ -48,6 +48,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       window.CAP_USER_EMAIL = '';
       window.CAP_USER_NAME = '';
     </script>
+    <script is:inline define:vars={{ packagesCatalog, servicesCatalog }}>
+      window.CAP_PACKAGES_CATALOG = packagesCatalog;
+      window.CAP_SERVICES_CATALOG = servicesCatalog;
+    </script>
     <style is:global>
       :root { --cap-orange:#ff9408; --cap-dark:#1a1a2e; --cap-blue:#2980b9; --cap-green:#27ae60; --cap-red:#e74c3c; }
       /* PAIEMENT FORMS */
@@ -961,6 +965,52 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
               <h3><i class="fa fa-tags" style="color:var(--cap-orange);"></i> Packs, services & tarifs</h3>
               <p style="margin:0 0 14px;color:#777;">Sélectionnez les services inclus dans chaque pack et renseignez le prix du pack (affiché côté client dans “Voir”).</p>
 
+              <!-- ── Référence Capitune ── -->
+              <div style="border:2px solid #ffd899;border-radius:14px;margin-bottom:22px;overflow:hidden;">
+                <div style="background:#fff8f0;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;" onclick="toggleCapRef()">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fa fa-tag" style="color:var(--cap-orange);"></i>
+                    <span style="font-weight:800;font-size:14px;color:var(--cap-dark);">Grille tarifaire Capitune <span style="font-weight:400;color:#999;font-size:12px;">(référence officielle)</span></span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:11px;color:#888;">Cliquez ✓ Appliquer pour pré-remplir votre grille</span>
+                    <i class="fa fa-chevron-down" id="capRefChevron" style="color:var(--cap-orange);transition:.2s;"></i>
+                  </div>
+                </div>
+                <div id="capRefPanel" style="display:none;padding:18px;background:#fffcf5;">
+                  <!-- Toggle Pack / Service -->
+                  <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <button id="capRefBtnPacks" onclick="switchCapRefMode('packs')" style="padding:7px 18px;border-radius:8px;border:none;background:var(--cap-orange);color:#fff;font-weight:700;font-size:12px;cursor:pointer;"><i class="fa fa-cube"></i> Packs</button>
+                    <button id="capRefBtnServices" onclick="switchCapRefMode('services')" style="padding:7px 18px;border-radius:8px;border:1.5px solid #ddd;background:#f9f9f9;color:#555;font-weight:700;font-size:12px;cursor:pointer;"><i class="fa fa-list"></i> Services à la carte</button>
+                  </div>
+                  <!-- Vue Packs -->
+                  <div id="capRefPacksPanel">
+                    <div id="capRefPacksCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;"></div>
+                    <p style="margin:10px 0 0;font-size:11px;color:#aaa;"><i class="fa fa-info-circle"></i> Appliquer pré-remplit le prix et les services du pack correspondant dans votre grille ci-dessous.</p>
+                  </div>
+                  <!-- Vue Services -->
+                  <div id="capRefServicesPanel" style="display:none;">
+                    <div style="overflow-x:auto;">
+                      <table style="width:100%;border-collapse:collapse;font-size:12px;" id="capRefServicesTable">
+                        <thead>
+                          <tr style="background:#f0f0f0;">
+                            <th style="padding:8px 12px;text-align:left;font-weight:800;color:#555;">Service</th>
+                            <th style="padding:8px 12px;text-align:right;font-weight:800;color:#555;">Prix réf.</th>
+                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Essentiel">Ess.</th>
+                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Standard">Std</th>
+                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Premium">Prem.</th>
+                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Tourisme">Tour.</th>
+                          </tr>
+                        </thead>
+                        <tbody id="capRefServicesTbody"></tbody>
+                      </table>
+                    </div>
+                    <p style="margin:10px 0 0;font-size:11px;color:#aaa;"><i class="fa fa-info-circle"></i> Cocher active/désactive ce service dans le pack de votre grille ci-dessous.</p>
+                  </div>
+                </div>
+              </div>
+              <!-- ── Fin Référence Capitune ── -->
+
               <div class="pro-offering-grid" id="proOfferingGrid">
                 <div class="pro-offering-pack">
                   <div class="pro-offering-head">Pack Essentiel</div>
@@ -1458,6 +1508,131 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             btnPacks.style.border = '1.5px solid #ddd';
           }
         }
+
+        // ── Capitune Reference Panel ──
+        function toggleCapRef() {
+          const panel = document.getElementById('capRefPanel');
+          const chevron = document.getElementById('capRefChevron');
+          const open = panel.style.display === 'none';
+          panel.style.display = open ? 'block' : 'none';
+          chevron.style.transform = open ? 'rotate(180deg)' : '';
+        }
+
+        function switchCapRefMode(mode) {
+          const pp = document.getElementById('capRefPacksPanel');
+          const sp = document.getElementById('capRefServicesPanel');
+          const bp = document.getElementById('capRefBtnPacks');
+          const bs = document.getElementById('capRefBtnServices');
+          if (mode === 'packs') {
+            pp.style.display='block'; sp.style.display='none';
+            bp.style.cssText += ';background:var(--cap-orange);color:#fff;border:none;';
+            bs.style.cssText += ';background:#f9f9f9;color:#555;border:1.5px solid #ddd;';
+          } else {
+            pp.style.display='none'; sp.style.display='block';
+            bs.style.cssText += ';background:var(--cap-orange);color:#fff;border:none;';
+            bp.style.cssText += ';background:#f9f9f9;color:#555;border:1.5px solid #ddd;';
+          }
+        }
+
+        function applyCapPack(packId, price, services) {
+          // 1. Remplir le prix
+          var priceInput = document.getElementById('proPackPrice-' + packId);
+          if (priceInput) priceInput.value = price;
+
+          // 2. Cocher/décocher les services
+          var allSvcIds = ['consultation','orientation','dossier','suivi','recherche','integration'];
+          allSvcIds.forEach(function(svcId) {
+            var cb = document.getElementById('proPackSvc-' + packId + '-' + svcId);
+            if (!cb) return;
+            var shouldCheck = services.indexOf(svcId) !== -1;
+            cb.checked = shouldCheck;
+            var lbl = cb.closest('label');
+            if (lbl) {
+              if (shouldCheck) lbl.classList.add('checked');
+              else lbl.classList.remove('checked');
+            }
+          });
+
+          // 3. Feedback visuel sur le bouton Appliquer
+          var badge = document.getElementById('capApplyBadge-' + packId);
+          var btn = document.getElementById('capApplyBtn-' + packId);
+          if (badge) { badge.innerHTML = '✓'; badge.style.background = 'var(--cap-orange)'; badge.style.color = '#fff'; }
+          if (btn) { btn.style.borderColor = 'var(--cap-orange)'; btn.style.background = '#fff0d6'; }
+          setTimeout(function() {
+            if (badge) { badge.innerHTML = ''; badge.style.background = '#fff'; badge.style.color = ''; }
+            if (btn) { btn.style.background = ''; }
+          }, 2000);
+        }
+
+        function applyCapService(packId, serviceId, checked) {
+          var cb = document.getElementById('proPackSvc-' + packId + '-' + serviceId);
+          if (!cb) return;
+          cb.checked = checked;
+          var lbl = cb.closest('label');
+          if (lbl) {
+            if (checked) lbl.classList.add('checked');
+            else lbl.classList.remove('checked');
+          }
+        }
+
+        function initCapRef() {
+          var pkgs = window.CAP_PACKAGES_CATALOG || [];
+          var svcs = window.CAP_SERVICES_CATALOG || [];
+
+          // Rendre les cartes packs
+          var cardsEl = document.getElementById('capRefPacksCards');
+          if (cardsEl && pkgs.length) {
+            cardsEl.innerHTML = pkgs.map(function(pkg) {
+              var total = pkg.price.toLocaleString('fr-CA');
+              var featList = pkg.features.map(function(f) {
+                return '<li style="font-size:11px;color:#555;display:flex;align-items:flex-start;gap:6px;"><span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>' + f + '</li>';
+              }).join('');
+              var borderColor = pkg.popular ? 'var(--cap-orange)' : '#eee';
+              var headBg = pkg.popular ? 'var(--cap-orange)' : '#1a1a2e';
+              var btnBorder = pkg.popular ? 'var(--cap-orange)' : '#ddd';
+              var btnBg = pkg.popular ? '#fff8f0' : '#f9f9f9';
+              var servicesJSON = JSON.stringify(pkg.services);
+              return '<div style="border-radius:12px;overflow:hidden;border:1.5px solid ' + borderColor + ';background:#fff;">' +
+                '<div style="background:' + headBg + ';color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">' +
+                  '<span style="font-weight:800;font-size:13px;">' + pkg.badge + ' ' + pkg.name + '</span>' +
+                  '<span style="font-size:15px;font-weight:900;">' + total + ' $</span>' +
+                '</div>' +
+                '<div style="padding:12px 14px;">' +
+                  '<ul style="list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:5px;">' + featList + '</ul>' +
+                  '<button id="capApplyBtn-' + pkg.id + '" onclick="applyCapPack(\'' + pkg.id + '\',' + pkg.price + ',' + servicesJSON + ')" ' +
+                    'style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1.5px solid ' + btnBorder + ';background:' + btnBg + ';font-weight:700;font-size:12px;color:var(--cap-dark);transition:.15s;">' +
+                    '<span id="capApplyBadge-' + pkg.id + '" style="width:16px;height:16px;border-radius:4px;border:2px solid var(--cap-orange);display:inline-flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;font-size:11px;"></span>' +
+                    '&#10003; Appliquer \u2192 ' + pkg.name.replace('Pack ','') +
+                  '</button>' +
+                '</div>' +
+              '</div>';
+            }).join('');
+          }
+
+          // Rendre les lignes services
+          var tbody = document.getElementById('capRefServicesTbody');
+          if (tbody && svcs.length) {
+            var packIds = ['essentiel','standard','premium','tourisme'];
+            tbody.innerHTML = svcs.map(function(svc) {
+              var refPrice = svc.subServices.reduce(function(s,sub){ return s+sub.price; }, 0);
+              var cells = packIds.map(function(pid) {
+                return '<td style="padding:9px 12px;text-align:center;">' +
+                  '<label style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">' +
+                    '<input type="checkbox" id="capSvcApply-' + pid + '-' + svc.id + '" ' +
+                      'style="accent-color:var(--cap-orange);width:15px;height:15px;cursor:pointer;" ' +
+                      'onchange="applyCapService(\'' + pid + '\',\'' + svc.id + '\',this.checked)" />' +
+                  '</label></td>';
+              }).join('');
+              return '<tr style="border-bottom:1px solid #f0f0f0;">' +
+                '<td style="padding:9px 12px;font-weight:700;color:#333;">' + svc.icon + ' ' + svc.name + '</td>' +
+                '<td style="padding:9px 12px;text-align:right;font-weight:800;color:var(--cap-orange);white-space:nowrap;">' + refPrice.toLocaleString('fr-CA') + ' $</td>' +
+                cells +
+              '</tr>';
+            }).join('');
+          }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() { initCapRef(); });
       </script>
 
       <!-- ===== ONGLET 6 : NOTRE ÉQUIPE ===== -->
