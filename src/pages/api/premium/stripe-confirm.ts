@@ -27,8 +27,15 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const sessionId = String(body?.sessionId ?? '').trim();
   if (!sessionId) return json({ error: 'sessionId requis' }, 400);
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' });
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  let session: any;
+  try {
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
+    session = await stripe.checkout.sessions.retrieve(sessionId);
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    console.error('[stripe-confirm]', msg);
+    return json({ error: 'Erreur Stripe : ' + msg }, 500);
+  }
 
   if (!session) return json({ error: 'Session Stripe introuvable' }, 404);
   if (session.payment_status !== 'paid') return json({ error: 'Paiement non confirmé' }, 402);

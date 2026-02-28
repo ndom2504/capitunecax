@@ -27,30 +27,36 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const success_url = `${origin}/dashboard?premium=success&session_id={CHECKOUT_SESSION_ID}`;
   const cancel_url = `${origin}/dashboard?premium=cancelled`;
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2026-01-28.clover' });
+  try {
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    customer_email: me.email,
-    line_items: [
-      {
-        price_data: {
-          currency,
-          unit_amount: 10000,
-          product_data: { name: 'Abonnement Premium (1 an)' },
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      customer_email: me.email,
+      line_items: [
+        {
+          price_data: {
+            currency,
+            unit_amount: 10000,
+            product_data: { name: 'Abonnement Premium (1 an)' },
+          },
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      success_url,
+      cancel_url,
+      metadata: {
+        kind: 'premium',
+        userId: String(me.id),
       },
-    ],
-    success_url,
-    cancel_url,
-    metadata: {
-      kind: 'premium',
-      userId: String(me.id),
-    },
-  });
+    });
 
-  return json({ url: session.url });
+    return json({ url: session.url });
+  } catch (err: any) {
+    const msg = err?.message ?? String(err);
+    console.error('[stripe-checkout]', msg);
+    return json({ error: 'Erreur Stripe : ' + msg }, 500);
+  }
 };
 
 function json(data: unknown, status = 200) {
