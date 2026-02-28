@@ -90,12 +90,21 @@ export const PUT: APIRoute = async ({ cookies, locals, request }) => {
   const notif_rdv   = body.notif_rdv   !== undefined ? (body.notif_rdv   ? 1 : 0) : user.notif_rdv;
   const notif_msg   = body.notif_msg   !== undefined ? (body.notif_msg   ? 1 : 0) : user.notif_msg;
   const currency_code = normalizeCurrencyCode(body.currency_code ?? user.currency_code ?? 'CAD');
+  // avatar_key : accepter https:// et data:image/ (base64 compressé ≤ 300 Ko), ou '' pour effacer
+  const rawAvatar = typeof body.avatar_key === 'string' ? body.avatar_key.trim() : null;
+  const avatar_key = rawAvatar === null
+    ? (user.avatar_key ?? null)            // non fourni → conserver
+    : rawAvatar === ''
+      ? ''                                 // suppression explicite
+      : (/^https?:\/\//i.test(rawAvatar) || /^data:image\//i.test(rawAvatar)) && rawAvatar.length <= 307200
+        ? rawAvatar                        // URL valide → sauvegarder
+        : (user.avatar_key ?? null);       // format invalide → conserver
 
   if (db) {
     await db.prepare(
-      `UPDATE users SET name=?, phone=?, location=?, bio=?, notif_email=?, notif_rdv=?, notif_msg=?, currency_code=?, updated_at=datetime('now')
+      `UPDATE users SET name=?, phone=?, location=?, bio=?, notif_email=?, notif_rdv=?, notif_msg=?, currency_code=?, avatar_key=?, updated_at=datetime('now')
        WHERE id=?`
-    ).bind(name, phone, location, bio, notif_email, notif_rdv, notif_msg, currency_code, user.id).run();
+    ).bind(name, phone, location, bio, notif_email, notif_rdv, notif_msg, currency_code, avatar_key, user.id).run();
   } else {
     const sql = await getNeonSqlClient();
     if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
@@ -110,6 +119,7 @@ export const PUT: APIRoute = async ({ cookies, locals, request }) => {
         notif_rdv = ${!!notif_rdv},
         notif_msg = ${!!notif_msg},
         currency_code = ${currency_code},
+        avatar_key = ${avatar_key},
         updated_at = now()
       WHERE id = ${user.id}
     `;

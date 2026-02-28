@@ -3620,6 +3620,8 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             try { localStorage.setItem('capitune_avatar', canvas.toDataURL('image/jpeg', 0.55)); } catch(e2) {}
           }
           applyAvatar(compressed);
+          // Persistance en base de données
+          dbSync('/api/user/profile', 'PUT', { avatar_key: compressed });
           var btnRm = document.getElementById('btnRemovePhoto');
           if (btnRm) btnRm.style.display = '';
           showToast('Photo de profil mise à jour ✓');
@@ -3652,6 +3654,8 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       if (da) da.innerHTML = '<i class="fa fa-user" style="font-size:20px;"></i>';
       var btnRm = document.getElementById('btnRemovePhoto');
       if (btnRm) btnRm.style.display = 'none';
+      // Effacer en base de données
+      dbSync('/api/user/profile', 'PUT', { avatar_key: '' });
     }
 
     window.saveParametres = function saveParametres() {
@@ -3811,7 +3815,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;';
         });
       }
-      function isHttpUrl(u){ return /^https?:\/\//i.test(String(u||'')); }
+      function getAvatarSrc(u){ var s=String(u||'').trim(); return (/^https?:\/\//i.test(s)||/^data:image\//i.test(s))&&s.length>4 ? s : ''; }
 
       fetch('/api/team')
         .then(function(r){ return r.json(); })
@@ -3826,7 +3830,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           var html = '<div class="team-grid">';
           members.forEach(function(m, idx){
             var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
-            var avatarUrl = isHttpUrl(m.avatar_key) ? String(m.avatar_key) : '';
+            var avatarUrl = getAvatarSrc(m.avatar_key);
             html += '<div class="team-card">';
             html += '<div class="team-avatar">' + (avatarUrl ? ('<img src="'+esc(avatarUrl)+'" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">') : (initials||'<i class="fa fa-user"></i>')) + '</div>';
             html += '<p class="team-name">' + esc(m.name||'Conseiller CAPITUNE') + '</p>';
@@ -3867,8 +3871,8 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             return c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;';
           });
         }
-        function isHttpUrl(u){ return /^https?:\/\//i.test(String(u||'')); }
-        var avatarUrl = isHttpUrl(m.avatar_key) ? String(m.avatar_key) : '';
+        function getAvatarSrc(u){ var s=String(u||'').trim(); return (/^https?:\/\//i.test(s)||/^data:image\//i.test(s))&&s.length>4 ? s : ''; }
+        var avatarUrl = getAvatarSrc(m.avatar_key);
         var initials = (m.name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
         var tpA = document.getElementById('tpAvatar');
         if (tpA) {
