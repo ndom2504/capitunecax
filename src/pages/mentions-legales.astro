@@ -1,7 +1,6 @@
 ---
 import MainLayout from '../layouts/main.astro';
-import { HeaderNav } from '../components/HeaderNav';
-import { FooterCustom } from '../components/FooterCustom';
+import { baseUrl } from '../lib/base-url';
 import { getContactAddressLines, publicConfig } from '../lib/public-config';
 
 const addressLines = getContactAddressLines();
@@ -9,61 +8,106 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
 ---
 
 <MainLayout>
-  <HeaderNav client:only="react" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
 
-  <section class="bg-gradient-to-br from-primary/10 to-primary/5 py-16 md:py-20">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-foreground">Mentions légales</h1>
-        <p class="text-xl text-muted-foreground">
-          Informations légales et éditeur du site CAPITUNE.
-        </p>
-      </div>
+  <div class="DesignHolder legal-page">
+    <div class="LayoutFrame">
+      <header class="auth-header">
+        <div class="Center">
+          <div class="site-logo">
+            <a href={`${baseUrl}/`}>
+              <img
+                src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png"
+                alt="CAPITUNE"
+              />
+            </a>
+          </div>
+          <nav class="Navigation auth-nav">
+            <ul>
+              <li><a href={`${baseUrl}/`}>Accueil</a></li>
+              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
+              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
+            </ul>
+          </nav>
+          <div class="clear"></div>
+        </div>
+      </header>
+
+      <section class="AuthHero_sec">
+        <div class="Center">
+          <h1>Mentions Légales</h1>
+          <p>Informations légales et éditeur du site CAPITUNE.</p>
+        </div>
+      </section>
+
+      <section class="Get_sec auth-sec">
+        <div class="Mid">
+          <div class="Leftside auth-form-side auth-form-wide">
+            <h3 style="margin-bottom: 12px;">Éditeur</h3>
+            <address>
+              <i class="fa fa-building" style="color:#ff9408;margin-right:10px;"></i>
+              CAPITUNE{locationLine ? ` — ${locationLine}` : ''}
+            </address>
+            <address class="Email">
+              <i class="fa fa-envelope" style="color:#ff9408;margin-right:10px;"></i>
+              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Hébergement</h3>
+            <address>
+              <i class="fa fa-cloud" style="color:#ff9408;margin-right:10px;"></i>
+              Hébergement assuré via l’infrastructure de déploiement du projet (selon l’environnement de production).
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Propriété Intellectuelle</h3>
+            <address>
+              <i class="fa fa-copyright" style="color:#ff9408;margin-right:10px;"></i>
+              Les contenus (textes, visuels, logos, éléments graphiques) sont protégés. Toute reproduction non autorisée est interdite.
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Données Personnelles</h3>
+            <address>
+              <i class="fa fa-shield" style="color:#ff9408;margin-right:10px;"></i>
+              Pour en savoir plus, consultez la
+              <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a>.
+            </address>
+          </div>
+
+          <div class="Rightside auth-info-side">
+            <h3>Besoin d'aide ?</h3>
+            <address>
+              <i class="fa fa-info-circle" style="color:#ff9408;margin-right:10px;"></i>
+              Écrivez-nous à tout moment.
+            </address>
+            <address class="Email">
+              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+            </address>
+            <address class="Email">
+              <a href={`${baseUrl}/dashboard`}>Retour au dashboard →</a>
+            </address>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="Cntr">
+          <p>
+            © 2026 <strong>CAPITUNE</strong> – Tous droits réservés.
+            | <a href={`${baseUrl}/mentions-legales`} style="color:#a9abad;">Mentions légales</a>
+            | <a href={`${baseUrl}/confidentialite`} style="color:#a9abad;">Confidentialité</a>
+          </p>
+        </div>
+      </footer>
     </div>
-  </section>
-
-  <section class="py-20 bg-background">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-4xl mx-auto space-y-10">
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Éditeur</h2>
-          <p class="text-muted-foreground">
-            CAPITUNE
-            {locationLine ? ` — ${locationLine}` : ''}
-          </p>
-          <p class="text-muted-foreground mt-2">
-            Contact : <a class="text-primary hover:underline" href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
-          </p>
-        </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Hébergement</h2>
-          <p class="text-muted-foreground">
-            Hébergement assuré via l’infrastructure de déploiement du projet (selon l’environnement de production).
-          </p>
-        </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Propriété intellectuelle</h2>
-          <p class="text-muted-foreground">
-            Les contenus (textes, visuels, logos, éléments graphiques) sont protégés. Toute reproduction non autorisée est interdite.
-          </p>
-        </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Données personnelles</h2>
-          <p class="text-muted-foreground">
-            Pour en savoir plus sur la collecte et le traitement des données, consultez la page
-            <a class="text-primary hover:underline" href="/confidentialite"> Politique de confidentialité</a>.
-          </p>
-        </div>
-
-        <div class="text-sm text-muted-foreground text-center">
-          Pour toute question, contactez-nous à <a class="text-primary hover:underline" href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>.
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <FooterCustom />
+  </div>
 </MainLayout>

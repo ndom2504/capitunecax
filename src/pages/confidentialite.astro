@@ -1,68 +1,133 @@
 ---
 import MainLayout from '../layouts/main.astro';
-import { HeaderNav } from '../components/HeaderNav';
-import { FooterCustom } from '../components/FooterCustom';
+import { baseUrl } from '../lib/base-url';
 import { publicConfig } from '../lib/public-config';
 ---
 
 <MainLayout>
-  <HeaderNav client:only="react" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
 
-  <section class="bg-gradient-to-br from-primary/10 to-primary/5 py-16 md:py-20">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-bold mb-6 text-foreground">Politique de confidentialité</h1>
-        <p class="text-xl text-muted-foreground">
-          Comprendre quelles données sont collectées et comment elles sont utilisées.
-        </p>
-      </div>
-    </div>
-  </section>
+  <div class="DesignHolder legal-page">
+    <div class="LayoutFrame">
+      <header class="auth-header">
+        <div class="Center">
+          <div class="site-logo">
+            <a href={`${baseUrl}/`}>
+              <img
+                src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png"
+                alt="CAPITUNE"
+              />
+            </a>
+          </div>
+          <nav class="Navigation auth-nav">
+            <ul>
+              <li><a href={`${baseUrl}/`}>Accueil</a></li>
+              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
+              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
+            </ul>
+          </nav>
+          <div class="clear"></div>
+        </div>
+      </header>
 
-  <section class="py-20 bg-background">
-    <div class="container mx-auto px-4 md:px-6">
-      <div class="max-w-4xl mx-auto space-y-10">
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Résumé</h2>
-          <p class="text-muted-foreground">
-            CAPITUNE traite vos informations afin de fournir le service (création de compte, gestion du projet, messagerie, paiements) et répondre à vos demandes.
+      <section class="AuthHero_sec">
+        <div class="Center">
+          <h1>Politique De Confidentialité</h1>
+          <p>Comprendre quelles données sont collectées et comment elles sont utilisées.</p>
+        </div>
+      </section>
+
+      <section class="Get_sec auth-sec">
+        <div class="Mid">
+          <div class="Leftside auth-form-side auth-form-wide">
+            <h3 style="margin-bottom: 12px;">Résumé</h3>
+            <address>
+              <i class="fa fa-file-text" style="color:#ff9408;margin-right:10px;"></i>
+              CAPITUNE traite vos informations afin de fournir le service (création de compte, gestion du projet, messagerie, paiements) et répondre à vos demandes.
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Données Collectées</h3>
+            <address>
+              <i class="fa fa-database" style="color:#ff9408;margin-right:10px;"></i>
+              Informations de compte (nom, email).
+            </address>
+            <address>
+              <i class="fa fa-folder-open" style="color:#ff9408;margin-right:10px;"></i>
+              Informations liées au projet lorsque vous les saisissez.
+            </address>
+            <address>
+              <i class="fa fa-comments" style="color:#ff9408;margin-right:10px;"></i>
+              Messages échangés via la messagerie.
+            </address>
+            <address>
+              <i class="fa fa-cog" style="color:#ff9408;margin-right:10px;"></i>
+              Données techniques nécessaires au fonctionnement (cookies de session, journaux techniques).
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Finalités</h3>
+            <address>
+              <i class="fa fa-lock" style="color:#ff9408;margin-right:10px;"></i>
+              Fournir et sécuriser l’accès à votre espace (authentification, session).
+            </address>
+            <address>
+              <i class="fa fa-exchange" style="color:#ff9408;margin-right:10px;"></i>
+              Permettre le suivi de votre projet et la communication avec l’équipe.
+            </address>
+            <address>
+              <i class="fa fa-credit-card" style="color:#ff9408;margin-right:10px;"></i>
+              Gérer les transactions et justificatifs liés aux paiements.
+            </address>
+            <address>
+              <i class="fa fa-line-chart" style="color:#ff9408;margin-right:10px;"></i>
+              Améliorer le service (diagnostic, prévention des abus).
+            </address>
+
+            <div style="height: 18px;"></div>
+
+            <h3 style="margin-bottom: 12px;">Contact</h3>
+            <address class="Email">
+              <i class="fa fa-envelope" style="color:#ff9408;margin-right:10px;"></i>
+              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+            </address>
+
+            <p style="margin-top: 18px; color:#a9abad;">
+              Dernière mise à jour : février 2026.
+            </p>
+          </div>
+
+          <div class="Rightside auth-info-side">
+            <h3>Ressources</h3>
+            <address>
+              <i class="fa fa-balance-scale" style="color:#ff9408;margin-right:10px;"></i>
+              Consultez aussi les mentions légales.
+            </address>
+            <address class="Email">
+              <a href={`${baseUrl}/mentions-legales`}>Mentions légales →</a>
+            </address>
+            <address class="Email">
+              <a href={`${baseUrl}/dashboard`}>Retour au dashboard →</a>
+            </address>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="Cntr">
+          <p>
+            © 2026 <strong>CAPITUNE</strong> – Tous droits réservés.
+            | <a href={`${baseUrl}/mentions-legales`} style="color:#a9abad;">Mentions légales</a>
+            | <a href={`${baseUrl}/confidentialite`} style="color:#a9abad;">Confidentialité</a>
           </p>
         </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Données collectées</h2>
-          <ul class="list-disc pl-5 text-muted-foreground space-y-2">
-            <li>Informations de compte (nom, email).</li>
-            <li>Informations liées au projet (ex. type de projet, préférences) lorsque vous les saisissez.</li>
-            <li>Messages échangés via la messagerie.</li>
-            <li>Données techniques nécessaires au fonctionnement (cookies de session, journaux techniques).</li>
-          </ul>
-        </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Finalités</h2>
-          <ul class="list-disc pl-5 text-muted-foreground space-y-2">
-            <li>Fournir et sécuriser l’accès à votre espace (authentification, session).</li>
-            <li>Permettre le suivi de votre projet et la communication avec l’équipe.</li>
-            <li>Gérer les transactions et justificatifs liés aux paiements.</li>
-            <li>Améliorer le service (diagnostic, prévention des abus).</li>
-          </ul>
-        </div>
-
-        <div class="bg-card border border-border rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-foreground mb-4">Contact</h2>
-          <p class="text-muted-foreground">
-            Pour toute question relative à vos données, vous pouvez nous écrire à
-            <a class="text-primary hover:underline" href={`mailto:${publicConfig.contactEmail}`}> {publicConfig.contactEmail}</a>.
-          </p>
-        </div>
-
-        <div class="text-sm text-muted-foreground text-center">
-          Dernière mise à jour : février 2026.
-        </div>
-      </div>
+      </footer>
     </div>
-  </section>
-
-  <FooterCustom />
+  </div>
 </MainLayout>
