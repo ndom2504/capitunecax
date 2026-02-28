@@ -1672,13 +1672,14 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
 
           <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()">
-            <div class="modal-box" style="max-width:720px;text-align:left;" onclick="event.stopPropagation()">
+            <div class="modal-box" style="max-width:720px;text-align:left;position:relative;" onclick="event.stopPropagation()">
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
                 <div class="team-avatar" id="tpAvatar" style="width:64px;height:64px;margin:0;"></div>
                 <div style="flex:1;">
                   <h3 style="margin:0 0 4px;" id="tpName">—</h3>
                   <p style="margin:0;color:#888;font-size:13px;" id="tpLocation">—</p>
                 </div>
+                <span id="tpCountryFlag" title="" style="font-size:34px;line-height:1;display:none;"></span>
                 <button class="btn-modal-cancel" type="button" onclick="closeTeamProfile()">Fermer</button>
               </div>
               <p style="margin:0 0 18px;color:#555;line-height:1.7;" id="tpBio"></p>
@@ -3897,6 +3898,56 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         setText('tpName', m.name || 'Conseiller CAPITUNE');
         setText('tpLocation', m.location ? ('📍 ' + m.location) : '');
         setText('tpBio', m.bio || '');
+
+        // Drapeau du pays déduit depuis le champ location
+        (function(){
+          var flagEl = document.getElementById('tpCountryFlag');
+          if (!flagEl) return;
+          var loc = String(m.location || '').trim();
+          if (!loc) { flagEl.style.display = 'none'; flagEl.textContent = ''; return; }
+          // Cherche la partie pays : après la dernière virgule, sinon toute la chaîne
+          var parts = loc.split(',');
+          var raw = parts[parts.length - 1].trim().toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[''\u2019]/g, "'");
+          var MAP = {
+            'canada':'CA','qc':'CA','ontario':'CA','montreal':'CA','quebec':'CA','levis':'CA','laval':'CA','gatineau':'CA','ottawa':'CA','toronto':'CA','vancouver':'CA','calgary':'CA','edmonton':'CA',
+            'france':'FR','paris':'FR',
+            'maroc':'MA','morocco':'MA',
+            'algerie':'DZ','algeria':'DZ',
+            'tunisie':'TN','tunisia':'TN',
+            'senegal':'SN',
+            "cote d'ivoire":'CI','ivory coast':'CI',
+            'cameroun':'CM','cameroon':'CM',
+            'congo':'CG','rdc':'CD','democratic republic of congo':'CD',
+            'gabon':'GA','madagascar':'MG','mali':'ML',
+            'guinee':'GN','guinea':'GN',
+            'togo':'TG','benin':'BJ','burkina faso':'BF','niger':'NE','tchad':'TD','chad':'TD',
+            'mauritanie':'MR','mauritania':'MR',
+            'etats-unis':'US','usa':'US','united states':'US',
+            'mexique':'MX','mexico':'MX',
+            'haiti':'HT','guadeloupe':'GP','martinique':'MQ','reunion':'RE',
+            'bresil':'BR','brazil':'BR',
+            'belgique':'BE','belgium':'BE',
+            'suisse':'CH','switzerland':'CH',
+            'luxembourg':'LU',
+            'espagne':'ES','spain':'ES',
+            'portugal':'PT','italie':'IT','italy':'IT',
+            'allemagne':'DE','germany':'DE',
+            'royaume-uni':'GB','uk':'GB','united kingdom':'GB',
+            'liban':'LB','lebanon':'LB',
+            'chine':'CN','china':'CN','inde':'IN','india':'IN'
+          };
+          var iso = MAP[raw];
+          if (!iso) {
+            flagEl.style.display = 'none'; flagEl.textContent = '';
+            return;
+          }
+          var flag = iso.split('').map(function(c){ return String.fromCodePoint(c.charCodeAt(0)-65+0x1F1E6); }).join('');
+          var countryNames = { CA:'Canada', FR:'France', MA:'Maroc', DZ:'Algérie', TN:'Tunisie', SN:'Sénégal', CI:"Côte d'Ivoire", CM:'Cameroun', CG:'Congo', CD:'RD Congo', GA:'Gabon', MG:'Madagascar', ML:'Mali', GN:'Guinée', TG:'Togo', BJ:'Bénin', BF:'Burkina Faso', NE:'Niger', TD:'Tchad', MR:'Mauritanie', US:'États-Unis', MX:'Mexique', HT:'Haïti', GP:'Guadeloupe', MQ:'Martinique', RE:'Réunion', BR:'Brésil', BE:'Belgique', CH:'Suisse', LU:'Luxembourg', ES:'Espagne', PT:'Portugal', IT:'Italie', DE:'Allemagne', GB:'Royaume-Uni', LB:'Liban', CN:'Chine', IN:'Inde' };
+          flagEl.textContent = flag;
+          flagEl.title = countryNames[iso] || iso;
+          flagEl.style.display = '';
+        })();
 
         // Meta (diplôme / compétences / expérience)
         var metaWrap = document.getElementById('tpMeta');
