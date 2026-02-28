@@ -125,8 +125,8 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           | undefined;
         try {
           existing = await db
-            .prepare(`SELECT id, name, role, account_type FROM users WHERE email = ?`)
-            .bind(email)
+            .prepare(`SELECT id, name, role, account_type FROM users WHERE email = ? AND account_type = ?`)
+            .bind(email, accountType)
             .first<{ id: string; name: string | null; role: string | null; account_type?: string | null }>();
         } catch {
           existing = await db
@@ -169,11 +169,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
                    oauth_provider='google',
                    oauth_id=?,
                    role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
-                   account_type = COALESCE(NULLIF(?, ''), account_type),
                    updated_at=datetime('now')
                  WHERE id=?`
               )
-              .bind(name, picture, profile.id ?? '', role, role, accountType, userId)
+              .bind(name, picture, profile.id ?? '', role, role, userId)
               .run();
           } catch (e: any) {
             const msg = String(e?.message ?? e ?? '');
@@ -234,7 +233,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         let existing: Array<{ id: string; name: string; role: string; account_type?: string | null }>;
         try {
           existing = await sql<{ id: string; name: string; role: string; account_type?: string | null }>
-            `SELECT id, name, role, account_type FROM users WHERE email = ${email} LIMIT 1`;
+            `SELECT id, name, role, account_type FROM users WHERE email = ${email} AND account_type = ${accountType} LIMIT 1`;
         } catch {
           const rows = await sql<{ id: string; name: string; role: string }>
             `SELECT id, name, role FROM users WHERE email = ${email} LIMIT 1`;
@@ -264,7 +263,6 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
                 oauth_provider = 'google',
                 oauth_id = ${profile.id ?? ''},
                 role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
-                account_type = ${accountType},
                 updated_at = now()
               WHERE id = ${userId}
             `;

@@ -41,10 +41,23 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     let account_type: 'client' | 'pro' = requestedAccountType;
 
     if (db) {
-      const user = await db
-        .prepare(`SELECT * FROM users WHERE email = ?`)
-        .bind(emailStr)
-        .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
+      let hasAccountTypeColumn = true;
+      let user:
+        | { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }
+        | null
+        | undefined;
+      try {
+        user = await db
+          .prepare(`SELECT * FROM users WHERE email = ? AND account_type = ?`)
+          .bind(emailStr, requestedAccountType)
+          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
+      } catch {
+        hasAccountTypeColumn = false;
+        user = await db
+          .prepare(`SELECT * FROM users WHERE email = ?`)
+          .bind(emailStr)
+          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
+      }
 
       if (!user) {
         // Auto-inscription si le compte n'existe pas (comportement MVP)
@@ -74,21 +87,9 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;
-        account_type = user.account_type === 'pro' ? 'pro' : requestedAccountType;
+        account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
         if (role === 'admin' && user.role !== 'admin') {
           await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(user.id).run();
-        }
-
-        // Permet de basculer le type de compte via l'écran de connexion
-        // (MVP: pas de validation/approbation).
-        try {
-          await db
-            .prepare(`UPDATE users SET account_type = ?, updated_at=datetime('now') WHERE id=?`)
-            .bind(requestedAccountType, user.id)
-            .run();
-          account_type = requestedAccountType;
-        } catch {
-          // Colonne pas encore dispo → ignorer
         }
         sessionToken = await createSessionAny(db, user.id);
       }
@@ -96,9 +97,18 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
 
-      const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
-        `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
-      const user = rows[0] ?? null;
+      let hasAccountTypeColumn = true;
+      let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null } | null;
+      try {
+        const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
+          `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} AND account_type = ${requestedAccountType} LIMIT 1`;
+        user = rows[0] ?? null;
+      } catch {
+        hasAccountTypeColumn = false;
+        const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
+          `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
+        user = rows[0] ?? null;
+      }
 
       if (!user) {
         const userId = uuid();
@@ -117,16 +127,9 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;
-        account_type = user.account_type === 'pro' ? 'pro' : requestedAccountType;
+        account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
         if (role === 'admin' && user.role !== 'admin') {
           await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
-        }
-
-        try {
-          await sql`UPDATE users SET account_type = ${requestedAccountType}, updated_at = now() WHERE id = ${user.id}`;
-          account_type = requestedAccountType;
-        } catch {
-          // Colonne pas encore dispo → ignorer
         }
         sessionToken = await createSessionAny(null, user.id);
       }

@@ -2134,8 +2134,22 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     window.useMyLocation = function(){
       try {
         if (!navigator.geolocation) { showToast('Géolocalisation non supportée sur ce navigateur.', 'error'); return; }
-        showToast('Localisation en cours…', 'info');
-        navigator.geolocation.getCurrentPosition(async function(pos){
+        try {
+          if (window.isSecureContext === false) { showToast('La géolocalisation nécessite HTTPS.', 'error'); return; }
+        } catch(_e0) {}
+
+        // Best-effort: si Permission API disponible, éviter un appel inutile quand c'est explicitement refusé.
+        try {
+          if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(function(res){
+              if (res && res.state === 'denied') {
+                showToast('Autorisation refusée. Autorisez la localisation dans les réglages du navigateur puis réessayez.', 'error');
+              }
+            }).catch(function(){ /* ignore */ });
+          }
+        } catch(_eP) {}
+
+        function applyPosition(pos){
           var lat = pos && pos.coords ? pos.coords.latitude : null;
           var lng = pos && pos.coords ? pos.coords.longitude : null;
           if (typeof lat !== 'number' || typeof lng !== 'number') { showToast('Impossible de récupérer la position.', 'error'); return; }
@@ -2143,23 +2157,27 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           var lngEl = document.getElementById('proLocationLng'); if (lngEl) lngEl.value = String(lng);
 
           // Best-effort reverse geocoding (sans clé)
-          try {
-            var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
-            var r = await fetch(url, { headers: { 'Accept': 'application/json' } });
-            var j = await r.json().catch(function(){ return null; });
-            var label = '';
-            if (j && j.address) {
-              var city = j.address.city || j.address.town || j.address.village || '';
-              var state = j.address.state || '';
-              var country = j.address.country || '';
-              label = [city, state].filter(Boolean).join(', ') || [state, country].filter(Boolean).join(', ');
-            }
-            var loc = document.getElementById('proLocation');
-            if (loc && label) loc.value = label;
-          } catch(_e) {}
+          (async function(){
+            try {
+              var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
+              var r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+              var j = await r.json().catch(function(){ return null; });
+              var label = '';
+              if (j && j.address) {
+                var city = j.address.city || j.address.town || j.address.village || '';
+                var state = j.address.state || '';
+                var country = j.address.country || '';
+                label = [city, state].filter(Boolean).join(', ') || [state, country].filter(Boolean).join(', ');
+              }
+              var loc = document.getElementById('proLocation');
+              if (loc && label) loc.value = label;
+            } catch(_e) {}
+          })();
 
           showToast('Position enregistrée (vous pouvez sauvegarder).', 'success');
-        }, function(err){
+        }
+
+        function formatGeoError(err){
           var msg = 'Erreur de géolocalisation.';
           try {
             if (err && err.code === 1) msg = 'Autorisation refusée. Vérifiez les permissions du navigateur (et du système) puis réessayez.';
@@ -2167,10 +2185,33 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             else if (err && err.code === 3) msg = 'Délai dépassé. Réessayez (ou désactivez le mode économie d\'énergie).';
           } catch(_e) {}
           try {
-            if (window.isSecureContext === false) msg += ' La géolocalisation nécessite HTTPS.';
+            var ua = (navigator && navigator.userAgent) ? navigator.userAgent : '';
+            if (err && err.code === 2 && /Windows/i.test(ua)) {
+              msg += ' (Windows : activez la Localisation dans Paramètres > Confidentialité et sécurité > Localisation.)';
+            }
           } catch(_e2) {}
-          showToast(msg, 'error');
-        }, { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
+          return msg;
+        }
+
+        showToast('Localisation en cours…', 'info');
+
+        // 1) D'abord en précision normale (souvent plus fiable sur desktop)
+        navigator.geolocation.getCurrentPosition(function(pos){
+          applyPosition(pos);
+        }, function(err1){
+          // 2) Retry en haute précision si indisponible/timeout
+          try {
+            if (err1 && (err1.code === 2 || err1.code === 3)) {
+              navigator.geolocation.getCurrentPosition(function(pos2){
+                applyPosition(pos2);
+              }, function(err2){
+                showToast(formatGeoError(err2 || err1), 'error');
+              }, { enableHighAccuracy:true, timeout:20000, maximumAge:0 });
+              return;
+            }
+          } catch(_eR) {}
+          showToast(formatGeoError(err1), 'error');
+        }, { enableHighAccuracy:false, timeout:20000, maximumAge:300000 });
       } catch(_e) {
         showToast('Erreur de géolocalisation.', 'error');
       }

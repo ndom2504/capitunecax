@@ -43,14 +43,25 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     let sessionToken: string;
 
     if (db) {
-      // Vérifier si l'email existe déjà
-      const existing = await db
-        .prepare(`SELECT id FROM users WHERE email = ?`)
-        .bind(emailStr)
-        .first<{ id: string }>();
+      // Vérifier si l'email existe déjà pour CE type de compte
+      let existing: { id: string } | null = null;
+      try {
+        existing =
+          (await db
+            .prepare(`SELECT id FROM users WHERE email = ? AND account_type = ?`)
+            .bind(emailStr, account_type)
+            .first<{ id: string }>()) ?? null;
+      } catch {
+        // Migration pas encore appliquée → fallback à l'unicité email
+        existing =
+          (await db
+            .prepare(`SELECT id FROM users WHERE email = ?`)
+            .bind(emailStr)
+            .first<{ id: string }>()) ?? null;
+      }
 
       if (existing) {
-        return json({ message: 'Un compte avec cet email existe déjà.' }, 409);
+        return json({ message: 'Un compte avec cet email existe déjà pour ce profil.' }, 409);
       }
 
       const userId  = uuid();
@@ -81,9 +92,16 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
 
-      const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
-      if (existing[0]) {
-        return json({ message: 'Un compte avec cet email existe déjà.' }, 409);
+      try {
+        const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} AND account_type = ${account_type} LIMIT 1`;
+        if (existing[0]) {
+          return json({ message: 'Un compte avec cet email existe déjà pour ce profil.' }, 409);
+        }
+      } catch {
+        const existing = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
+        if (existing[0]) {
+          return json({ message: 'Un compte avec cet email existe déjà.' }, 409);
+        }
       }
 
       const userId  = uuid();

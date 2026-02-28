@@ -142,8 +142,8 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         let existing: { id: string } | null | undefined;
         try {
           existing = await db
-            .prepare(`SELECT id, account_type FROM users WHERE email = ?`)
-            .bind(emailStr)
+            .prepare(`SELECT id, account_type FROM users WHERE email = ? AND account_type = ?`)
+            .bind(emailStr, accountType)
             .first<{ id: string; account_type?: string | null }>();
         } catch {
           existing = await db
@@ -180,11 +180,10 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
                    oauth_provider='microsoft',
                    oauth_id=?,
                    role = CASE WHEN ? = 'admin' THEN 'admin' ELSE COALESCE(role, ?) END,
-                   account_type = COALESCE(NULLIF(?, ''), account_type),
                    updated_at=datetime('now')
                  WHERE id=?`
               )
-              .bind(name, profile.id ?? '', role, role, accountType, userId)
+              .bind(name, profile.id ?? '', role, role, userId)
               .run();
           } catch (e: any) {
             const msg = String(e?.message ?? e ?? '');
@@ -239,7 +238,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
         let existing: Array<{ id: string; account_type?: string | null }>;
         try {
-          existing = await sql<{ id: string; account_type?: string | null }>`SELECT id, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
+          existing = await sql<{ id: string; account_type?: string | null }>`SELECT id, account_type FROM users WHERE email = ${emailStr} AND account_type = ${accountType} LIMIT 1`;
         } catch {
           const rows = await sql<{ id: string }>`SELECT id FROM users WHERE email = ${emailStr} LIMIT 1`;
           existing = rows as unknown as Array<{ id: string; account_type?: string | null }>;
@@ -267,7 +266,6 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
                 oauth_provider = 'microsoft',
                 oauth_id = ${profile.id ?? ''},
                 role = CASE WHEN ${role} = 'admin' THEN 'admin' ELSE role END,
-                account_type = ${accountType},
                 updated_at = now()
               WHERE id = ${userId}
             `;
