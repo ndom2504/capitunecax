@@ -3745,6 +3745,20 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         if (profile.notif_rdv   !== undefined && document.getElementById('notif-rdv'))   document.getElementById('notif-rdv').checked   = profile.notif_rdv;
         if (profile.notif_msg   !== undefined && document.getElementById('notif-msg'))   document.getElementById('notif-msg').checked   = profile.notif_msg;
 
+        // Avatar : DB prioritaire sur localStorage ; si DB vide → syncer le localStorage vers DB
+        var dbAvatar = String(profile.avatar_key || '').trim();
+        var lsAvatar = String(localStorage.getItem('capitune_avatar') || '').trim();
+        if (dbAvatar && (/^https?:\/\//i.test(dbAvatar) || /^data:image\//i.test(dbAvatar))) {
+          // DB a un avatar valide → appliquer et mettre à jour localStorage
+          applyAvatar(dbAvatar);
+          try { localStorage.setItem('capitune_avatar', dbAvatar); } catch(e) {}
+          var btnRm = document.getElementById('btnRemovePhoto');
+          if (btnRm) btnRm.style.display = '';
+        } else if (lsAvatar && (/^data:image\//i.test(lsAvatar) || /^https?:\/\//i.test(lsAvatar))) {
+          // localStorage a un avatar mais DB est vide → syncer vers DB maintenant
+          dbSync('/api/user/profile', 'PUT', { avatar_key: lsAvatar });
+        }
+
         // Devise + premium
         if (profile.currency_code) {
           window.__currencyCode = String(profile.currency_code || 'CAD').toUpperCase();
