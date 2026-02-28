@@ -261,38 +261,58 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .toggle-row{display:flex;gap:0;border:2px solid var(--cap-orange);border-radius:10px;overflow:hidden;width:fit-content;margin-bottom:28px;}
       .toggle-row button{padding:9px 24px;border:none;background:#fff;color:var(--cap-orange);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
       .toggle-row button.active{background:var(--cap-orange);color:#fff;}
-      /* === PACK CARDS — MODERN SAAS DESIGN === */
-      .packs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px;align-items:stretch;}
-      .pack-card{background:#fff;border-radius:16px;border:1px solid #e5e7eb;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);display:flex;flex-direction:column;position:relative;transition:all .3s ease;overflow:hidden;}
-      .pack-card:hover{transform:translateY(-4px);box-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04);}
-      .pack-card.popular-card{border:2px solid var(--cap-orange);box-shadow:0 8px 15px -3px rgba(255,148,8,0.2);}
-      .pack-popular-badge{position:absolute;top:0;left:50%;transform:translateX(-50%);background:var(--cap-orange);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 16px;border-radius:0 0 8px 8px;}
-      .pack-header{padding:32px 24px 20px;text-align:center;border-bottom:1px solid #f3f4f6;}
-      .pack-header-name{font-size:1.25rem;font-weight:700;color:#111827;margin:0 0 8px;}
-      .pack-header-desc{font-size:0.875rem;color:#6b7280;margin:0;min-height:40px;}
-      .pack-price-row{margin:20px 0 0;display:flex;align-items:baseline;justify-content:center;gap:4px;}
-      /* === PACK CARDS (Style Bootstrap) === */
-      .packs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:40px;align-items:start;}
-      .pack-card{background:#fff;border-radius:15px;padding:24px;box-shadow:0 8px 25px rgba(0,0,0,0.05);border:2px solid transparent;transition:0.3s;position:relative;display:flex;flex-direction:column;cursor:pointer;}
-      .pack-card[data-pack="tourisme"]{--pack-accent:var(--cap-blue);}
-      .pack-card[data-pack="essentiel"]{--pack-accent:var(--cap-green);}
-      .pack-card[data-pack="standard"]{--pack-accent:var(--cap-orange);}
-      .pack-card[data-pack="premium"]{--pack-accent:var(--cap-dark);}
-      .pack-card:hover{transform:translateY(-5px);}
-      .pack-card.selected{border:2px solid #ff8c00;}
+      /* === CAROUSEL PACKS (client) === */
+      .pack-carousel-wrapper{display:flex;align-items:center;gap:18px;}
+      .carousel-track-wrap{flex:1;overflow:hidden;border-radius:22px;}
+      .carousel-track{display:flex;transition:transform .45s cubic-bezier(.25,.8,.25,1);will-change:transform;}
+      .carousel-slide{min-width:100%;box-sizing:border-box;}
+      .cs-card{display:grid;grid-template-columns:340px 1fr;min-height:460px;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,0.13);}
+      @media(max-width:860px){.cs-card{grid-template-columns:1fr;}}
+      .cs-left{padding:42px 38px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;}
+      .cs-left[data-pack="tourisme"]{background:var(--cap-blue);}
+      .cs-left[data-pack="essentiel"]{background:var(--cap-green);}
+      .cs-left[data-pack="standard"]{background:var(--cap-orange);}
+      .cs-left[data-pack="premium"]{background:var(--cap-dark);}
+      .cs-left[data-pack="emploi"]{background:#e67e22;}
+      .cs-emoji{font-size:2.8rem;margin-bottom:12px;}
+      .cs-name{font-size:2rem;font-weight:900;margin:0 0 8px;line-height:1.1;}
+      .cs-desc{font-size:14px;opacity:.88;margin:0 0 22px;line-height:1.65;}
+      .cs-price-block{}
+      .cs-price{font-size:3.2rem;font-weight:900;line-height:1;}
+      .cs-price sub{font-size:15px;font-weight:600;opacity:.8;vertical-align:super;}
+      .cs-popular-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.22);border-radius:999px;padding:4px 14px;font-size:11px;font-weight:800;margin-top:10px;}
+      .cs-btn{margin-top:30px;background:#fff;border:none;border-radius:13px;padding:15px 28px;font-size:15px;font-weight:800;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+      .cs-left[data-pack="tourisme"] .cs-btn{color:var(--cap-blue);}
+      .cs-left[data-pack="essentiel"] .cs-btn{color:var(--cap-green);}
+      .cs-left[data-pack="standard"] .cs-btn{color:var(--cap-orange);}
+      .cs-left[data-pack="premium"] .cs-btn{color:var(--cap-dark);}
+      .cs-left[data-pack="emploi"] .cs-btn{color:#e67e22;}
+      .cs-btn:hover{opacity:.92;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.18);}
+      .cs-btn.selected-pack{opacity:1;box-shadow:0 0 0 3px rgba(255,255,255,0.8);}
+      .cs-right{padding:36px 38px;background:#fafafa;display:flex;flex-direction:column;overflow-y:auto;}
+      .cs-right-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#aaa;margin:0 0 14px;}
+      .cs-svc-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;flex:1;}
+      .cs-svc-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:background .15s;}
+      .cs-svc-item:hover{background:#fff0de;}
+      .cs-svc-item input[type="checkbox"]{accent-color:var(--cap-orange);width:17px;height:17px;cursor:pointer;flex-shrink:0;}
+      .cs-svc-name{flex:1;font-size:14px;color:#333;line-height:1.4;}
+      .cs-svc-price{font-size:12px;color:#bbb;font-weight:600;white-space:nowrap;}
+      .cs-bottom{margin-top:20px;padding-top:16px;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+      .cs-subtotal-label{font-size:13px;color:#888;}
+      .cs-subtotal-val{font-size:20px;font-weight:900;color:var(--cap-orange);}
+      /* Carousel navigation */
+      .carousel-arrow{width:48px;height:48px;border-radius:50%;background:#fff;border:2px solid #e8e8e8;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 14px rgba(0,0,0,0.09);transition:.2s;flex-shrink:0;color:#555;line-height:1;padding:0;}
+      .carousel-arrow:hover{border-color:var(--cap-orange);color:var(--cap-orange);box-shadow:0 4px 18px rgba(255,148,8,0.22);}
+      .carousel-arrow:disabled{opacity:.28;pointer-events:none;}
+      .carousel-dots{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;}
+      .carousel-dot{width:10px;height:10px;border-radius:50%;background:#ddd;cursor:pointer;transition:.25s;border:none;padding:0;}
+      .carousel-dot.active{background:var(--cap-orange);transform:scale(1.4);}
+      /* Legacy compat */
       .nowrap{white-space:nowrap;}
-      .pack-head{margin:-24px -24px 16px;padding:16px 18px;border-radius:13px 13px 0 0;background:var(--pack-accent,#ff8c00);color:#fff;}
-      .pack-head h4{margin:0 0 6px;font-size:1.15rem;font-weight:800;color:#fff;}
-      .pack-head p.text-muted{margin:0;font-size:13px;color:rgba(255,255,255,0.85);}
-      .pack-body{display:flex;flex-direction:column;gap:0;}
-      .pack-price{font-size:28px;font-weight:bold;color:#ff8c00;margin-bottom:16px;}
-      .pack-card hr{border:0;border-top:1px solid #eee;margin:0 0 16px;}
-      .pack-svc-item{display:flex;align-items:center;gap:10px;font-size:14px;color:#333;padding:6px 0;cursor:pointer;}
-      .pack-svc-item input[type="checkbox"]{margin:0;cursor:pointer;}
       .option-price{font-size:14px;color:#777;margin-left:auto;}
-      .pack-svc-subtotal{text-align:right;font-weight:700;color:#ff8c00;margin-top:10px;font-size:14px;display:none;} /* Hidden as per new design */
-      .pack-expand-toggle{display:none;} /* Hidden as per new design */
-      .pack-detail-panel{display:block;} /* Always visible as per new design */
+      .pack-svc-subtotal{display:none;}
+      .pack-expand-toggle{display:none;}
+      .pack-detail-panel{display:block;}
       .services-carte-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
       .service-carte-item{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border:2px solid transparent;cursor:pointer;transition:.2s;}
       .service-carte-item:hover{border-color:#ddd;}
@@ -1133,13 +1153,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
           <div id="view-packs">
             <div class="section-title-block">
-              <h2>Nos Packs d Accompagnement</h2>
+              <h2>Nos Packs d'Accompagnement</h2>
               <div class="title-line"></div>
-              <p>Un pack couvre toutes les etapes necessaires a votre projet.</p>
+              <p>Faites défiler pour découvrir chaque pack — choisissez celui qui correspond à votre projet.</p>
             </div>
-            <div class="packs-grid" id="packsGrid">
-              <!-- Packs injectes par JS depuis service-catalog -->
+            <div class="pack-carousel-wrapper">
+              <button class="carousel-arrow" id="carouselPrev" onclick="carouselNav(-1)" aria-label="Pack précédent">&#8249;</button>
+              <div class="carousel-track-wrap">
+                <div class="carousel-track" id="carouselTrack"><!-- injecté par renderPacks() --></div>
+              </div>
+              <button class="carousel-arrow" id="carouselNext" onclick="carouselNav(1)" aria-label="Pack suivant">&#8250;</button>
             </div>
+            <div class="carousel-dots" id="carouselDots"></div>
           </div>
           <div id="view-carte" style="display:none;">
             <div class="section-title-block">
@@ -2140,44 +2165,91 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
 
     //  Rendu dynamique des packs (Style Bootstrap)
+// ─── Carousel state ─────────────────────────────────────────────────────
+    var _carIdx = 0;
+
     function renderPacks() {
-      var grid = document.getElementById('packsGrid');
-      if (!grid) return;
-      
-      grid.innerHTML = PACKS.map(function(p) {
-        var isPremium = p.id === 'premium';
-        var isPopular = p.popular;
-        
-        var detailSvcs = p.services.map(function(s) {
-          return '<label class="pack-svc-item">'
-            + '<input type="checkbox" class="option" data-pid="'+p.id+'" data-sid="'+s.id+'" data-price="'+s.price+'" onchange="togglePackSvc(\''+p.id+'\',\''+s.id+'\','+s.price+', this)">'
-            + ' ' + escHtml(s.name)
-            + '<span class="option-price">'+formatMoney(s.price)+'</span>'
-            + '</label>';
+      var track = document.getElementById('carouselTrack');
+      var dotsEl = document.getElementById('carouselDots');
+      if (!track) return;
+
+      _carIdx = 0;
+
+      track.innerHTML = PACKS.map(function(p, i) {
+        var svcsHtml = p.services.map(function(s) {
+          return '<li class="cs-svc-item" onclick="event.stopPropagation()">' +
+            '<input type="checkbox" class="option" id="cs-cb-'+p.id+'-'+s.id+'" data-pid="'+p.id+'" data-sid="'+s.id+'" data-price="'+s.price+'" onchange="togglePackSvc(\''+p.id+'\',\''+s.id+'\','+s.price+', this)">' +
+            '<span class="cs-svc-name">'+escHtml(s.name)+'</span>' +
+            '<span class="cs-svc-price cs-svc-price-tag">'+formatMoney(s.price)+'</span>' +
+            '</li>';
         }).join('');
 
-        var descHtml = escHtml(p.desc || '');
-        descHtml = descHtml.replace(/de\s+(A\s+(?:à|a)\s+Z)/gi, function(_m, grp) {
-          return 'de <span class="nowrap">' + escHtml(grp) + '</span>';
-        });
+        var popularBadge = p.popular
+          ? '<div class="cs-popular-badge">&#11088; Le plus populaire</div>'
+          : '';
 
-        return (
-          '<div class="pack-card" data-pack="'+p.id+'" id="pack-'+p.id+'" onclick="if(!event.target.closest(\'.pack-svc-item\')) setPackMode(\''+p.id+'\','+p.price+',\'full\')">'
-          + '<div class="pack-head">'
-          + '<h4>'+escHtml(p.name)+'</h4>'
-          + '<p class="text-muted">'+descHtml+'</p>'
-          + '</div>'
-          + '<div class="pack-body">'
-          + '<div class="pack-price" data-base="'+p.price+'">'+formatMoney(p.price)+'</div>'
-          + '<hr>'
-          + '<div>'
-          + detailSvcs
-          + '</div>'
-          + '</div>'
-          + '</div>'
-        );
+        return '<div class="carousel-slide">' +
+          '<div class="cs-card">' +
+            '<div class="cs-left" data-pack="'+p.id+'">' +
+              '<div>' +
+                '<div class="cs-emoji">'+escHtml(p.badge||'📦')+'</div>' +
+                '<div class="cs-name">'+escHtml(p.name)+'</div>' +
+                '<div class="cs-desc">'+escHtml(p.desc||'')+'</div>' +
+              '</div>' +
+              '<div class="cs-price-block">' +
+                '<div class="cs-price"><sub>$</sub>'+p.price.toLocaleString('fr-CA')+'<sub style="font-size:13px"> CAD</sub></div>' +
+                popularBadge +
+              '</div>' +
+              '<button class="cs-btn pack-price" id="pack-'+p.id+'" data-base="'+p.price+'" onclick="setPackMode(\''+p.id+'\','+p.price+',\'full\')">' +
+                '&#10003; Choisir ce pack' +
+              '</button>' +
+            '</div>' +
+            '<div class="cs-right">' +
+              '<div class="cs-right-label">Services inclus &mdash; personnalisez votre sélection</div>' +
+              '<ul class="cs-svc-list">' + svcsHtml + '</ul>' +
+              '<div class="cs-bottom">' +
+                '<span class="cs-subtotal-label">Sous-total sélectionné</span>' +
+                '<span class="cs-subtotal-val" id="cs-sub-'+p.id+'">'+formatMoney(p.price)+'</span>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
+
+      // Dots
+      if (dotsEl) {
+        dotsEl.innerHTML = PACKS.map(function(_p, i) {
+          return '<button class="carousel-dot' + (i===0?' active':'') + '" onclick="carouselGoTo('+i+')" aria-label="Pack '+(i+1)+'"></button>';
+        }).join('');
+      }
+
+      // Reset position
+      track.style.transform = 'translateX(0)';
+      _updateCarouselArrows();
     }
+
+    function _updateCarouselArrows() {
+      var prev = document.getElementById('carouselPrev');
+      var next = document.getElementById('carouselNext');
+      if (prev) prev.disabled = _carIdx === 0;
+      if (next) next.disabled = _carIdx === PACKS.length - 1;
+      // Active dot
+      document.querySelectorAll('.carousel-dot').forEach(function(d, i) {
+        d.classList.toggle('active', i === _carIdx);
+      });
+    }
+
+    window.carouselNav = function(dir) {
+      carouselGoTo(_carIdx + dir);
+    };
+
+    window.carouselGoTo = function(idx) {
+      if (idx < 0 || idx >= PACKS.length) return;
+      _carIdx = idx;
+      var track = document.getElementById('carouselTrack');
+      if (track) track.style.transform = 'translateX(-' + (_carIdx * 100) + '%)';
+      _updateCarouselArrows();
+    };
 
     function restorePackOptionChecks() {
       try {
@@ -3072,27 +3144,19 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     };
 
     window.selectPack = function(packId, price) {
-      document.querySelectorAll('.pack-card').forEach(function(c){c.classList.remove('selected');});
-      document.querySelectorAll('.service-carte-item').forEach(function(c){c.classList.remove('selected');});
-      ST.carte={};
-      var card=document.getElementById('pack-'+packId);
-      if(card) card.classList.add('selected');
-      ST.pack=packId; ST.packPrice=price; ST.packMode='full'; ST.packItemsSelected={};
-      updateServiceTotal();
+      setPackMode(packId, price, 'full');
     };
 
     window.setPackMode = function(packId, packPrice, mode) {
-      document.querySelectorAll('.pack-card').forEach(function(c){c.classList.remove('selected');});
+      document.querySelectorAll('.cs-btn').forEach(function(b){b.classList.remove('selected-pack');b.textContent='\u2713 Choisir ce pack';});
       document.querySelectorAll('.service-carte-item').forEach(function(c){c.classList.remove('selected');});
       ST.carte={};
-      var card=document.getElementById('pack-'+packId);
-      if(card) card.classList.add('selected');
-      ST.pack=packId; ST.packMode='full'; // Always full base price + options
-      
-      ST.packPrice=parseInt(packPrice,10); 
+      var btn = document.getElementById('pack-'+packId);
+      if(btn){btn.classList.add('selected-pack');btn.textContent='\u2705 Pack s\u00e9lectionn\u00e9';}
+      ST.pack=packId; ST.packMode='full';
+      ST.packPrice=parseInt(packPrice,10);
       ST.packItemsSelected={};
       document.querySelectorAll('.option').forEach(function(cb){cb.checked=false;});
-      
       updateServiceTotal();
     };
 
@@ -3120,6 +3184,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var pack = PACKS.find(function(p){return p.id===packId;});
       var basePrice = pack ? pack.price : 0;
       ST.packPrice = basePrice + sub;
+      // Mise à jour du sous-total visible dans le carousel
+      var subEl = document.getElementById('cs-sub-'+packId);
+      if (subEl) subEl.textContent = formatMoney(ST.packPrice);
     }
 
     window.toggleCarte = function(id, price) {
@@ -3158,7 +3225,11 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           if(el) el.textContent=txt;
         }
       }
-      if(ST.pack) { var c=document.getElementById('pack-'+ST.pack); if(c) c.classList.add('selected'); }
+      if(ST.pack) {
+        document.querySelectorAll('.cs-btn').forEach(function(b){b.classList.remove('selected-pack');b.textContent='\u2713 Choisir ce pack';});
+        var c=document.getElementById('pack-'+ST.pack);
+        if(c){c.classList.add('selected-pack');c.textContent='\u2705 Pack s\u00e9lectionn\u00e9';}
+      }
       Object.keys(ST.carte).forEach(function(id){ var c=document.getElementById('carte-'+id); if(c) c.classList.add('selected'); });
       updateServiceTotal();
     }
