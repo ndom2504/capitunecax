@@ -108,6 +108,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .tab-hero h1{color:#fff;font-size:2rem;margin:0 0 8px;}
       .tab-hero p{color:rgba(255,255,255,0.7);margin:0;}
       .dash-container{max-width:1100px;margin:0 auto;padding:40px 30px;}
+
+      html, body{height:100%;}
+      body.dashboard-body{min-height:100vh;display:flex;flex-direction:column;}
+      #dashMain{flex:1 0 auto;}
       /* HEADER */
       .dash-header{background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);padding:0 30px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
       .dash-header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:62px;}
@@ -2338,9 +2342,18 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           }
         }
         // Onglet de depart
+        // En mode PRO, l'onglet "projet" est caché : on démarre sur le dashboard.
+        var isProUI = document.body && document.body.classList.contains('is-pro-mode');
+        if (isProUI) {
+          switchTab('dashboard');
+          return;
+        }
         if (ST.projet && ST.projet.type) switchTab('services');
         else switchTab('projet');
-      } catch(e) { switchTab('projet'); }
+      } catch(e) {
+        var isProUI2 = document.body && document.body.classList.contains('is-pro-mode');
+        switchTab(isProUI2 ? 'dashboard' : 'projet');
+      }
     }
 
     function restoreProjetForm(d) {
