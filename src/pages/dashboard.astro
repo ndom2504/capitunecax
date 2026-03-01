@@ -1279,27 +1279,33 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
           </div>
 
           <div id="client-mode-payments" style={isProMode ? 'display:none' : ''}>
-          <div id="paiement-locked-view">
-            <div class="paiement-locked">
-              <i class="fa fa-lock"></i>
-              <h3 style="color:#bbb;margin:0 0 10px;">Aucun service selectionne</h3>
-              <p style="margin:0 0 20px;">Choisissez d abord un pack ou des services a la carte.</p>
-              <button onclick="switchTab('services')" style="background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-weight:600;">
+
+            <!-- Bannière contextuelle (visible si aucun service sélectionné) -->
+            <div id="paiement-locked-notice" style="display:none;margin-bottom:24px;background:linear-gradient(135deg,#fff8f0,#fff3e6);border:2px solid var(--cap-orange);border-radius:14px;padding:20px 24px;align-items:center;gap:18px;">
+              <i class="fa fa-info-circle" style="font-size:1.8rem;color:var(--cap-orange);flex-shrink:0;"></i>
+              <div style="flex:1;">
+                <strong style="color:var(--cap-dark);font-size:15px;">Aucun service sélectionné</strong>
+                <p style="margin:4px 0 0;color:#777;font-size:13px;">Choisissez d'abord un pack dans l'onglet Services pour activer le paiement.</p>
+              </div>
+              <button onclick="switchTab('services')" style="background:var(--cap-orange);color:#fff;border:none;border-radius:9px;padding:10px 20px;cursor:pointer;font-weight:700;font-size:13px;white-space:nowrap;">
                 <i class="fa fa-briefcase"></i> Choisir un service
               </button>
             </div>
-          </div>
-          <div id="paiement-active-view" style="display:none;">
+
+            <div id="paiement-active-view">
+            <!-- Récapitulatif (masqué si total = 0) -->
+            <div id="payment-summary-card-wrap" style="display:none;">
             <div class="payment-summary-card">
-              <h3><i class="fa fa-shopping-cart" style="color:var(--cap-orange);"></i> Recapitulatif de commande</h3>
+              <h3><i class="fa fa-shopping-cart" style="color:var(--cap-orange);"></i> Récapitulatif de commande</h3>
               <div id="payment-lines"></div>
               <div class="payment-line">
                 <span>Total</span>
                 <span id="payment-total-amount">0 $</span>
               </div>
             </div>
+            </div>
             <div class="section-title-block">
-              <h2>Methode de paiement</h2>
+              <h2>Méthode de paiement</h2>
               <div class="title-line"></div>
             </div>
             <div class="payment-methods">
@@ -1382,6 +1388,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             <p style="text-align:center;font-size:12px;color:#aaa;margin-top:12px;">
               <i class="fa fa-shield"></i> Paiement 100% sécurisé &mdash; Données chiffrées SSL
             </p>
+          </div>
           </div>
           </div>
         </div>
@@ -3477,10 +3484,17 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     //  PAIEMENTS 
     function refreshPaiementsView() {
       var total=computeTotal();
-      var locked=document.getElementById('paiement-locked-view');
-      var active=document.getElementById('paiement-active-view');
-      if(total===0){if(locked)locked.style.display='';if(active)active.style.display='none';return;}
-      if(locked)locked.style.display='none';if(active)active.style.display='';
+      var notice=document.getElementById('paiement-locked-notice');
+      var summaryWrap=document.getElementById('payment-summary-card-wrap');
+      var btnPay=document.getElementById('btn-pay-stripe');
+      var hasTotal=(total>0);
+      // Bannière d'avertissement si aucun service
+      if(notice) notice.style.display=hasTotal?'none':'flex';
+      // Récapitulatif seulement si service sélectionné
+      if(summaryWrap) summaryWrap.style.display=hasTotal?'':'none';
+      // Bouton Payer : désactivé + grisé si total = 0
+      if(btnPay){ btnPay.disabled=!hasTotal; btnPay.style.opacity=hasTotal?'1':'0.45'; btnPay.style.cursor=hasTotal?'pointer':'not-allowed'; }
+      if(!hasTotal) return;
       var linesEl=document.getElementById('payment-lines');
       if(linesEl){
         linesEl.innerHTML='';
