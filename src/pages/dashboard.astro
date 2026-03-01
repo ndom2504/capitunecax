@@ -433,6 +433,34 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
       .dash-footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
       .dash-footer nav a{color:rgba(255,255,255,0.4);text-decoration:none;font-size:12px;margin-left:16px;}
       .dash-footer nav a:hover{color:rgba(255,255,255,0.8);}
+      /* VIDEOS DASHBOARD */
+      .dash-videos-row{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px;}
+      .dash-video-card{background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.08);overflow:hidden;}
+      .dash-video-label{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;}
+      .dash-video-label i{color:var(--cap-orange);font-size:16px;}
+      .dash-video-label strong{font-size:14px;color:#1a1a2e;font-weight:700;}
+      .dash-video-label small{font-size:11px;color:#aaa;margin-left:auto;}
+      .dash-video-screen{position:relative;aspect-ratio:16/9;background:#000;}
+      .dash-video-screen video{width:100%;height:100%;object-fit:cover;display:block;}
+      .dash-video-yt{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-top:1px solid #f5f5f5;font-size:12.5px;font-weight:700;color:#cc0000;text-decoration:none;font-family:inherit;transition:background .2s;}
+      .dash-video-yt:hover{background:#fff5f5;color:#aa0000;}
+      .dash-video-yt .fa-youtube-play{font-size:17px;}
+      @media(max-width:700px){.dash-videos-row{grid-template-columns:1fr;}}
+      /* BULLE BIENVENUE */
+      .welcome-bubble-wrap{position:fixed;bottom:88px;right:24px;z-index:1200;display:flex;flex-direction:column;align-items:flex-end;gap:0;}
+      .welcome-bubble{background:#fff;border-radius:16px 16px 4px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:16px 18px 14px;max-width:270px;position:relative;animation:bubblePop .35s cubic-bezier(.34,1.56,.64,1) both;}
+      .welcome-bubble::after{content:'';position:absolute;bottom:-10px;right:18px;border:5px solid transparent;border-top-color:#fff;border-bottom:0;}
+      .welcome-bubble-title{font-size:13px;font-weight:700;color:#1a1a2e;margin:0 0 5px;display:flex;align-items:center;gap:7px;}
+      .welcome-bubble-title img{width:20px;height:20px;border-radius:50%;}
+      .welcome-bubble-body{font-size:12.5px;color:#555;line-height:1.55;margin:0 0 10px;}
+      .welcome-bubble-actions{display:flex;gap:8px;justify-content:flex-end;}
+      .welcome-bubble-reply{font-size:12px;font-weight:600;color:var(--cap-orange);background:none;border:1.5px solid var(--cap-orange);border-radius:20px;padding:5px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:.2s;}
+      .welcome-bubble-reply:hover{background:var(--cap-orange);color:#fff;}
+      .welcome-bubble-close{position:absolute;top:8px;right:10px;background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0;}
+      .welcome-bubble-close:hover{color:#888;}
+      .welcome-bubble-avatar{width:36px;height:36px;background:linear-gradient(135deg,#ff9408,#1a1a2e);border-radius:50%;display:flex;align-items:center;justify-content:center;align-self:flex-end;margin-top:6px;box-shadow:0 4px 12px rgba(255,148,8,.35);}
+      .welcome-bubble-avatar i{font-size:18px;color:#fff;}
+      @keyframes bubblePop{from{opacity:0;transform:scale(.7) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
       /* BOUTON ANNULATION DEMANDE */
       .btn-cancel-demande{background:transparent;border:1.5px solid #e74c3c;color:#e74c3c;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s;}
       .btn-cancel-demande:hover{background:#fdf3f2;border-color:#c0392b;color:#c0392b;}
@@ -671,6 +699,40 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
             <div class="trend-box">
               <h3><i class="fa fa-bar-chart"></i> Domaines les plus demandés (30 jours)</h3>
               <ul class="trend-list" id="dashTrendingDomains"></ul>
+            </div>
+
+            <!-- Vidéos guides -->
+            <div class="dash-videos-row">
+              <div class="dash-video-card">
+                <div class="dash-video-label">
+                  <i class="fa fa-suitcase"></i>
+                  <strong>Guide : Pr&eacute;paration au D&eacute;part</strong>
+                  <small>Gratuit</small>
+                </div>
+                <div class="dash-video-screen">
+                  <video autoplay muted loop playsinline preload="auto">
+                    <source src="/templatemo_473_november/video/preparation-depart.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <a href="https://youtube.com/@capitune-b7n?si=ERrv2gwAnxKfn89x" target="_blank" rel="noopener" class="dash-video-yt">
+                  <i class="fa fa-youtube-play"></i> Voir sur YouTube
+                </a>
+              </div>
+              <div class="dash-video-card">
+                <div class="dash-video-label">
+                  <i class="fa fa-home"></i>
+                  <strong>Guide : Int&eacute;gration Canada</strong>
+                  <small>Gratuit</small>
+                </div>
+                <div class="dash-video-screen">
+                  <video autoplay muted loop playsinline preload="auto">
+                    <source src="/templatemo_473_november/video/integration-canada.mp4" type="video/mp4" />
+                  </video>
+                </div>
+                <a href="https://youtube.com/@capitune-b7n?si=ERrv2gwAnxKfn89x" target="_blank" rel="noopener" class="dash-video-yt">
+                  <i class="fa fa-youtube-play"></i> Voir sur YouTube
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -1949,6 +2011,21 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
       <i class="fa fa-comments"></i>
     </button>
 
+    <!-- BULLE BIENVENUE -->
+    <div class="welcome-bubble-wrap" id="welcomeBubbleWrap" style="display:none;">
+      <div class="welcome-bubble" id="welcomeBubble">
+        <button class="welcome-bubble-close" onclick="document.getElementById('welcomeBubbleWrap').style.display='none'" aria-label="Fermer">&times;</button>
+        <div class="welcome-bubble-title">
+          <i class="fa fa-flag" style="color:var(--cap-orange);"></i> CAPITUNE
+        </div>
+        <p class="welcome-bubble-body">Bienvenue dans votre espace CAPITUNE.<br />Votre projet Canada commence ici. Posez vos questions ou parcourez nos guides gratuits.</p>
+        <div class="welcome-bubble-actions">
+          <a href="#" class="welcome-bubble-reply" onclick="document.getElementById('welcomeBubbleWrap').style.display='none'; switchTab('messagerie'); return false;"><i class="fa fa-reply"></i> R&eacute;pondre</a>
+        </div>
+      </div>
+      <div class="welcome-bubble-avatar"><i class="fa fa-leaf"></i></div>
+    </div>
+
     <script type="text/javascript" src="/templatemo_473_november/js/jquery-1.11.0.min.js"></script>
     <script>
     // ============================================================
@@ -2868,6 +2945,21 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
       initCountryAutocomplete();
       refreshDashboardView();
       confirmStripePremiumIfNeeded();
+      // Bulle de bienvenue — affichée une fois par session
+      (function(){
+        var wrap = document.getElementById('welcomeBubbleWrap');
+        if (!wrap) return;
+        if (sessionStorage.getItem('cap_welcome_seen')) { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'none';
+        setTimeout(function(){ wrap.style.display = 'flex'; }, 1800);
+        wrap.querySelector('.welcome-bubble-close').addEventListener('click', function(){
+          sessionStorage.setItem('cap_welcome_seen', '1');
+        });
+        var replyBtn = wrap.querySelector('.welcome-bubble-reply');
+        if (replyBtn) replyBtn.addEventListener('click', function(){
+          sessionStorage.setItem('cap_welcome_seen', '1');
+        });
+      })();
       try {
         var c = document.cookie.split(';').map(function(x){return x.trim();}).find(function(x){return x.startsWith('capitune_user=');});
         if (c) {
