@@ -1,0 +1,108 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { baseUrl } from '../lib/base-url';
+---
+
+<MainLayout>
+  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+
+  <div class="DesignHolder auth-page">
+    <div class="LayoutFrame">
+      <header class="auth-header">
+        <div class="Center">
+          <div class="site-logo">
+            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
+          </div>
+          <nav class="Navigation auth-nav">
+            <ul>
+              <li><a href={`${baseUrl}/`}>Accueil</a></li>
+              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
+              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
+            </ul>
+          </nav>
+          <div class="clear"></div>
+        </div>
+      </header>
+
+      <section class="AuthHero_sec">
+        <div class="Center">
+          <h1>Compte vérifié avec succès !</h1>
+          <p>Votre adresse courriel a été confirmée.</p>
+        </div>
+      </section>
+
+      <section class="Get_sec auth-sec">
+        <div class="Mid">
+          <div class="Leftside auth-form-side" style="max-width:480px;margin:0 auto;">
+
+            <div class="verify-card verify-card--success">
+              <div class="verify-icon verify-icon--success">
+                <i class="fa fa-check"></i>
+              </div>
+              <h2>Votre compte est activé !</h2>
+              <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 28px;">
+                Votre adresse courriel a été vérifiée avec succès. 
+                Vous pouvez maintenant vous connecter à votre espace Capitune.
+              </p>
+
+              <a href={`${baseUrl}/connexion`} class="btn-connexion-now">
+                <i class="fa fa-sign-in" style="margin-right:8px;"></i>
+                Se connecter maintenant
+              </a>
+
+              <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee;text-align:center;">
+                <a href={`${baseUrl}/`} style="color:#1f4b6e;font-size:13px;opacity:.65;text-decoration:none;">
+                  ← Retour à l'accueil
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</MainLayout>
+
+<style is:global>
+  .verify-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 40px 36px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09);
+    text-align: center;
+  }
+  .verify-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1f4b6e, #2d6a96);
+    color: #fff;
+    font-size: 30px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .verify-icon--success {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+  }
+  .verify-card h2 {
+    margin: 0 0 14px;
+    color: #1f4b6e;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .btn-connexion-now {
+    display: inline-block;
+    background: linear-gradient(135deg, #e87722, #d4631a);
+    color: #fff;
+    text-decoration: none;
+    padding: 13px 36px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    transition: opacity .2s;
+  }
+  .btn-connexion-now:hover { opacity: .88; }
+</style>

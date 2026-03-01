@@ -39,7 +39,20 @@ import { baseUrl } from '../lib/base-url';
         <div class="Mid">
           <div class="Leftside auth-form-side">
             <div class="auth-error" id="loginError">
-              <i class="fa fa-exclamation-circle"></i> Email ou mot de passe incorrect.
+              <i class="fa fa-exclamation-circle"></i> <span id="loginErrorMsg">Email ou mot de passe incorrect.</span>
+            </div>
+
+            <div class="auth-success" id="loginSuccess" style="display:none;">
+              <i class="fa fa-check-circle"></i> <span id="loginSuccessMsg"></span>
+            </div>
+
+            <div id="verify-email-notice" style="display:none;background:rgba(231,135,0,.1);border:1px solid rgba(231,135,0,.45);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
+              <p style="margin:0 0 6px;font-weight:700;color:#c05e00;font-size:13px;"><i class="fa fa-envelope"></i>&nbsp; Courriel non vérifié</p>
+              <p style="margin:0 0 10px;color:#a04a00;font-size:13px;">Vérifiez votre boîte de réception pour l'email envoyé à <strong id="unverified-email-label"></strong> et cliquez sur le lien de confirmation.</p>
+              <button id="resend-verify-btn" style="background:#e87722;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;" type="button">
+                <i class="fa fa-refresh" id="resend-verify-icon"></i>&nbsp; Renvoyer l'email
+              </button>
+              <span id="resend-verify-msg" style="font-size:12px;margin-left:10px;vertical-align:middle;"></span>
             </div>
 
             <form id="loginForm">
@@ -124,7 +137,8 @@ import { baseUrl } from '../lib/base-url';
   const errorEl = document.getElementById('loginError');
   const showError = (message: string) => {
     if (!errorEl) return;
-    errorEl.textContent = message;
+    const msgEl = document.getElementById('loginErrorMsg');
+    if (msgEl) msgEl.textContent = message;
     errorEl.classList.add('show');
   };
   const hideError = () => {
@@ -135,6 +149,23 @@ import { baseUrl } from '../lib/base-url';
   // Afficher les erreurs OAuth depuis l'URL (?error=)
   const params = new URLSearchParams(window.location.search);
   const oauthError = params.get('error');
+
+  // Gestion ?verified=1 et ?verify_error=* (retour de /api/verify-email)
+  const verifiedParam = params.get('verified');
+  const verifyErrorParam = params.get('verify_error');
+  const loginSuccessEl = document.getElementById('loginSuccess');
+  const loginSuccessMsgEl = document.getElementById('loginSuccessMsg');
+  if (verifiedParam === '1') {
+    if (loginSuccessEl) (loginSuccessEl as HTMLElement).style.display = 'block';
+    if (loginSuccessMsgEl) loginSuccessMsgEl.textContent = 'Compte vérifié avec succès ! Vous pouvez maintenant vous connecter.';
+  } else if (verifiedParam === 'deja') {
+    if (loginSuccessEl) (loginSuccessEl as HTMLElement).style.display = 'block';
+    if (loginSuccessMsgEl) loginSuccessMsgEl.textContent = 'Votre compte est déjà vérifié. Connectez-vous ci-dessous.';
+  } else if (verifyErrorParam === 'lien_expire') {
+    showError('Ce lien de vérification est expiré. Reconnectez-vous pour en recevoir un nouveau.');
+  } else if (verifyErrorParam) {
+    showError('Lien de vérification invalide. Réessayez ou contactez le support.');
+  }
   if (oauthError === 'OAuthAccountNotLinked') {
     showError('Ce compte est déjà associé à une autre méthode de connexion.');
   } else if (oauthError === 'access_denied') {
@@ -188,6 +219,14 @@ import { baseUrl } from '../lib/base-url';
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if ((data as Record<string, unknown>).email_not_verified) {
+          const notice = document.getElementById('verify-email-notice') as HTMLElement | null;
+          const emailLbl = document.getElementById('unverified-email-label') as HTMLElement | null;
+          if (notice) notice.style.display = 'block';
+          if (emailLbl) emailLbl.textContent = (data as Record<string, string>).email || email;
+          (window as unknown as Record<string, unknown>)._unverifiedEmail = (data as Record<string, string>).email || email;
+          return;
+        }
         showError((data as { message?: string })?.message || 'Email ou mot de passe incorrect.');
         return;
       }
@@ -197,6 +236,39 @@ import { baseUrl } from '../lib/base-url';
       showError('Une erreur est survenue. Réessayez.');
     }
   });
+
+  // Bouton renvoi de l'email de vérification
+  async function resendVerifyEmail() {
+    const unverifiedEmail = ((window as any)._unverifiedEmail as string)
+      || (document.getElementById('email') as HTMLInputElement)?.value || '';
+    const btn = document.getElementById('resend-verify-btn') as HTMLButtonElement | null;
+    const icon = document.getElementById('resend-verify-icon') as HTMLElement | null;
+    const msg = document.getElementById('resend-verify-msg') as HTMLElement | null;
+    if (!unverifiedEmail || !btn) return;
+    btn.disabled = true;
+    if (icon) icon.className = 'fa fa-spinner fa-spin';
+    if (msg) { msg.style.color = '#888'; msg.textContent = 'Envoi…'; }
+    try {
+      const res = await fetch('/api/resend-verification', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        if (msg) { msg.style.color = '#27ae60'; msg.textContent = '✓ Email envoyé !'; }
+      } else {
+        if (msg) { msg.style.color = '#e74c3c'; msg.textContent = (data as Record<string, string>).error || 'Erreur.'; }
+        btn.disabled = false;
+        if (icon) icon.className = 'fa fa-refresh';
+      }
+    } catch {
+      if (msg) { msg.style.color = '#e74c3c'; msg.textContent = 'Erreur réseau.'; }
+      btn.disabled = false;
+      if (icon) icon.className = 'fa fa-refresh';
+    }
+  }
+  (window as any).resendVerifyEmail = resendVerifyEmail;
+  document.getElementById('resend-verify-btn')?.addEventListener('click', resendVerifyEmail);
 </script>
 
 <style is:global>
@@ -228,6 +300,16 @@ import { baseUrl } from '../lib/base-url';
     display: none;
   }
   .auth-error.show { display: block; }
+  .auth-success {
+    background: rgba(39,174,96,.15);
+    border: 1px solid rgba(39,174,96,.4);
+    color: #1e8449;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
 
   .auth-nav {
     float: right;

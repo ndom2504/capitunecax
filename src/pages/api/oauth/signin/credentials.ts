@@ -50,13 +50,13 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         user = await db
           .prepare(`SELECT * FROM users WHERE email = ? AND account_type = ?`)
           .bind(emailStr, requestedAccountType)
-          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
+          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: number | null }>();
       } catch {
         hasAccountTypeColumn = false;
         user = await db
           .prepare(`SELECT * FROM users WHERE email = ?`)
           .bind(emailStr)
-          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>();
+          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: number | null }>();
       }
 
       if (!user) {
@@ -85,6 +85,10 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
           const valid = await verifyPassword(user.password_hash, String(password));
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
+        // Bloquer si email non vérifié
+        if ((user.email_verified ?? 1) === 0) {
+          return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
+        }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;
         account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
@@ -98,7 +102,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
 
       let hasAccountTypeColumn = true;
-      let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null } | null;
+      let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null } | null;
       try {
         const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
           `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} AND account_type = ${requestedAccountType} LIMIT 1`;
@@ -124,6 +128,10 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         if (user.password_hash) {
           const valid = await verifyPassword(user.password_hash, String(password));
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
+        }
+        // Bloquer si email non vérifié
+        if (user.email_verified === false) {
+          return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
         }
         displayName = user.name || nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : user.role;

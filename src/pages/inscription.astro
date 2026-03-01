@@ -179,13 +179,18 @@ import { baseUrl } from '../lib/base-url';
         body: JSON.stringify({ firstName, lastName, email, phone, country, password, accountType }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => ({})) as Record<string, string | boolean | undefined>;
       if (!res.ok) {
-        alert(data?.message || 'Une erreur est survenue lors de la création du compte.');
+        alert((data?.message as string) || 'Une erreur est survenue lors de la création du compte.');
         return;
       }
 
-      window.location.href = '/dashboard';
+      // Si l'email de vérification a été envoyé, rediriger vers la page d'attente
+      if ((data as Record<string, unknown>)?.pending) {
+        window.location.href = '/verification-envoyee?email=' + encodeURIComponent((data as Record<string, string>)?.email || email);
+      } else {
+        window.location.href = '/dashboard';
+      }
     } catch (err) {
       alert('Une erreur est survenue. Réessayez.');
     }

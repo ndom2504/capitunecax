@@ -3,4 +3,6 @@
 // After adding bindings to `wrangler.jsonc`, regenerate this interface via `npm run cf-typegen`
 interface Env {
   DB: D1Database;
+  /** Clé API Resend pour l'envoi d'emails transactionnels — ajouter dans .dev.vars (local) ou wrangler secret (prod) */
+  RESEND_API_KEY?: string;
 }

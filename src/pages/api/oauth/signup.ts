@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { createSessionAny, getNeonSqlClient, hasNeonDatabase, uuid } from '../../../lib/db';
 import { isAdminEmail } from '../../../lib/admin-emails';
+import { generateVerificationToken, buildVerifyUrl } from '../../../lib/tokens';
+import { sendEmail, buildVerificationEmail } from '../../../lib/email';
 
 /**
  * Génère un hash de mot de passe (SHA-256 + salt simple).
@@ -36,6 +38,15 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const role      = isAdminEmail(emailStr) ? 'admin' : 'client';
     const account_type = normalizeAccountType((data as Record<string, unknown>)?.accountType);
     const isHttps   = import.meta.env.PROD || new URL(request.url).protocol === 'https:';
+
+    // ── Vérification email ────────────────────────────────────────────────
+    const resendApiKey: string | undefined =
+      (locals.runtime?.env as Record<string, string>)?.RESEND_API_KEY ??
+      (import.meta.env as Record<string, string>).RESEND_API_KEY;
+    const emailVerificationEnabled = !!resendApiKey;
+    const verifyToken = generateVerificationToken();
+    const verifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 h
+    let verificationPending = false;
 
     // ── Persistance D1 ────────────────────────────────────────────────────
     const db = (locals.runtime?.env as Env)?.DB ?? null;
@@ -88,6 +99,21 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       }
 
       sessionToken = await createSessionAny(db, userId);
+
+      // Vérification email (migration 0008 requise)
+      if (emailVerificationEnabled) {
+        try {
+          await db.prepare(
+            `UPDATE users
+             SET email_verified = 0,
+                 email_verification_token = ?,
+                 email_verification_expires = ?,
+                 email_verification_sent_at = ?
+             WHERE id = ?`
+          ).bind(verifyToken, verifyExpires, Date.now(), userId).run();
+          verificationPending = true;
+        } catch { /* colonnes pas encore migrées → comportement MVP */ }
+      }
     } else if (useNeon) {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
@@ -121,12 +147,49 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         `;
       }
       sessionToken = await createSessionAny(null, userId);
+
+      // Vérification email (migration 0008 requise)
+      if (emailVerificationEnabled) {
+        try {
+          await sql`
+            UPDATE users
+            SET email_verified = FALSE,
+                email_verification_token = ${verifyToken},
+                email_verification_expires = ${verifyExpires},
+                email_verification_sent_at = ${Date.now()}
+            WHERE id = ${userId}
+          `;
+          verificationPending = true;
+        } catch { /* colonnes pas encore migrées → comportement MVP */ }
+      }
     } else {
       // Fallback sans DB (dev sans wrangler)
       const sessionData = JSON.stringify({ email: emailStr, name, role, account_type, expires: Date.now() + 7 * 86400000 });
       sessionToken = btoa(encodeURIComponent(sessionData));
     }
 
+    // ── Email de vérification (si migration 0008 appliquée + RESEND_API_KEY) ──
+    if (verificationPending) {
+      const verifyUrl = buildVerifyUrl(request.url, verifyToken, emailStr);
+      const emailResult = await sendEmail(
+        {
+          to: emailStr,
+          subject: 'Confirmez votre adresse courriel — Capitune',
+          html: buildVerificationEmail(name, verifyUrl),
+        },
+        resendApiKey,
+      );
+      if (!emailResult.ok) {
+        console.error('[signup] Échec envoi email de vérification:', emailResult.error);
+      }
+      return json({
+        pending: true,
+        email: emailStr,
+        message: 'Un email de confirmation a été envoyé. Vérifiez votre boîte de réception.',
+      });
+    }
+
+    // ── Session immédiate (dev / migration non appliquée) ─────────────────
     cookies.set('capitune_session', sessionToken, {
       path: '/', httpOnly: true, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });

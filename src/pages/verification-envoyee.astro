@@ -1,0 +1,223 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { baseUrl } from '../lib/base-url';
+
+const email = Astro.url.searchParams.get('email') ?? '';
+---
+
+<MainLayout>
+  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
+  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+
+  <div class="DesignHolder auth-page">
+    <div class="LayoutFrame">
+      <header class="auth-header">
+        <div class="Center">
+          <div class="site-logo">
+            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
+          </div>
+          <nav class="Navigation auth-nav">
+            <ul>
+              <li><a href={`${baseUrl}/`}>Accueil</a></li>
+              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
+              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
+            </ul>
+          </nav>
+          <div class="clear"></div>
+        </div>
+      </header>
+
+      <section class="AuthHero_sec">
+        <div class="Center">
+          <h1>Vérifiez votre courriel</h1>
+          <p>Un lien de confirmation vous a été envoyé.</p>
+        </div>
+      </section>
+
+      <section class="Get_sec auth-sec">
+        <div class="Mid">
+          <div class="Leftside auth-form-side" style="max-width:520px;margin:0 auto;">
+
+            <!-- Carte principale -->
+            <div class="verify-card">
+              <div class="verify-icon">
+                <i class="fa fa-envelope-o"></i>
+              </div>
+              <h2>Email de confirmation envoyé !</h2>
+              {email ? (
+                <p class="verify-email-addr">
+                  <i class="fa fa-envelope" style="color:var(--cap-orange);margin-right:6px;"></i>
+                  <strong id="shown-email">{email}</strong>
+                </p>
+              ) : null}
+              <p class="verify-desc">
+                Consultez votre boîte de réception et cliquez sur le lien de confirmation.
+                Le lien expire dans <strong>24 heures</strong>.
+              </p>
+              <p class="verify-spam">
+                <i class="fa fa-info-circle"></i>
+                Vérifiez aussi vos courriers indésirables (spam).
+              </p>
+
+              <!-- Bouton renvoi -->
+              <div id="resend-area" style="margin-top:24px;">
+                <button id="resend-btn" class="resend-btn">
+                  <i class="fa fa-refresh" id="resend-icon"></i>
+                  Renvoyer l'email de vérification
+                </button>
+                <p id="resend-msg" style="margin:8px 0 0;font-size:13px;text-align:center;"></p>
+              </div>
+
+              <div style="margin-top:24px;padding-top:20px;border-top:1px solid #eee;text-align:center;">
+                <a href={`${baseUrl}/connexion`} style="color:#1f4b6e;font-size:13px;opacity:.75;text-decoration:none;">
+                  ← Retour à la connexion
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</MainLayout>
+
+<script define:vars={{ emailFromServer: email }}>
+  const emailParam = emailFromServer ||
+    new URLSearchParams(window.location.search).get('email') || '';
+
+  const btn = document.getElementById('resend-btn');
+  const icon = document.getElementById('resend-icon');
+  const msg = document.getElementById('resend-msg');
+
+  let lastSent = 0;
+  const COOLDOWN = 60000;
+
+  async function resendVerification() {
+    if (Date.now() - lastSent < COOLDOWN) return;
+    if (!emailParam) {
+      if (msg) { msg.style.color = '#e74c3c'; msg.textContent = 'Email introuvable. Reconnectez-vous.'; }
+      return;
+    }
+
+    if (btn) { btn.disabled = true; }
+    if (icon) { icon.className = 'fa fa-spinner fa-spin'; }
+    if (msg) { msg.style.color = '#888'; msg.textContent = 'Envoi en cours…'; }
+
+    try {
+      const res = await fetch('/api/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailParam }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        lastSent = Date.now();
+        if (msg) { msg.style.color = '#27ae60'; msg.textContent = '✓ Email envoyé ! Vérifiez votre boîte.'; }
+        startCooldown();
+      } else {
+        if (msg) { msg.style.color = '#e74c3c'; msg.textContent = data?.error || 'Erreur lors de l\'envoi.'; }
+        if (btn) { btn.disabled = false; }
+        if (icon) { icon.className = 'fa fa-refresh'; }
+      }
+    } catch {
+      if (msg) { msg.style.color = '#e74c3c'; msg.textContent = 'Erreur réseau. Réessayez.'; }
+      if (btn) { btn.disabled = false; }
+      if (icon) { icon.className = 'fa fa-refresh'; }
+    }
+  }
+
+  function startCooldown() {
+    if (btn) btn.disabled = true;
+    if (icon) icon.className = 'fa fa-clock-o';
+    let remaining = 60;
+    const interval = setInterval(() => {
+      remaining--;
+      if (btn) btn.textContent = '';
+      const ic = document.createElement('i');
+      ic.id = 'resend-icon';
+      ic.className = 'fa fa-clock-o';
+      if (btn) {
+        btn.textContent = `  Renvoyer dans ${remaining}s`;
+        btn.prepend(ic);
+      }
+      if (remaining <= 0) {
+        clearInterval(interval);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa fa-refresh" id="resend-icon"></i> Renvoyer l\'email de vérification';
+          btn.addEventListener('click', resendVerification, { once: true });
+        }
+      }
+    }, 1000);
+  }
+
+  if (btn) btn.addEventListener('click', resendVerification, { once: true });
+</script>
+
+<style is:global>
+  .verify-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 40px 36px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.09);
+    text-align: center;
+  }
+  .verify-icon {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1f4b6e, #2d6a96);
+    color: #fff;
+    font-size: 30px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .verify-card h2 {
+    margin: 0 0 14px;
+    color: #1f4b6e;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .verify-email-addr {
+    background: #f5f7fa;
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: inline-block;
+    margin: 0 0 16px;
+    font-size: 14px;
+    color: #333;
+    word-break: break-all;
+  }
+  .verify-desc {
+    color: #555;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+  .verify-spam {
+    background: #fff8f0;
+    border: 1px solid #f5c98a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #b55e00;
+    font-size: 13px;
+    margin: 0;
+  }
+  .resend-btn {
+    background: linear-gradient(135deg, #e87722, #d4631a);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 28px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    width: 100%;
+  }
+  .resend-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .resend-btn:not(:disabled):hover { opacity: .88; }
+</style>
