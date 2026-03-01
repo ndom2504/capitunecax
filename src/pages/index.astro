@@ -82,6 +82,7 @@ const landingServices = [
       inset: 0;
       background: linear-gradient(135deg, rgba(10,15,40,0.70) 0%, rgba(10,15,40,0.45) 60%, rgba(0,0,0,0.20) 100%);
       z-index: 1;
+      pointer-events: none;
     }
     .Banner_sec .bannerside { position: relative; z-index: 2; }
   </style>
@@ -355,46 +356,54 @@ const landingServices = [
   #home .rightside {
     width: 62%;
     transform: translateX(52px);
+    position: relative;
   }
 
   #home .rightside .hero-yt-cta {
     text-align: center;
-    margin-top: 14px;
+    margin-top: 16px;
     margin-bottom: 4px;
+    position: relative;
+    z-index: 5;
   }
 
   #home .rightside .hero-yt-btn {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    background: rgba(255,255,255,0.10);
-    border: 1px solid rgba(255,255,255,0.35);
+    gap: 10px;
+    background: #ff0000;
+    border: 2px solid #cc0000;
     color: #ffffff;
     font-family: 'Open Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
     text-decoration: none;
-    padding: 9px 22px;
-    border-radius: 4px;
-    backdrop-filter: blur(4px);
-    transition: background .25s, border-color .25s, color .25s;
+    padding: 11px 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 4px 18px rgba(255,0,0,0.45), 0 2px 8px rgba(0,0,0,0.30);
+    transition: background .2s, border-color .2s, transform .15s, box-shadow .2s;
   }
 
   #home .rightside .hero-yt-btn .fa-youtube-play {
-    font-size: 18px;
-    color: #ff0000;
-    transition: color .25s;
+    font-size: 20px;
+    color: #ffffff;
+    transition: transform .2s;
   }
 
   #home .rightside .hero-yt-btn:hover {
-    background: #ff0000;
-    border-color: #ff0000;
+    background: #cc0000;
+    border-color: #aa0000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(255,0,0,0.55), 0 4px 12px rgba(0,0,0,0.35);
     color: #ffffff;
   }
 
   #home .rightside .hero-yt-btn:hover .fa-youtube-play {
+    transform: scale(1.15);
     color: #ffffff;
   }
 
@@ -422,6 +431,7 @@ const landingServices = [
   #home .rightside .Shadow {
     margin-top: -10px;
     opacity: 0.5;
+    pointer-events: none;
   }
 
   #home .rightside .Slider figure img {
