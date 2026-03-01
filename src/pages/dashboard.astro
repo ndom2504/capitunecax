@@ -1991,6 +1991,26 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       return !window.__premiumActive;
     }
 
+    window.showPremiumInterac = function() {
+      var box = document.getElementById('premiumInteracBox');
+      var ref = document.getElementById('premiumInteracRef');
+      if (ref) ref.textContent = 'PREM-' + Date.now().toString().slice(-7);
+      if (box) box.style.display = 'block';
+    };
+
+    window.confirmPremiumInterac = function() {
+      setPremiumHint('✅ Merci ! Votre virement a été enregistré. Accès activé sous 24h après réception.', true);
+      var box = document.getElementById('premiumInteracBox');
+      if (box) box.style.display = 'none';
+      // Enregistrer la demande dans le chat
+      try {
+        var ref = document.getElementById('premiumInteracRef');
+        var refTxt = ref ? ref.textContent : 'PREM-?';
+        dbSync('/api/messages', 'POST', { content: 'Virement Interac Premium envoyé — Référence : ' + refTxt + ' — En attente de validation.', sender: 'user' });
+      } catch(_e) {}
+      setTimeout(function(){ closeModal(); showToast('⏳ Virement enregistré — activation sous 24h', 'info'); }, 1200);
+    };
+
     window.openPremiumModal = function(reason) {
       var modal = document.getElementById('modalPaiement');
       if (modal) modal.classList.add('open');
