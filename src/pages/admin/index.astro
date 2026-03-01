@@ -274,13 +274,13 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     <small style="color:var(--muted);font-size:11px;font-weight:400;">Panneau Admin</small>
   </div>
   <nav class="sidebar-nav">
-    <a class="nav-item active" href="#dashboard" onclick="showSection('dashboard'); return false;">
+    <a class="nav-item active" href="#dashboard" data-section="dashboard">
       <i class="fa fa-chart-pie"></i> Tableau de bord
     </a>
-    <a class="nav-item" href="#clients" onclick="showSection('clients'); return false;">
+    <a class="nav-item" href="#clients" data-section="clients">
       <i class="fa fa-users"></i> Clients
     </a>
-    <a class="nav-item" href="#pros" onclick="showSection('pros'); return false;">
+    <a class="nav-item" href="#pros" data-section="pros">
       <i class="fa fa-user-tie"></i> Comptes Pro
     </a>
     <a class="nav-item" href="/admin/stripe-configuration">
@@ -338,7 +338,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       <!-- Derniers clients -->
       <div class="section-header">
         <div class="section-title">Derniers inscrits</div>
-        <button class="btn-sm" onclick="showSection('clients')">Voir tous →</button>
+        <button class="btn-sm" data-section="clients">Voir tous →</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -356,9 +356,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         <div style="display:flex;align-items:center;gap:12px">
           <div class="section-title">Clients</div>
           <div class="segmented" title="Filtrer par assignation">
-            <button class="seg-btn" id="scope-me" onclick="setScope('me')"><i class="fa fa-user"></i> Mes clients</button>
-            <button class="seg-btn" id="scope-unassigned" onclick="setScope('unassigned')"><i class="fa fa-inbox"></i> Non assignés</button>
-            <button class="seg-btn active" id="scope-all" onclick="setScope('all')"><i class="fa fa-layer-group"></i> Tous</button>
+            <button class="seg-btn" id="scope-me" data-scope="me"><i class="fa fa-user"></i> Mes clients</button>
+            <button class="seg-btn" id="scope-unassigned" data-scope="unassigned"><i class="fa fa-inbox"></i> Non assignés</button>
+            <button class="seg-btn active" id="scope-all" data-scope="all"><i class="fa fa-layer-group"></i> Tous</button>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -367,7 +367,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
               <option value={adminId}>Moi</option>
             </select>
           )}
-          <input class="search-box" id="client-search" placeholder="🔍  Rechercher nom ou email..." oninput="debounceSearch()" />
+          <input class="search-box" id="client-search" placeholder="🔍  Rechercher nom ou email..." />
         </div>
       </div>
       <div class="table-wrap">
@@ -423,7 +423,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 </main>
 
 <!-- Drawer overlay -->
-<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer-overlay" id="drawer-overlay" data-action="closeDrawer"></div>
 
 <!-- Drawer fiche client -->
 <div class="drawer" id="client-drawer">
@@ -435,22 +435,22 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         <div class="drawer-email" id="dr-email">—</div>
       </div>
     </div>
-    <button class="btn-close" onclick="closeDrawer()"><i class="fa fa-times"></i></button>
+    <button class="btn-close" data-action="closeDrawer"><i class="fa fa-times"></i></button>
   </div>
   <div class="drawer-tabs">
-    <div class="dtab active" onclick="switchDTab('messages')"> <i class="fa fa-comments"></i> Messages</div>
-    <div class="dtab" onclick="switchDTab('projet')"><i class="fa fa-folder"></i> Projet</div>
-    <div class="dtab" onclick="switchDTab('profil')"><i class="fa fa-user"></i> Profil</div>
-    <div class="dtab" onclick="switchDTab('paiements')"><i class="fa fa-credit-card"></i> Paiements</div>
+    <div class="dtab active" data-tab="messages"> <i class="fa fa-comments"></i> Messages</div>
+    <div class="dtab" data-tab="projet"><i class="fa fa-folder"></i> Projet</div>
+    <div class="dtab" data-tab="profil"><i class="fa fa-user"></i> Profil</div>
+    <div class="dtab" data-tab="paiements"><i class="fa fa-credit-card"></i> Paiements</div>
   </div>
   <div class="drawer-body" id="drawer-body">
     <div class="spinner"></div>
   </div>
   <div class="reply-bar" id="reply-bar">
     <textarea class="reply-input" id="reply-input" placeholder="Répondre au client..." rows="1"
-      onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendReply();}"></textarea>
-    <button class="btn-ai" id="btn-ai-suggest" onclick="suggestReply()" title="Suggérer une réponse avec l'IA">✨</button>
-    <button class="btn-send" onclick="sendReply()"><i class="fa fa-paper-plane"></i></button>
+      ></textarea>
+    <button class="btn-ai" id="btn-ai-suggest" data-action="suggestReply" title="Suggérer une réponse avec l'IA">✨</button>
+    <button class="btn-send" data-action="sendReply"><i class="fa fa-paper-plane"></i></button>
   </div>
 </div>
 
@@ -479,10 +479,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
     document.getElementById('section-pros').style.display      = name === 'pros'      ? '' : 'none';
     document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
-    // Réactiver l'item correspondant (fonctionne même quand showSection est appelé depuis un bouton)
-    document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(el) {
-      var oc = el.getAttribute('onclick') || '';
-      if (oc.indexOf("showSection('" + name + "')") !== -1) el.classList.add('active');
+    document.querySelectorAll('.sidebar-nav .nav-item[data-section]').forEach(function(el) {
+      if (el.getAttribute('data-section') === name) el.classList.add('active');
     });
     var titles = { dashboard: 'Tableau de bord', clients: 'Clients', pros: 'Comptes Pro' };
     document.getElementById('page-title').textContent = titles[name] || name;
@@ -1014,12 +1012,53 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   // ── Init ──────────────────────────────────────────────────────────────────
   loadStats();
 
-  // Masquer reply-bar par défaut sur les autres onglets
-  document.querySelectorAll('.dtab').forEach(function(el) {
-    el.addEventListener('click', function() {
-      var tab = el.textContent.toLowerCase();
-      document.getElementById('reply-bar').style.display = tab.includes('mess') ? '' : 'none';
-    });
+  // ── Event delegation (remplace tous les onclick= statiques du HTML) ────────
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+
+    // Remonte jusqu'à 4 niveaux pour trouver l'élément portant le data-*
+    for (var i = 0; i < 4; i++) {
+      if (!el || el === document) break;
+
+      // Navigation sidebar : data-section
+      if (el.hasAttribute && el.hasAttribute('data-section')) {
+        e.preventDefault();
+        showSection(el.getAttribute('data-section'));
+        return;
+      }
+      // Scope clients : data-scope
+      if (el.hasAttribute && el.hasAttribute('data-scope')) {
+        setScope(el.getAttribute('data-scope'));
+        return;
+      }
+      // Actions génériques : data-action
+      if (el.hasAttribute && el.hasAttribute('data-action')) {
+        var action = el.getAttribute('data-action');
+        if (action === 'closeDrawer')  { closeDrawer();  return; }
+        if (action === 'sendReply')    { sendReply();    return; }
+        if (action === 'suggestReply') { suggestReply(); return; }
+        return;
+      }
+      // Onglets drawer : data-tab
+      if (el.hasAttribute && el.hasAttribute('data-tab')) {
+        var tab = el.getAttribute('data-tab');
+        switchDTab(tab);
+        document.getElementById('reply-bar').style.display = tab === 'messages' ? '' : 'none';
+        return;
+      }
+
+      el = el.parentElement;
+    }
+  });
+
+  // Recherche client (input)
+  var searchEl = document.getElementById('client-search');
+  if (searchEl) searchEl.addEventListener('input', function() { debounceSearch(); });
+
+  // Textarea reply : Enter pour envoyer
+  var replyInput = document.getElementById('reply-input');
+  if (replyInput) replyInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
   });
 </script>
 </body>
