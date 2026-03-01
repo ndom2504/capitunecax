@@ -4576,14 +4576,26 @@ const proSvcList = [
             var headBg    = pkg.popular ? 'linear-gradient(135deg,var(--cap-orange),#e67e00)' : 'linear-gradient(135deg,#1a1a2e,#0f3460)';
             var borderCol = pkg.popular ? 'var(--cap-orange)' : '#eee';
             var priceColor = hasPrice ? 'var(--cap-orange)' : '#bbb';
-            var includedHtml = included.length
-              ? included.map(function(id) {
-                  return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
-                    + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
-                    + esc(svcLabel(id))
-                    + '</li>';
-                }).join('')
-              : '<li style="color:#aaa;font-size:12px;">—</li>';
+            // Si le pro a coché des services perso → les afficher ; sinon fallback sur les features du catalogue
+            var includedHtml;
+            if (included.length) {
+              includedHtml = included.map(function(id) {
+                return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
+                  + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
+                  + esc(svcLabel(id))
+                  + '</li>';
+              }).join('');
+            } else if (pkg.features && pkg.features.length) {
+              // Fallback : features par défaut du pack (toujours visibles)
+              includedHtml = pkg.features.map(function(feat) {
+                return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
+                  + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
+                  + esc(feat)
+                  + '</li>';
+              }).join('');
+            } else {
+              includedHtml = '<li style="color:#aaa;font-size:12px;">—</li>';
+            }
             cardsHtml +=
               '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.09);overflow:hidden;'
               + 'display:flex;flex-direction:column;border:2px solid '+borderCol+';position:relative;">'
