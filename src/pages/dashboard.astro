@@ -453,8 +453,8 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
       .welcome-bubble-title{font-size:13px;font-weight:700;color:#1a1a2e;margin:0 0 5px;display:flex;align-items:center;gap:7px;}
       .welcome-bubble-title img{width:20px;height:20px;border-radius:50%;}
       .welcome-bubble-body{font-size:12.5px;color:#555;line-height:1.55;margin:0 0 10px;}
-      .welcome-bubble-actions{display:flex;gap:8px;justify-content:flex-end;}
-      .welcome-bubble-reply{font-size:12px;font-weight:600;color:var(--cap-orange);background:none;border:1.5px solid var(--cap-orange);border-radius:20px;padding:5px 14px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:.2s;}
+      .welcome-bubble-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+      .welcome-bubble-reply{font-size:11.5px;font-weight:600;color:var(--cap-orange);background:none;border:1.5px solid var(--cap-orange);border-radius:20px;padding:4px 11px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:.2s;}
       .welcome-bubble-reply:hover{background:var(--cap-orange);color:#fff;}
       .welcome-bubble-close{position:absolute;top:8px;right:10px;background:none;border:none;color:#bbb;font-size:16px;cursor:pointer;line-height:1;padding:0;}
       .welcome-bubble-close:hover{color:#888;}
@@ -1678,13 +1678,13 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
               var btnBorder = pkg.popular ? 'var(--cap-orange)' : '#ddd';
               var btnBg = pkg.popular ? '#fff8f0' : '#f9f9f9';
               var servicesJSON = JSON.stringify(pkg.services).replace(/"/g, '\u0027');
-              return '<div style="border-radius:12px;overflow:hidden;border:1.5px solid ' + borderColor + ';background:#fff;">' +
+              return '<div style="border-radius:12px;overflow:hidden;border:1.5px solid ' + borderColor + ';background:#fff;display:flex;flex-direction:column;">' +
                 '<div style="background:' + headBg + ';color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">' +
                   '<span style="font-weight:800;font-size:13px;">' + pkg.badge + ' ' + pkg.name + '</span>' +
                   '<span style="font-size:15px;font-weight:900;">' + total + ' $</span>' +
                 '</div>' +
-                '<div style="padding:12px 14px;">' +
-                  '<ul style="list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:5px;">' + featList + '</ul>' +
+                '<div style="padding:12px 14px;display:flex;flex-direction:column;flex:1;">' +
+                  '<ul style="list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:5px;flex:1;">' + featList + '</ul>' +
                   '<button id="capApplyBtn-' + pkg.id + '" onclick="applyCapPack(\'' + pkg.id + '\',' + pkg.price + ',' + servicesJSON + ')" ' +
                     'style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;border:1.5px solid ' + btnBorder + ';background:' + btnBg + ';font-weight:700;font-size:12px;color:var(--cap-dark);transition:.15s;">' +
                     '<span id="capApplyBadge-' + pkg.id + '" style="width:16px;height:16px;border-radius:4px;border:2px solid var(--cap-orange);display:inline-flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;font-size:11px;"></span>' +
@@ -2020,6 +2020,7 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
         </div>
         <p class="welcome-bubble-body">Bienvenue dans votre espace CAPITUNE.<br />Votre projet Canada commence ici. Posez vos questions ou parcourez nos guides gratuits.</p>
         <div class="welcome-bubble-actions">
+          <a href="#" class="welcome-bubble-reply" onclick="document.getElementById('welcomeBubbleWrap').style.display='none'; switchTab('parametres'); return false;"><i class="fa fa-cog"></i> Param&egrave;tres</a>
           <a href="#" class="welcome-bubble-reply" onclick="document.getElementById('welcomeBubbleWrap').style.display='none'; switchTab('messagerie'); return false;"><i class="fa fa-reply"></i> R&eacute;pondre</a>
         </div>
       </div>
