@@ -26,6 +26,9 @@ if (sessionUser.role === 'admin' && !(allowAdminPreview || isProPreview)) {
 // Clés publiques paiement (injectées côté client)
 const STRIPE_PK = import.meta.env.PUBLIC_STRIPE_PUBLIC_KEY || import.meta.env.PUBLIC_STRIPE_KEY || import.meta.env.STRIPE_PUBLISHABLE_KEY || '';
 const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PAYPAL_CLIENT_ID || 'sb';
+// Coordonnées Interac — configurables via Vercel (PUBLIC_INTERAC_EMAIL, PUBLIC_INTERAC_INSTITUTION)
+const INTERAC_EMAIL = import.meta.env.PUBLIC_INTERAC_EMAIL || import.meta.env.INTERAC_EMAIL || 'paiements@capitune.ca';
+const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import.meta.env.INTERAC_INSTITUTION || 'Desjardins';
 ---
 
 <html lang="fr">
@@ -43,9 +46,11 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     <!-- Stripe.js v3 -->
     <script src="https://js.stripe.com/v3/" is:inline></script>
     <!-- Clés paiement injectées côté serveur -->
-    <script is:inline define:vars={{ STRIPE_PK, PAYPAL_CID }}>
+    <script is:inline define:vars={{ STRIPE_PK, PAYPAL_CID, INTERAC_EMAIL, INTERAC_INSTITUTION }}>
       window.CAP_STRIPE_PK = STRIPE_PK;
       window.CAP_PAYPAL_CID = PAYPAL_CID;
+      window.CAP_INTERAC_EMAIL = INTERAC_EMAIL;
+      window.CAP_INTERAC_INSTITUTION = INTERAC_INSTITUTION;
       window.CAP_USER_EMAIL = '';
       window.CAP_USER_NAME = '';
     </script>
@@ -1333,10 +1338,10 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
             <div id="form-transfer" class="pay-form-block" style="display:none;">
               <div class="transfer-info-box">
                 <h4><i class="fa fa-university"></i> Instructions de virement</h4>
-                <div class="transfer-row"><span class="transfer-label">Institution</span><span class="transfer-value">Banque CAPITUNE (Desjardins)</span></div>
+                <div class="transfer-row"><span class="transfer-label">Institution</span><span class="transfer-value" id="transfer-institution">--</span></div>
                 <div class="transfer-row">
                   <span class="transfer-label">Courriel Interac</span>
-                  <span class="transfer-value">paiements@capitune.ca <button class="copy-btn" onclick="copyText('paiements@capitune.ca')">Copier</button></span>
+                  <span class="transfer-value"><span id="transfer-interac-email">--</span> <button class="copy-btn" onclick="copyText(document.getElementById('transfer-interac-email').textContent)">Copier</button></span>
                 </div>
                 <div class="transfer-row"><span class="transfer-label">Référence</span><span class="transfer-value" id="transfer-ref">INV-...</span></div>
                 <div class="transfer-row"><span class="transfer-label">Montant à virer</span><span class="transfer-value" id="transfer-amount">-- $</span></div>
@@ -1885,16 +1890,44 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 
     <!-- MODAL PAIEMENT -->
     <div class="modal-overlay" id="modalPaiement">
-      <div class="modal-box">
+      <div class="modal-box" style="max-width:460px;">
         <i class="fa fa-lock modal-icon"></i>
         <h3>Abonnement Premium</h3>
         <p style="margin:0 0 10px;">L’accès à la <strong>messagerie</strong>, au bouton <strong>Contacter</strong> et au <strong>chat</strong> est réservé aux comptes Premium.</p>
         <p style="margin:0 0 16px;color:#777;">Prix : <strong>100 CAD / an</strong>.</p>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-          <button class="btn-modal" style="min-width:210px;" onclick="startPremiumStripe()"><i class="fa fa-credit-card"></i> Payer par carte (Stripe)</button>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:4px;">
+          <button class="btn-modal" style="min-width:175px;" onclick="startPremiumStripe()"><i class="fa fa-credit-card"></i> Payer par carte</button>
+          <button class="btn-modal" style="min-width:175px;background:#e67e22;" onclick="showPremiumInterac()"><i class="fa fa-university"></i> Payer par Interac</button>
         </div>
         <div id="premiumPayPalWrap" style="margin-top:12px;display:flex;justify-content:center;">
           <div id="premiumPayPalButtons"></div>
+        </div>
+        <div id="premiumInteracBox" style="display:none;margin-top:14px;text-align:left;background:#fff8f0;border:2px solid #e67e22;border-radius:12px;padding:18px 20px;">
+          <p style="font-weight:700;color:#e67e22;margin:0 0 12px;font-size:14px;"><i class="fa fa-university"></i> Virement Interac &mdash; 100 $ CAD</p>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0d9c0;">
+            <span style="font-size:13px;color:#888;">Institution</span>
+            <span id="premiumInteracInstitution" style="font-weight:700;color:#1a1a2e;font-size:13px;">--</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0d9c0;">
+            <span style="font-size:13px;color:#888;">Courriel Interac</span>
+            <span style="display:flex;align-items:center;gap:8px;">
+              <span id="premiumInteracEmail" style="font-weight:700;color:#1a1a2e;font-size:13px;">--</span>
+              <button class="copy-btn" onclick="copyText(document.getElementById('premiumInteracEmail').textContent)">Copier</button>
+            </span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0d9c0;">
+            <span style="font-size:13px;color:#888;">Montant exact</span>
+            <span style="font-weight:900;color:#e67e22;font-size:15px;">100,00 $ CAD</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;">
+            <span style="font-size:13px;color:#888;">R&eacute;f&eacute;rence</span>
+            <span id="premiumInteracRef" style="font-weight:700;color:#1a1a2e;font-size:13px;">PREM-...</span>
+          </div>
+          <p style="font-size:11px;color:#999;margin:10px 0 0;">Activation sous <strong>24h</strong> apr&egrave;s r&eacute;ception. Envoyez la preuve dans la messagerie.</p>
+          <button class="btn-modal" style="width:100%;margin-top:12px;background:#27ae60;" onclick="confirmPremiumInterac()">
+            <i class="fa fa-check"></i> J&apos;ai effectu&eacute; le virement
+          </button>
+          <button onclick="document.getElementById('premiumInteracBox').style.display='none';" style="background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;width:100%;margin-top:6px;">&#x2190; Retour</button>
         </div>
         <p id="premiumHint" style="margin:12px 0 0;color:#888;font-size:12px;"></p>
         <button class="btn-modal" style="background:#aaa;margin-top:14px;" onclick="closeModal()">Fermer</button>
@@ -1960,7 +1993,11 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
     window.showPremiumInterac = function() {
       var box = document.getElementById('premiumInteracBox');
       var ref = document.getElementById('premiumInteracRef');
+      var emailElP = document.getElementById('premiumInteracEmail');
+      var instElP = document.getElementById('premiumInteracInstitution');
       if (ref) ref.textContent = 'PREM-' + Date.now().toString().slice(-7);
+      if (emailElP) emailElP.textContent = window.CAP_INTERAC_EMAIL || 'paiements@capitune.ca';
+      if (instElP) instElP.textContent = window.CAP_INTERAC_INSTITUTION || 'Desjardins';
       if (box) box.style.display = 'block';
     };
 
@@ -3514,6 +3551,11 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
         var f=document.getElementById('form-'+x);
         if(f) f.style.display=(x===m?'block':'none');
       });
+      // Peupler les coordonnées Interac depuis les variables d'environnement
+      var emailEl=document.getElementById('transfer-interac-email');
+      var instEl=document.getElementById('transfer-institution');
+      if(emailEl) emailEl.textContent = window.CAP_INTERAC_EMAIL || 'paiements@capitune.ca';
+      if(instEl) instEl.textContent = window.CAP_INTERAC_INSTITUTION || 'Desjardins';
       // Bouton Stripe : masqué pour PayPal (PayPal a ses propres boutons)
       var btnStripe=document.getElementById('btn-pay-stripe');
       if(btnStripe) btnStripe.style.display=(m==='paypal'?'none':'');
