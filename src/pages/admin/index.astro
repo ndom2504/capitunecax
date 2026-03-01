@@ -208,11 +208,19 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       padding: 10px 18px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
     }
     .btn-send:hover { background: #e08400; }
-
-    /* Info grid */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .info-cell { background: var(--card); border-radius: 8px; padding: 12px 14px; }
-    .info-cell label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .btn-ai {
+      background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none;
+      border-radius: 10px; padding: 10px 14px; font-size: 15px; cursor: pointer; flex-shrink: 0;
+      transition: opacity .2s, transform .1s; title: 'Suggérer avec l\'IA';
+    }
+    .btn-ai:hover { opacity: .85; }
+    .btn-ai:active { transform: scale(.95); }
+    .btn-ai:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-ai .ai-spin {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite;
+      vertical-align: middle;
+    }
     .info-cell span { display: block; font-weight: 600; margin-top: 3px; }
 
     /* Status select */
@@ -401,6 +409,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   <div class="reply-bar" id="reply-bar">
     <textarea class="reply-input" id="reply-input" placeholder="Répondre au client..." rows="1"
       onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendReply();}"></textarea>
+    <button class="btn-ai" id="btn-ai-suggest" onclick="suggestReply()" title="Suggérer une réponse avec l'IA">✨</button>
     <button class="btn-send" onclick="sendReply()"><i class="fa fa-paper-plane"></i></button>
   </div>
 </div>
@@ -767,6 +776,50 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       } catch {}
       toast(msg, true);
     }
+  }
+
+  async function suggestReply() {
+    if (!_clientData || !_currentClient) return;
+    var btn = document.getElementById('btn-ai-suggest');
+    var input = document.getElementById('reply-input');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ai-spin"></span>'; }
+
+    // Récupérer les messages + les infos projet
+    var messages = (_clientData.messages || []).map(function(m) {
+      return { sender: m.sender, content: m.content };
+    });
+    var project = {};
+    var projs = _clientData.projects || [];
+    if (projs.length) {
+      var p = projs[0];
+      if (p.type)      project.type     = p.type;
+      if (p.province)  project.province = p.province;
+      if (p.pays)      project.pays     = p.pays;
+      if (p.pack_id)   project.pack_id  = p.pack_id;
+      if (p.status)    project.status   = p.status;
+    }
+
+    try {
+      const r = await fetch('/api/ai-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, project }),
+      });
+      const data = await r.json();
+      if (r.ok && data.suggestion) {
+        input.value = data.suggestion;
+        input.focus();
+        // Ajuster la hauteur du textarea
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+        toast('Suggestion IA prête ✓');
+      } else {
+        toast(data.error || 'Erreur IA', true);
+      }
+    } catch (err) {
+      toast('Erreur de connexion IA', true);
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '✨'; }
   }
 
   async function assignClient(clientId) {
