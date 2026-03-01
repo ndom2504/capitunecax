@@ -67,6 +67,15 @@ const proSvcList = [
     <script is:inline define:vars={{ packagesCatalog, servicesCatalog }}>
       window.CAP_PACKAGES_CATALOG = packagesCatalog;
       window.CAP_SERVICES_CATALOG = servicesCatalog;
+      // Labels des 6 services fixes côté pro (IDs utilisés dans pro_pack_services)
+      window.__proSvcLabelMap = {
+        consultation: 'Consultation stratégique',
+        orientation:  'Orientation programme',
+        dossier:      'Montage du dossier',
+        suivi:        'Suivi administratif',
+        recherche:    'Recherche employeur',
+        integration:  "Aide à l'installation"
+      };
     </script>
     <style is:global>
       :root { --cap-orange:#ff9408; --cap-dark:#1a1a2e; --cap-blue:#2980b9; --cap-green:#27ae60; --cap-red:#e74c3c; }
@@ -1726,17 +1735,15 @@ const proSvcList = [
                 <div style="margin-top:8px;"><strong>Compétences :</strong> <span id="tpCompetences"></span></div>
               </div>
 
-              <div class="section-title-block" style="margin-top:0;">
-                <h2>Services</h2>
-                <div class="title-line"></div>
+              <div id="tpPacksBlock">
+                <div class="section-title-block" style="margin-top:0;">
+                  <h2>Offres & tarifs</h2>
+                  <p style="margin:4px 0 0;font-size:13px;color:#999;">Packs configurés par ce professionnel</p>
+                  <div class="title-line"></div>
+                </div>
+                <div id="tpTarifs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:8px;"></div>
+                <div id="tpNoOffers" style="display:none;color:#aaa;font-size:13px;padding:14px 0;"><i class="fa fa-info-circle"></i> Ce professionnel n'a pas encore configuré ses tarifs.</div>
               </div>
-              <div id="tpServices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-
-              <div class="section-title-block" style="margin-top:28px;">
-                <h2>Tarifs (packs)</h2>
-                <div class="title-line"></div>
-              </div>
-              <div class="tarifs-grid" id="tpTarifs"></div>
 
               <!-- AVIS CLIENTS (visible côté client uniquement) -->
               <div id="tpReviewsBlock" style="margin-top:32px;display:none;">
@@ -4224,59 +4231,68 @@ const proSvcList = [
         if (competences) { setText('tpCompetences', competences); hasMeta = true; } else { setText('tpCompetences', '—'); }
         if (metaWrap) metaWrap.style.display = hasMeta ? '' : 'none';
 
-        var svcWrap = document.getElementById('tpServices');
+        // Résolution de label : pro service IDs (consultation…) ou catalog service IDs
         function svcLabel(id) {
+          if (window.__proSvcLabelMap && window.__proSvcLabelMap[id]) return window.__proSvcLabelMap[id];
           try {
             if (window.__catalogServiceMap && window.__catalogServiceMap[id] && window.__catalogServiceMap[id].name) return window.__catalogServiceMap[id].name;
           } catch(_e) {}
-          return id;
-        }
-        var packSvcs = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
-        var hasPackSvcs = packSvcs && Object.keys(packSvcs).length > 0;
-        var svcs = Array.isArray(m.pro_services) ? m.pro_services : [];
-        if (hasPackSvcs) {
-          var union = [];
-          Object.keys(packSvcs).forEach(function(pk){
-            var arr = Array.isArray(packSvcs[pk]) ? packSvcs[pk] : [];
-            arr.forEach(function(s){ union.push(s); });
-          });
-          svcs = Array.from(new Set(union));
-        }
-        if (svcWrap) {
-          if (!svcs.length) svcWrap.innerHTML = '<span style="color:#888;font-size:13px;">—</span>';
-          else svcWrap.innerHTML = svcs.map(function(id){
-            return '<span class="service-pill">'+esc(svcLabel(id))+'</span>';
-          }).join('');
+          // Fallback lisible : capitalize
+          return String(id).charAt(0).toUpperCase() + String(id).slice(1);
         }
 
-        var tarifsWrap = document.getElementById('tpTarifs');
-        var prices = (m.pro_pack_prices && typeof m.pro_pack_prices === 'object') ? m.pro_pack_prices : {};
-        var packs = [
-          { id:'essentiel', name:'Essentiel' },
-          { id:'standard', name:'Standard' },
-          { id:'premium', name:'Premium' },
-          { id:'tourisme', name:'Tourisme' },
-          { id:'emploi', name:'Emploi' }
-        ];
+        var packSvcs = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
+        var prices   = (m.pro_pack_prices   && typeof m.pro_pack_prices   === 'object') ? m.pro_pack_prices   : {};
+        var pkgCatalog = window.CAP_PACKAGES_CATALOG || [];
+
+        // ── Rendu des cartes packs (style packagesCatalog + données pro) ─────────
+        var tarifsWrap  = document.getElementById('tpTarifs');
+        var noOffersEl  = document.getElementById('tpNoOffers');
         if (tarifsWrap) {
-          tarifsWrap.style.gridTemplateColumns = 'repeat(auto-fill,minmax(160px,1fr))';
-          tarifsWrap.innerHTML = packs.map(function(pk){
-            var v = prices[pk.id];
-            var priceTxt = (typeof v === 'number' && Number.isFinite(v)) ? (v.toLocaleString('fr-CA') + ' $') : '—';
-            var included = hasPackSvcs && Array.isArray(packSvcs[pk.id]) ? packSvcs[pk.id] : [];
-            var includedHtml = (!included || !included.length)
-              ? '<span style="color:#888;font-size:12px;">—</span>'
-              : included.map(function(id){
-                  return '<span class="service-pill" style="font-size:11px;padding:4px 9px;">'+esc(svcLabel(id))+'</span>';
-                }).join('');
-            return '<div class="tarif-card">'
-              + '<div class="tarif-name">'+esc(pk.name)+'</div>'
-              + '<div class="tarif-price">'+esc(priceTxt)+' <span>CAD</span></div>'
-              + '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">'
-              + includedHtml
+          var cardsHtml = '';
+          var anyCard = false;
+          pkgCatalog.forEach(function(pkg) {
+            var priceVal = prices[pkg.id];
+            var included = Array.isArray(packSvcs[pkg.id]) ? packSvcs[pkg.id] : [];
+            var hasPrice = typeof priceVal === 'number' && Number.isFinite(priceVal);
+            // N'affiche la carte que si le pro a renseigné un prix OU des services
+            if (!hasPrice && !included.length) return;
+            anyCard = true;
+            var priceTxt  = hasPrice ? priceVal.toLocaleString('fr-CA') + '\u00a0$' : '—';
+            var headBg    = pkg.popular ? 'linear-gradient(135deg,var(--cap-orange),#e67e00)' : 'linear-gradient(135deg,#1a1a2e,#0f3460)';
+            var borderCol = pkg.popular ? 'var(--cap-orange)' : '#eee';
+            var priceColor = hasPrice ? 'var(--cap-orange)' : '#bbb';
+            var includedHtml = included.length
+              ? included.map(function(id) {
+                  return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
+                    + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
+                    + esc(svcLabel(id))
+                    + '</li>';
+                }).join('')
+              : '<li style="color:#aaa;font-size:12px;">—</li>';
+            cardsHtml +=
+              '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.09);overflow:hidden;'
+              + 'display:flex;flex-direction:column;border:2px solid '+borderCol+';position:relative;">'
+              + (pkg.popular ? '<div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--cap-orange);'
+                + 'color:#fff;font-size:10px;font-weight:800;padding:3px 12px;border-radius:0 0 9px 9px;white-space:nowrap;z-index:1;">⭐ PLUS POPULAIRE</div>' : '')
+              + '<div style="background:'+headBg+';color:#fff;padding:'+(pkg.popular?'28px 16px 14px':'16px')+'">'
+                + '<div style="font-size:1.6rem;margin-bottom:5px;">'+esc(pkg.badge)+'</div>'
+                + '<div style="font-size:.95rem;font-weight:800;margin-bottom:3px;">'+esc(pkg.name)+'</div>'
+                + '<div style="font-size:11px;opacity:.8;">'+esc(pkg.description)+'</div>'
+              + '</div>'
+              + '<div style="padding:12px 14px;background:#fafafa;border-bottom:1px solid #f0f0f0;text-align:center;">'
+                + '<div style="font-size:1.8rem;font-weight:900;color:'+priceColor+';">'+esc(priceTxt)+'</div>'
+                + '<div style="font-size:10px;color:#bbb;margin-top:2px;">CAD · prix du pack</div>'
+              + '</div>'
+              + '<div style="padding:12px 14px;flex:1;">'
+                + '<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">'
+                + includedHtml
+                + '</ul>'
               + '</div>'
               + '</div>';
-          }).join('');
+          });
+          tarifsWrap.innerHTML = cardsHtml;
+          if (noOffersEl) noOffersEl.style.display = anyCard ? 'none' : '';
         }
 
         modal.classList.add('open');
