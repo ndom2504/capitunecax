@@ -1,4 +1,4 @@
-﻿---
+---
 // CAPITUNE  Espace Client Dashboard
 import { packagesCatalog, servicesCatalog } from '../lib/service-catalog';
 import { getUserFromSessionAny } from '../lib/db';
@@ -29,6 +29,16 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
 // Coordonnées Interac — configurables via Vercel (PUBLIC_INTERAC_EMAIL, PUBLIC_INTERAC_INSTITUTION)
 const INTERAC_EMAIL = import.meta.env.PUBLIC_INTERAC_EMAIL || import.meta.env.INTERAC_EMAIL || 'paiements@capitune.ca';
 const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import.meta.env.INTERAC_INSTITUTION || 'Desjardins';
+
+// Services simplifiés pour la grille pro (6 cases pros)
+const proSvcList = [
+  {id:'consultation', label:'Consultation stratégique', icon:'💬'},
+  {id:'orientation',  label:'Orientation programme',   icon:'🎯'},
+  {id:'dossier',      label:'Montage du dossier',      icon:'📁'},
+  {id:'suivi',        label:'Suivi administratif',     icon:'📅'},
+  {id:'recherche',    label:'Recherche employeur',     icon:'🔍'},
+  {id:'integration',  label:"Aide à l'installation",   icon:'🏠'},
+];
 ---
 
 <html lang="fr">
@@ -1063,189 +1073,113 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
 
             <div class="projet-form-card">
               <h3><i class="fa fa-tags" style="color:var(--cap-orange);"></i> Packs, services & tarifs</h3>
-              <p style="margin:0 0 14px;color:#777;">Sélectionnez les services inclus dans chaque pack et renseignez le prix du pack (affiché côté client dans “Voir”).</p>
+              <p style="margin:0 0 18px;color:#777;font-size:13px;">Configurez vos prix par pack et les services inclus dans chaque offre. Ces informations s'affichent côté client.</p>
 
-              <!-- ── Référence Capitune ── -->
-              <div style="border:2px solid #ffd899;border-radius:14px;margin-bottom:22px;overflow:hidden;">
-                <div style="background:#fff8f0;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;" onclick="toggleCapRef()">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <i class="fa fa-tag" style="color:var(--cap-orange);"></i>
-                    <span style="font-weight:800;font-size:14px;color:var(--cap-dark);">Grille tarifaire Capitune <span style="font-weight:400;color:#999;font-size:12px;">(référence officielle)</span></span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:11px;color:#888;">Cliquez ✓ Appliquer pour pré-remplir votre grille</span>
-                    <i class="fa fa-chevron-down" id="capRefChevron" style="color:var(--cap-orange);transition:.2s;"></i>
-                  </div>
-                </div>
-                <div id="capRefPanel" style="display:none;padding:18px;background:#fffcf5;">
-                  <!-- Toggle Pack / Service -->
-                  <div style="display:flex;gap:8px;margin-bottom:16px;">
-                    <button id="capRefBtnPacks" onclick="switchCapRefMode('packs')" style="padding:7px 18px;border-radius:8px;border:none;background:var(--cap-orange);color:#fff;font-weight:700;font-size:12px;cursor:pointer;"><i class="fa fa-cube"></i> Packs</button>
-                    <button id="capRefBtnServices" onclick="switchCapRefMode('services')" style="padding:7px 18px;border-radius:8px;border:1.5px solid #ddd;background:#f9f9f9;color:#555;font-weight:700;font-size:12px;cursor:pointer;"><i class="fa fa-list"></i> Services à la carte</button>
-                  </div>
-                  <!-- Vue Packs -->
-                  <div id="capRefPacksPanel">
-                    <div id="capRefPacksCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;"></div>
-                    <p style="margin:10px 0 0;font-size:11px;color:#aaa;"><i class="fa fa-info-circle"></i> Appliquer pré-remplit le prix et les services du pack correspondant dans votre grille ci-dessous.</p>
-                  </div>
-                  <!-- Vue Services -->
-                  <div id="capRefServicesPanel" style="display:none;">
-                    <div style="overflow-x:auto;">
-                      <table style="width:100%;border-collapse:collapse;font-size:12px;" id="capRefServicesTable">
-                        <thead>
-                          <tr style="background:#f0f0f0;">
-                            <th style="padding:8px 12px;text-align:left;font-weight:800;color:#555;">Service</th>
-                            <th style="padding:8px 12px;text-align:right;font-weight:800;color:#555;">Prix réf.</th>
-                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Essentiel">Ess.</th>
-                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Standard">Std</th>
-                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Premium">Prem.</th>
-                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Tourisme">Tour.</th>
-                            <th style="padding:8px 12px;text-align:center;font-weight:800;color:#555;" title="Emploi">Empl.</th>
-                          </tr>
-                        </thead>
-                        <tbody id="capRefServicesTbody"></tbody>
-                      </table>
-                    </div>
-                    <p style="margin:10px 0 0;font-size:11px;color:#aaa;"><i class="fa fa-info-circle"></i> Cocher active/désactive ce service dans le pack de votre grille ci-dessous.</p>
-                  </div>
-                </div>
+              <!-- ── Toggle Packs / Services ── -->
+              <div style="display:flex;gap:5px;background:#f1f3f5;border-radius:12px;padding:5px;margin-bottom:24px;">
+                <button id="proTarifsBtn-packs" onclick="switchProTarifsMode('packs')"
+                  style="flex:1;padding:9px 14px;border-radius:9px;border:none;background:var(--cap-orange);color:#fff;font-weight:700;font-size:13px;cursor:pointer;transition:.2s;">
+                  <i class="fa fa-cube"></i> Packs tout inclus
+                </button>
+                <button id="proTarifsBtn-services" onclick="switchProTarifsMode('services')"
+                  style="flex:1;padding:9px 14px;border-radius:9px;border:none;background:transparent;color:#888;font-weight:700;font-size:13px;cursor:pointer;transition:.2s;">
+                  <i class="fa fa-list"></i> Services à la carte
+                </button>
               </div>
-              <!-- ── Fin Référence Capitune ── -->
 
-              <div class="pro-offering-grid" id="proOfferingGrid">
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Essentiel</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-essentiel" type="number" min="0" step="1" />
+              <!-- ══ PANEL PACKS ══ -->
+              <div id="proTarifsPanel-packs">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;">
+                  {packagesCatalog.map((pkg) => (
+                    <div style={`background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.09);overflow:hidden;display:flex;flex-direction:column;border:2px solid ${pkg.popular ? 'var(--cap-orange)' : '#eee'};position:relative;`}>
+                      {pkg.popular && (
+                        <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--cap-orange);color:#fff;font-size:10px;font-weight:800;padding:3px 12px;border-radius:0 0 9px 9px;white-space:nowrap;z-index:1;">⭐ PLUS POPULAIRE</div>
+                      )}
+                      <div style={`background:${pkg.popular ? 'linear-gradient(135deg,var(--cap-orange),#e67e00)' : 'linear-gradient(135deg,#1a1a2e,#0f3460)'};color:#fff;padding:${pkg.popular ? '28px 16px 14px' : '16px'};`}>
+                        <div style="font-size:1.6rem;margin-bottom:5px;">{pkg.badge}</div>
+                        <div style="font-size:.95rem;font-weight:800;margin-bottom:3px;">{pkg.name}</div>
+                        <div style="font-size:11px;opacity:0.8;">{pkg.description}</div>
+                      </div>
+                      <div style="padding:12px 14px;background:#fafafa;border-bottom:1px solid #f0f0f0;">
+                        <label style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">Mon prix (CAD)</label>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                          <input id={`proPackPrice-${pkg.id}`} type="number" min="0" step="1" placeholder={String(pkg.price)}
+                            style="flex:1;min-width:0;border:2px solid #e0e0e0;border-radius:8px;padding:6px 8px;font-size:1.2rem;font-weight:900;color:var(--cap-dark);outline:none;transition:.2s;"
+                            onfocus="this.style.borderColor='var(--cap-orange)'" onblur="this.style.borderColor='#e0e0e0'" />
+                          <span style="font-size:13px;font-weight:700;color:#bbb;flex-shrink:0;">$</span>
+                        </div>
+                        <div style="font-size:10px;color:#ccc;margin-top:3px;">Réf. Capitune : {pkg.price.toLocaleString('fr-CA')} $</div>
+                      </div>
+                      <div style="padding:12px 14px;flex:1;">
+                        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">
+                          {pkg.features.slice(0, 5).map((feat) => (
+                            <li style="display:flex;align-items:flex-start;gap:7px;font-size:11px;color:#444;">
+                              <span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;margin-top:1px;">✓</span>
+                              {feat}
+                            </li>
+                          ))}
+                          {pkg.features.length > 5 && (
+                            <li style="font-size:10px;color:#bbb;padding-top:2px;">+{pkg.features.length - 5} autres…</li>
+                          )}
+                        </ul>
+                      </div>
+                      <div style="padding:10px 14px;border-top:1px solid #f0f0f0;">
+                        <button onclick="switchProTarifsMode('services')"
+                          style="width:100%;padding:7px;border-radius:8px;border:1.5px solid #eee;background:#f9f9f9;color:#888;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;"
+                          onmouseover="this.style.borderColor='var(--cap-orange)';this.style.color='var(--cap-orange)'"
+                          onmouseout="this.style.borderColor='#eee';this.style.color='#888'">
+                          <i class="fa fa-cog"></i> Configurer les services →
+                        </button>
+                      </div>
                     </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-essentiel-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Standard</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-standard" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-standard-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Premium</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-premium" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-premium-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Tourisme</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-tourisme" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-tourisme-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pro-offering-pack">
-                  <div class="pro-offering-head">Pack Emploi</div>
-                  <div class="pro-offering-body">
-                    <div class="pro-offering-price">
-                      <label>Prix (CAD)</label>
-                      <input id="proPackPrice-emploi" type="number" min="0" step="1" />
-                    </div>
-                    <div class="pro-offering-services">
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-consultation" value="consultation"> Consultation stratégique</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-orientation" value="orientation"> Orientation programme</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-dossier" value="dossier"> Montage du dossier</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-suivi" value="suivi"> Suivi administratif</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-recherche" value="recherche"> Recherche employeur</label>
-                      <label class="langue-checkbox" style="user-select:none;"><input type="checkbox" id="proPackSvc-emploi-integration" value="integration"> Aide à l’installation</label>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:14px;">
-                <button class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer packs & tarifs</button>
+              <!-- ══ PANEL SERVICES À LA CARTE ══ -->
+              <div id="proTarifsPanel-services" style="display:none;">
+                <p style="margin:0 0 14px;font-size:13px;color:#777;"><i class="fa fa-info-circle" style="color:var(--cap-orange);margin-right:6px;"></i>Cochez les services inclus dans chaque pack. Les prix se configurent dans l'onglet "Packs".</p>
+                <div style="overflow-x:auto;border-radius:14px;border:1px solid #eee;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                  <table style="width:100%;border-collapse:collapse;min-width:580px;">
+                    <thead>
+                      <tr style="background:linear-gradient(135deg,#1a1a2e,#0f3460);">
+                        <th style="padding:14px 16px;text-align:left;color:#fff;font-size:12px;font-weight:800;border-radius:14px 0 0 0;">Service</th>
+                        {packagesCatalog.map((pkg) => (
+                          <th style="padding:12px 8px;text-align:center;color:#fff;font-size:11px;font-weight:800;min-width:90px;">
+                            <div style="font-size:1.3rem;">{pkg.badge}</div>
+                            <div style="margin-top:2px;">{pkg.name.replace('Pack ','')}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {proSvcList.map((svc, svcIdx) => (
+                        <tr style={svcIdx % 2 === 0 ? 'background:#fafafa;' : 'background:#fff;'}>
+                          <td style="padding:12px 16px;font-size:13px;font-weight:700;color:#333;">
+                            <span style="margin-right:7px;">{svc.icon}</span>{svc.label}
+                          </td>
+                          {packagesCatalog.map((pkg) => (
+                            <td style="padding:12px 8px;text-align:center;">
+                              <label style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
+                                <input type="checkbox"
+                                  id={`proPackSvc-${pkg.id}-${svc.id}`}
+                                  value={svc.id}
+                                  style="accent-color:var(--cap-orange);width:18px;height:18px;cursor:pointer;" />
+                              </label>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p style="margin:10px 0 0;font-size:11px;color:#bbb;"><i class="fa fa-check-square-o"></i> Ces cases correspondent aux services proposés côté client lors de l'achat d'un pack.</p>
               </div>
-            </div>
-          </div>
 
-          <div id="client-mode-services" style={isProMode ? 'display:none' : ''}>
-          <div id="services-no-projet" class="notice-box" style="display:none;">
-            <i class="fa fa-exclamation-circle"></i>
-            <span>Commencez par <strong>remplir votre profil projet</strong> pour que nous puissions vous recommander le service adapte.
-              <a href="#" onclick="switchTab('projet'); return false;" style="color:var(--cap-orange);font-weight:700;margin-left:8px;">Creer mon projet</a>
-            </span>
-          </div>
-          <div id="projet-resume-card" style="display:none;background:#fff8f0;border:1px solid #ffd899;border-radius:12px;padding:14px 20px;margin-bottom:28px;align-items:center;gap:14px;">
-            <i class="fa fa-folder-open" style="font-size:22px;color:var(--cap-orange);"></i>
-            <div>
-              <p style="margin:0 0 4px;font-weight:700;font-size:14px;">Votre projet</p>
-              <p id="projet-resume-text" style="margin:0;font-size:13px;color:#777;"></p>
-            </div>
-            <a href="#" onclick="switchTab('projet'); return false;" style="margin-left:auto;font-size:12px;color:var(--cap-orange);font-weight:600;">Modifier</a>
-          </div>
-          <div class="toggle-row">
-            <button class="active" id="toggle-packs" onclick="showPacks()">Packs tout-inclus</button>
-            <button id="toggle-carte" onclick="showCarte()">Services a la carte</button>
-          </div>
-          <div id="view-packs">
-            <div class="section-title-block">
-              <h2>Nos Packs d'Accompagnement</h2>
-              <div class="title-line"></div>
-              <p>Faites défiler pour découvrir chaque pack — choisissez celui qui correspond à votre projet.</p>
-            </div>
-            <div class="pack-carousel-wrapper">
-              <button class="carousel-arrow" id="carouselPrev" onclick="carouselNav(-1)" aria-label="Pack précédent">&#8249;</button>
-              <div class="carousel-track-wrap">
-                <div class="carousel-track" id="carouselTrack"><!-- injecté par renderPacks() --></div>
+              <div style="display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:18px;">
+                <button id="btnSaveProProfile" class="btn-submit-projet" type="button" onclick="saveProProfile()"><i class="fa fa-save"></i> Enregistrer packs & tarifs</button>
               </div>
-              <button class="carousel-arrow" id="carouselNext" onclick="carouselNav(1)" aria-label="Pack suivant">&#8250;</button>
             </div>
-            <div class="carousel-dots" id="carouselDots"></div>
-          </div>
-          <div id="view-carte" style="display:none;">
-            <div class="section-title-block">
               <h2>Services a la Carte</h2>
               <div class="title-line"></div>
               <p>Composez votre accompagnement selon vos besoins specifiques.</p>
@@ -1618,6 +1552,23 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
           const open = panel.style.display === 'none';
           panel.style.display = open ? 'block' : 'none';
           chevron.style.transform = open ? 'rotate(180deg)' : '';
+        }
+
+        function switchProTarifsMode(mode) {
+          var pp = document.getElementById('proTarifsPanel-packs');
+          var sp = document.getElementById('proTarifsPanel-services');
+          var bp = document.getElementById('proTarifsBtn-packs');
+          var bs = document.getElementById('proTarifsBtn-services');
+          if (!pp || !sp) return;
+          if (mode === 'packs') {
+            pp.style.display = 'block'; sp.style.display = 'none';
+            if (bp) { bp.style.background = 'var(--cap-orange)'; bp.style.color = '#fff'; }
+            if (bs) { bs.style.background = 'transparent'; bs.style.color = '#888'; }
+          } else {
+            pp.style.display = 'none'; sp.style.display = 'block';
+            if (bs) { bs.style.background = 'var(--cap-orange)'; bs.style.color = '#fff'; }
+            if (bp) { bp.style.background = 'transparent'; bp.style.color = '#888'; }
+          }
         }
 
         function switchCapRefMode(mode) {
