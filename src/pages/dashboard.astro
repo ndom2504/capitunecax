@@ -692,15 +692,6 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
               </div>
             </div>
 
-            <div class="trend-box">
-              <h3><i class="fa fa-map-marker"></i> Destinations prisées (30 jours)</h3>
-              <ul class="trend-list" id="dashTrendingDestinations"></ul>
-            </div>
-            <div class="trend-box">
-              <h3><i class="fa fa-bar-chart"></i> Domaines les plus demandés (30 jours)</h3>
-              <ul class="trend-list" id="dashTrendingDomains"></ul>
-            </div>
-
             <!-- Vidéos guides -->
             <div class="dash-videos-row">
               <div class="dash-video-card">
@@ -733,6 +724,15 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
                   <i class="fa fa-youtube-play"></i> Voir sur YouTube
                 </a>
               </div>
+            </div>
+
+            <div class="trend-box">
+              <h3><i class="fa fa-map-marker"></i> Destinations prisées (30 jours)</h3>
+              <ul class="trend-list" id="dashTrendingDestinations"></ul>
+            </div>
+            <div class="trend-box">
+              <h3><i class="fa fa-bar-chart"></i> Domaines les plus demandés (30 jours)</h3>
+              <ul class="trend-list" id="dashTrendingDomains"></ul>
             </div>
           </div>
         </div>
@@ -3104,11 +3104,9 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
           switchTab('dashboard');
           return;
         }
-        if (ST.projet && ST.projet.type) switchTab('services');
-        else switchTab('projet');
+        switchTab('dashboard');
       } catch(e) {
-        var isProUI2 = document.body && document.body.classList.contains('is-pro-mode');
-        switchTab(isProUI2 ? 'dashboard' : 'projet');
+        switchTab('dashboard');
       }
     }
 
