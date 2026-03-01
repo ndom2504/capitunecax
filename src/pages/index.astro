@@ -185,12 +185,11 @@ const landingServices = [
       <div class="bgcolor"></div>
 
       <div id="Container">
-        <section class="cap-features-sec" id="about">
+        <div class="About_sec cap-features-sec" id="about">
           <div class="Center">
-            <header class="cap-features-header">
-              <h2><span>&middot;&middot;&middot;</span> &Agrave; Propos De CAPITUNE <span>&middot;&middot;&middot;</span></h2>
-              <p>Une initiative d&rsquo;Export Monde Prestige Inc. pour structurer votre projet Canada avec un accompagnement clair, professionnel et centr&eacute; sur vos objectifs.</p>
-            </header>
+            <h2>Notre accompagnement</h2>
+            <p>Une initiative d&rsquo;Export Monde Prestige Inc. pour structurer votre projet Canada avec un accompagnement clair, professionnel et centr&eacute; sur vos objectifs.</p>
+            <div class="Line"></div>
             <div class="cap-features-grid">
               <div class="cap-feature-box">
                 <div class="cap-feature-inner">
@@ -222,7 +221,7 @@ const landingServices = [
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
         <div class="Services_sec" id="services">
           <div class="Center">
@@ -512,8 +511,22 @@ const landingServices = [
 
   /* ===== SECTION À PROPOS — FEATURES STYLE ===== */
   .cap-features-sec {
-    background: #1a1a2e url('/templatemo_473_november/img/pattern_bg.png') fixed;
-    padding: 70px 0 90px;
+    background: #ffffff;
+    padding-bottom: 90px;
+  }
+
+  /* Le h2 + p + Line héritent du style .About_sec natif */
+  /* On surcharge juste ce qui diffère */
+  .cap-features-sec h2 {
+    font-size: 52px !important;
+    color: #1a1a2e !important;
+    margin-bottom: 0;
+  }
+
+  .cap-features-sec > .Center > p {
+    color: #888 !important;
+    font-size: 15px !important;
+    padding-bottom: 30px !important;
   }
 
   .cap-features-header {
@@ -521,110 +534,82 @@ const landingServices = [
     margin-bottom: 50px;
   }
 
-  .cap-features-header h2 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 36px;
-    color: #ffffff;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin: 0 0 16px;
-  }
-
-  .cap-features-header h2 span {
-    color: #f88e04;
-    font-size: 22px;
-  }
-
-  .cap-features-header > p {
-    color: rgba(255,255,255,0.72);
-    font-size: 15px;
-    max-width: 620px;
-    margin: 0 auto;
-    line-height: 1.7;
-  }
-
   .cap-features-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 0;
+    gap: 24px;
     justify-content: center;
+    margin-top: 60px;
   }
 
   .cap-feature-box {
-    width: 25%;
-    padding: 30px 0;
-    transition: padding .45s;
+    width: calc(25% - 18px);
     box-sizing: border-box;
+    transition: transform .35s, box-shadow .35s;
   }
 
   .cap-feature-inner {
-    box-shadow: inset 0 0 0 10px #cecece;
-    border-top: 10px solid #cecece;
-    border-bottom: 10px solid #cecece;
-    background: #fff;
-    padding: 30px 20px 36px;
+    border: 1px solid #e8e8e8;
+    border-top: 4px solid #e8e8e8;
+    background: #fafafa;
+    padding: 40px 24px 36px;
     text-align: center;
-    transition: all .45s;
+    border-radius: 4px;
     height: 100%;
     box-sizing: border-box;
+    transition: all .35s;
   }
 
   .cap-feature-box:hover {
-    padding: 0;
+    transform: translateY(-6px);
   }
 
   .cap-feature-box:hover .cap-feature-inner {
-    box-shadow: inset 0 0 0 0 transparent;
-    border-top-color: #f88e04;
-    border-bottom-color: #f88e04;
-    background: #1a2a5e;
-    padding: 60px 20px 60px;
+    border-top-color: #ff9408;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(255,148,8,0.13);
   }
 
   .cap-feature-icon {
-    font-size: 52px;
+    font-size: 46px;
     color: #1a1a2e;
-    padding-top: 30px;
-    transition: color .45s;
+    margin-bottom: 20px;
+    transition: color .35s;
   }
 
   .cap-feature-box:hover .cap-feature-icon {
-    color: #f88e04;
+    color: #ff9408;
   }
 
   .cap-feature-inner h4 {
     font-family: 'Oswald', sans-serif;
-    font-size: 17px;
+    font-size: 16px;
     color: #1a1a2e;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 18px 0 10px;
-    transition: color .45s;
+    letter-spacing: 1.5px;
+    margin: 0 0 14px;
+    font-weight: 500;
+    transition: color .35s;
   }
 
   .cap-feature-box:hover .cap-feature-inner h4 {
-    color: #ffffff;
+    color: #ff9408;
   }
 
   .cap-feature-inner p {
-    font-size: 14px;
-    color: #555;
+    font-size: 13.5px;
+    color: #777;
     line-height: 1.75;
-    max-width: 220px;
     margin: 0 auto;
-    transition: color .45s;
-  }
-
-  .cap-feature-box:hover .cap-feature-inner p {
-    color: rgba(255,255,255,0.88);
+    transition: color .35s;
+    font-family: 'Open Sans', sans-serif;
   }
 
   @media (max-width: 991px) {
-    .cap-feature-box { width: 50%; }
+    .cap-feature-box { width: calc(50% - 12px); }
   }
 
   @media (max-width: 540px) {
     .cap-feature-box { width: 100%; }
-    .cap-features-header h2 { font-size: 26px; }
   }
 </style>
