@@ -1,4 +1,4 @@
----
+﻿---
 // CAPITUNE  Espace Client Dashboard
 import { packagesCatalog, servicesCatalog } from '../lib/service-catalog';
 import { getUserFromSessionAny } from '../lib/db';
@@ -550,6 +550,65 @@ const proSvcList = [
         .settings-grid{grid-template-columns:1fr;}
         .settings-card[style*="grid-column:span 2"]{grid-column:span 1 !important;}
         .danger-action-row{flex-direction:column;align-items:flex-start;}
+      }
+      /* ── PRO MESSAGERIE ─────────────────────────────────── */
+      .pro-msg-layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 240px);min-height:500px;border:1px solid #ededed;border-radius:16px;overflow:hidden;background:#fff;}
+      .pro-msg-sidebar{border-right:1px solid #ededed;display:flex;flex-direction:column;background:#f9f9f9;}
+      .pro-msg-sidebar-header{padding:14px 16px;border-bottom:1px solid #ededed;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+      .pro-msg-sidebar-header h3{margin:0;font-size:13px;font-weight:700;color:var(--cap-dark);}
+      .pro-msg-search{width:100%;border:none;border-bottom:1px solid #ededed;padding:9px 16px;font-size:13px;background:#fff;outline:none;}
+      .pro-msg-search::placeholder{color:#bbb;}
+      .pro-client-list{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1;}
+      .pro-client-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:.15s;}
+      .pro-client-item:hover{background:#fff8f0;}
+      .pro-client-item.active{background:#fff4e6;border-left:3px solid var(--cap-orange);}
+      .pro-cav{width:34px;height:34px;border-radius:50%;background:var(--cap-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+      .pro-cav.sus{background:#ccc;}
+      .pro-cdetails{flex:1;min-width:0;}
+      .pro-cname{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cap-dark);}
+      .pro-cpreview{font-size:11px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+      .pro-chat-area{display:flex;flex-direction:column;height:100%;}
+      .pro-chat-header{padding:13px 18px;border-bottom:1px solid #ededed;display:flex;align-items:center;gap:12px;background:#fff;flex-shrink:0;}
+      .pro-chat-av{width:38px;height:38px;border-radius:50%;background:var(--cap-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
+      .pro-chat-name-lbl{font-weight:700;font-size:14px;color:var(--cap-dark);}
+      .pro-chat-email-lbl{font-size:11px;color:#aaa;}
+      .pro-chat-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:9px;background:#f9f9fb;}
+      .pro-mi{max-width:78%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;}
+      .pro-mi.user{background:#fff;border:1px solid #ededed;align-self:flex-start;border-bottom-left-radius:4px;}
+      .pro-mi.admin{background:rgba(255,148,8,.12);color:#b06000;align-self:flex-end;border-bottom-right-radius:4px;}
+      .pro-mi.bot{background:rgba(41,128,185,.08);color:#1a6393;align-self:flex-start;border-bottom-left-radius:4px;}
+      .pro-mi-time{font-size:10px;color:#bbb;margin-top:3px;display:block;}
+      .pro-chat-input{padding:12px 16px;border-top:1px solid #ededed;display:flex;gap:8px;background:#fff;flex-shrink:0;}
+      .pro-reply-ta{flex:1;border:1.5px solid #ddd;border-radius:10px;padding:9px 12px;font-size:13px;resize:none;outline:none;min-height:40px;max-height:120px;font-family:inherit;}
+      .pro-reply-ta:focus{border-color:var(--cap-orange);}
+      .pro-ai-btn{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:14px;cursor:pointer;flex-shrink:0;}
+      .pro-ai-btn:hover{opacity:.85;}
+      .pro-ai-btn:disabled{opacity:.4;cursor:not-allowed;}
+      .pro-send-btn{background:var(--cap-orange);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+      .pro-send-btn:hover{background:#e08400;}
+      .pro-empty-conv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:10px;padding:40px;}
+      .pro-empty-conv i{font-size:44px;}
+      .pro-empty-conv p{margin:0;font-size:14px;}
+      /* ── PRO PAIEMENTS ────────────────────────────────────── */
+      .pro-pay-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+      .pro-pay-stat-card{background:#fff;border:1px solid #ededed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;}
+      .pro-pay-stat-icon{width:46px;height:46px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;background:rgba(255,148,8,.1);color:var(--cap-orange);flex-shrink:0;}
+      .pro-pay-stat-icon.green{background:rgba(39,174,96,.1);color:var(--cap-green);}
+      .pro-pay-stat-icon.blue{background:rgba(41,128,185,.1);color:var(--cap-blue);}
+      .pro-pay-stat-label{font-size:12px;color:#aaa;margin-bottom:3px;}
+      .pro-pay-stat-value{font-size:22px;font-weight:700;color:var(--cap-dark);}
+      .pro-pay-table-wrap{background:#fff;border:1px solid #ededed;border-radius:14px;overflow:hidden;}
+      .pro-pay-table-wrap h3{margin:0;padding:14px 18px;font-size:15px;border-bottom:1px solid #ededed;display:flex;align-items:center;gap:8px;}
+      .pro-pay-table{width:100%;border-collapse:collapse;}
+      .pro-pay-table th{padding:10px 16px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#aaa;background:#fafafa;}
+      .pro-pay-table td{padding:11px 16px;border-top:1px solid #f5f5f5;font-size:13px;vertical-align:middle;}
+      .pro-pay-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;}
+      .pro-pay-pill.paid{background:rgba(39,174,96,.1);color:var(--cap-green);}
+      .pro-pay-pill.none{background:#f5f5f5;color:#bbb;}
+      @media(max-width:768px){
+        .pro-msg-layout{grid-template-columns:1fr;height:auto;}
+        .pro-msg-sidebar{height:200px;}
+        .pro-pay-stats{grid-template-columns:1fr;}
       }
     </style>
   </head>
@@ -1220,10 +1279,40 @@ const proSvcList = [
         </div>
         <div class="dash-container">
           <div id="pro-mode-messages" style={isProMode ? '' : 'display:none'}>
-            <div class="projet-form-card">
-              <h3><i class="fa fa-envelope" style="color:var(--cap-orange);"></i> Messagerie</h3>
-              <p style="margin:0 0 16px;color:#777;">Ouvrez la messagerie clients depuis votre panneau pro.</p>
-              <a href="/admin" class="btn-submit-projet" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;"><i class="fa fa-arrow-right"></i> Ouvrir la messagerie</a>
+            <div class="pro-msg-layout">
+              <!-- Sidebar : liste clients -->
+              <div class="pro-msg-sidebar">
+                <div class="pro-msg-sidebar-header">
+                  <h3><i class="fa fa-users"></i> Clients</h3>
+                  <span id="pro-msg-spin" style="display:none"><i class="fa fa-spinner fa-spin" style="color:var(--cap-orange);"></i></span>
+                </div>
+                <input type="text" id="pro-msg-search" class="pro-msg-search" placeholder="🔍 Rechercher..." />
+                <ul id="pro-client-list" class="pro-client-list">
+                  <li style="padding:20px;color:#bbb;font-size:13px;text-align:center;"><i class="fa fa-spinner fa-spin"></i> Chargement…</li>
+                </ul>
+              </div>
+              <!-- Zone conversation -->
+              <div class="pro-chat-area">
+                <div class="pro-empty-conv" id="pro-empty-conv">
+                  <i class="fa fa-comments-o"></i>
+                  <p>Sélectionnez un client pour lire sa messagerie</p>
+                </div>
+                <div id="pro-chat-active" style="display:none;flex-direction:column;height:100%;">
+                  <div class="pro-chat-header">
+                    <div class="pro-chat-av" id="pro-chat-av">?</div>
+                    <div>
+                      <div class="pro-chat-name-lbl" id="pro-chat-name"></div>
+                      <div class="pro-chat-email-lbl" id="pro-chat-email"></div>
+                    </div>
+                  </div>
+                  <div class="pro-chat-msgs" id="pro-chat-msgs"></div>
+                  <div class="pro-chat-input">
+                    <textarea class="pro-reply-ta" id="pro-reply-ta" rows="1" placeholder="Répondre au client…"></textarea>
+                    <button class="pro-ai-btn" id="pro-ai-btn" title="Suggérer avec l'IA">✨</button>
+                    <button class="pro-send-btn" id="pro-send-btn"><i class="fa fa-paper-plane"></i></button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1292,12 +1381,7 @@ const proSvcList = [
           </div>
         </div>
         <div class="dash-container">
-          <div id="pro-mode-payments" style={isProMode ? '' : 'display:none'}>
-            <div class="projet-form-card">
-              <h3><i class="fa fa-credit-card" style="color:var(--cap-orange);"></i> Paiements</h3>
-              <p style="margin:0;color:#777;">Cet onglet affichera vos paiements reçus et l’historique (à venir).</p>
-            </div>
-          </div>
+          <div id="pro-mode-payments" style={isProMode ? '' : 'display:none'}><div id="pro-pay-loading" style="text-align:center;padding:40px 0;"><i class="fa fa-spinner fa-spin" style="font-size:22px;color:var(--cap-orange);"></i></div><div id="pro-pay-content" style="display:none"><div class="pro-pay-stats"><div class="pro-pay-stat-card"><div class="pro-pay-stat-icon"><i class="fa fa-dollar"></i></div><div><div class="pro-pay-stat-label">Revenus recus</div><div class="pro-pay-stat-value" id="pro-stat-revenue">&#x2014;</div></div></div><div class="pro-pay-stat-card"><div class="pro-pay-stat-icon green"><i class="fa fa-check-circle"></i></div><div><div class="pro-pay-stat-label">Clients avec paiement</div><div class="pro-pay-stat-value" id="pro-stat-paid-clients">&#x2014;</div></div></div><div class="pro-pay-stat-card"><div class="pro-pay-stat-icon blue"><i class="fa fa-users"></i></div><div><div class="pro-pay-stat-label">Total clients</div><div class="pro-pay-stat-value" id="pro-stat-total-clients">&#x2014;</div></div></div></div><div class="pro-pay-table-wrap"><h3 style="margin:0 0 16px;"><i class="fa fa-list" style="color:var(--cap-orange);"></i> Detail par client</h3><table class="pro-pay-table"><thead><tr><th>Client</th><th>Service</th><th>Statut projet</th><th>Montant recu</th></tr></thead><tbody id="pro-pay-rows"></tbody></table></div></div></div>
 
           <div id="client-mode-payments" style={isProMode ? 'display:none' : ''}>
 
@@ -3615,7 +3699,233 @@ const proSvcList = [
         }, 1400);
       }
       if (tabId === 'messagerie') removeMsgBadge();
+      // Pro mode : charger les clients au premier clic
+      if (tabId === 'messagerie' && document.getElementById('pro-mode-messages') && document.getElementById('pro-mode-messages').style.display !== 'none') {
+        if (!window.__proClientsLoaded) loadProClients();
+      }
+      if (tabId === 'paiements' && document.getElementById('pro-mode-payments') && document.getElementById('pro-mode-payments').style.display !== 'none') {
+        if (!window.__proPayLoaded) loadProPayments();
+      }
     };
+
+    // ============================================================
+    //  PRO MODE — MESSAGERIE
+    // ============================================================
+    var _proCurrentClient = null;
+    var _proClientData = null;
+    window.__proClientsLoaded = false;
+
+    function escP(s) { return String(s||'').replace(/[&<>"']/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;';}); }
+
+    async function loadProClients() {
+      var spin = document.getElementById('pro-msg-spin');
+      var list = document.getElementById('pro-client-list');
+      if (!list) return;
+      if (spin) spin.style.display = '';
+      try {
+        var r = await fetch('/api/admin/clients?scope=me&page=1');
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        var d = await r.json();
+        if (!d.clients || !d.clients.length) {
+          list.innerHTML = '<li style="padding:20px;text-align:center;color:#bbb;font-size:13px;"><i class="fa fa-info-circle"></i> Aucun client assigné</li>';
+          window.__proClientsLoaded = true;
+          return;
+        }
+        list.innerHTML = d.clients.map(function(c) {
+          var init = (c.name || c.email || '?').charAt(0).toUpperCase();
+          var preview = c.last_msg ? escP(String(c.last_msg).slice(0,40)) : 'Aucun message';
+          var susp = c.suspended == 1 ? ' sus' : '';
+          return '<li class="pro-client-item" data-cid="'+c.id+'" data-cname="'+escP(c.name||'—')+'" data-cemail="'+escP(c.email)+'" onclick="openProConv(this)">'
+            + '<div class="pro-cav'+susp+'">'+init+'</div>'
+            + '<div class="pro-cdetails"><div class="pro-cname">'+escP(c.name||c.email)+'</div><div class="pro-cpreview">'+preview+'</div></div>'
+            + '</li>';
+        }).join('');
+        window.__proClientsLoaded = true;
+        // Raffraichir la recherche
+        var searchEl = document.getElementById('pro-msg-search');
+        if (searchEl) searchEl.addEventListener('input', function() {
+          var q = this.value.toLowerCase();
+          document.querySelectorAll('.pro-client-item').forEach(function(li){
+            var nm = (li.getAttribute('data-cname')||'').toLowerCase();
+            var em = (li.getAttribute('data-cemail')||'').toLowerCase();
+            li.style.display = (!q || nm.includes(q) || em.includes(q)) ? '' : 'none';
+          });
+        });
+      } catch(e) {
+        list.innerHTML = '<li style="padding:16px;color:#e74c3c;font-size:13px;"><i class="fa fa-exclamation-circle"></i> ' + escP(e.message) + '</li>';
+      }
+      if (spin) spin.style.display = 'none';
+    }
+
+    async function openProConv(el) {
+      // Active le client dans la liste
+      document.querySelectorAll('.pro-client-item').forEach(function(li){ li.classList.remove('active'); });
+      el.classList.add('active');
+      var cid = el.getAttribute('data-cid');
+      var cname = el.getAttribute('data-cname');
+      var cemail = el.getAttribute('data-cemail');
+      _proCurrentClient = cid;
+
+      // Affichage
+      var emptyEl = document.getElementById('pro-empty-conv');
+      var activeEl = document.getElementById('pro-chat-active');
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (activeEl) { activeEl.style.display = 'flex'; }
+
+      var avEl = document.getElementById('pro-chat-av');
+      var nmEl = document.getElementById('pro-chat-name');
+      var emEl = document.getElementById('pro-chat-email');
+      if (avEl) avEl.textContent = (cname || cemail || '?').charAt(0).toUpperCase();
+      if (nmEl) nmEl.textContent = cname || '—';
+      if (emEl) emEl.textContent = cemail || '';
+
+      var msgsEl = document.getElementById('pro-chat-msgs');
+      if (msgsEl) msgsEl.innerHTML = '<div style="text-align:center;padding:24px;color:#bbb"><i class="fa fa-spinner fa-spin"></i></div>';
+
+      try {
+        var r = await fetch('/api/admin/client/' + cid);
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        _proClientData = await r.json();
+        renderProMessages();
+      } catch(e) {
+        if (msgsEl) msgsEl.innerHTML = '<div style="padding:20px;color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> ' + escP(e.message) + '</div>';
+      }
+    }
+
+    function renderProMessages() {
+      var msgsEl = document.getElementById('pro-chat-msgs');
+      if (!msgsEl || !_proClientData) return;
+      var msgs = _proClientData.messages || [];
+      if (!msgs.length) {
+        msgsEl.innerHTML = '<div style="text-align:center;padding:30px;color:#bbb;font-size:13px;"><i class="fa fa-comment-o" style="font-size:28px;display:block;margin-bottom:8px;"></i>Aucun message</div>';
+        return;
+      }
+      msgsEl.innerHTML = msgs.map(function(m) {
+        var cls = m.sender === 'user' ? 'user' : m.sender === 'admin' ? 'admin' : 'bot';
+        var lbl = m.sender === 'admin' ? '<small style="font-size:10px;opacity:.7;display:block;margin-bottom:2px;">Vous</small>' : '';
+        var time = new Date(m.created_at).toLocaleString('fr-CA',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        return '<div class="pro-mi '+cls+'">'+lbl+escP(m.content)+'<span class="pro-mi-time">'+time+'</span></div>';
+      }).join('');
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    async function proSendMsg() {
+      var ta = document.getElementById('pro-reply-ta');
+      var content = (ta ? ta.value : '').trim();
+      if (!content || !_proCurrentClient) return;
+      ta.value = '';
+      ta.style.height = 'auto';
+      try {
+        var r = await fetch('/api/admin/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: _proCurrentClient, content: content }),
+        });
+        var d = await r.json();
+        if (r.ok && d.ok !== false) {
+          if (!_proClientData) _proClientData = { messages: [] };
+          if (!_proClientData.messages) _proClientData.messages = [];
+          _proClientData.messages.push({ sender: 'admin', content: content, created_at: new Date().toISOString() });
+          renderProMessages();
+        } else {
+          showToast(d.error || 'Erreur envoi', 'error');
+        }
+      } catch(e) { showToast('Erreur réseau', 'error'); }
+    }
+
+    async function proSuggestMsg() {
+      if (!_proClientData || !_proCurrentClient) return;
+      var btn = document.getElementById('pro-ai-btn');
+      var ta = document.getElementById('pro-reply-ta');
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;"></span>'; }
+      var messages = (_proClientData.messages || []).map(function(m){ return { sender: m.sender, content: m.content }; });
+      var project = {};
+      var projs = _proClientData.projects || [];
+      if (projs.length) { var p0 = projs[0]; if(p0.type) project.type=p0.type; if(p0.province) project.province=p0.province; if(p0.pays) project.pays=p0.pays; }
+      try {
+        var r = await fetch('/api/ai-suggest', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ messages, project }) });
+        var d = await r.json();
+        if (r.ok && d.suggestion) {
+          if (ta) { ta.value = d.suggestion; ta.focus(); ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight,120)+'px'; }
+          showToast('Suggestion IA prête ✓', 'success');
+        } else { showToast(d.error || 'Erreur IA', 'error'); }
+      } catch(e) { showToast('Erreur réseau', 'error'); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '✨'; }
+    }
+
+    // Attacher les listeners après le DOM
+    document.addEventListener('DOMContentLoaded', function() {
+      var sendBtn = document.getElementById('pro-send-btn');
+      var aiBtn = document.getElementById('pro-ai-btn');
+      var ta = document.getElementById('pro-reply-ta');
+      if (sendBtn) sendBtn.addEventListener('click', proSendMsg);
+      if (aiBtn) aiBtn.addEventListener('click', proSuggestMsg);
+      if (ta) {
+        ta.addEventListener('keydown', function(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); proSendMsg(); } });
+        ta.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px'; });
+      }
+      // Si déjà en onglet messagerie en mode pro, charger
+      var proMsgDiv = document.getElementById('pro-mode-messages');
+      if (proMsgDiv && proMsgDiv.style.display !== 'none') {
+        var activeTab = document.querySelector('.tab-section.active');
+        if (activeTab && activeTab.id === 'tab-messagerie') loadProClients();
+      }
+    });
+
+    // ============================================================
+    //  PRO MODE — PAIEMENTS
+    // ============================================================
+    window.__proPayLoaded = false;
+
+    async function loadProPayments() {
+      var loading = document.getElementById('pro-pay-loading');
+      var content = document.getElementById('pro-pay-content');
+      if (!loading || !content) return;
+      loading.style.display = '';
+      content.style.display = 'none';
+      try {
+        var r = await fetch('/api/admin/clients?scope=me&page=1');
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        var d = await r.json();
+        var clients = d.clients || [];
+        var totalRevenue = clients.reduce(function(s, c){ return s + Number(c.total_paid || 0); }, 0);
+        var paidCount = clients.filter(function(c){ return Number(c.total_paid || 0) > 0; }).length;
+        var setV = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=v; };
+        setV('pro-stat-revenue', (totalRevenue > 0 ? '$' + totalRevenue.toFixed(0) + ' CAD' : '0 $'));
+        setV('pro-stat-paid-clients', String(paidCount));
+        setV('pro-stat-total-clients', String(clients.length));
+
+        var statusLabels = { soumis:'Soumis', en_cours:'En cours', termine:'Terminé', annule:'Annulé', aucun:'' };
+        var rows = document.getElementById('pro-pay-rows');
+        if (rows) {
+          if (!clients.length) {
+            rows.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#bbb;">Aucun client assigné</td></tr>';
+          } else {
+            rows.innerHTML = clients.map(function(c) {
+              var init = (c.name || c.email || '?').charAt(0).toUpperCase();
+              var paid = Number(c.total_paid || 0);
+              var paidHtml = paid > 0
+                ? '<span class="pro-pay-pill paid"><i class="fa fa-check"></i> $'+paid.toFixed(0)+' CAD</span>'
+                : '<span class="pro-pay-pill none">—</span>';
+              var status = c.project_status || '';
+              var sLabel = statusLabels[status] || status || '—';
+              var svcType = c.project_type ? c.project_type.replace(/_/g,' ') : '—';
+              return '<tr>'
+                + '<td><div style="display:flex;align-items:center;gap:9px;"><div style="width:30px;height:30px;border-radius:50%;background:var(--cap-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">'+init+'</div><div><div style="font-weight:600;">'+escP(c.name||'—')+'</div><div style="font-size:11px;color:#aaa;">'+escP(c.email)+'</div></div></div></td>'
+                + '<td style="font-size:12px;color:#666;">'+escP(svcType)+'</td>'
+                + '<td style="font-size:12px;">'+escP(sLabel)+'</td>'
+                + '<td>'+paidHtml+'</td>'
+                + '</tr>';
+            }).join('');
+          }
+        }
+        window.__proPayLoaded = true;
+        loading.style.display = 'none';
+        content.style.display = '';
+      } catch(e) {
+        loading.innerHTML = '<div style="color:#e74c3c;padding:20px;"><i class="fa fa-exclamation-circle"></i> ' + escP(e.message) + '</div>';
+      }
+    }
 
     //  PAIEMENTS 
     function refreshPaiementsView() {
@@ -4452,3 +4762,4 @@ const proSvcList = [
     </script>
   </body>
 </html>
+
