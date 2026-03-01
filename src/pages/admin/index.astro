@@ -457,6 +457,11 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 <div id="adm-toast"></div>
 
 <script is:inline define:vars={{ isSuperAdmin, adminId }}>
+  window.__admIsSuperAdmin = !!isSuperAdmin;
+  window.__admAdminId      = String(adminId || '');
+</script>
+
+<script is:inline>
   var _currentClient = null;
   var _currentTab    = 'messages';
   var _clientData    = null;
@@ -464,8 +469,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   var _search        = '';
   var _scope         = 'all';
   var _debounceTimer = null;
-  var _isSuper       = !!isSuperAdmin;
-  var _meId          = String(adminId || '');
+  var _isSuper       = !!(window.__admIsSuperAdmin);
+  var _meId          = String(window.__admAdminId || '');
   var _prosLoaded    = false;
 
   // ── Sections ────────────────────────────────────────────────────────────
@@ -1005,19 +1010,6 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     clearTimeout(t._timer);
     t._timer = setTimeout(function(){ t.style.display = 'none'; }, 3000);
   }
-
-  // ── Exposition globale (define:vars crée un IIFE → fonctions non accessibles via onclick="...") ──
-  window.showSection  = showSection;
-  window.setScope     = setScope;
-  window.goPage       = goPage;
-  window.closeDrawer  = closeDrawer;
-  window.switchDTab   = switchDTab;
-  window.openClient   = openClient;
-  window.assignClient = assignClient;
-  window.sendReply    = sendReply;
-  window.suggestReply = suggestReply;
-  window.changePro    = changePro;
-  window.updateStatus = updateStatus;
 
   // ── Init ──────────────────────────────────────────────────────────────────
   loadStats();
