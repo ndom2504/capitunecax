@@ -3178,7 +3178,24 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
     };
 
     window.setPackMode = function(packId, packPrice, mode) {
+      // Toggle : si le pack est déjà sélectionné, on le désélectionne
+      if (ST.pack === packId) {
+        var btnDe = document.getElementById('pack-'+packId);
+        if(btnDe){btnDe.classList.remove('selected-pack');btnDe.textContent='\u2713 Choisir ce pack';}
+        var subElDe = document.getElementById('cs-sub-'+packId);
+        if(subElDe) subElDe.textContent = formatMoney(0);
+        ST.pack=null; ST.packPrice=0; ST.packItemsSelected={};
+        document.querySelectorAll('.option').forEach(function(cb){cb.checked=false;});
+        updateServiceTotal();
+        return;
+      }
+      // Sélection d'un nouveau pack
       document.querySelectorAll('.cs-btn').forEach(function(b){b.classList.remove('selected-pack');b.textContent='\u2713 Choisir ce pack';});
+      // Remettre à 0 le sous-total de l'ancien pack s'il y en avait un
+      if (ST.pack) {
+        var subElOld = document.getElementById('cs-sub-'+ST.pack);
+        if(subElOld) subElOld.textContent = formatMoney(0);
+      }
       document.querySelectorAll('.service-carte-item').forEach(function(c){c.classList.remove('selected');});
       ST.carte={};
       var btn = document.getElementById('pack-'+packId);
@@ -3225,7 +3242,13 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
     window.toggleCarte = function(id, price) {
       if (ST.pack) {
         document.querySelectorAll('.pack-card').forEach(function(c){c.classList.remove('selected');});
-        ST.pack=null; ST.packPrice=0;
+        // Remettre le sous-total du pack désélectionné à 0
+        var subElC = document.getElementById('cs-sub-'+ST.pack);
+        if(subElC) subElC.textContent = formatMoney(0);
+        var btnC = document.getElementById('pack-'+ST.pack);
+        if(btnC){btnC.classList.remove('selected-pack');btnC.textContent='\u2713 Choisir ce pack';}
+        ST.pack=null; ST.packPrice=0; ST.packItemsSelected={};
+        document.querySelectorAll('.option').forEach(function(cb){cb.checked=false;});
       }
       var el=document.getElementById('carte-'+id);
       if (ST.carte[id]) { delete ST.carte[id]; if(el) el.classList.remove('selected'); }
