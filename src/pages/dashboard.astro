@@ -67,12 +67,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       .transfer-label{color:#888;}
       .transfer-value{font-weight:600;color:var(--cap-dark);font-family:monospace;}
       .copy-btn{background:var(--cap-orange);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:8px;}
-      .crypto-info-box{background:#0f1923;border-radius:12px;padding:24px;}
-      .crypto-info-box h4{color:#f7931a;margin:0 0 16px;}
-      .crypto-wallet-row{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-bottom:1px solid #1e2d3d;}
-      .crypto-wallet-row:last-child{border-bottom:none;}
-      .crypto-coin{font-weight:700;color:#fff;font-size:14px;}
-      .crypto-address{font-family:monospace;font-size:11px;color:#a0aab4;word-break:break-all;}
+
       .paypal-loading{color:#888;font-size:14px;padding:20px;text-align:center;}
       .payment-success-badge{background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border-radius:12px;padding:24px;text-align:center;}
       .payment-success-badge i{font-size:2.5rem;margin-bottom:12px;display:block;}
@@ -1316,10 +1311,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                 <i class="fa fa-paypal"></i><h4>PayPal</h4><p>Compte PayPal ou carte<br>Protection acheteur incluse</p>
               </div>
               <div class="pay-method-card" id="pay-transfer" onclick="selectPayMethod('transfer')">
-                <i class="fa fa-university"></i><h4>Virement bancaire</h4><p>Interac ou virement SWIFT<br>Traitement sous 24h</p>
-              </div>
-              <div class="pay-method-card" id="pay-crypto" onclick="selectPayMethod('crypto')">
-                <i class="fa fa-bitcoin"></i><h4>Crypto-monnaie</h4><p>Bitcoin, USDT, ETH<br>Conversion automatique</p>
+                <i class="fa fa-university"></i><h4>Virement / Interac</h4><p>Interac ou virement SWIFT<br>Traitement sous 24h</p>
               </div>
             </div>
 
@@ -1351,32 +1343,6 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
                 <p style="font-size:12px;color:#999;margin:16px 0 0;">Votre dossier sera activé sous 24h après réception du virement. Envoyez la preuve de transfert dans la messagerie.</p>
                 <button class="btn-pay" style="margin-top:16px;width:100%;" onclick="confirmTransfer()">
                   <i class="fa fa-check"></i> Confirmer le virement
-                </button>
-              </div>
-            </div>
-
-            <!-- Crypto -->
-            <div id="form-crypto" class="pay-form-block" style="display:none;">
-              <div class="crypto-info-box">
-                <h4><i class="fa fa-bitcoin"></i> Portefeuilles acceptés</h4>
-                <div class="crypto-wallet-row">
-                  <span class="crypto-coin">Bitcoin (BTC)</span>
-                  <span class="crypto-address" id="addr-btc">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
-                  <button class="copy-btn" onclick="copyText(document.getElementById('addr-btc').textContent)">Copier</button>
-                </div>
-                <div class="crypto-wallet-row">
-                  <span class="crypto-coin">USDT (TRC-20)</span>
-                  <span class="crypto-address" id="addr-usdt">TQAYgBGd3FUqmJnCzxF8prJ3XqkBR6mQfP</span>
-                  <button class="copy-btn" onclick="copyText(document.getElementById('addr-usdt').textContent)">Copier</button>
-                </div>
-                <div class="crypto-wallet-row">
-                  <span class="crypto-coin">Ethereum (ETH)</span>
-                  <span class="crypto-address" id="addr-eth">0x32Be343B94f860124dC4fEe278FDCBD38C102D88</span>
-                  <button class="copy-btn" onclick="copyText(document.getElementById('addr-eth').textContent)">Copier</button>
-                </div>
-                <p style="font-size:12px;color:#a0aab4;margin:16px 0 0;">Envoyez exactement le montant indiqué. Partagez le TXID dans la messagerie pour accélérer la validation.</p>
-                <button class="btn-pay" style="margin-top:16px;width:100%;background:linear-gradient(135deg,#f7931a,#e8650a);" onclick="confirmCrypto()">
-                  <i class="fa fa-check"></i> Confirmer le paiement crypto
                 </button>
               </div>
             </div>
@@ -3535,7 +3501,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       // Mettre \u00e0 jour montant virement
       var tamt=document.getElementById('transfer-amount'); if(tamt) tamt.textContent=ts + ' ' + String(window.__currencyCode||'CAD').toUpperCase();
       var tref=document.getElementById('transfer-ref');
-      if(tref&&tref.textContent==='INV-...') tref.textContent='INV-'+(Date.now().toString().slice(-8));
+      if(tref&&tref.textContent==='INV-...') { var pc=(ST.projet&&ST.projet.type)?ST.projet.type.toUpperCase().slice(0,3):'SRV'; tref.textContent='INV-'+pc+'-'+(Date.now().toString().slice(-6)); }
       markStepActive('step-paiements');
     }
 
@@ -3544,7 +3510,7 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var el=document.getElementById('pay-'+m); if(el) el.classList.add('selected');
       ST.payMethod=m;
       // Afficher le bon formulaire
-      ['card','paypal','transfer','crypto'].forEach(function(x){
+      ['card','paypal','transfer'].forEach(function(x){
         var f=document.getElementById('form-'+x);
         if(f) f.style.display=(x===m?'block':'none');
       });
@@ -3557,8 +3523,9 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var total=computeTotal();
       var tref=document.getElementById('transfer-ref');
       var tamt=document.getElementById('transfer-amount');
-      if(tref) tref.textContent='INV-'+(ST.projet&&ST.projet.type?ST.projet.type.toUpperCase():'')+ '-'+Date.now().toString().slice(-6);
-      if(tamt) tamt.textContent=total.toLocaleString('fr-CA')+' $ CAD';
+      var projCode = (ST.projet && ST.projet.type) ? ST.projet.type.toUpperCase().slice(0,3) : 'SRV';
+      if(tref) tref.textContent = 'INV-' + projCode + '-' + Date.now().toString().slice(-6);
+      if(tamt) tamt.textContent = total > 0 ? (total.toLocaleString('fr-CA') + ' $ CAD') : 'À définir après sélection de service';
     };
 
     window.processPayment = async function() {
@@ -3606,12 +3573,6 @@ const PAYPAL_CID = import.meta.env.PUBLIC_PAYPAL_CLIENT_ID || import.meta.env.PA
       var total=computeTotal();
       if(total<=0){showToast('Veuillez sélectionner au moins un service avant de payer.','info');return;}
       onPaymentSuccess('transfer', null);
-    };
-
-    window.confirmCrypto = function() {
-      var total=computeTotal();
-      if(total<=0){showToast('Veuillez sélectionner au moins un service avant de payer.','info');return;}
-      onPaymentSuccess('crypto', null);
     };
 
     window.copyText = function(txt) {
