@@ -18,8 +18,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const db = (locals.runtime?.env as Env)?.DB ?? null;
     const useNeon = !db && hasNeonDatabase();
-    const resendApiKey = (locals.runtime?.env as Env & { RESEND_API_KEY?: string })?.RESEND_API_KEY
-      ?? import.meta.env.RESEND_API_KEY as string | undefined;
+    const resendApiKey =
+      (locals.runtime?.env as Env & { RESEND_API_KEY?: string })?.RESEND_API_KEY ??
+      (import.meta.env.RESEND_API_KEY as string | undefined) ??
+      (typeof process !== 'undefined' ? (process.env as Record<string, string | undefined>).RESEND_API_KEY : undefined);
 
     const token = generateVerificationToken();
     const expires = Date.now() + 24 * 60 * 60 * 1000;

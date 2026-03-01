@@ -185,6 +185,13 @@ import { baseUrl } from '../lib/base-url';
         return;
       }
 
+      // Compte créé mais envoi email échoué (ex: domaine Resend non vérifié)
+      if ((data as Record<string, unknown>)?.error) {
+        alert((data?.message as string) || 'Compte créé, mais l\'envoi de l\'email de confirmation a échoué. Contactez le support.');
+        window.location.href = '/connexion';
+        return;
+      }
+
       // Si l'email de vérification a été envoyé, rediriger vers la page d'attente
       if ((data as Record<string, unknown>)?.pending) {
         window.location.href = '/verification-envoyee?email=' + encodeURIComponent((data as Record<string, string>)?.email || email);

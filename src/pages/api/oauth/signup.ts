@@ -40,9 +40,12 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const isHttps   = import.meta.env.PROD || new URL(request.url).protocol === 'https:';
 
     // ── Vérification email ────────────────────────────────────────────────
+    // NOTE: import.meta.env est résolu au BUILD par Vite → sur Vercel (Node.js runtime)
+    // les variables d'env sont dans process.env, pas dans import.meta.env après build.
     const resendApiKey: string | undefined =
       (locals.runtime?.env as Record<string, string>)?.RESEND_API_KEY ??
-      (import.meta.env as Record<string, string>).RESEND_API_KEY;
+      (import.meta.env as Record<string, string>).RESEND_API_KEY ??
+      (typeof process !== 'undefined' ? (process.env as Record<string, string | undefined>).RESEND_API_KEY : undefined);
     const emailVerificationEnabled = !!resendApiKey;
     const verifyToken = generateVerificationToken();
     const verifyExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 h
@@ -181,6 +184,12 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       );
       if (!emailResult.ok) {
         console.error('[signup] Échec envoi email de vérification:', emailResult.error);
+        // Retourner l'erreur d'envoi plutôt que de faire croire que ça a marché
+        return json({
+          error: true,
+          message: `Compte créé mais l'envoi de l'email de confirmation a échoué : ${emailResult.error ?? 'erreur inconnue'}. Connectez-vous et demandez un renvoi depuis la page de connexion.`,
+          email: emailStr,
+        }, 207);
       }
       return json({
         pending: true,
