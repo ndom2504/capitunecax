@@ -1006,6 +1006,19 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     t._timer = setTimeout(function(){ t.style.display = 'none'; }, 3000);
   }
 
+  // ── Exposition globale (define:vars crée un IIFE → fonctions non accessibles via onclick="...") ──
+  window.showSection  = showSection;
+  window.setScope     = setScope;
+  window.goPage       = goPage;
+  window.closeDrawer  = closeDrawer;
+  window.switchDTab   = switchDTab;
+  window.openClient   = openClient;
+  window.assignClient = assignClient;
+  window.sendReply    = sendReply;
+  window.suggestReply = suggestReply;
+  window.changePro    = changePro;
+  window.updateStatus = updateStatus;
+
   // ── Init ──────────────────────────────────────────────────────────────────
   loadStats();
 
