@@ -50,9 +50,9 @@ export const GET: APIRoute = async ({ request, locals, cookies }) => {
     const limit = 20;
     const offset = (page - 1) * limit;
     const search = (url.searchParams.get('q') ?? '').trim();
-    const scopeRaw = (url.searchParams.get('scope') ?? 'me').toLowerCase();
-    const scope = (scopeRaw === 'unassigned' || scopeRaw === 'me' || scopeRaw === 'all') ? scopeRaw : 'me';
-    if (scope === 'all' && !isSuper) return json({ error: 'Réservé au super-admin' }, 403);
+    const scopeRaw = (url.searchParams.get('scope') ?? 'all').toLowerCase();
+    const scope = (scopeRaw === 'unassigned' || scopeRaw === 'me' || scopeRaw === 'all') ? scopeRaw : 'all';
+    // Tous les admins peuvent voir tous les clients ; isSuper conserve des privilèges d'assignation
 
     if (db) {
       const baseParams: unknown[] = [];

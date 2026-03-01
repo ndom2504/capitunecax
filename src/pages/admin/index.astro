@@ -247,6 +247,16 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin: 40px auto; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Pro badges */
+    .pro-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase; }
+    .badge-admin { background:rgba(231,76,60,.15);color:var(--red); }
+    .badge-pro { background:rgba(52,152,219,.15);color:var(--blue); }
+    .badge-client { background:rgba(136,145,180,.1);color:var(--muted); }
+    .btn-promote { background:rgba(46,204,113,.12);color:var(--green);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
+    .btn-promote:hover { background:var(--green);color:#fff; }
+    .btn-demote { background:rgba(231,76,60,.12);color:var(--red);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
+    .btn-demote:hover { background:var(--red);color:#fff; }
+
     /* Toast */
     #adm-toast {
       position: fixed; bottom: 24px; right: 24px; background: var(--green);
@@ -270,11 +280,14 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     <a class="nav-item" href="#clients" onclick="showSection('clients'); return false;">
       <i class="fa fa-users"></i> Clients
     </a>
+    <a class="nav-item" href="#pros" onclick="showSection('pros'); return false;">
+      <i class="fa fa-user-tie"></i> Comptes Pro
+    </a>
     <a class="nav-item" href="/admin/stripe-configuration">
       <i class="fa fa-credit-card"></i> Stripe
     </a>
-    <a class="nav-item" href="/dashboard?preview=1">
-      <i class="fa fa-arrow-left"></i> Espace client
+    <a class="nav-item" href="/dashboard?pro=1">
+      <i class="fa fa-rocket"></i> Espace Pro
     </a>
     <a class="nav-item" href="/api/oauth/signout" style="margin-top:auto;">
       <i class="fa fa-sign-out-alt"></i> Déconnexion
@@ -343,11 +356,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         <div style="display:flex;align-items:center;gap:12px">
           <div class="section-title">Clients</div>
           <div class="segmented" title="Filtrer par assignation">
-            <button class="seg-btn active" id="scope-me" onclick="setScope('me')"><i class="fa fa-user"></i> Mes clients</button>
+            <button class="seg-btn" id="scope-me" onclick="setScope('me')"><i class="fa fa-user"></i> Mes clients</button>
             <button class="seg-btn" id="scope-unassigned" onclick="setScope('unassigned')"><i class="fa fa-inbox"></i> Non assignés</button>
-            {isSuperAdmin && (
-              <button class="seg-btn" id="scope-all" onclick="setScope('all')"><i class="fa fa-layer-group"></i> Tous</button>
-            )}
+            <button class="seg-btn active" id="scope-all" onclick="setScope('all')"><i class="fa fa-layer-group"></i> Tous</button>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -377,6 +388,35 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         </table>
       </div>
       <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- SECTION COMPTES PRO -->
+    <div id="section-pros" style="display:none">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="section-title">Comptes Pro / Admins</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;color:var(--muted);">Comptes avec accès professionnel au dashboard</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Rôle / Type</th>
+              <th>Clients assignés</th>
+              <th>Revenus générés</th>
+              <th>Inscrit le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pros-body">
+            <tr><td colspan="6"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </div>
@@ -422,7 +462,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   var _clientData    = null;
   var _page          = 1;
   var _search        = '';
-  var _scope         = 'me';
+  var _scope         = 'all';
   var _debounceTimer = null;
   var _isSuper       = !!isSuperAdmin;
   var _meId          = String(adminId || '');
@@ -432,16 +472,20 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   function showSection(name) {
     document.getElementById('section-dashboard').style.display = name === 'dashboard' ? '' : 'none';
     document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
+    document.getElementById('section-pros').style.display      = name === 'pros'      ? '' : 'none';
     document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
     // Réactiver l'item correspondant (fonctionne même quand showSection est appelé depuis un bouton)
     document.querySelectorAll('.sidebar-nav .nav-item').forEach(function(el) {
       var oc = el.getAttribute('onclick') || '';
       if (oc.indexOf("showSection('" + name + "')") !== -1) el.classList.add('active');
     });
-    var titles = { dashboard: 'Tableau de bord', clients: 'Clients' };
+    var titles = { dashboard: 'Tableau de bord', clients: 'Clients', pros: 'Comptes Pro' };
     document.getElementById('page-title').textContent = titles[name] || name;
     if (name === 'clients' && !document.getElementById('clients-body').dataset.loaded) {
       loadClients();
+    }
+    if (name === 'pros' && !document.getElementById('pros-body').dataset.loaded) {
+      loadPros();
     }
   }
 
@@ -609,6 +653,84 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   }
 
   function goPage(p) { _page = p; loadClients(); }
+
+  // ── Comptes Pro ──────────────────────────────────────────────────────────
+  async function loadPros() {
+    var tbody = document.getElementById('pros-body');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+    try {
+      const r = await fetch('/api/admin/pros-list');
+      if (!r.ok) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Erreur ' + r.status + '</td></tr>';
+        return;
+      }
+      const d = await r.json();
+      if (!d.pros || !d.pros.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa fa-user-tie"></i>Aucun compte pro / admin</div></td></tr>';
+        tbody.dataset.loaded = '1';
+        return;
+      }
+      tbody.innerHTML = d.pros.map(function(p) {
+        var initials = (p.name || p.email || '?').charAt(0).toUpperCase();
+        var roleBadge = p.role === 'admin'
+          ? '<span class="pro-badge badge-admin"><i class="fa fa-shield-alt"></i> Admin</span>'
+          : '';
+        var typeBadge = p.account_type === 'pro'
+          ? '<span class="pro-badge badge-pro"><i class="fa fa-briefcase"></i> Pro</span>'
+          : '<span class="pro-badge badge-client">Client</span>';
+        var clients = Number(p.clients_count || 0);
+        var revenue = Number(p.total_revenue || 0);
+        var date = p.created_at ? new Date(p.created_at).toLocaleDateString('fr-CA') : '—';
+        var isSelf = String(p.id) === String(_meId);
+        var actionBtn = '';
+        if (!isSelf) {
+          if (p.account_type === 'pro') {
+            actionBtn = '<button class="btn-demote" onclick="changePro(\'' + p.id + '\', \'demote\')"><i class="fa fa-user-minus"></i> Rétrograder</button>';
+          } else if (p.role !== 'admin') {
+            actionBtn = '<button class="btn-promote" onclick="changePro(\'' + p.id + '\', \'promote\')"><i class="fa fa-user-plus"></i> Promouvoir Pro</button>';
+          }
+        }
+        return '<tr>'
+          + '<td><div style="display:flex;align-items:center;gap:10px">'
+          + '<div class="avatar-sm">' + initials + '</div>'
+          + '<div><div class="client-name">' + esc(p.name || '—') + '</div><div class="client-email">' + esc(p.email) + '</div></div>'
+          + '</div></td>'
+          + '<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + roleBadge + ' ' + typeBadge + '</div></td>'
+          + '<td style="font-weight:600">' + clients + '</td>'
+          + '<td style="color:var(--green);font-weight:600">' + (revenue > 0 ? '$' + revenue.toFixed(0) : '—') + '</td>'
+          + '<td style="color:var(--muted);font-size:12px">' + date + '</td>'
+          + '<td>' + (actionBtn || (isSelf ? '<span style="color:var(--muted);font-size:12px">Vous</span>' : '—')) + '</td>'
+          + '</tr>';
+      }).join('');
+      tbody.dataset.loaded = '1';
+    } catch (err) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:20px">Erreur de connexion</td></tr>';
+    }
+  }
+
+  async function changePro(userId, action) {
+    var label = action === 'promote' ? 'Promouvoir en Pro' : 'Rétrograder en Client';
+    if (!confirm(label + ' ?')) return;
+    try {
+      const r = await fetch('/api/admin/pros-list', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, action }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        toast(label + ' effectué ✓');
+        // Recharger la liste
+        document.getElementById('pros-body').dataset.loaded = '';
+        loadPros();
+      } else {
+        toast(d.error || 'Erreur', true);
+      }
+    } catch {
+      toast('Erreur de connexion', true);
+    }
+  }
 
   function debounceSearch() {
     clearTimeout(_debounceTimer);
