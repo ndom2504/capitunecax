@@ -64,6 +64,26 @@ const landingServices = [
     header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
     header.smaller .site-logo { height: 60px; }
     header.smaller .site-logo img { height: 36px; }
+
+    /* Vidéo hero arrière-plan */
+    .Banner_sec { position: relative; overflow: hidden; }
+    .hero-video-bg {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 100%; min-height: 100%;
+      width: auto; height: auto;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-video-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(10,15,40,0.70) 0%, rgba(10,15,40,0.45) 60%, rgba(0,0,0,0.20) 100%);
+      z-index: 1;
+    }
+    .Banner_sec .bannerside { position: relative; z-index: 2; }
   </style>
 
   <div class="DesignHolder">
@@ -92,6 +112,10 @@ const landingServices = [
       </header>
 
       <div class="Banner_sec" id="home">
+        <video class="hero-video-bg" autoplay muted loop playsinline preload="auto">
+          <source src="/templatemo_473_november/video/hero-bg.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-video-overlay"></div>
         <div class="bannerside">
           <div class="Center">
             <div class="leftside">
