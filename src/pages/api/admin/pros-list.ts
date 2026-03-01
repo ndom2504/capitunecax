@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
       const rows = await db
         .prepare(
           `SELECT
-             u.id, u.name, u.email, u.role, u.account_type, u.created_at,
+             u.id, u.name, u.email, u.role, u.account_type, u.created_at, u.suspended,
              (SELECT COUNT(*) FROM client_assignments WHERE pro_id = u.id) AS clients_count,
              (SELECT COUNT(*)
               FROM payments pay
@@ -64,6 +64,7 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
         u.role,
         u.account_type,
         u.created_at::text AS created_at,
+        u.suspended,
         (SELECT COUNT(*)::int FROM client_assignments WHERE pro_id = u.id) AS clients_count,
         (SELECT COUNT(*)::int
          FROM payments pay

@@ -257,6 +257,16 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .btn-demote { background:rgba(231,76,60,.12);color:var(--red);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
     .btn-demote:hover { background:var(--red);color:#fff; }
 
+    /* Suspend / Delete buttons */
+    .btn-suspend { background:rgba(241,196,15,.12);color:var(--yellow);border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
+    .btn-suspend:hover { background:var(--yellow);color:#000; }
+    .btn-unsuspend { background:rgba(46,204,113,.12);color:var(--green);border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
+    .btn-unsuspend:hover { background:var(--green);color:#fff; }
+    .btn-delete { background:rgba(231,76,60,.12);color:var(--red);border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s; }
+    .btn-delete:hover { background:var(--red);color:#fff; }
+    .badge-suspended { background:rgba(241,196,15,.18);color:var(--yellow);display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase; }
+    .actions-cell { display:flex;gap:6px;flex-wrap:wrap;align-items:center; }
+
     /* Toast */
     #adm-toast {
       position: fixed; bottom: 24px; right: 24px; background: var(--green);
@@ -379,7 +389,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
               <th>Statut</th>
               <th>Dernier message</th>
               <th>Revenus</th>
-              <th></th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="clients-body">
@@ -628,7 +638,12 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           + '</tr>';
       }
 
-      return '<tr class="client-row" onclick="openClient(\''+c.id+'\')">'
+      var isSusp = c.suspended == 1 || c.suspended === true;
+      var suspBtn = isSusp
+        ? '<button class="btn-unsuspend" onclick="event.stopPropagation();suspendUser(\''+c.id+'\',false)"><i class="fa fa-play"></i> Réactiver</button>'
+        : '<button class="btn-suspend" onclick="event.stopPropagation();suspendUser(\''+c.id+'\',true)"><i class="fa fa-ban"></i> Suspendre</button>';
+      var delBtn = '<button class="btn-delete" onclick="event.stopPropagation();deleteUser(\''+c.id+'\', \''+esc(c.name||c.email)+'\')"><i class="fa fa-trash"></i></button>';
+      return '<tr class="client-row" onclick="openClient(\''+c.id+'\')">'  
         + '<td><div style="display:flex;align-items:center;gap:10px">'
         + '<div class="avatar-sm">'+initials+'</div>'
         + '<div><div class="client-name">'+esc(c.name||'—')+'</div><div class="client-email">'+esc(c.email)+'</div></div></div></td>'
@@ -636,7 +651,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         + '<td><span class="status-pill '+pillClass+'">'+pillLabel+'</span></td>'
         + '<td class="msg-preview">'+lastMsg+'</td>'
         + '<td style="color:var(--green);font-weight:600">'+paid+'</td>'
-        + '<td><button class="btn-sm" onclick="event.stopPropagation();openClient(\''+c.id+'\')"><i class="fa fa-eye"></i> Voir</button></td>'
+        + '<td><div class="actions-cell"><button class="btn-sm" onclick="event.stopPropagation();openClient(\''+c.id+'\')" style="margin:0"><i class="fa fa-eye"></i> Voir</button>' + suspBtn + delBtn + '</div></td>'
         + '</tr>';
     }).join('');
     // Pagination
@@ -686,18 +701,26 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         var revenue = Number(p.total_revenue || 0);
         var date = p.created_at ? new Date(p.created_at).toLocaleDateString('fr-CA') : '—';
         var isSelf = String(p.id) === String(_meId);
+        var isSuspPro = p.suspended == 1 || p.suspended === true;
         var actionBtn = '';
         if (!isSelf) {
+          var promoPart = '';
           if (p.account_type === 'pro') {
-            actionBtn = '<button class="btn-demote" onclick="changePro(\'' + p.id + '\', \'demote\')"><i class="fa fa-user-minus"></i> Rétrograder</button>';
+            promoPart = '<button class="btn-demote" onclick="changePro(\'' + p.id + '\', \'demote\')"><i class="fa fa-user-minus"></i> Rétrograder</button>';
           } else if (p.role !== 'admin') {
-            actionBtn = '<button class="btn-promote" onclick="changePro(\'' + p.id + '\', \'promote\')"><i class="fa fa-user-plus"></i> Promouvoir Pro</button>';
+            promoPart = '<button class="btn-promote" onclick="changePro(\'' + p.id + '\', \'promote\')"><i class="fa fa-user-plus"></i> Promouvoir Pro</button>';
           }
+          var suspPartPro = isSuspPro
+            ? '<button class="btn-unsuspend" onclick="suspendUser(\'' + p.id + '\',false)"><i class="fa fa-play"></i> Réactiver</button>'
+            : '<button class="btn-suspend" onclick="suspendUser(\'' + p.id + '\',true)"><i class="fa fa-ban"></i> Suspendre</button>';
+          var delPartPro = '<button class="btn-delete" onclick="deleteUser(\'' + p.id + '\', \'' + esc(p.name||p.email) + '\')" title="Supprimer le compte"><i class="fa fa-trash"></i></button>';
+          actionBtn = '<div class="actions-cell">' + promoPart + suspPartPro + delPartPro + '</div>';
         }
+        var suspBadgePro = isSuspPro ? ' <span class="badge-suspended"><i class="fa fa-ban"></i> Suspendu</span>' : '';
         return '<tr>'
           + '<td><div style="display:flex;align-items:center;gap:10px">'
           + '<div class="avatar-sm">' + initials + '</div>'
-          + '<div><div class="client-name">' + esc(p.name || '—') + '</div><div class="client-email">' + esc(p.email) + '</div></div>'
+          + '<div><div class="client-name">' + esc(p.name || '—') + suspBadgePro + '</div><div class="client-email">' + esc(p.email) + '</div></div>'
           + '</div></td>'
           + '<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + roleBadge + ' ' + typeBadge + '</div></td>'
           + '<td style="font-weight:600">' + clients + '</td>'
@@ -996,6 +1019,58 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   }
 
   // ── Utils ─────────────────────────────────────────────────────────────────
+  async function suspendUser(userId, doSuspend) {
+    var label = doSuspend ? 'Suspendre' : 'Réactiver';
+    var warning = doSuspend ? 'L\'utilisateur ne pourra plus se connecter.' : 'L\'utilisateur pourra se reconnecter.';
+    if (!confirm(label + ' ce compte ?\n' + warning)) return;
+    try {
+      const r = await fetch('/api/admin/user/' + userId + '/suspend', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suspend: !!doSuspend }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        toast(label + ' effectué ✓');
+        // Recharger la liste active
+        var prosBody = document.getElementById('pros-body');
+        if (prosBody && prosBody.dataset.loaded) { prosBody.dataset.loaded = ''; loadPros(); }
+        var clientsBody = document.getElementById('clients-body');
+        if (clientsBody && clientsBody.dataset.loaded) { loadClients(); }
+      } else {
+        toast(d.error || 'Erreur', true);
+      }
+    } catch { toast('Erreur de connexion', true); }
+  }
+
+  async function deleteUser(userId, userName) {
+    var msg = 'Supprimer définitivement le compte de « ' + userName + ' » ?\n\nCette action est IRRÉVERSIBLE. Tous ses projets, messages et paiements seront supprimés.';
+    if (!confirm(msg)) return;
+    // Double confirmation
+    var confirm2 = prompt('Tapez SUPPRIMER pour confirmer :');
+    if ((confirm2 || '').trim().toUpperCase() !== 'SUPPRIMER') { toast('Annulé', false); return; }
+    try {
+      const r = await fetch('/api/admin/user/' + userId + '/suspend', {
+        method: 'DELETE',
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) {
+        toast('Compte supprimé ✓');
+        // Fermer le drawer si c'est ce client
+        if (_currentClient === userId) closeDrawer();
+        // Recharger
+        var prosBody = document.getElementById('pros-body');
+        if (prosBody && prosBody.dataset.loaded) { prosBody.dataset.loaded = ''; loadPros(); }
+        var clientsBody = document.getElementById('clients-body');
+        if (clientsBody && clientsBody.dataset.loaded) { loadClients(); }
+        // Dashboard stats
+        loadStats();
+      } else {
+        toast(d.error || 'Erreur', true);
+      }
+    } catch { toast('Erreur de connexion', true); }
+  }
+
   function esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
