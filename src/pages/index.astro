@@ -125,56 +125,11 @@ const landingServices = [
               <a href="#contact" class="secondary-cta">NOUS CONTACTER</a>
             </div>
             <div class="rightside">
-              <ul id="slider">
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/cn-tower-toronto.jpg" alt="Toronto" /></figure>
-                    <div class="text"><div class="Lorem"><p>Toronto <span>Ontario</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/canadian-flag-against-cloudy-sky.jpg" alt="Drapeau canadien" /></figure>
-                    <div class="text"><div class="Lorem"><p>Rêve <span>canadien</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/festivio-ottawa-815375_1920.jpg" alt="Ottawa" /></figure>
-                    <div class="text"><div class="Lorem"><p>Ottawa <span>capitale</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/photo-of-a-cityscape-with-a-ferris-wheel.jpg" alt="Paysage urbain" /></figure>
-                    <div class="text"><div class="Lorem"><p>Ville <span>dynamique</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/happy-canada-day.jpg" alt="Fête du Canada" /></figure>
-                    <div class="text"><div class="Lorem"><p>Intégration <span>locale</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/canada-flag-couple.jpg" alt="Couple au Canada" /></figure>
-                    <div class="text"><div class="Lorem"><p>Nouveau <span>départ</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/toronto-city-hall-sign.jpg" alt="Toronto City Hall" /></figure>
-                    <div class="text"><div class="Lorem"><p>Montage <span>du dossier</span></p></div></div>
-                  </div>
-                </li>
-                <li>
-                  <div class="Slider">
-                    <figure><img src="/templatemo_473_november/side/16301694-canada-5148191_1920.jpg" alt="Paysage Canada" /></figure>
-                    <div class="text"><div class="Lorem"><p>Analyse <span>stratégique</span></p></div></div>
-                  </div>
-                </li>
-              </ul>
+              <div class="hero-mini-screen">
+                <video autoplay muted loop playsinline preload="auto" class="hero-mini-video">
+                  <source src="/templatemo_473_november/video/integration-canada.mp4" type="video/mp4" />
+                </video>
+              </div>
               <figure><img src="/templatemo_473_november/img/Shadow-img.png" alt="shadow" class="Shadow" /></figure>
             </div>
           </div>
@@ -395,6 +350,32 @@ const landingServices = [
   #home .rightside {
     width: 62%;
     transform: translateX(52px);
+  }
+
+  #home .rightside .hero-mini-screen {
+    position: relative;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 6px rgba(255,255,255,0.12),
+      0 0 0 12px rgba(255,255,255,0.06),
+      0 24px 64px rgba(0,0,0,0.55);
+    aspect-ratio: 16/9;
+    background: #000;
+  }
+
+  #home .rightside .hero-mini-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px;
+  }
+
+  #home .rightside .Shadow {
+    margin-top: -10px;
+    opacity: 0.5;
   }
 
   #home .rightside .Slider figure img {
