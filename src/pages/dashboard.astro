@@ -1256,7 +1256,7 @@ const proSvcList = [
               <!-- Services injectés par JS via /api/catalog -->
             </div>
           </div>
-          <div class="submit-service-bar" id="serviceSubmitBar">
+          <div class="submit-service-bar" id="serviceSubmitBar" style={isProMode ? 'display:none' : ''}>
             <div>
               <div class="total-label">Total sélectionné</div>
               <div class="total-amount" id="serviceTotalAmount">0 $</div>
@@ -2699,6 +2699,9 @@ const proSvcList = [
             var v = prices[pk];
             var el = document.getElementById('proPackPrice-'+pk);
             if (el) el.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
+            // Aussi pré-remplir les inputs du tab Paramètres (price-essentiel, price-standard…)
+            var settingsEl = document.getElementById('price-' + pk);
+            if (settingsEl) settingsEl.value = (typeof v === 'number' && Number.isFinite(v)) ? String(v) : '';
           });
         } catch(_e) {}
       } catch(e) {}
@@ -3468,6 +3471,7 @@ const proSvcList = [
     }
 
     window.submitService = function() {
+      if(isProModeUI()) return; // les pros ne soumettent pas de services client
       if(!ST.projet||!ST.projet.type) { showToast('📋 Complétez d\'abord votre profil projet — on vous y emmène !', 'info'); setTimeout(function(){ switchTab('projet'); }, 600); return; }
       var total=ST.packPrice; Object.values(ST.carte).forEach(function(p){total+=p;});
       if(total===0) return;

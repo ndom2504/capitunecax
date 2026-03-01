@@ -141,7 +141,7 @@ export function DashboardFAQ() {
             💬 Contacter le support
           </button>
           <a
-            href="mailto:support@capitune.com"
+            href="mailto:equipe@capitune.com"
             className="bg-background text-foreground border border-border px-6 py-3 rounded-lg font-semibold hover:bg-muted/50 transition"
           >
             📧 Envoyer un email
