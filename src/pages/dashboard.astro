@@ -1821,12 +1821,12 @@ const proSvcList = [
 
               <div id="tpPacksBlock">
                 <div class="section-title-block" style="margin-top:0;">
-                  <h2>Offres & tarifs</h2>
-                  <p style="margin:4px 0 0;font-size:13px;color:#999;">Packs configurés par ce professionnel</p>
+                  <h2>Services proposés</h2>
+                  <p style="margin:4px 0 0;font-size:13px;color:#999;">Services inclus dans chaque pack de ce professionnel</p>
                   <div class="title-line"></div>
                 </div>
                 <div id="tpTarifs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:8px;"></div>
-                <div id="tpNoOffers" style="display:none;color:#aaa;font-size:13px;padding:14px 0;"><i class="fa fa-info-circle"></i> Ce professionnel n'a pas encore configuré ses tarifs.</div>
+                <div id="tpNoOffers" style="display:none;color:#aaa;font-size:13px;padding:14px 0;"><i class="fa fa-info-circle"></i> Aucun service disponible pour le moment.</div>
               </div>
 
               <!-- AVIS CLIENTS (visible côté client uniquement) -->
@@ -4555,47 +4555,28 @@ const proSvcList = [
           return String(id).charAt(0).toUpperCase() + String(id).slice(1);
         }
 
-        var packSvcs = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
-        var prices   = (m.pro_pack_prices   && typeof m.pro_pack_prices   === 'object') ? m.pro_pack_prices   : {};
+        var packSvcs  = (m.pro_pack_services && typeof m.pro_pack_services === 'object') ? m.pro_pack_services : {};
         var pkgCatalog = window.CAP_PACKAGES_CATALOG || [];
 
-        // ── Rendu des cartes packs (style packagesCatalog + données pro) ─────────
-        var tarifsWrap  = document.getElementById('tpTarifs');
-        var noOffersEl  = document.getElementById('tpNoOffers');
+        // ── Rendu des cartes packs — services uniquement, sans prix ──────────────
+        var tarifsWrap = document.getElementById('tpTarifs');
+        var noOffersEl = document.getElementById('tpNoOffers');
         if (tarifsWrap) {
           var cardsHtml = '';
-          var anyCard = false;
           pkgCatalog.forEach(function(pkg) {
-            var priceVal = prices[pkg.id];
             var included = Array.isArray(packSvcs[pkg.id]) ? packSvcs[pkg.id] : [];
-            var hasPrice = typeof priceVal === 'number' && Number.isFinite(priceVal);
-            // N'affiche la carte que si le pro a renseigné un prix OU des services
-            if (!hasPrice && !included.length) return;
-            anyCard = true;
-            var priceTxt  = hasPrice ? priceVal.toLocaleString('fr-CA') + '\u00a0$' : '—';
+            // Services à afficher : ceux configurés par le pro, sinon features du catalogue
+            var feats = included.length
+              ? included.map(function(id) { return svcLabel(id); })
+              : (pkg.features || []);
             var headBg    = pkg.popular ? 'linear-gradient(135deg,var(--cap-orange),#e67e00)' : 'linear-gradient(135deg,#1a1a2e,#0f3460)';
             var borderCol = pkg.popular ? 'var(--cap-orange)' : '#eee';
-            var priceColor = hasPrice ? 'var(--cap-orange)' : '#bbb';
-            // Si le pro a coché des services perso → les afficher ; sinon fallback sur les features du catalogue
-            var includedHtml;
-            if (included.length) {
-              includedHtml = included.map(function(id) {
-                return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
-                  + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
-                  + esc(svcLabel(id))
-                  + '</li>';
-              }).join('');
-            } else if (pkg.features && pkg.features.length) {
-              // Fallback : features par défaut du pack (toujours visibles)
-              includedHtml = pkg.features.map(function(feat) {
-                return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
-                  + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
-                  + esc(feat)
-                  + '</li>';
-              }).join('');
-            } else {
-              includedHtml = '<li style="color:#aaa;font-size:12px;">—</li>';
-            }
+            var featHtml  = feats.map(function(f) {
+              return '<li style="display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#444;">'
+                + '<span style="color:var(--cap-orange);font-weight:800;flex-shrink:0;">\u2713</span>'
+                + esc(String(f))
+                + '</li>';
+            }).join('');
             cardsHtml +=
               '<div style="background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.09);overflow:hidden;'
               + 'display:flex;flex-direction:column;border:2px solid '+borderCol+';position:relative;">'
@@ -4606,19 +4587,15 @@ const proSvcList = [
                 + '<div style="font-size:.95rem;font-weight:800;margin-bottom:3px;">'+esc(pkg.name)+'</div>'
                 + '<div style="font-size:11px;opacity:.8;">'+esc(pkg.description)+'</div>'
               + '</div>'
-              + '<div style="padding:12px 14px;background:#fafafa;border-bottom:1px solid #f0f0f0;text-align:center;">'
-                + '<div style="font-size:1.8rem;font-weight:900;color:'+priceColor+';">'+esc(priceTxt)+'</div>'
-                + '<div style="font-size:10px;color:#bbb;margin-top:2px;">CAD · prix du pack</div>'
-              + '</div>'
               + '<div style="padding:12px 14px;flex:1;">'
                 + '<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;">'
-                + includedHtml
+                + featHtml
                 + '</ul>'
               + '</div>'
               + '</div>';
           });
           tarifsWrap.innerHTML = cardsHtml;
-          if (noOffersEl) noOffersEl.style.display = anyCard ? 'none' : '';
+          if (noOffersEl) noOffersEl.style.display = pkgCatalog.length ? 'none' : '';
         }
 
         modal.classList.add('open');
