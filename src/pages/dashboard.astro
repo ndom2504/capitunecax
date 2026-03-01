@@ -257,6 +257,22 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
       .team-loading{text-align:center;padding:48px;color:#aaa;font-size:15px;}
       .team-contact-btn{display:inline-block;margin-top:20px;background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;}
       .team-contact-btn:hover{background:#e67e00;}
+      /* === STAR RATING === */
+      .star-row{display:flex;gap:6px;justify-content:center;margin:4px 0 8px;}
+      .star-btn{font-size:24px;cursor:pointer;color:#ddd;background:none;border:none;padding:0;line-height:1;transition:color .15s;}
+      .star-btn.filled,.star-btn:hover,.star-btn:hover~.star-btn{color:#ddd;}
+      .star-row:hover .star-btn{color:#ffd700;}
+      .star-btn:hover~.star-btn{color:#ddd !important;}
+      .star-row .star-btn.filled{color:#ffd700;}
+      .review-avg-badge{display:inline-flex;align-items:center;gap:5px;background:#fff8e6;border:1px solid #ffd46b;border-radius:20px;padding:3px 11px;font-size:12px;font-weight:700;color:#b07700;margin-top:4px;}
+      .review-card{background:#f9f9f9;border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--cap-orange);}
+      .review-card-stars{font-size:14px;color:#ffd700;margin-bottom:4px;}
+      .review-card-comment{font-size:13px;color:#555;line-height:1.5;margin:0 0 4px;}
+      .review-card-author{font-size:11px;color:#aaa;}
+      .review-form-wrap{background:#fff8f0;border:1px solid #ffd899;border-radius:12px;padding:16px 18px;margin-top:14px;}
+      .review-submit-btn{margin-top:10px;padding:9px 24px;border-radius:8px;background:var(--cap-orange);color:#fff;border:none;font-weight:700;font-size:13px;cursor:pointer;transition:.2s;width:100%;}
+      .review-submit-btn:hover{background:#e67e00;}
+      .review-submit-btn:disabled{opacity:.6;cursor:not-allowed;}
       .service-pill{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;background:#fff8f0;border:1px solid #ffd899;color:#7a4e00;font-size:12px;font-weight:700;}
       .toggle-row{display:flex;gap:0;border:2px solid var(--cap-orange);border-radius:10px;overflow:hidden;width:fit-content;margin-bottom:28px;}
       .toggle-row button{padding:9px 24px;border:none;background:#fff;color:var(--cap-orange);font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
@@ -1770,6 +1786,31 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
                 <div class="title-line"></div>
               </div>
               <div class="tarifs-grid" id="tpTarifs"></div>
+
+              <!-- AVIS CLIENTS (visible côté client uniquement) -->
+              <div id="tpReviewsBlock" style="margin-top:32px;display:none;">
+                <div class="section-title-block" style="margin-top:0;">
+                  <h2>Avis des clients</h2>
+                  <div class="title-line"></div>
+                </div>
+                <div id="tpReviewsSummary" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;"></div>
+                <div id="tpReviewsList"></div>
+
+                <!-- Formulaire notation -->
+                <div class="review-form-wrap" id="tpReviewForm">
+                  <p style="font-weight:700;font-size:14px;color:var(--cap-dark);margin:0 0 10px;"><i class="fa fa-star" style="color:var(--cap-orange);"></i> Laisser un avis</p>
+                  <div class="star-row" id="tpStarRow">
+                    <button class="star-btn" data-v="1" onclick="setReviewStar(1)" title="1 étoile">&#9733;</button>
+                    <button class="star-btn" data-v="2" onclick="setReviewStar(2)" title="2 étoiles">&#9733;</button>
+                    <button class="star-btn" data-v="3" onclick="setReviewStar(3)" title="3 étoiles">&#9733;</button>
+                    <button class="star-btn" data-v="4" onclick="setReviewStar(4)" title="4 étoiles">&#9733;</button>
+                    <button class="star-btn" data-v="5" onclick="setReviewStar(5)" title="5 étoiles">&#9733;</button>
+                  </div>
+                  <textarea id="tpReviewComment" placeholder="Votre commentaire (optionnel)" style="width:100%;min-height:72px;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #e5d5a0;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+                  <button class="review-submit-btn" id="tpReviewSubmitBtn" onclick="submitProReview()" disabled>Soumettre ma note</button>
+                  <p id="tpReviewHint" style="font-size:12px;color:#888;margin-top:6px;"></p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -4114,6 +4155,11 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
             html += '<div class="team-card-body">';
             html += '<p class="team-name">' + esc(m.name||'Conseiller CAPITUNE') + '</p>';
             html += '<span class="team-badge"><i class="fa fa-star"></i> Conseiller Pro</span>';
+            if (m.avg_rating && m.avg_rating > 0) {
+              var stars = '';
+              for (var s = 1; s <= 5; s++) { stars += s <= Math.round(m.avg_rating) ? '&#9733;' : '&#9734;'; }
+              html += '<span class="review-avg-badge" style="margin-bottom:8px;">' + stars + ' <span>' + m.avg_rating.toFixed(1) + '</span> <span style="font-weight:400;color:#999;">('+m.review_count+')</span></span>';
+            }
             if (m.location) html += '<p class="team-location"><i class="fa fa-map-marker"></i> ' + esc(m.location) + (flag ? (' <span style="font-size:15px;">'+flag+'</span>') : '') + '</p>';
             if (expYears > 0) html += '<p style="font-size:12px;color:#888;margin:4px 0 0;"><i class="fa fa-briefcase" style="color:var(--cap-orange);"></i> ' + expYears + ' an' + (expYears > 1 ? 's' : '') + ' d&#39;expérience</p>';
             if (m.bio) html += '<p class="team-bio" style="margin-top:10px;">' + esc(m.bio) + '</p>';
@@ -4283,7 +4329,136 @@ const INTERAC_INSTITUTION = import.meta.env.PUBLIC_INTERAC_INSTITUTION || import
         }
 
         modal.classList.add('open');
+
+        // ---- AVIS ----
+        window._reviewProId = m.id;
+        window._reviewRating = 0;
+        var isProUI = document.body && document.body.classList.contains('is-pro-mode');
+        var reviewsBlock = document.getElementById('tpReviewsBlock');
+        if (reviewsBlock) reviewsBlock.style.display = isProUI ? 'none' : '';
+        if (!isProUI) {
+          // Reset form
+          window._reviewRating = 0;
+          setReviewStar(0);
+          var commentEl = document.getElementById('tpReviewComment');
+          var hintEl = document.getElementById('tpReviewHint');
+          var submitBtn = document.getElementById('tpReviewSubmitBtn');
+          if (commentEl) commentEl.value = '';
+          if (hintEl) hintEl.textContent = '';
+          if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Soumettre ma note'; }
+          loadProReviews(m.id);
+        }
       } catch(e) {}
+    };
+
+    // ============================================================
+    //  NOTATION DES PROS
+    // ============================================================
+    window._reviewProId = null;
+    window._reviewRating = 0;
+
+    window.setReviewStar = function(v) {
+      window._reviewRating = v;
+      var btns = document.querySelectorAll('#tpStarRow .star-btn');
+      btns.forEach(function(btn) {
+        var bv = parseInt(btn.getAttribute('data-v'), 10);
+        btn.classList.toggle('filled', bv <= v);
+      });
+      var submitBtn = document.getElementById('tpReviewSubmitBtn');
+      if (submitBtn) submitBtn.disabled = (v < 1);
+    };
+
+    window.loadProReviews = function(proId) {
+      var summEl = document.getElementById('tpReviewsSummary');
+      var listEl = document.getElementById('tpReviewsList');
+      if (summEl) summEl.innerHTML = '<span style="color:#aaa;font-size:13px;"><i class="fa fa-spinner fa-spin"></i> Chargement des avis...</span>';
+      if (listEl) listEl.innerHTML = '';
+
+      fetch('/api/reviews?pro_id=' + encodeURIComponent(proId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var avg = data.avg || 0;
+          var count = data.count || 0;
+          var reviews = data.reviews || [];
+          var mine = data.mine;
+
+          // Summary
+          if (summEl) {
+            var stars = '';
+            for (var s = 1; s <= 5; s++) { stars += '<span style="color:' + (s <= Math.round(avg) ? '#ffd700' : '#ddd') + ';font-size:20px;">&#9733;</span>'; }
+            summEl.innerHTML = count > 0
+              ? stars + '<strong style="font-size:22px;color:var(--cap-dark);">' + avg.toFixed(1) + '</strong><span style="color:#999;font-size:13px;">&nbsp;(' + count + ' avis)</span>'
+              : '<span style="color:#aaa;font-size:13px;">Aucun avis pour le moment</span>';
+          }
+
+          // Liste des avis (5 derniers)
+          if (listEl) {
+            if (!reviews.length) {
+              listEl.innerHTML = '';
+            } else {
+              listEl.innerHTML = reviews.slice(0, 5).map(function(r) {
+                var rStars = '';
+                for (var s = 1; s <= 5; s++) { rStars += '<span style="color:' + (s <= r.rating ? '#ffd700' : '#ddd') + ';">&#9733;</span>'; }
+                var date = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-CA',{year:'numeric',month:'short',day:'numeric'}) : '';
+                var initials = (r.client_name||'?').split(' ').map(function(w){return w[0]||'';}).slice(0,2).join('').toUpperCase();
+                return '<div class="review-card">'
+                  + '<div class="review-card-stars">' + rStars + '</div>'
+                  + (r.comment ? '<p class="review-card-comment">' + String(r.comment).replace(/[<>&]/g, function(c){return c==='<'?'&lt;':c==='>'?'&gt;':'&amp;';}) + '</p>' : '')
+                  + '<div class="review-card-author"><strong>' + String(initials).replace(/[<>&]/g,'') + '</strong> &bull; ' + date + '</div>'
+                  + '</div>';
+              }).join('');
+            }
+          }
+
+          // Pré-remplir si l'utilisateur a déjà un avis
+          if (mine) {
+            setReviewStar(mine.rating);
+            var commentEl = document.getElementById('tpReviewComment');
+            var hintEl = document.getElementById('tpReviewHint');
+            if (commentEl) commentEl.value = mine.comment || '';
+            if (hintEl) hintEl.textContent = 'Vous avez déjà donné une note. Vous pouvez la modifier.';
+            var submitBtn = document.getElementById('tpReviewSubmitBtn');
+            if (submitBtn) submitBtn.textContent = 'Mettre à jour ma note';
+          }
+        })
+        .catch(function() {
+          if (summEl) summEl.innerHTML = '<span style="color:#e74c3c;font-size:13px;">Impossible de charger les avis</span>';
+        });
+    };
+
+    window.submitProReview = function() {
+      var proId = window._reviewProId;
+      var rating = window._reviewRating || 0;
+      if (!proId || rating < 1) return;
+      var commentEl = document.getElementById('tpReviewComment');
+      var hintEl = document.getElementById('tpReviewHint');
+      var submitBtn = document.getElementById('tpReviewSubmitBtn');
+      var comment = commentEl ? commentEl.value.trim() : '';
+
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi...'; }
+      if (hintEl) hintEl.textContent = '';
+
+      fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pro_id: proId, rating: rating, comment: comment })
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok) {
+            if (hintEl) hintEl.textContent = '\u2705 Avis enregistré !';
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Mettre à jour ma note'; }
+            loadProReviews(proId);
+            showToast('Votre avis a été enregistré.', 'success');
+          } else {
+            if (hintEl) hintEl.textContent = data.error || 'Erreur lors de l\'enregistrement';
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Soumettre ma note'; }
+          }
+        })
+        .catch(function() {
+          if (hintEl) hintEl.textContent = 'Erreur réseau';
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Soumettre ma note'; }
+        });
     };
 
     // ============================================================
