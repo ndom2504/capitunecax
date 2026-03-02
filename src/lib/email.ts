@@ -21,7 +21,7 @@ export async function sendEmail(
     return { ok: false, error: 'RESEND_API_KEY_MISSING' };
   }
 
-  const from = payload.from ?? 'Capitune <no-reply@capitune.ca>';
+  const from = payload.from ?? 'Capitune <no-reply@capitune.com>';
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
