@@ -32,12 +32,20 @@ export default function InscriptionScreen() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
 
+  // Proxy HTTPS d'Expo — URI acceptée par Google et Microsoft
+  // À enregistrer dans les deux consoles : https://auth.expo.io/@ndom2504/capitune-mobile
+  const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+
   // ── Google OAuth ───────────────────────────────────────────────────────────
-  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    webClientId:     GOOGLE_WEB_CLIENT_ID,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
-    iosClientId:     GOOGLE_IOS_CLIENT_ID,
-  });
+  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest(
+    {
+      webClientId:     GOOGLE_WEB_CLIENT_ID,
+      androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+      iosClientId:     GOOGLE_IOS_CLIENT_ID,
+      redirectUri,
+    },
+    { useProxy: true } as any
+  );
 
   useEffect(() => {
     if (googleResponse?.type === 'success') {
@@ -51,7 +59,6 @@ export default function InscriptionScreen() {
   const microsoftDiscovery = AuthSession.useAutoDiscovery(
     'https://login.microsoftonline.com/common/v2.0'
   );
-  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'capitune' });
 
   const [msRequest, msResponse, promptMsAsync] = AuthSession.useAuthRequest(
     { clientId: MICROSOFT_CLIENT_ID, scopes: ['openid', 'profile', 'email'], redirectUri, responseType: AuthSession.ResponseType.Token },
