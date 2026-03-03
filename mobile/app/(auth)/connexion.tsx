@@ -28,10 +28,11 @@ export default function ConnexionScreen() {
   const [loading, setLoading]   = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
 
-  // Proxy HTTPS d'Expo — URI acceptée par Google Console
+  // Google : proxy Expo (HTTPS, accepté par Google Console)
   const googleRedirectUri = AuthSession.makeRedirectUri({ useProxy: true });
-  // URI MSAL pré-enregistrée dans Azure (format: msal{clientId}://auth)
-  const msRedirectUri = `msal${MICROSOFT_CLIENT_ID}://auth`;
+  // Microsoft : custom scheme accepté par Azure (plateforme Mobile)
+  // → Enregistrer "capitune://" dans Azure Portal > Authentification > Mobile
+  const msRedirectUri = AuthSession.makeRedirectUri({ scheme: 'capitune' });
 
   // ── Google OAuth ───────────────────────────────────────────────────────────
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest(
@@ -46,14 +47,13 @@ export default function ConnexionScreen() {
 
   useEffect(() => {
     if (googleResponse?.type === 'success') {
-      const { authentication } = googleResponse;
-      handleOAuthToken('google', authentication?.accessToken ?? '');
+      handleOAuthToken('google', googleResponse.authentication?.accessToken ?? '');
     } else if (googleResponse?.type === 'error' || googleResponse?.type === 'dismiss') {
       setOauthLoading(null);
     }
   }, [googleResponse]);
 
-  // ── Microsoft OAuth ────────────────────────────────────────────────────────
+  // ── Microsoft OAuth (Code + PKCE — implicit flow déprécié par MS) ─────────
   const microsoftDiscovery = AuthSession.useAutoDiscovery(
     'https://login.microsoftonline.com/common/v2.0'
   );
@@ -63,39 +63,49 @@ export default function ConnexionScreen() {
       clientId:     MICROSOFT_CLIENT_ID,
       scopes:       ['openid', 'profile', 'email'],
       redirectUri:  msRedirectUri,
-      responseType: AuthSession.ResponseType.Token,
+      responseType: AuthSession.ResponseType.Code,
+      usePKCE:      true,
     },
     microsoftDiscovery
   );
 
   useEffect(() => {
     if (msResponse?.type === 'success') {
-      handleOAuthToken('microsoft', msResponse.params?.access_token ?? '');
+      const code        = msResponse.params?.code ?? '';
+      const verifier    = msRequest?.codeVerifier ?? '';
+      handleMsCode(code, verifier);
     } else if (msResponse?.type === 'error' || msResponse?.type === 'dismiss') {
       setOauthLoading(null);
     }
   }, [msResponse]);
 
-  // ── Envoi du token OAuth au backend ───────────────────────────────────────
-  const handleOAuthToken = async (provider: 'google' | 'microsoft', token: string) => {
+  // ── Handlers backend ──────────────────────────────────────────────────────
+  const handleOAuthToken = async (provider: 'google', token: string) => {
     if (!token) { setOauthLoading(null); return; }
     try {
-      const res = await fetch(`https://capitunecax.vercel.app/api/auth/${provider}`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token }),
+      const res  = await fetch(`https://capitunecax.vercel.app/api/auth/${provider}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body:   JSON.stringify({ token }),
       });
       const data = await res.json();
-      if (res.ok && data.ok) {
-        // Le contexte auth gère la redirection via son state
-      } else {
-        Alert.alert('Connexion échouée', data.message ?? `Erreur ${provider}`);
-      }
+      if (!res.ok) Alert.alert('Connexion échouée', data.message ?? `Erreur ${provider}`);
     } catch {
       Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
-    } finally {
-      setOauthLoading(null);
-    }
+    } finally { setOauthLoading(null); }
+  };
+
+  const handleMsCode = async (code: string, codeVerifier: string) => {
+    if (!code) { setOauthLoading(null); return; }
+    try {
+      const res  = await fetch('https://capitunecax.vercel.app/api/auth/microsoft', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body:   JSON.stringify({ code, codeVerifier, redirectUri: msRedirectUri }),
+      });
+      const data = await res.json();
+      if (!res.ok) Alert.alert('Connexion échouée', data.message ?? 'Erreur Microsoft');
+    } catch {
+      Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
+    } finally { setOauthLoading(null); }
   };
 
   const handleLogin = async () => {

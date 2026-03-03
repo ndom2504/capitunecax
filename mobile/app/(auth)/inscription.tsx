@@ -32,10 +32,10 @@ export default function InscriptionScreen() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
 
-  // Proxy HTTPS d'Expo — URI acceptée par Google Console
+  // Google : proxy Expo (HTTPS, accepté par Google Console)
   const googleRedirectUri = AuthSession.makeRedirectUri({ useProxy: true });
-  // URI MSAL pré-enregistrée dans Azure (format: msal{clientId}://auth)
-  const msRedirectUri = `msal${MICROSOFT_CLIENT_ID}://auth`;
+  // Microsoft : custom scheme accepté par Azure (plateforme Mobile)
+  const msRedirectUri = AuthSession.makeRedirectUri({ scheme: 'capitune' });
 
   // ── Google OAuth ───────────────────────────────────────────────────────────
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest(
@@ -56,39 +56,52 @@ export default function InscriptionScreen() {
     }
   }, [googleResponse]);
 
-  // ── Microsoft OAuth ────────────────────────────────────────────────────────
+  // ── Microsoft OAuth (Code + PKCE) ─────────────────────────────────────────
   const microsoftDiscovery = AuthSession.useAutoDiscovery(
     'https://login.microsoftonline.com/common/v2.0'
   );
 
   const [msRequest, msResponse, promptMsAsync] = AuthSession.useAuthRequest(
-    { clientId: MICROSOFT_CLIENT_ID, scopes: ['openid', 'profile', 'email'], redirectUri: msRedirectUri, responseType: AuthSession.ResponseType.Token },
+    { clientId: MICROSOFT_CLIENT_ID, scopes: ['openid', 'profile', 'email'], redirectUri: msRedirectUri, responseType: AuthSession.ResponseType.Code, usePKCE: true },
     microsoftDiscovery
   );
 
   useEffect(() => {
     if (msResponse?.type === 'success') {
-      handleOAuthToken('microsoft', msResponse.params?.access_token ?? '');
+      const code     = msResponse.params?.code ?? '';
+      const verifier = msRequest?.codeVerifier ?? '';
+      handleMsCode(code, verifier);
     } else if (msResponse?.type === 'error' || msResponse?.type === 'dismiss') {
       setOauthLoading(null);
     }
   }, [msResponse]);
 
-  const handleOAuthToken = async (provider: 'google' | 'microsoft', token: string) => {
+  const handleOAuthToken = async (provider: 'google', token: string) => {
     if (!token) { setOauthLoading(null); return; }
     try {
-      const res = await fetch(`https://capitunecax.vercel.app/api/auth/${provider}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+      const res  = await fetch(`https://capitunecax.vercel.app/api/auth/${provider}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body:   JSON.stringify({ token }),
       });
       const data = await res.json();
       if (!res.ok) Alert.alert('Erreur', data.message ?? `Erreur ${provider}`);
     } catch {
       Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
-    } finally {
-      setOauthLoading(null);
-    }
+    } finally { setOauthLoading(null); }
+  };
+
+  const handleMsCode = async (code: string, codeVerifier: string) => {
+    if (!code) { setOauthLoading(null); return; }
+    try {
+      const res  = await fetch('https://capitunecax.vercel.app/api/auth/microsoft', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body:   JSON.stringify({ code, codeVerifier, redirectUri: msRedirectUri }),
+      });
+      const data = await res.json();
+      if (!res.ok) Alert.alert('Erreur', data.message ?? 'Erreur Microsoft');
+    } catch {
+      Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
+    } finally { setOauthLoading(null); }
   };
 
   const set = (key: keyof typeof form) => (val: string) =>
