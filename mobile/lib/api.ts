@@ -231,7 +231,7 @@ export interface CapiServicesContext {
 
 export interface CapiActivationPayload {
   session: CapiSession;
-  advisorId: string;
+  advisorId?: string;
   selectedServiceIds: string[];
 }
 
@@ -258,10 +258,11 @@ export interface ProjectStep {
 export interface Message {
   id: string;
   content: string;
-  sender: 'user' | 'bot' | 'admin';
+  sender: 'user' | 'bot' | 'admin' | 'pro' | 'client';
   senderName?: string;
   createdAt: string;
   attachments?: string[];
+  read?: boolean;
 }
 
 export interface Document {

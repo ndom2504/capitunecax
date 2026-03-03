@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { useRouter, Link } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
 import { Colors } from '../../constants/Colors';
 import { authApi, type SignupPayload } from '../../lib/api';
+
+WebBrowser.maybeCompleteAuthSession();
+
+// ── Remplacez ces valeurs par vos vrais identifiants OAuth ──────────────────
+const GOOGLE_WEB_CLIENT_ID     = 'VOTRE_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_ANDROID_CLIENT_ID = 'VOTRE_ANDROID_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID     = 'VOTRE_IOS_CLIENT_ID.apps.googleusercontent.com';
+const MICROSOFT_CLIENT_ID      = 'VOTRE_AZURE_APP_CLIENT_ID';
+// ────────────────────────────────────────────────────────────────────────────
 
 type AccountType = 'client' | 'pro';
 
@@ -18,6 +31,58 @@ export default function InscriptionScreen() {
   });
   const [accountType, setAccountType] = useState<AccountType>('client');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
+
+  // ── Google OAuth ───────────────────────────────────────────────────────────
+  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
+    webClientId:     GOOGLE_WEB_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId:     GOOGLE_IOS_CLIENT_ID,
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      handleOAuthToken('google', googleResponse.authentication?.accessToken ?? '');
+    } else if (googleResponse?.type === 'error' || googleResponse?.type === 'dismiss') {
+      setOauthLoading(null);
+    }
+  }, [googleResponse]);
+
+  // ── Microsoft OAuth ────────────────────────────────────────────────────────
+  const microsoftDiscovery = AuthSession.useAutoDiscovery(
+    'https://login.microsoftonline.com/common/v2.0'
+  );
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'capitune' });
+
+  const [msRequest, msResponse, promptMsAsync] = AuthSession.useAuthRequest(
+    { clientId: MICROSOFT_CLIENT_ID, scopes: ['openid', 'profile', 'email'], redirectUri, responseType: AuthSession.ResponseType.Token },
+    microsoftDiscovery
+  );
+
+  useEffect(() => {
+    if (msResponse?.type === 'success') {
+      handleOAuthToken('microsoft', msResponse.params?.access_token ?? '');
+    } else if (msResponse?.type === 'error' || msResponse?.type === 'dismiss') {
+      setOauthLoading(null);
+    }
+  }, [msResponse]);
+
+  const handleOAuthToken = async (provider: 'google' | 'microsoft', token: string) => {
+    if (!token) { setOauthLoading(null); return; }
+    try {
+      const res = await fetch(`https://capitunecax.vercel.app/api/auth/${provider}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (!res.ok) Alert.alert('Erreur', data.message ?? `Erreur ${provider}`);
+    } catch {
+      Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
+    } finally {
+      setOauthLoading(null);
+    }
+  };
 
   const set = (key: keyof typeof form) => (val: string) =>
     setForm(f => ({ ...f, [key]: val }));
@@ -129,6 +194,39 @@ export default function InscriptionScreen() {
               : <Text style={styles.btnText}>Créer mon compte</Text>
             }
           </TouchableOpacity>
+
+          {/* ── Séparateur ── */}
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>ou</Text>
+            <View style={styles.separatorLine} />
+          </View>
+
+          {/* ── Google ── */}
+          <TouchableOpacity
+            style={[styles.oauthBtn, (!googleRequest || oauthLoading !== null) && styles.btnDisabled]}
+            onPress={() => { setOauthLoading('google'); promptGoogleAsync(); }}
+            disabled={!googleRequest || oauthLoading !== null}
+            activeOpacity={0.8}
+          >
+            {oauthLoading === 'google'
+              ? <ActivityIndicator color={Colors.white} size="small" />
+              : <><Text style={styles.googleG}>G</Text><Text style={styles.oauthBtnText}>Continuer avec Google</Text></>
+            }
+          </TouchableOpacity>
+
+          {/* ── Microsoft ── */}
+          <TouchableOpacity
+            style={[styles.oauthBtn, styles.oauthBtnMs, (!msRequest || oauthLoading !== null) && styles.btnDisabled]}
+            onPress={() => { setOauthLoading('microsoft'); promptMsAsync(); }}
+            disabled={!msRequest || oauthLoading !== null}
+            activeOpacity={0.8}
+          >
+            {oauthLoading === 'microsoft'
+              ? <ActivityIndicator color={Colors.white} size="small" />
+              : <><Ionicons name="logo-windows" size={18} color="#00a4ef" /><Text style={styles.oauthBtnText}>Continuer avec Microsoft</Text></>
+            }
+          </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
@@ -183,4 +281,16 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, marginBottom: 40 },
   footerText: { color: 'rgba(255,255,255,0.55)', fontSize: 14 },
   footerLink: { color: Colors.orange, fontSize: 14, fontWeight: '700' },
+  separator: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
+  separatorText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginHorizontal: 12 },
+  oauthBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 12, paddingVertical: 14, marginBottom: 12,
+  },
+  oauthBtnMs: { marginBottom: 0 },
+  oauthBtnText: { color: Colors.white, fontSize: 15, fontWeight: '600' },
+  googleG: { fontSize: 16, fontWeight: '800', color: '#EA4335' },
 });
