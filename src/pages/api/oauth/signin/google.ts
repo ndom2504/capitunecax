@@ -32,6 +32,8 @@ function buildGoogleAuthUrl(clientId: string, callbackUrl: string, state: string
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const reqUrl = new URL(request.url);
   const accountType = reqUrl.searchParams.get('accountType') === 'pro' ? 'pro' : 'client';
+  // ?mobile=true → signale que la requête vient de l'app mobile (deep link au retour)
+  const mobile = reqUrl.searchParams.get('mobile') === 'true';
 
   const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
@@ -53,14 +55,16 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const origin = import.meta.env.DEV ? 'http://localhost:3000' : (siteOrigin ?? requestOrigin);
 
   if (!import.meta.env.DEV && siteOrigin && siteOrigin !== requestOrigin) {
-    // Conserver le choix de type de compte
+    // Conserver le choix de type de compte et le flag mobile
     const target = new URL(`${siteOrigin}/api/oauth/signin/google`);
     target.searchParams.set('accountType', accountType);
+    if (mobile) target.searchParams.set('mobile', 'true');
     return redirect(target.toString());
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/google`;
-  const state = crypto.randomUUID();
+  // Encoder :mobile dans le state → survit à l'aller-retour Google sans cookie supplémentaire
+  const state = mobile ? `${crypto.randomUUID()}:mobile` : crypto.randomUUID();
 
   const isHttps = origin.startsWith('https');
 

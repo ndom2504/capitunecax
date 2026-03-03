@@ -59,6 +59,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     return redirect('/connexion?error=InvalidState');
   }
 
+  // state peut contenir le suffixe :mobile (ajouté par signin/microsoft.ts) pour signaler l'app mobile
+  const isMobile = !!(state && state.endsWith(':mobile'));
+
   try {
     const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
     const clientSecret = import.meta.env.AUTH_MICROSOFT_ENTRA_SECRET ?? import.meta.env.AUTH_MICROSOFT_SECRET;
@@ -224,6 +227,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           maxAge: 60 * 60 * 24 * 30,
         });
 
+        if (isMobile) {
+          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+        }
         return redirect('/dashboard');
       } catch (dbErr) {
         console.error('[Microsoft OAuth] D1 session/store failed, falling back:', dbErr);
@@ -298,6 +304,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           sameSite: 'lax',
           maxAge: 60 * 60 * 24 * 30,
         });
+        if (isMobile) {
+          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+        }
         return redirect('/dashboard');
       } catch (dbErr) {
         console.error('[Microsoft OAuth] Neon session/store failed, falling back:', dbErr);
@@ -335,6 +344,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
       maxAge: 60 * 60 * 24 * 7,
     });
 
+    if (isMobile) {
+      return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+    }
     return redirect('/dashboard');
   } catch (err) {
     console.error('[Microsoft OAuth] Callback error:', err);

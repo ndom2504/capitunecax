@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
@@ -6,20 +6,13 @@ import {
 import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
+import * as Linking from 'expo-linking';
 import { Colors } from '../../constants/Colors';
-import { authApi, type SignupPayload } from '../../lib/api';
+import { authApi, type SignupPayload, type UserInfo } from '../../lib/api';
 import { saveSession } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
-WebBrowser.maybeCompleteAuthSession();
-
-// Lus depuis mobile/.env (préfixe EXPO_PUBLIC_ = exposé côté client Expo SDK 49+)
-const GOOGLE_WEB_CLIENT_ID     = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID     ?? '';
-const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '';
-const GOOGLE_IOS_CLIENT_ID     = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID     ?? '';
-const MICROSOFT_CLIENT_ID      = process.env.EXPO_PUBLIC_MICROSOFT_CLIENT_ID      ?? '';
+const BACKEND = 'https://capitunecax.vercel.app';
 
 type AccountType = 'client' | 'pro';
 
@@ -35,67 +28,70 @@ export default function InscriptionScreen() {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
 
-  // Un seul redirect URI proxy HTTPS — identique pour Google et Microsoft
-  const proxyRedirectUri = AuthSession.makeRedirectUri({ useProxy: true });
-
-  // ── Google OAuth ───────────────────────────────────────────────────────────
-  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest(
-    { webClientId: GOOGLE_WEB_CLIENT_ID, androidClientId: GOOGLE_ANDROID_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID, redirectUri: proxyRedirectUri },
-    { useProxy: true } as any
-  );
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      handleOAuthToken('google', googleResponse.authentication?.accessToken ?? '');
-    } else if (googleResponse?.type === 'error' || googleResponse?.type === 'dismiss') {
-      setOauthLoading(null);
-    }
-  }, [googleResponse]);
-
-  // ── Microsoft OAuth (Token implicite) ────────────────────────────────────────
-  const microsoftDiscovery = AuthSession.useAutoDiscovery(
-    'https://login.microsoftonline.com/common/v2.0'
-  );
-
-  const [msRequest, msResponse, promptMsAsync] = AuthSession.useAuthRequest(
-    { clientId: MICROSOFT_CLIENT_ID, scopes: ['openid', 'profile', 'email'], redirectUri: proxyRedirectUri, responseType: AuthSession.ResponseType.Token },
-    microsoftDiscovery
-  );
-
-  useEffect(() => {
-    if (msResponse?.type === 'success') {
-      handleOAuthToken('microsoft', msResponse.params?.access_token ?? '');
-    } else if (msResponse?.type === 'error' || msResponse?.type === 'dismiss') {
-      setOauthLoading(null);
-    }
-  }, [msResponse]);
-
-  const handleOAuthToken = async (provider: 'google' | 'microsoft', token: string) => {
-    if (!token) { setOauthLoading(null); return; }
+  // ── Traitement du deep link capitune://oauth?token=...&email=...&name=...&role=...
+  const handleOAuthDeepLink = async (url: string) => {
     try {
-      const userInfoUrl = provider === 'google'
-        ? 'https://www.googleapis.com/oauth2/v2/userinfo'
-        : 'https://graph.microsoft.com/v1.0/me';
-      const uiRes  = await fetch(userInfoUrl, { headers: { Authorization: `Bearer ${token}` } });
-      const ui     = await uiRes.json();
-      const email  = ui.email ?? ui.mail ?? ui.userPrincipalName ?? '';
-      const name   = ui.name ?? ui.displayName ?? '';
-      if (!email) { Alert.alert('Erreur', 'Impossible de récupérer votre adresse email.'); return; }
+      const parsed = Linking.parse(url);
+      const token      = parsed.queryParams?.token as string | undefined;
+      const emailParam = parsed.queryParams?.email as string | undefined;
+      const nameParam  = parsed.queryParams?.name  as string | undefined;
+      const roleParam  = (parsed.queryParams?.role as string | undefined) ?? 'client';
+      const atParam    = (parsed.queryParams?.account_type as string | undefined) ?? accountType;
 
-      const res  = await fetch('https://capitunecax.vercel.app/api/auth/oauth', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body:   JSON.stringify({ provider, token, email, name }),
-      });
-      const data = await res.json();
-      if (res.ok && data.ok && data.token) {
-        await saveSession(data.token, data.user);
-        setUser(data.user);
-      } else {
-        Alert.alert('Erreur', data.message ?? `Erreur ${provider}`);
+      if (!token || !emailParam) {
+        Alert.alert('Connexion incomplète', 'Token ou email manquant après OAuth.');
+        return;
+      }
+
+      const user: UserInfo = {
+        id: '',
+        email: decodeURIComponent(emailParam),
+        name:  decodeURIComponent(nameParam ?? emailParam),
+        role:  roleParam as UserInfo['role'],
+        account_type: atParam as UserInfo['account_type'],
+      };
+
+      await saveSession(decodeURIComponent(token), user);
+      setUser(user);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de finaliser la connexion OAuth.');
+    }
+  };
+
+  // ── Google OAuth via WebBrowser (SDK 51 compatible) ───────────────────
+  const handleGoogle = async () => {
+    setOauthLoading('google');
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        `${BACKEND}/api/oauth/signin/google?mobile=true&accountType=${accountType}`,
+        'capitune://oauth'
+      );
+      if (result.type === 'success' && result.url) {
+        await handleOAuthDeepLink(result.url);
       }
     } catch {
       Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
-    } finally { setOauthLoading(null); }
+    } finally {
+      setOauthLoading(null);
+    }
+  };
+
+  // ── Microsoft OAuth via WebBrowser (SDK 51 compatible) ────────────────
+  const handleMicrosoft = async () => {
+    setOauthLoading('microsoft');
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&accountType=${accountType}`,
+        'capitune://oauth'
+      );
+      if (result.type === 'success' && result.url) {
+        await handleOAuthDeepLink(result.url);
+      }
+    } catch {
+      Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
+    } finally {
+      setOauthLoading(null);
+    }
   };
 
   const set = (key: keyof typeof form) => (val: string) =>
@@ -218,9 +214,9 @@ export default function InscriptionScreen() {
 
           {/* ── Google ── */}
           <TouchableOpacity
-            style={[styles.oauthBtn, (!googleRequest || oauthLoading !== null) && styles.btnDisabled]}
-            onPress={() => { setOauthLoading('google'); promptGoogleAsync(); }}
-            disabled={!googleRequest || oauthLoading !== null}
+            style={[styles.oauthBtn, oauthLoading !== null && styles.btnDisabled]}
+            onPress={handleGoogle}
+            disabled={oauthLoading !== null}
             activeOpacity={0.8}
           >
             {oauthLoading === 'google'
@@ -231,9 +227,9 @@ export default function InscriptionScreen() {
 
           {/* ── Microsoft ── */}
           <TouchableOpacity
-            style={[styles.oauthBtn, styles.oauthBtnMs, (!msRequest || oauthLoading !== null) && styles.btnDisabled]}
-            onPress={() => { setOauthLoading('microsoft'); promptMsAsync(); }}
-            disabled={!msRequest || oauthLoading !== null}
+            style={[styles.oauthBtn, styles.oauthBtnMs, oauthLoading !== null && styles.btnDisabled]}
+            onPress={handleMicrosoft}
+            disabled={oauthLoading !== null}
             activeOpacity={0.8}
           >
             {oauthLoading === 'microsoft'

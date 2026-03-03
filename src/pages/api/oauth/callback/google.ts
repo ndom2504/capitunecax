@@ -48,6 +48,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     return redirect('/connexion?error=InvalidState');
   }
 
+  // state peut contenir le suffixe :mobile (ajouté par signin/google.ts) pour signaler l'app mobile
+  const isMobile = !!(state && state.endsWith(':mobile'));
+
   try {
     const clientId = import.meta.env.AUTH_GOOGLE_ID;
     const clientSecret = import.meta.env.AUTH_GOOGLE_SECRET;
@@ -218,6 +221,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           }
         );
 
+        if (isMobile) {
+          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+        }
         return redirect('/dashboard');
       } catch (dbErr) {
         console.error('[Google OAuth] D1 session/store failed, falling back:', dbErr);
@@ -300,6 +306,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
             maxAge: 60 * 60 * 24 * 30,
           }
         );
+        if (isMobile) {
+          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+        }
         return redirect('/dashboard');
       } catch (dbErr) {
         console.error('[Google OAuth] Neon session/store failed, falling back:', dbErr);
@@ -338,6 +347,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
       maxAge: 60 * 60 * 24 * 7,
     });
 
+    if (isMobile) {
+      return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+    }
     return redirect('/dashboard');
   } catch (err) {
     console.error('[Google OAuth] Callback error:', err);
