@@ -174,10 +174,10 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 14 },
   shortcutsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   shortcut: {
-    width: '46.5%', backgroundColor: Colors.white,
+    width: '46.5%', backgroundColor: Colors.surface,
     borderRadius: 14, padding: 16, alignItems: 'center', gap: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    shadowOpacity: 0.2, shadowRadius: 8, elevation: 2,
   },
   shortcutIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   shortcutLabel: { fontSize: 13, fontWeight: '600', color: Colors.text },
