@@ -30,8 +30,12 @@ export default function ConnexionScreen() {
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
 
   // Un seul redirect URI proxy HTTPS — identique pour Google et Microsoft
-  // À enregistrer dans Azure sous plateforme WEB (pas Mobile) : https://auth.expo.io/@ndom2504/capitune-mobile
   const proxyRedirectUri = AuthSession.makeRedirectUri({ useProxy: true });
+
+  // ── DEBUG : affiche l'URI exacte à enregistrer ────────────────────────────
+  useEffect(() => {
+    console.log('[OAuth] redirect URI =', proxyRedirectUri);
+  }, [proxyRedirectUri]);
 
   // ── Google OAuth ───────────────────────────────────────────────────────────
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest(
@@ -176,6 +180,14 @@ export default function ConnexionScreen() {
             <Text style={styles.linkText}>Mot de passe oublié ?</Text>
           </TouchableOpacity>
 
+          {/* ── DEBUG : URI de redirection (à supprimer après config) ── */}
+          <TouchableOpacity
+            style={styles.debugBtn}
+            onPress={() => Alert.alert('Redirect URI', proxyRedirectUri + '\n\nCopier cette valeur exacte dans Google Console et Azure.')}
+          >
+            <Text style={styles.debugText}>Voir l'URI de redirection OAuth</Text>
+          </TouchableOpacity>
+
           {/* ── Séparateur ── */}
           <View style={styles.separator}>
             <View style={styles.separatorLine} />
@@ -275,4 +287,6 @@ const styles = StyleSheet.create({
   oauthBtnMs: { marginBottom: 0 },
   oauthBtnText: { color: Colors.white, fontSize: 15, fontWeight: '600' },
   googleG: { fontSize: 16, fontWeight: '800', color: '#EA4335' },
+  debugBtn: { alignItems: 'center', marginTop: 8, padding: 6 },
+  debugText: { color: 'rgba(255,255,255,0.3)', fontSize: 11, textDecorationLine: 'underline' },
 });
