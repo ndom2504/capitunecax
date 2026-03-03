@@ -1,0 +1,169 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  RefreshControl, Alert, ActivityIndicator,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
+import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../context/AuthContext';
+import { dashboardApi, type Document } from '../../lib/api';
+
+const STATUS_CONFIG = {
+  validated: { label: 'Validé', color: Colors.success, icon: 'checkmark-circle' as const },
+  pending:   { label: 'En attente', color: Colors.warning, icon: 'time' as const },
+  rejected:  { label: 'À corriger', color: Colors.error, icon: 'alert-circle' as const },
+  missing:   { label: 'À envoyer', color: Colors.textMuted, icon: 'cloud-upload' as const },
+};
+
+// Données de démonstration si l'API ne renvoie rien
+const DEMO_DOCS: Document[] = [
+  { id: '1', name: 'Passeport.pdf', type: 'pdf', status: 'validated', uploadedAt: '2026-01-15' },
+  { id: '2', name: 'Photo identité.jpg', type: 'image', status: 'validated', uploadedAt: '2026-01-15' },
+  { id: '3', name: 'Relevé bancaire.pdf', type: 'pdf', status: 'rejected' },
+  { id: '4', name: 'Casier judiciaire.pdf', type: 'pdf', status: 'missing' },
+  { id: '5', name: 'Références emploi.pdf', type: 'pdf', status: 'pending', uploadedAt: '2026-02-20' },
+  { id: '6', name: 'Diplômes.pdf', type: 'pdf', status: 'missing' },
+];
+
+export default function DocumentsScreen() {
+  const { token } = useAuth();
+  const [docs, setDocs] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<'all' | Document['status']>('all');
+
+  const load = async () => {
+    if (!token) { setDocs(DEMO_DOCS); setLoading(false); return; }
+    const res = await dashboardApi.getDocuments(token);
+    setDocs(res.data?.length ? res.data : DEMO_DOCS);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [token]);
+
+  const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
+
+  const pickAndUpload = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: false });
+    if (result.canceled) return;
+    Alert.alert('Document sélectionné', result.assets[0].name + '\n(Upload à implémenter côté API)');
+  };
+
+  const filtered = filter === 'all' ? docs : docs.filter(d => d.status === filter);
+
+  const counts = {
+    all: docs.length,
+    validated: docs.filter(d => d.status === 'validated').length,
+    pending: docs.filter(d => d.status === 'pending').length,
+    rejected: docs.filter(d => d.status === 'rejected').length,
+    missing: docs.filter(d => d.status === 'missing').length,
+  };
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Documents</Text>
+        <TouchableOpacity style={styles.uploadBtn} onPress={pickAndUpload} activeOpacity={0.8}>
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.uploadBtnText}>Ajouter</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Filtres */}
+      <FlatList
+        horizontal
+        data={(['all', 'validated', 'pending', 'rejected', 'missing'] as const)}
+        keyExtractor={i => i}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersRow}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[styles.filterChip, filter === item && styles.filterChipActive]}
+            onPress={() => setFilter(item)}
+          >
+            <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>
+              {item === 'all' ? `Tous (${counts.all})`
+                : `${STATUS_CONFIG[item].label} (${counts[item]})`}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+
+      {loading ? (
+        <ActivityIndicator color={Colors.orange} style={{ marginTop: 60 }} />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={d => d.id}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
+          renderItem={({ item }) => {
+            const cfg = STATUS_CONFIG[item.status];
+            return (
+              <TouchableOpacity style={styles.docCard} activeOpacity={0.75}>
+                <View style={[styles.docIcon, { backgroundColor: `${cfg.color}18` }]}>
+                  <Ionicons
+                    name={item.type === 'image' ? 'image' : 'document-text'}
+                    size={22} color={cfg.color}
+                  />
+                </View>
+                <View style={styles.docInfo}>
+                  <Text style={styles.docName} numberOfLines={1}>{item.name}</Text>
+                  {item.uploadedAt && (
+                    <Text style={styles.docDate}>Envoyé le {item.uploadedAt}</Text>
+                  )}
+                </View>
+                <View style={styles.docStatus}>
+                  <Ionicons name={cfg.icon} size={18} color={cfg.color} />
+                  <Text style={[styles.docStatusText, { color: cfg.color }]}>{cfg.label}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={
+            <Text style={styles.empty}>Aucun document dans cette catégorie.</Text>
+          }
+        />
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.bgLight },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8,
+  },
+  title: { fontSize: 22, fontWeight: '800', color: Colors.text },
+  uploadBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: Colors.orange, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14,
+  },
+  uploadBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  filtersRow: { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
+  filterChip: {
+    paddingVertical: 6, paddingHorizontal: 14,
+    borderRadius: 20, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  filterText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
+  filterTextActive: { color: '#fff' },
+  list: { padding: 16, gap: 10 },
+  docCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: Colors.white, borderRadius: 14, padding: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 6, elevation: 1,
+  },
+  docIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  docInfo: { flex: 1 },
+  docName: { fontSize: 14, fontWeight: '600', color: Colors.text },
+  docDate: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  docStatus: { alignItems: 'center', gap: 2 },
+  docStatusText: { fontSize: 10, fontWeight: '700' },
+  empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 60, fontSize: 14 },
+});
