@@ -1,63 +1,58 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
-import { type ComponentProps } from 'react';
-
-type IoniconsName = ComponentProps<typeof Ionicons>['name'];
-
-function TabIcon({ name, color, size }: { name: IoniconsName; color: string; size: number }) {
-  return <Ionicons name={name} color={color} size={size} />;
-}
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        contentStyle: { backgroundColor: Colors.primaryDark },
         tabBarStyle: {
-          backgroundColor: Colors.tabBar,
-          borderTopColor: 'rgba(255,255,255,0.08)',
+          backgroundColor: Colors.dark,
+          borderTopColor: Colors.border,
+          borderTopWidth: 1,
           height: 62,
           paddingBottom: 8,
         },
-        tabBarActiveTintColor: Colors.tabBarActive,
-        tabBarInactiveTintColor: Colors.tabBarInactive,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarActiveTintColor: Colors.orange,
+        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Accueil',
-          tabBarIcon: ({ color, size }) => <TabIcon name="home" color={color} size={size} />,
+          tabBarLabel: 'Accueil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="documents"
+        name="projet"
         options={{
-          title: 'Documents',
-          tabBarIcon: ({ color, size }) => <TabIcon name="folder" color={color} size={size} />,
+          tabBarLabel: 'Mon Projet',
+          tabBarIcon: ({ color, size }) => <Ionicons name="folder-open" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messagerie"
         options={{
-          title: 'Messagerie',
-          tabBarIcon: ({ color, size }) => <TabIcon name="chatbubbles" color={color} size={size} />,
+          tabBarLabel: 'Messages',
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="paiements"
         options={{
-          title: 'Paiements',
-          tabBarIcon: ({ color, size }) => <TabIcon name="card" color={color} size={size} />,
+          tabBarLabel: 'Paiements',
+          tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }) => <TabIcon name="person-circle" color={color} size={size} />,
+          tabBarLabel: 'Profil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
     </Tabs>

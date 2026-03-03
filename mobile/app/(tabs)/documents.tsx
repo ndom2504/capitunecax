@@ -133,7 +133,7 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8,

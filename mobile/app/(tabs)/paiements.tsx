@@ -103,7 +103,7 @@ export default function PaiementsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   title: { fontSize: 22, fontWeight: '800', color: Colors.text, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
   summaryRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginBottom: 20 },
   summaryCard: {

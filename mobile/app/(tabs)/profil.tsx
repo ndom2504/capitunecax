@@ -135,7 +135,7 @@ export default function ProfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   scroll: { padding: 20, paddingBottom: 40 },
   profileBlock: { alignItems: 'center', marginBottom: 28 },
   avatarCircle: {

@@ -88,7 +88,7 @@ export default function MessagerieScreen() {
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           renderItem={({ item }) => {
-            const isMe = item.sender === 'client';
+            const isMe = item.sender === 'client' || item.sender === 'user';
             return (
               <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
                 <Text style={[styles.bubbleText, isMe ? styles.bubbleTextMe : styles.bubbleTextThem]}>
@@ -138,7 +138,7 @@ export default function MessagerieScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     padding: 16, backgroundColor: Colors.white,
