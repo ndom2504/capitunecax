@@ -61,6 +61,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
   // state peut contenir le suffixe :mobile (ajouté par signin/microsoft.ts) pour signaler l'app mobile
   const isMobile = !!(state && state.endsWith(':mobile'));
+  // Lire et supprimer le cookie redirect URI mobile
+  const mobileRedirectUri = cookies.get('oauth_mobile_redirect')?.value ?? 'capitune://oauth';
+  if (isMobile) cookies.delete('oauth_mobile_redirect', { path: '/' });
 
   try {
     const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
@@ -228,7 +231,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         });
 
         if (isMobile) {
-          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+          return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
         }
         return redirect('/dashboard');
       } catch (dbErr) {
@@ -305,7 +308,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           maxAge: 60 * 60 * 24 * 30,
         });
         if (isMobile) {
-          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+          return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
         }
         return redirect('/dashboard');
       } catch (dbErr) {
@@ -345,7 +348,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     });
 
     if (isMobile) {
-      return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+      return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(emailStr)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
     }
     return redirect('/dashboard');
   } catch (err) {

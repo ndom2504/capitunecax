@@ -15,8 +15,8 @@ function buildMicrosoftAuthUrl(clientId: string, tenantId: string, callbackUrl: 
 export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const reqUrl = new URL(request.url);
   const accountType = reqUrl.searchParams.get('accountType') === 'pro' ? 'pro' : 'client';
-  // ?mobile=true → signale que la requête vient de l'app mobile (deep link au retour)
   const mobile = reqUrl.searchParams.get('mobile') === 'true';
+  const mobileRedirectUri = reqUrl.searchParams.get('redirect_uri') ?? 'capitune://oauth';
 
   const clientId = import.meta.env.AUTH_MICROSOFT_ENTRA_ID ?? import.meta.env.AUTH_MICROSOFT_ID;
   const tenantId = import.meta.env.AUTH_MICROSOFT_ENTRA_TENANT_ID ?? 'common';
@@ -35,11 +35,11 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     const target = new URL(`${siteOrigin}/api/oauth/signin/microsoft`);
     target.searchParams.set('accountType', accountType);
     if (mobile) target.searchParams.set('mobile', 'true');
+    target.searchParams.set('redirect_uri', mobileRedirectUri);
     return redirect(target.toString());
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/microsoft-entra-id`;
-  // Encoder :mobile dans le state → survit à l'aller-retour Microsoft sans cookie supplémentaire
   const state = mobile ? `${crypto.randomUUID()}:mobile` : crypto.randomUUID();
 
   const isHttps = origin.startsWith('https');
@@ -59,6 +59,16 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     sameSite: 'lax',
     maxAge: 60 * 10,
   });
+
+  if (mobile) {
+    cookies.set('oauth_mobile_redirect', mobileRedirectUri, {
+      path: '/',
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: 'lax',
+      maxAge: 60 * 10,
+    });
+  }
 
   return redirect(buildMicrosoftAuthUrl(clientId, tenantId, callbackUrl, state));
 };

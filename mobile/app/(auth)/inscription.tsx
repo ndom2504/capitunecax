@@ -12,7 +12,7 @@ import { authApi, type SignupPayload, type UserInfo } from '../../lib/api';
 import { saveSession } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
-const BACKEND = 'https://capitunecax.vercel.app';
+const BACKEND = 'https://capituneweb.vercel.app';
 
 type AccountType = 'client' | 'pro';
 
@@ -61,10 +61,11 @@ export default function InscriptionScreen() {
   // ── Google OAuth via WebBrowser (SDK 51 compatible) ───────────────────
   const handleGoogle = async () => {
     setOauthLoading('google');
+    const redirectUri = Linking.createURL('oauth');
     try {
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/google?mobile=true&accountType=${accountType}`,
-        'capitune://oauth'
+        `${BACKEND}/api/oauth/signin/google?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri
       );
       if (result.type === 'success' && result.url) {
         await handleOAuthDeepLink(result.url);
@@ -79,10 +80,11 @@ export default function InscriptionScreen() {
   // ── Microsoft OAuth via WebBrowser (SDK 51 compatible) ────────────────
   const handleMicrosoft = async () => {
     setOauthLoading('microsoft');
+    const redirectUri = Linking.createURL('oauth');
     try {
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&accountType=${accountType}`,
-        'capitune://oauth'
+        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri
       );
       if (result.type === 'success' && result.url) {
         await handleOAuthDeepLink(result.url);

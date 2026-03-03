@@ -34,6 +34,8 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   const accountType = reqUrl.searchParams.get('accountType') === 'pro' ? 'pro' : 'client';
   // ?mobile=true → signale que la requête vient de l'app mobile (deep link au retour)
   const mobile = reqUrl.searchParams.get('mobile') === 'true';
+  // ?redirect_uri= → URI dynamique fournie par l'app mobile (exp://... en Expo Go)
+  const mobileRedirectUri = reqUrl.searchParams.get('redirect_uri') ?? 'capitune://oauth';
 
   const clientId = normalizeGoogleClientId(import.meta.env.AUTH_GOOGLE_ID);
 
@@ -59,6 +61,7 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     const target = new URL(`${siteOrigin}/api/oauth/signin/google`);
     target.searchParams.set('accountType', accountType);
     if (mobile) target.searchParams.set('mobile', 'true');
+    target.searchParams.set('redirect_uri', mobileRedirectUri);
     return redirect(target.toString());
   }
 
@@ -83,6 +86,16 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     sameSite: 'lax',
     maxAge: 60 * 10,
   });
+
+  if (mobile) {
+    cookies.set('oauth_mobile_redirect', mobileRedirectUri, {
+      path: '/',
+      httpOnly: true,
+      secure: isHttps,
+      sameSite: 'lax',
+      maxAge: 60 * 10,
+    });
+  }
 
   return redirect(buildGoogleAuthUrl(clientId, callbackUrl, state));
 };

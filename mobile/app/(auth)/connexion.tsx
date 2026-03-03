@@ -12,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { saveSession } from '../../lib/auth';
 import type { UserInfo } from '../../lib/api';
 
-const BACKEND = 'https://capitunecax.vercel.app';
+const BACKEND = 'https://capituneweb.vercel.app';
 
 export default function ConnexionScreen() {
   const router = useRouter();
@@ -56,15 +56,14 @@ export default function ConnexionScreen() {
   // ── Google OAuth via WebBrowser (SDK 51 compatible) ───────────────────
   const handleGoogle = async () => {
     setOauthLoading('google');
+    const redirectUri = Linking.createURL('oauth'); // exp://... dans Expo Go, capitune://oauth en prod
     try {
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/google?mobile=true`,
-        'capitune://oauth'
+        `${BACKEND}/api/oauth/signin/google?mobile=true&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri
       );
       if (result.type === 'success' && result.url) {
         await handleOAuthDeepLink(result.url);
-      } else if (result.type === 'cancel') {
-        // L'utilisateur a annulé
       }
     } catch {
       Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
@@ -76,15 +75,14 @@ export default function ConnexionScreen() {
   // ── Microsoft OAuth via WebBrowser (SDK 51 compatible) ────────────────
   const handleMicrosoft = async () => {
     setOauthLoading('microsoft');
+    const redirectUri = Linking.createURL('oauth');
     try {
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/microsoft?mobile=true`,
-        'capitune://oauth'
+        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        redirectUri
       );
       if (result.type === 'success' && result.url) {
         await handleOAuthDeepLink(result.url);
-      } else if (result.type === 'cancel') {
-        // L'utilisateur a annulé
       }
     } catch {
       Alert.alert('Erreur réseau', 'Impossible de contacter le serveur.');
@@ -170,7 +168,7 @@ export default function ConnexionScreen() {
             <Text style={styles.linkText}>Mot de passe oublié ?</Text>
           </TouchableOpacity>
 
-          {/* ── Séparateur ── */}}
+          {/* ── Séparateur ── */}
           <View style={styles.separator}>
             <View style={styles.separatorLine} />
             <Text style={styles.separatorText}>ou</Text>

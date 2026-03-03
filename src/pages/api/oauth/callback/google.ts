@@ -50,6 +50,9 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
 
   // state peut contenir le suffixe :mobile (ajouté par signin/google.ts) pour signaler l'app mobile
   const isMobile = !!(state && state.endsWith(':mobile'));
+  // Lire et supprimer le cookie redirect URI mobile (exp://... en Expo Go, capitune://oauth en prod)
+  const mobileRedirectUri = cookies.get('oauth_mobile_redirect')?.value ?? 'capitune://oauth';
+  if (isMobile) cookies.delete('oauth_mobile_redirect', { path: '/' });
 
   try {
     const clientId = import.meta.env.AUTH_GOOGLE_ID;
@@ -222,7 +225,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
         );
 
         if (isMobile) {
-          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+          return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
         }
         return redirect('/dashboard');
       } catch (dbErr) {
@@ -307,7 +310,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
           }
         );
         if (isMobile) {
-          return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+          return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
         }
         return redirect('/dashboard');
       } catch (dbErr) {
@@ -348,7 +351,7 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     });
 
     if (isMobile) {
-      return redirect(`capitune://oauth?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
+      return redirect(`${mobileRedirectUri}?token=${encodeURIComponent(sessionToken)}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}&account_type=${encodeURIComponent(accountType)}`);
     }
     return redirect('/dashboard');
   } catch (err) {
