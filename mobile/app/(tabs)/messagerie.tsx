@@ -34,7 +34,8 @@ export default function MessagerieScreen() {
   const load = async () => {
     if (!token) { setMessages(DEMO_MESSAGES); setLoading(false); return; }
     const res = await dashboardApi.getMessages(token);
-    setMessages(res.data?.length ? res.data : DEMO_MESSAGES);
+    const msgs = res.data?.messages;
+    setMessages(msgs?.length ? msgs : DEMO_MESSAGES);
     setLoading(false);
   };
 

@@ -71,19 +71,19 @@ export const authApi = {
 
 export const dashboardApi = {
   getProject: (token: string) =>
-    request<ProjectData>('/api/project', {}, token),
+    request<{ project: ProjectData | null }>('/api/projet', {}, token),
 
   getMessages: (token: string) =>
-    request<Message[]>('/api/messages', {}, token),
+    request<{ messages: Message[] }>('/api/messages', {}, token),
 
   sendMessage: (token: string, content: string) =>
     request('/api/messages', { method: 'POST', body: JSON.stringify({ content }) }, token),
 
   getDocuments: (token: string) =>
-    request<Document[]>('/api/documents', {}, token),
+    request<{ documents: Document[] }>('/api/documents', {}, token),
 
   getPayments: (token: string) =>
-    request<Payment[]>('/api/payments', {}, token),
+    request<{ payments: Payment[] }>('/api/payments', {}, token),
 };
 
 // ── Types ────────────────────────────────────────────────────────────────────

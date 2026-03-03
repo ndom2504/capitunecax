@@ -26,7 +26,7 @@ export default function DashboardScreen() {
   const load = async () => {
     if (!token) return;
     const res = await dashboardApi.getProject(token);
-    if (res.data) setProject(res.data);
+    if (res.data?.project) setProject(res.data.project);
     setLoading(false);
   };
 

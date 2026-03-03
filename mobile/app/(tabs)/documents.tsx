@@ -37,7 +37,8 @@ export default function DocumentsScreen() {
   const load = async () => {
     if (!token) { setDocs(DEMO_DOCS); setLoading(false); return; }
     const res = await dashboardApi.getDocuments(token);
-    setDocs(res.data?.length ? res.data : DEMO_DOCS);
+    const fetchedDocs = res.data?.documents;
+    setDocs(fetchedDocs?.length ? fetchedDocs : DEMO_DOCS);
     setLoading(false);
   };
 

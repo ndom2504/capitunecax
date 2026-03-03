@@ -31,7 +31,8 @@ export default function PaiementsScreen() {
   const load = async () => {
     if (!token) { setPayments(DEMO_PAYMENTS); setLoading(false); return; }
     const res = await dashboardApi.getPayments(token);
-    setPayments(res.data?.length ? res.data : DEMO_PAYMENTS);
+    const fetchedPayments = res.data?.payments;
+    setPayments(fetchedPayments?.length ? fetchedPayments : DEMO_PAYMENTS);
     setLoading(false);
   };
 

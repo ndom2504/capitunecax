@@ -19,6 +19,8 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
     email: user.email,
     name: user.name,
     role: effectiveRoleForUser(user),
+    account_type: (user as any).account_type ?? 'client',
+    avatar: (user as any).avatar_key ?? null,
   });
 };
 
