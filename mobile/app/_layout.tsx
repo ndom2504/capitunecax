@@ -20,7 +20,8 @@ function RootLayoutNav() {
     } else if (user && inAuthGroup) {
       router.replace('/(tabs)/dashboard');
     }
-  }, [user, isLoading, segments]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isLoading]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

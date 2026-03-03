@@ -149,15 +149,15 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: '800', color: Colors.text },
   email: { fontSize: 13, color: Colors.textMuted, marginTop: 3 },
   roleBadge: {
-    marginTop: 8, backgroundColor: 'rgba(31,75,110,0.1)',
+    marginTop: 8, backgroundColor: 'rgba(31,75,110,0.45)',
     paddingHorizontal: 14, paddingVertical: 4, borderRadius: 20,
   },
   roleText: { fontSize: 12, color: Colors.primary, fontWeight: '700' },
   sectionTitle: { fontSize: 12, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 20 },
   card: {
-    backgroundColor: Colors.white, borderRadius: 14,
+    backgroundColor: Colors.surface, borderRadius: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 1,
+    shadowOpacity: 0.2, shadowRadius: 6, elevation: 1,
     overflow: 'hidden',
   },
   menuItem: {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   menuIcon: {
     width: 36, height: 36, borderRadius: 10,
-    backgroundColor: 'rgba(31,75,110,0.1)',
+    backgroundColor: 'rgba(31,75,110,0.45)',
     justifyContent: 'center', alignItems: 'center',
   },
   menuIconDanger: { backgroundColor: 'rgba(239,68,68,0.1)' },

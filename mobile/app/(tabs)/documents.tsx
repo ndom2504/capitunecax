@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingVertical: 6, paddingHorizontal: 14,
     borderRadius: 20, borderWidth: 1, borderColor: Colors.border,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.surface,
   },
   filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   filterText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
@@ -156,9 +156,9 @@ const styles = StyleSheet.create({
   list: { padding: 16, gap: 10 },
   docCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: Colors.white, borderRadius: 14, padding: 14,
+    backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 6, elevation: 1,
+    shadowOpacity: 0.2, shadowRadius: 6, elevation: 1,
   },
   docIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   docInfo: { flex: 1 },

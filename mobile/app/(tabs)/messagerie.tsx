@@ -141,10 +141,10 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.primaryDark },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 16, backgroundColor: Colors.white,
+    padding: 16, backgroundColor: Colors.surface,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
   },
   proAvatar: {
     width: 42, height: 42, borderRadius: 21,
@@ -168,21 +168,21 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   bubbleThem: {
-    alignSelf: 'flex-start', backgroundColor: Colors.white,
+    alignSelf: 'flex-start', backgroundColor: '#1c2436',
     borderBottomLeftRadius: 4,
   },
   bubbleText: { fontSize: 14, lineHeight: 20 },
   bubbleTextMe: { color: '#fff' },
   bubbleTextThem: { color: Colors.text },
-  bubbleTime: { fontSize: 10, color: 'rgba(0,0,0,0.35)', marginTop: 4, textAlign: 'right' },
+  bubbleTime: { fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4, textAlign: 'right' },
   bubbleTimeMe: { color: 'rgba(255,255,255,0.55)' },
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 10,
-    padding: 12, backgroundColor: Colors.white,
+    padding: 12, backgroundColor: Colors.surface,
     borderTopWidth: 1, borderTopColor: Colors.border,
   },
   input: {
-    flex: 1, backgroundColor: Colors.bgLight,
+    flex: 1, backgroundColor: Colors.primaryDark,
     borderWidth: 1, borderColor: Colors.border,
     borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10,
     fontSize: 14, color: Colors.text, maxHeight: 100,
