@@ -102,6 +102,7 @@ const landingServices = [
                   <li class="active"><a href="#home">Accueil</a><span class="menu-item-bg"></span></li>
                   <li><a href="#about">À propos</a><span class="menu-item-bg"></span></li>
                   <li><a href="#services">Services</a><span class="menu-item-bg"></span></li>
+                  <li><a href="#app-mobile">Application</a><span class="menu-item-bg"></span></li>
                   <li><a href="#contact">Contact</a><span class="menu-item-bg"></span></li>
                   <li><a href={`${baseUrl}/connexion`}>Connexion</a><span class="menu-item-bg"></span></li>
                 </ul>
@@ -214,6 +215,165 @@ const landingServices = [
             </div>
           </div>
         </div>
+
+        <!-- ═══════════ SECTION APP MOBILE ═══════════ -->
+        <div class="cap-mobile-sec" id="app-mobile">
+          <div class="Center">
+
+            <div class="cap-mob-header">
+              <span class="cap-mob-badge">
+                <i class="fa fa-mobile"></i>&nbsp; Bientôt disponible
+              </span>
+              <h2>CAPITUNE dans votre poche</h2>
+              <p>Gérez votre projet Canada où que vous soyez. Consultez vos documents, échangez avec votre conseiller et suivez chaque étape en temps réel depuis votre téléphone.</p>
+              <div class="Line"></div>
+            </div>
+
+            <div class="cap-mob-layout">
+
+              <!-- Maquette téléphone animée -->
+              <div class="cap-mob-phone-wrap" aria-hidden="true">
+                <div class="cap-mob-phone">
+                  <div class="cap-mob-notch"></div>
+                  <div class="cap-mob-screen">
+                    <!-- Écran 1 : Dashboard -->
+                    <div class="cap-mob-slide cap-mob-slide--active" data-slide="0">
+                      <div class="cap-mob-topbar">
+                        <span class="cap-mob-avatar"><i class="fa fa-user-circle"></i></span>
+                        <span class="cap-mob-hello">Bonjour, Marc 👋</span>
+                        <span class="cap-mob-notif"><i class="fa fa-bell"></i><em>2</em></span>
+                      </div>
+                      <div class="cap-mob-progress-card">
+                        <p class="cap-mob-prog-label">Avancement du dossier</p>
+                        <div class="cap-mob-prog-bar"><div class="cap-mob-prog-fill" style="width:68%"></div></div>
+                        <p class="cap-mob-prog-pct">68%</p>
+                      </div>
+                      <div class="cap-mob-steps">
+                        <div class="cap-mob-step cap-mob-step--done"><i class="fa fa-check-circle"></i> Analyse du profil</div>
+                        <div class="cap-mob-step cap-mob-step--done"><i class="fa fa-check-circle"></i> Documents envoyés</div>
+                        <div class="cap-mob-step cap-mob-step--active"><i class="fa fa-circle-o-notch fa-spin"></i> Révision du dossier</div>
+                        <div class="cap-mob-step"><i class="fa fa-circle-o"></i> Dépôt officiel</div>
+                      </div>
+                    </div>
+                    <!-- Écran 2 : Messagerie -->
+                    <div class="cap-mob-slide" data-slide="1">
+                      <div class="cap-mob-chat-header"><i class="fa fa-comments"></i> Messagerie</div>
+                      <div class="cap-mob-chat-list">
+                        <div class="cap-mob-msg cap-mob-msg--in">
+                          <span>Votre dossier est en révision. Les pièces jointes sont conformes ✅</span>
+                          <time>10:32</time>
+                        </div>
+                        <div class="cap-mob-msg cap-mob-msg--out">
+                          <span>Merci ! Quand aura lieu le dépôt ?</span>
+                          <time>10:35</time>
+                        </div>
+                        <div class="cap-mob-msg cap-mob-msg--in">
+                          <span>Nous prévoyons le dépôt d'ici 5 jours ouvrables 📅</span>
+                          <time>10:37</time>
+                        </div>
+                        <div class="cap-mob-typing"><span></span><span></span><span></span></div>
+                      </div>
+                    </div>
+                    <!-- Écran 3 : Documents -->
+                    <div class="cap-mob-slide" data-slide="2">
+                      <div class="cap-mob-chat-header"><i class="fa fa-folder-open"></i> Mes documents</div>
+                      <div class="cap-mob-doc-list">
+                        <div class="cap-mob-doc cap-mob-doc--ok"><i class="fa fa-file-pdf-o"></i><span>Passeport.pdf</span><i class="fa fa-check cap-mob-doc-status"></i></div>
+                        <div class="cap-mob-doc cap-mob-doc--ok"><i class="fa fa-file-image-o"></i><span>Photo_identité.jpg</span><i class="fa fa-check cap-mob-doc-status"></i></div>
+                        <div class="cap-mob-doc cap-mob-doc--warn"><i class="fa fa-file-pdf-o"></i><span>Relevé_bancaire.pdf</span><i class="fa fa-exclamation cap-mob-doc-status"></i></div>
+                        <div class="cap-mob-doc"><i class="fa fa-file-pdf-o"></i><span>Casier_judiciaire.pdf</span><i class="fa fa-upload cap-mob-doc-status"></i></div>
+                        <div class="cap-mob-doc"><i class="fa fa-file-pdf-o"></i><span>Références_emploi.pdf</span><i class="fa fa-upload cap-mob-doc-status"></i></div>
+                      </div>
+                    </div>
+                    <!-- Barre de navigation mobile -->
+                    <div class="cap-mob-nav">
+                      <button class="cap-mob-nav-btn cap-mob-nav-btn--active" data-goto="0"><i class="fa fa-home"></i></button>
+                      <button class="cap-mob-nav-btn" data-goto="1"><i class="fa fa-comments"></i></button>
+                      <button class="cap-mob-nav-btn" data-goto="2"><i class="fa fa-folder"></i></button>
+                    </div>
+                  </div>
+                </div>
+                <!-- Reflets décoratifs -->
+                <div class="cap-mob-glow cap-mob-glow--1"></div>
+                <div class="cap-mob-glow cap-mob-glow--2"></div>
+              </div>
+
+              <!-- Fonctionnalités listées -->
+              <div class="cap-mob-features">
+                <ul>
+                  <li class="cap-mob-feat" data-delay="0">
+                    <div class="cap-mob-feat-icon"><i class="fa fa-tasks"></i></div>
+                    <div class="cap-mob-feat-text">
+                      <h4>Suivi en temps réel</h4>
+                      <p>Visualisez chaque étape de votre dossier, de l'analyse initiale jusqu'au dépôt officiel.</p>
+                    </div>
+                  </li>
+                  <li class="cap-mob-feat" data-delay="120">
+                    <div class="cap-mob-feat-icon"><i class="fa fa-comments"></i></div>
+                    <div class="cap-mob-feat-text">
+                      <h4>Messagerie directe</h4>
+                      <p>Échangez instantanément avec votre conseiller Capitune depuis votre téléphone.</p>
+                    </div>
+                  </li>
+                  <li class="cap-mob-feat" data-delay="240">
+                    <div class="cap-mob-feat-icon"><i class="fa fa-folder-open"></i></div>
+                    <div class="cap-mob-feat-text">
+                      <h4>Gestion des documents</h4>
+                      <p>Consultez, téléversez et suivez le statut de chaque pièce de votre dossier.</p>
+                    </div>
+                  </li>
+                  <li class="cap-mob-feat" data-delay="360">
+                    <div class="cap-mob-feat-icon"><i class="fa fa-bell"></i></div>
+                    <div class="cap-mob-feat-text">
+                      <h4>Notifications intelligentes</h4>
+                      <p>Recevez des alertes dès qu'une action est requise ou qu'une étape est franchie.</p>
+                    </div>
+                  </li>
+                  <li class="cap-mob-feat" data-delay="480">
+                    <div class="cap-mob-feat-icon"><i class="fa fa-lock"></i></div>
+                    <div class="cap-mob-feat-text">
+                      <h4>Données sécurisées</h4>
+                      <p>Vos informations personnelles et documents sont chiffrés et hébergés au Canada.</p>
+                    </div>
+                  </li>
+                </ul>
+
+                <!-- Statistiques animées -->
+                <div class="cap-mob-stats">
+                  <div class="cap-mob-stat">
+                    <strong class="cap-count" data-target="98">0</strong><span>%</span>
+                    <p>Satisfaction client</p>
+                  </div>
+                  <div class="cap-mob-stat">
+                    <strong class="cap-count" data-target="500">0</strong><span>+</span>
+                    <p>Dossiers traités</p>
+                  </div>
+                  <div class="cap-mob-stat">
+                    <strong class="cap-count" data-target="24">0</strong><span>h</span>
+                    <p>Accès continu</p>
+                  </div>
+                </div>
+
+                <!-- CTAs stores -->
+                <div class="cap-mob-stores">
+                  <p class="cap-mob-stores-label">Disponible prochainement sur</p>
+                  <div class="cap-mob-store-btns">
+                    <a href="#app-mobile" class="cap-mob-store-btn" aria-label="App Store">
+                      <i class="fa fa-apple"></i>
+                      <span><small>Bientôt sur</small> App Store</span>
+                    </a>
+                    <a href="#app-mobile" class="cap-mob-store-btn" aria-label="Google Play">
+                      <i class="fa fa-android"></i>
+                      <span><small>Bientôt sur</small> Google Play</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- fin cap-mob-layout -->
+          </div><!-- fin Center -->
+        </div>
+        <!-- ═══════════ FIN SECTION APP MOBILE ═══════════ -->
 
         <div class="Contact_sec" id="contact">
           <div class="Contactside">
@@ -335,6 +495,111 @@ const landingServices = [
       }
 
       document.addEventListener('astro:page-load', initServicePanels);
+    })();
+  </script>
+
+  <script is:inline>
+    (() => {
+      /* ── Gestion des écrans du téléphone ── */
+      function initMobileSection() {
+        var slides = Array.from(document.querySelectorAll('.cap-mob-slide'));
+        var navBtns = Array.from(document.querySelectorAll('.cap-mob-nav-btn'));
+        if (!slides.length) return;
+
+        var current = 0;
+        var timer = null;
+
+        function showSlide(idx) {
+          slides.forEach(function(s, i) {
+            s.classList.toggle('cap-mob-slide--active', i === idx);
+          });
+          navBtns.forEach(function(b, i) {
+            b.classList.toggle('cap-mob-nav-btn--active', i === idx);
+          });
+          current = idx;
+        }
+
+        navBtns.forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var goto = parseInt(btn.getAttribute('data-goto') || '0', 10);
+            showSlide(goto);
+            clearInterval(timer);
+            timer = setInterval(function() {
+              showSlide((current + 1) % slides.length);
+            }, 4200);
+          });
+        });
+
+        // Rotation automatique
+        timer = setInterval(function() {
+          showSlide((current + 1) % slides.length);
+        }, 4200);
+      }
+
+      /* ── Compteurs animés ── */
+      function animateCounters(root) {
+        var counters = Array.from((root || document).querySelectorAll('.cap-count:not(.counted)'));
+        counters.forEach(function(el) {
+          el.classList.add('counted');
+          var target = parseInt(el.getAttribute('data-target') || '0', 10);
+          var start = 0;
+          var duration = 1800;
+          var step = duration / target;
+          var interval = setInterval(function() {
+            start += Math.ceil(target / 60);
+            if (start >= target) { start = target; clearInterval(interval); }
+            el.textContent = String(start);
+          }, step < 16 ? 16 : step);
+        });
+      }
+
+      /* ── Scroll reveal features + stats ── */
+      function initMobileReveal() {
+        var feats = Array.from(document.querySelectorAll('.cap-mob-feat'));
+        var statsSection = document.querySelector('.cap-mob-stats');
+        var statsTriggered = false;
+
+        if (!feats.length) return;
+
+        var observer = new IntersectionObserver(function(entries) {
+          entries.forEach(function(entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+
+            if (el.classList.contains('cap-mob-feat')) {
+              var delay = parseInt(el.getAttribute('data-delay') || '0', 10);
+              setTimeout(function() { el.classList.add('is-visible'); }, delay);
+              observer.unobserve(el);
+            }
+          });
+        }, { threshold: 0.2 });
+
+        feats.forEach(function(f) { observer.observe(f); });
+
+        // Observer séparé pour les stats (one-shot)
+        if (statsSection) {
+          var statsObs = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting && !statsTriggered) {
+              statsTriggered = true;
+              animateCounters(statsSection.closest('.cap-mobile-sec'));
+              statsObs.disconnect();
+            }
+          }, { threshold: 0.5 });
+          statsObs.observe(statsSection);
+        }
+      }
+
+      function init() {
+        initMobileSection();
+        initMobileReveal();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+      } else {
+        init();
+      }
+      document.addEventListener('astro:page-load', init);
     })();
   </script>
 </MainLayout>
@@ -648,5 +913,336 @@ const landingServices = [
 
   @media (max-width: 540px) {
     .cap-feature-box { width: 100%; }
+  }
+
+  /* ═══════════════════════════════════════════════
+     SECTION APP MOBILE
+  ═══════════════════════════════════════════════ */
+  .cap-mobile-sec {
+    background: linear-gradient(160deg, #0a1628 0%, #1f4b6e 55%, #0e2740 100%);
+    padding: 90px 0 80px;
+    overflow: hidden;
+    position: relative;
+  }
+  .cap-mobile-sec::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 50%, rgba(232,119,34,.12) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 70% at 85% 30%, rgba(31,75,110,.4) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── En-tête ── */
+  .cap-mob-header { text-align: center; margin-bottom: 60px; }
+  .cap-mob-badge {
+    display: inline-block;
+    background: rgba(232,119,34,.18);
+    border: 1px solid rgba(232,119,34,.45);
+    color: #f8a855;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+  }
+  .cap-mob-header h2 {
+    color: #fff !important;
+    font-size: 46px !important;
+    margin: 0 0 16px !important;
+  }
+  .cap-mob-header > p {
+    color: rgba(255,255,255,.70);
+    font-size: 15px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+    line-height: 1.7;
+  }
+
+  /* ── Layout principal ── */
+  .cap-mob-layout {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+  }
+
+  /* ── Téléphone ── */
+  .cap-mob-phone-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    width: 260px;
+  }
+  .cap-mob-phone {
+    width: 260px;
+    height: 530px;
+    background: #0d1b2a;
+    border: 3px solid #2d4f6e;
+    border-radius: 38px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 6px #0a1521,
+      0 30px 80px rgba(0,0,0,.7),
+      inset 0 0 40px rgba(31,75,110,.25);
+    animation: phoneFloat 4s ease-in-out infinite;
+  }
+  @keyframes phoneFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-14px); }
+  }
+  .cap-mob-notch {
+    width: 90px; height: 20px;
+    background: #0a1521;
+    border-radius: 0 0 14px 14px;
+    margin: 0 auto;
+    position: relative; z-index: 10;
+  }
+  .cap-mob-screen {
+    position: absolute;
+    inset: 20px 4px 4px;
+    background: #0f2035;
+    border-radius: 0 0 34px 34px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Slides d'écran ── */
+  .cap-mob-slide {
+    position: absolute;
+    inset: 0;
+    bottom: 52px;
+    padding: 12px 14px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity .45s ease, transform .45s ease;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .cap-mob-slide--active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+    position: relative;
+  }
+
+  /* Slide 0 — Dashboard */
+  .cap-mob-topbar {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.05);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .cap-mob-avatar { font-size: 22px; color: #e87722; }
+  .cap-mob-hello { font-size: 11px; color: #cde; flex: 1; font-weight: 600; }
+  .cap-mob-notif { font-size: 14px; color: #aaa; position: relative; }
+  .cap-mob-notif em {
+    position: absolute; top: -4px; right: -5px;
+    background: #e87722; color: #fff; font-size: 8px; font-weight: 700;
+    border-radius: 50%; width: 12px; height: 12px; display: flex; align-items: center; justify-content: center;
+    font-style: normal;
+  }
+  .cap-mob-progress-card {
+    background: rgba(232,119,34,.12);
+    border: 1px solid rgba(232,119,34,.25);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .cap-mob-prog-label { font-size: 10px; color: #aac; margin: 0 0 6px; }
+  .cap-mob-prog-bar { background: rgba(255,255,255,.1); border-radius: 4px; height: 6px; }
+  .cap-mob-prog-fill {
+    height: 100%; background: linear-gradient(90deg, #e87722, #f8b84e);
+    border-radius: 4px;
+    animation: progGrow 1.8s ease forwards;
+    width: 0%;
+  }
+  @keyframes progGrow { to { width: 68%; } }
+  .cap-mob-prog-pct { font-size: 18px; font-weight: 700; color: #f8b84e; margin: 4px 0 0; text-align: right; }
+  .cap-mob-steps { display: flex; flex-direction: column; gap: 7px; }
+  .cap-mob-step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 10.5px; color: rgba(200,220,240,.55);
+    background: rgba(255,255,255,.03); border-radius: 8px;
+    padding: 6px 10px;
+  }
+  .cap-mob-step--done { color: #8ef0a0; }
+  .cap-mob-step--active { color: #f8b84e; background: rgba(232,119,34,.1); }
+
+  /* Slide 1 — Chat */
+  .cap-mob-chat-header {
+    font-size: 12px; font-weight: 700; color: #fff;
+    padding: 4px 2px 8px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .cap-mob-chat-list {
+    display: flex; flex-direction: column; gap: 8px;
+    overflow: hidden; flex: 1;
+  }
+  .cap-mob-msg {
+    max-width: 88%; display: flex; flex-direction: column; gap: 2px;
+  }
+  .cap-mob-msg span {
+    font-size: 10.5px; line-height: 1.5; padding: 7px 10px; border-radius: 10px;
+  }
+  .cap-mob-msg time { font-size: 9px; color: rgba(255,255,255,.3); }
+  .cap-mob-msg--in { align-self: flex-start; }
+  .cap-mob-msg--in span { background: rgba(255,255,255,.1); color: #cde; border-radius: 4px 10px 10px 10px; }
+  .cap-mob-msg--out { align-self: flex-end; }
+  .cap-mob-msg--out span { background: #e87722; color: #fff; border-radius: 10px 4px 10px 10px; }
+  .cap-mob-msg--out time { text-align: right; }
+  .cap-mob-typing {
+    display: flex; gap: 4px; align-items: center;
+    padding: 8px 10px;
+    background: rgba(255,255,255,.07); border-radius: 4px 10px 10px 10px;
+    width: fit-content;
+  }
+  .cap-mob-typing span {
+    width: 6px; height: 6px; background: #888;
+    border-radius: 50%;
+    animation: typingDot 1.2s ease-in-out infinite;
+  }
+  .cap-mob-typing span:nth-child(2) { animation-delay: .2s; }
+  .cap-mob-typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingDot {
+    0%,60%,100% { transform: translateY(0); opacity: .5; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* Slide 2 — Documents */
+  .cap-mob-doc-list { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+  .cap-mob-doc {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.05); border-radius: 8px;
+    padding: 8px 10px; font-size: 10.5px; color: rgba(200,220,240,.7);
+    border-left: 3px solid transparent;
+  }
+  .cap-mob-doc--ok { border-left-color: #4ade80; }
+  .cap-mob-doc--warn { border-left-color: #f59e0b; }
+  .cap-mob-doc span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cap-mob-doc-status { font-size: 11px; }
+  .cap-mob-doc--ok .cap-mob-doc-status { color: #4ade80; }
+  .cap-mob-doc--warn .cap-mob-doc-status { color: #f59e0b; }
+
+  /* ── Barre de navigation du téléphone ── */
+  .cap-mob-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: #0a1521;
+    border-top: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: space-around;
+  }
+  .cap-mob-nav-btn {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,.35); font-size: 16px;
+    padding: 8px 16px; border-radius: 8px;
+    transition: color .2s, background .2s;
+  }
+  .cap-mob-nav-btn--active { color: #e87722; background: rgba(232,119,34,.15); }
+
+  /* ── Reflets ── */
+  .cap-mob-glow {
+    position: absolute; border-radius: 50%; pointer-events: none;
+    filter: blur(40px); opacity: .3;
+  }
+  .cap-mob-glow--1 {
+    width: 160px; height: 160px;
+    background: #e87722;
+    bottom: -40px; right: -40px;
+    animation: glowPulse 3.5s ease-in-out infinite;
+  }
+  .cap-mob-glow--2 {
+    width: 100px; height: 100px;
+    background: #1f4b6e;
+    top: -20px; left: -20px;
+    animation: glowPulse 4s ease-in-out infinite reverse;
+  }
+  @keyframes glowPulse {
+    0%,100% { opacity: .25; transform: scale(1); }
+    50% { opacity: .45; transform: scale(1.15); }
+  }
+
+  /* ── Features liste ── */
+  .cap-mob-features { flex: 1; }
+  .cap-mob-features > ul { list-style: none; margin: 0 0 36px; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+  .cap-mob-feat {
+    display: flex; align-items: flex-start; gap: 16px;
+    opacity: 0; transform: translateX(40px);
+    transition: opacity .5s ease, transform .5s ease;
+  }
+  .cap-mob-feat.is-visible { opacity: 1; transform: translateX(0); }
+  .cap-mob-feat-icon {
+    flex: 0 0 48px; height: 48px;
+    background: rgba(232,119,34,.15);
+    border: 1px solid rgba(232,119,34,.35);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: #f8a855;
+    transition: background .3s, border-color .3s;
+  }
+  .cap-mob-feat:hover .cap-mob-feat-icon {
+    background: rgba(232,119,34,.28); border-color: #e87722;
+  }
+  .cap-mob-feat-text h4 {
+    color: #fff; font-family: 'Oswald', sans-serif; font-size: 15px;
+    text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px;
+  }
+  .cap-mob-feat-text p {
+    color: rgba(255,255,255,.60); font-size: 13px; line-height: 1.6; margin: 0;
+  }
+
+  /* ── Stats ── */
+  .cap-mob-stats {
+    display: flex; gap: 24px; margin-bottom: 32px;
+    padding: 20px 0; border-top: 1px solid rgba(255,255,255,.1);
+  }
+  .cap-mob-stat { text-align: center; flex: 1; }
+  .cap-mob-stat strong {
+    display: block; font-family: 'Oswald', sans-serif;
+    font-size: 36px; color: #e87722; line-height: 1;
+  }
+  .cap-mob-stat span { font-size: 22px; color: #f8a855; font-weight: 700; }
+  .cap-mob-stat p { font-size: 11px; color: rgba(255,255,255,.5); margin: 4px 0 0; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Store buttons ── */
+  .cap-mob-stores-label { font-size: 12px; color: rgba(255,255,255,.45); margin: 0 0 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .cap-mob-store-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .cap-mob-store-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 10px;
+    padding: 10px 20px;
+    color: #fff; text-decoration: none;
+    transition: background .25s, border-color .25s, transform .2s;
+  }
+  .cap-mob-store-btn:hover {
+    background: rgba(255,255,255,.14);
+    border-color: rgba(232,119,34,.55);
+    transform: translateY(-2px);
+    color: #fff;
+  }
+  .cap-mob-store-btn .fa { font-size: 26px; color: #fff; }
+  .cap-mob-store-btn span { line-height: 1.3; }
+  .cap-mob-store-btn small { display: block; font-size: 10px; opacity: .6; }
+  .cap-mob-store-btn span > b, .cap-mob-store-btn span { font-size: 13px; font-weight: 700; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .cap-mob-layout { flex-direction: column; gap: 48px; align-items: center; }
+    .cap-mob-header h2 { font-size: 32px !important; }
+    .cap-mob-features > ul { gap: 16px; }
+  }
+  @media (max-width: 540px) {
+    .cap-mob-stats { gap: 12px; }
+    .cap-mob-stat strong { font-size: 28px; }
+    .cap-mob-store-btns { flex-direction: column; }
+    .cap-mobile-sec { padding: 60px 0 56px; }
   }
 </style>
