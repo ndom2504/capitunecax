@@ -13,12 +13,11 @@ import { useAuth } from '../../context/AuthContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// ── Remplacez ces valeurs par vos vrais identifiants OAuth ──────────────────
-const GOOGLE_WEB_CLIENT_ID     = 'VOTRE_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
-const GOOGLE_ANDROID_CLIENT_ID = 'VOTRE_ANDROID_CLIENT_ID.apps.googleusercontent.com';
-const GOOGLE_IOS_CLIENT_ID     = 'VOTRE_IOS_CLIENT_ID.apps.googleusercontent.com';
-const MICROSOFT_CLIENT_ID      = 'VOTRE_AZURE_APP_CLIENT_ID';
-// ────────────────────────────────────────────────────────────────────────────
+// Lus depuis mobile/.env (préfixe EXPO_PUBLIC_ = exposé côté client Expo SDK 49+)
+const GOOGLE_WEB_CLIENT_ID     = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID     ?? '';
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '';
+const GOOGLE_IOS_CLIENT_ID     = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID     ?? '';
+const MICROSOFT_CLIENT_ID      = process.env.EXPO_PUBLIC_MICROSOFT_CLIENT_ID      ?? '';
 
 export default function ConnexionScreen() {
   const router = useRouter();
