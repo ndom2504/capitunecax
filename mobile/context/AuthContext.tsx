@@ -6,7 +6,7 @@ interface AuthContextType {
   user: UserInfo | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ ok: boolean; pending?: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; pending?: boolean; message?: string; accountType?: string }>;
   logout: () => Promise<void>;
   setUser: (user: UserInfo) => void;
 }
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await saveSession(sessionToken, res.data.user);
       setToken(sessionToken);
       setUser(res.data.user);
-      return { ok: true };
+      return { ok: true, accountType: res.data.user.account_type };
     }
 
     return { ok: false, message: res.data?.message ?? 'Identifiants incorrects.' };
