@@ -75,12 +75,30 @@ export function HeaderNav() {
             >
               Contact
             </a>
-            <a
-              href={`${baseUrl}/connexion`}
-              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-lg hover:bg-primary/90 transition font-semibold leading-none ml-2"
-            >
-              Connexion
-            </a>
+
+            {/* Séparateur + bouton CTA Connexion */}
+            <div className="ml-4 pl-4 border-l border-border/60 flex items-center">
+              <a
+                href={`${baseUrl}/connexion`}
+                className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-bold text-sm shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 leading-none"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 opacity-80"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+                Connexion
+              </a>
+            </div>
           </nav>
 
           <button
@@ -142,9 +160,23 @@ export function HeaderNav() {
               </a>
               <a
                 href={`${baseUrl}/connexion`}
-                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition text-center mt-2"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold text-sm shadow-md hover:bg-primary/90 transition-all duration-200 mt-2"
                 onClick={() => setIsMenuOpen(false)}
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4 opacity-80"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
                 Connexion
               </a>
             </div>
