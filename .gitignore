@@ -35,6 +35,9 @@ lost+found/
 # local vercel artifacts
 .vercel/
 
+# local expo artifacts (web root)
+.expo/
+
 # local dev artifacts / sensitive
 .vscode/
 cookies.txt

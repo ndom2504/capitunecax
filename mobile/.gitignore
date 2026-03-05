@@ -1,5 +1,6 @@
 node_modules/
 .expo/
+assets/
 dist/
 build/
 *.orig.*
@@ -18,3 +19,7 @@ web-build/
 
 expo-env.d.ts
 # @end expo-cli
+
+# local tooling binaries/scripts
+cloudflared.exe
+start-tunnel.ps1
