@@ -143,38 +143,52 @@ export default function DashboardScreen() {
             <ActivityIndicator color={Colors.orange} style={{ marginTop: 60 }} />
           ) : (
             <>
-              {/* Carte progression */}
-              <View style={styles.progressCard}>
-                <View style={styles.progressHeader}>
-                  <Text style={styles.progressTitle}>Avancement du dossier</Text>
-                  <Text style={styles.progressPct}>{project?.progress ?? 0}%</Text>
-                </View>
-                <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: `${project?.progress ?? 0}%` }]} />
-                </View>
-                {project?.steps?.map(step => (
-                  <View key={step.id} style={styles.stepRow}>
-                    <Ionicons
-                      name={step.status === 'done' ? 'checkmark-circle' : step.status === 'active' ? 'time' : 'ellipse-outline'}
-                      size={16}
-                      color={step.status === 'done' ? Colors.success : step.status === 'active' ? Colors.orange : 'rgba(255,255,255,0.3)'}
-                    />
-                    <Text style={[styles.stepLabel, step.status === 'done' && styles.stepDone, step.status === 'active' && styles.stepActive]}>
-                      {step.label}
-                    </Text>
-                    {step.date && <Text style={styles.stepDate}>{step.date}</Text>}
+              {project ? (
+                <View style={styles.progressCard}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressTitle}>Avancement du dossier</Text>
+                    <Text style={styles.progressPct}>{project?.progress ?? 0}%</Text>
                   </View>
-                )) ?? STEPS_LABELS.map((label, i) => (
-                  <View key={i} style={styles.stepRow}>
-                    <Ionicons
-                      name={i < 2 ? 'checkmark-circle' : i === 2 ? 'time' : 'ellipse-outline'}
-                      size={16}
-                      color={i < 2 ? Colors.success : i === 2 ? Colors.orange : 'rgba(255,255,255,0.3)'}
-                    />
-                    <Text style={[styles.stepLabel, i < 2 && styles.stepDone, i === 2 && styles.stepActive]}>{label}</Text>
+                  <View style={styles.progressBarBg}>
+                    <View style={[styles.progressBarFill, { width: `${project?.progress ?? 0}%` }]} />
                   </View>
-                ))}
-              </View>
+                  {project?.steps?.map(step => (
+                    <View key={step.id} style={styles.stepRow}>
+                      <Ionicons
+                        name={step.status === 'done' ? 'checkmark-circle' : step.status === 'active' ? 'time' : 'ellipse-outline'}
+                        size={16}
+                        color={step.status === 'done' ? Colors.success : step.status === 'active' ? Colors.orange : 'rgba(255,255,255,0.3)'}
+                      />
+                      <Text style={[styles.stepLabel, step.status === 'done' && styles.stepDone, step.status === 'active' && styles.stepActive]}>
+                        {step.label}
+                      </Text>
+                      {step.date && <Text style={styles.stepDate}>{step.date}</Text>}
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyProjectCard}>
+                  <View style={styles.emptyProjectTop}>
+                    <View style={styles.emptyProjectIcon}>
+                      <Ionicons name="sparkles" size={18} color={Colors.orange} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.emptyProjectTitle}>Créez votre dossier</Text>
+                      <Text style={styles.emptyProjectSub}>
+                        Répondez à quelques questions avec CAPI pour générer votre plan et activer votre projet.
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.emptyProjectCta}
+                    activeOpacity={0.85}
+                    onPress={() => router.push('/capi')}
+                  >
+                    <Ionicons name="rocket-outline" size={18} color="#fff" />
+                    <Text style={styles.emptyProjectCtaText}>Démarrer avec CAPI</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Raccourcis */}
               <Text style={styles.sectionTitle}>Accès rapide</Text>
@@ -251,6 +265,37 @@ const styles = StyleSheet.create({
   },
   shortcutIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   shortcutLabel: { fontSize: 13, fontWeight: '600', color: Colors.text },
+
+  emptyProjectCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 22,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  emptyProjectTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  emptyProjectIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.orange + '18',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyProjectTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  emptyProjectSub: { fontSize: 12, color: Colors.textMuted, marginTop: 4, lineHeight: 18 },
+  emptyProjectCta: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.orange,
+    borderRadius: 14,
+    paddingVertical: 12,
+  },
+  emptyProjectCtaText: { color: '#fff', fontSize: 14, fontWeight: '800' },
   // Pro
   subtitlePro: { color: '#3b9eff' },
   avatarPro: { backgroundColor: Colors.primary },

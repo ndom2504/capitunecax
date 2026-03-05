@@ -69,15 +69,15 @@ export default function ProjetScreen() {
           <Text style={{ fontSize: 52 }}>📋</Text>
           <Text style={styles.emptyTitle}>Aucun projet actif</Text>
           <Text style={styles.emptySubtitle}>
-            Parlez à CAPI depuis le Dashboard pour créer votre projet d'immigration personnalisé.
+            Démarrez avec CAPI pour créer votre projet d'immigration personnalisé.
           </Text>
           <TouchableOpacity
             style={styles.capiBtn}
-            onPress={() => router.push('/(tabs)/dashboard')}
+            onPress={() => router.push('/capi')}
             activeOpacity={0.85}
           >
-            <Ionicons name="home-outline" size={18} color="#fff" />
-            <Text style={styles.capiBtnText}>Aller au Dashboard</Text>
+            <Ionicons name="rocket-outline" size={18} color="#fff" />
+            <Text style={styles.capiBtnText}>Démarrer avec CAPI</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -9,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
 import { useCapiSession } from '../../context/CapiContext';
 import { capiApi } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 
 const MOTIF_LABEL: Record<string, string> = {
   visiter: 'Visiter le Canada',
@@ -23,6 +24,7 @@ const MOTIF_LABEL: Record<string, string> = {
 export default function CapiActivationScreen() {
   const router = useRouter();
   const { session, resetSession } = useCapiSession();
+  const { token } = useAuth();
   const [creating, setCreating] = useState(false);
 
   const selectedServices = (session.services ?? []).filter(s => s.selected);
@@ -32,22 +34,25 @@ export default function CapiActivationScreen() {
   const activate = async () => {
     setCreating(true);
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      if (!token) throw new Error('Non authentifié');
+      const sessionToken = token ?? await AsyncStorage.getItem('auth_token');
+      if (!sessionToken) throw new Error('Non authentifié');
 
       const payload = {
         session,
-        advisorId: session.advisor?.id ?? null,
+        advisorId: session.advisor?.id,
         selectedServiceIds: selectedServices.map(s => s.id),
       };
-      await capiApi.activateProject(token, payload);
+      const res = await capiApi.activateProject(sessionToken, payload);
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(res.error ?? 'Activation échouée');
+      }
       resetSession();
-      router.replace('/(tabs)/dashboard');
+      router.replace('/(tabs)/projet');
     } catch (err: any) {
       // Activation OK en mode hors-ligne (fallback)
       console.log('Activation backend skipped:', err.message);
       resetSession();
-      router.replace('/(tabs)/dashboard');
+      router.replace('/(tabs)/projet');
     } finally {
       setCreating(false);
     }
@@ -207,7 +212,7 @@ export default function CapiActivationScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   scroll: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 },
   progressBarOuter: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
