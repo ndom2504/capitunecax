@@ -25,6 +25,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     const email = body.email;
     const password = body.password;
     const requestedAccountType = normalizeAccountType(body.accountType);
+    const isMobile = body.mobile === true || String(body.mobile ?? '').toLowerCase().trim() === 'true';
 
     if (!email || !password) return json({ message: 'Email et mot de passe requis.' }, 400);
     const emailStr = String(email).toLowerCase().trim();
@@ -39,6 +40,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     let displayName: string;
     let role: string;
     let account_type: 'client' | 'pro' = requestedAccountType;
+    let userIdForResponse = '';
 
     if (db) {
       let hasAccountTypeColumn = true;
@@ -62,6 +64,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       if (!user) {
         // Auto-inscription si le compte n'existe pas (comportement MVP)
         const userId = uuid();
+        userIdForResponse = userId;
         displayName = nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : 'client';
         try {
@@ -80,6 +83,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         sessionToken = await createSessionAny(db, userId);
       } else {
+        userIdForResponse = user.id;
         // Vérification mot de passe si hash présent
         if (user.password_hash) {
           const valid = await verifyPassword(user.password_hash, String(password));
@@ -116,6 +120,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
       if (!user) {
         const userId = uuid();
+        userIdForResponse = userId;
         displayName = nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : 'client';
         try {
@@ -125,6 +130,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         sessionToken = await createSessionAny(null, userId);
       } else {
+        userIdForResponse = user.id;
         if (user.password_hash) {
           const valid = await verifyPassword(user.password_hash, String(password));
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
@@ -148,6 +154,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       account_type = requestedAccountType;
       const sessionData = JSON.stringify({ email: emailStr, name: displayName, role, account_type, expires: Date.now() + 7 * 86400000 });
       sessionToken = btoa(encodeURIComponent(sessionData));
+      userIdForResponse = '';
     }
 
     cookies.set('capitune_session', sessionToken, {
@@ -157,7 +164,17 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       path: '/', httpOnly: false, secure: isHttps, sameSite: 'lax', maxAge: 60 * 60 * 24 * 30,
     });
 
-    return json({ success: true, user: { email: emailStr, name: displayName } });
+    return json({
+      success: true,
+      token: isMobile ? sessionToken : undefined,
+      user: {
+        id: userIdForResponse,
+        email: emailStr,
+        name: displayName,
+        role,
+        account_type,
+      },
+    });
 
   } catch (error) {
     console.error('Signin error:', error);

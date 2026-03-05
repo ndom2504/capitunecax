@@ -1,0 +1,180 @@
+Starting project at C:\capitunecax\mobile
+env: load .env
+env: export EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID EXPO_PUBLIC_MICROSOFT_CLIENT_ID
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Tunnel connected.
+Tunnel ready.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Android Bundled 14565ms C:\capitunecax\mobile\node_modules\expo-router\entry.js (1393 modules)
+ WARN  Value being stored in SecureStore is larger than 2048 bytes and it may not be stored successfully. In a future SDK version, this call may throw an error.
+Android Bundled 167ms C:\capitunecax\mobile\node_modules\expo-router\entry.js (1 module)
+ WARN  Value being stored in SecureStore is larger than 2048 bytes and it may not be stored successfully. In a future SDK version, this call may throw an error.
+Android Bundled 97ms C:\capitunecax\mobile\node_modules\expo-router\entry.js (1 module)
+ WARN  Value being stored in SecureStore is larger than 2048 bytes and it may not be stored successfully. In a future SDK version, this call may throw an error.
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+error: SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+  497 |                 <Text style={styles.loaderText}>Récupération des DLI depuis IRCC…</Text>
+  498 |               </View>
+> 499 |             )}
+      |             ^
+  500 |
+  501 |             {/* Barre de recherche */}
+  502 |             <View style={styles.searchBar}>
+ ERROR  [Error: TransformError SyntaxError: C:\capitunecax\mobile\app\capi\autonomie\dli-search.tsx: Unexpected token (499:12)
+
+[0m [90m 497 |[39m                 [33m<[39m[33mText[39m style[33m=[39m{styles[33m.[39mloaderText}[33m>[39m[33mRécupération[39m des [33mDLI[39m depuis [33mIRCC…[39m[33m<[39m[33m/[39m[33mText[39m[33m>[39m
+ [90m 498 |[39m               [33m<[39m[33m/[39m[33mView[39m[33m>[39m
+[31m[1m>[22m[39m[90m 499 |[39m             )}
+ [90m     |[39m             [31m[1m^[22m[39m
+ [90m 500 |[39m
+ [90m 501 |[39m             {[90m/* Barre de recherche */[39m}
+ [90m 502 |[39m             [33m<[39m[33mView[39m style[33m=[39m{styles[33m.[39msearchBar}[33m>[39m[0m]
+ WARN  Value being stored in SecureStore is larger than 2048 bytes and it may not be stored successfully. In a future SDK version, this call may throw an error.
+Android Bundled 47ms C:\capitunecax\mobile\node_modules\expo-router\entry.js (1 module)
+ WARN  Value being stored in SecureStore is larger than 2048 bytes and it may not be stored successfully. In a future SDK version, this call may throw an error.

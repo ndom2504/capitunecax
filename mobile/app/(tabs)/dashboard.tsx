@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
   RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, type ProjectData } from '../../lib/api';
 import { useRouter } from 'expo-router';
+import { getAvatarSource } from '../../lib/avatar';
 
 const STEPS_LABELS = [
   'Analyse du profil',
@@ -19,10 +21,10 @@ const STEPS_LABELS = [
 ];
 
 // ── Tableau de bord Professionnel ─────────────────────────────────────────────
-function ProDashboard({ name }: { name: string }) {
+function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | null }) {
   const STATS = [
     { label: 'Dossiers actifs', value: '8', icon: 'folder-open' as const, color: '#3b9eff' },
-    { label: 'Messages non lus', value: '3', icon: 'chatbubbles' as const, color: Colors.orange },
+    { label: 'Inside — Actus', value: '3', icon: 'sparkles' as const, color: Colors.orange },
     { label: 'Docs en attente', value: '5', icon: 'document-text' as const, color: Colors.warning },
     { label: 'Complétés ce mois', value: '2', icon: 'checkmark-circle' as const, color: Colors.success },
   ];
@@ -37,13 +39,17 @@ function ProDashboard({ name }: { name: string }) {
     <ScrollView contentContainerStyle={styles.scroll}>
       {/* En-tête Pro */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Bonjour, {name.split(' ')[0]} 👋</Text>
-          <Text style={[styles.subtitle, styles.subtitlePro]}>Tableau de bord Professionnel</Text>
-        </View>
+        <Text style={styles.welcome}>Bienvenue sur Capitune</Text>
+
         <View style={[styles.avatarCircle, styles.avatarPro]}>
-          <Text style={styles.avatarInitial}>{name[0].toUpperCase()}</Text>
+          {getAvatarSource(avatarKey) ? (
+            <Image source={getAvatarSource(avatarKey) as any} style={styles.avatarImg} />
+          ) : (
+            <Text style={styles.avatarInitial}>{name[0].toUpperCase()}</Text>
+          )}
         </View>
+
+        <Text style={[styles.subtitle, styles.subtitlePro]}>Tableau de bord Professionnel</Text>
       </View>
 
       {/* Badge Pro */}
@@ -122,7 +128,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {isPro ? (
-        <ProDashboard name={user?.name ?? 'Pro'} />
+        <ProDashboard name={user?.name ?? 'Pro'} avatarKey={user?.avatar ?? null} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.scroll}
@@ -130,13 +136,17 @@ export default function DashboardScreen() {
         >
           {/* En-tête */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>Bonjour, {user?.name?.split(' ')[0] ?? 'vous'} 👋</Text>
-              <Text style={styles.subtitle}>Voici l'état de votre dossier</Text>
-            </View>
+            <Text style={styles.welcome}>Bienvenue sur Capitune</Text>
+
             <View style={styles.avatarCircle}>
-              <Text style={styles.avatarInitial}>{(user?.name ?? 'U')[0].toUpperCase()}</Text>
+              {getAvatarSource(user?.avatar) ? (
+                <Image source={getAvatarSource(user?.avatar) as any} style={styles.avatarImg} />
+              ) : (
+                <Text style={styles.avatarInitial}>{(user?.name ?? 'U')[0].toUpperCase()}</Text>
+              )}
             </View>
+
+            <Text style={styles.subtitle}>Voici l'état de votre dossier</Text>
           </View>
 
           {loading ? (
@@ -195,8 +205,7 @@ export default function DashboardScreen() {
               <View style={styles.shortcutsGrid}>
                 {[
                   { icon: 'folder' as const, label: 'Documents', color: '#3b82f6', route: '/(tabs)/documents' },
-                  { icon: 'chatbubbles' as const, label: 'Messagerie', color: Colors.orange, route: '/(tabs)/messagerie' },
-                  { icon: 'card' as const, label: 'Paiements', color: Colors.success, route: '/(tabs)/paiements' },
+                  { icon: 'sparkles' as const, label: 'Inside', color: Colors.orange, route: '/(tabs)/inside' },
                   { icon: 'folder-open' as const, label: 'Mon Projet', color: '#a855f7', route: '/(tabs)/projet' },
                 ].map(item => (
                   <TouchableOpacity
@@ -212,6 +221,21 @@ export default function DashboardScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <TouchableOpacity
+                style={styles.findAdvisorBtn}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(tabs)/conseillers' as any)}
+              >
+                <View style={styles.findAdvisorIcon}>
+                  <Ionicons name="people" size={18} color={Colors.orange} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.findAdvisorTitle}>Trouvez votre conseiller</Text>
+                  <Text style={styles.findAdvisorSub}>Swipez les profils et contactez</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
             </>
           )}
         </ScrollView>
@@ -221,19 +245,21 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { padding: 20 },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    alignItems: 'center',
     marginBottom: 24,
+    gap: 10,
   },
-  greeting: { fontSize: 22, fontWeight: '800', color: Colors.text },
+  welcome: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },
   subtitle: { fontSize: 13, color: Colors.textMuted, marginTop: 3 },
   avatarCircle: {
-    width: 46, height: 46, borderRadius: 23,
+    width: 64, height: 64, borderRadius: 32,
     backgroundColor: Colors.orange, justifyContent: 'center', alignItems: 'center',
   },
-  avatarInitial: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  avatarImg: { width: 64, height: 64, borderRadius: 32 },
+  avatarInitial: { color: '#fff', fontSize: 24, fontWeight: '800' },
   progressCard: {
     backgroundColor: Colors.primary,
     borderRadius: 18, padding: 20, marginBottom: 28,
@@ -256,15 +282,16 @@ const styles = StyleSheet.create({
   stepActive: { color: Colors.orangeLight, fontWeight: '700' },
   stepDate: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 14 },
-  shortcutsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  shortcutsGrid: { flexDirection: 'row', gap: 12 },
   shortcut: {
-    width: '46.5%', backgroundColor: Colors.surface,
+    flex: 1,
+    backgroundColor: Colors.surface,
     borderRadius: 14, padding: 16, alignItems: 'center', gap: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2, shadowRadius: 8, elevation: 2,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
   },
   shortcutIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  shortcutLabel: { fontSize: 13, fontWeight: '600', color: Colors.text },
+  shortcutLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, textAlign: 'center' },
 
   emptyProjectCard: {
     backgroundColor: Colors.surface,
@@ -273,6 +300,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     borderWidth: 1,
     borderColor: Colors.border,
+    ...UI.cardShadow,
   },
   emptyProjectTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   emptyProjectIcon: {
@@ -297,6 +325,31 @@ const styles = StyleSheet.create({
   },
   emptyProjectCtaText: { color: '#fff', fontSize: 14, fontWeight: '800' },
   // Pro
+  findAdvisorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 18,
+    padding: 14,
+    marginTop: 16,
+    marginBottom: 8,
+    ...UI.cardShadow,
+  },
+  findAdvisorIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.orange + '18',
+    borderWidth: 1,
+    borderColor: Colors.orange + '35',
+  },
+  findAdvisorTitle: { fontSize: 14, fontWeight: '900', color: Colors.text },
+  findAdvisorSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   subtitlePro: { color: '#3b9eff' },
   avatarPro: { backgroundColor: Colors.primary },
   proBadge: {
@@ -311,12 +364,16 @@ const styles = StyleSheet.create({
   statCard: {
     width: '46.5%', backgroundColor: Colors.surface,
     borderRadius: 14, padding: 16, alignItems: 'center', gap: 6,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
   },
   statValue: { fontSize: 28, fontWeight: '800' },
   statLabel: { fontSize: 11, color: Colors.textMuted, textAlign: 'center', fontWeight: '600' },
   clientCard: {
     backgroundColor: Colors.surface, borderRadius: 14,
     padding: 16, marginBottom: 12,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
   },
   clientRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   clientAvatar: {

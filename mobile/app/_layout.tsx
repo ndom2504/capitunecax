@@ -8,7 +8,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <StatusBar style="light" backgroundColor={Colors.primaryDark} />
+        <StatusBar style="dark" backgroundColor={Colors.bgLight} />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="oauth" />

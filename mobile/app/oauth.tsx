@@ -70,7 +70,7 @@ export default function OAuthCallback() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.primaryDark, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bgLight, justifyContent: 'center', alignItems: 'center', gap: 16 }}>
       <ActivityIndicator color={Colors.orange} size="large" />
       <Text style={{ color: Colors.textMuted, fontSize: 14 }}>Connexion en cours…</Text>
     </View>

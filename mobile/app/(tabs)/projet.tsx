@@ -1,14 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  RefreshControl, ActivityIndicator,
+  RefreshControl, ActivityIndicator, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
-import { dashboardApi } from '../../lib/api';
+import { UI } from '../../constants/UI';
+import { dashboardApi, type Payment } from '../../lib/api';
 
 type TabKey = 'etapes' | 'documents' | 'services' | 'conseiller';
 
@@ -29,6 +30,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; icon: keyof typ
 export default function ProjetScreen() {
   const router = useRouter();
   const [project, setProject] = useState<any>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('etapes');
@@ -40,6 +42,9 @@ export default function ProjetScreen() {
       if (!token) return;
       const res = await dashboardApi.getProject(token);
       setProject(res.data?.project ?? null);
+
+      const payRes = await dashboardApi.getPayments(token);
+      setPayments(payRes.data?.payments ?? []);
     } catch (err) {
       console.log('MonProjet load error:', err);
     } finally {
@@ -90,6 +95,21 @@ export default function ProjetScreen() {
   const advisor = project.advisor;
   const completedSteps = steps.filter((s: any) => s.status === 'completed').length;
   const progress = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0;
+
+  const openSupport = () => {
+    Linking.openURL('mailto:equipe@capitune.com?subject=Paiement%20CAPITUNE');
+  };
+
+  const handlePayNow = (p: Payment) => {
+    Alert.alert(
+      'Paiement',
+      `Le paiement in-app est en cours d'intégration.\n\nFacture: ${p.label}\nMontant: ${p.amount} ${p.currency ?? 'CAD'}`,
+      [
+        { text: 'OK' },
+        { text: 'Contacter le support', onPress: openSupport },
+      ],
+    );
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -175,6 +195,50 @@ export default function ProjetScreen() {
                   </View>
                 );
               })
+            )}
+
+            {/* Paiements (intégré dans le projet) */}
+            {payments.length > 0 && (
+              <View style={styles.paymentsCard}>
+                <View style={styles.paymentsHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.paymentsTitle}>Paiements</Text>
+                    <Text style={styles.paymentsSub}>Les paiements se débloquent quand une étape est validée.</Text>
+                  </View>
+                  <Ionicons name="card-outline" size={18} color={Colors.textMuted} />
+                </View>
+
+                {(() => {
+                  const pending = payments.filter(p => p.status === 'pending');
+                  const paidCount = payments.filter(p => p.status === 'paid').length;
+                  const unlockedCount = Math.max(0, completedSteps - paidCount);
+
+                  if (pending.length === 0) {
+                    return <Text style={styles.paymentsEmpty}>Aucun paiement en attente.</Text>;
+                  }
+
+                  return pending.map((p, i) => {
+                    const enabled = i < unlockedCount;
+                    return (
+                      <View key={p.id} style={styles.paymentRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.paymentLabel} numberOfLines={2}>{p.label}</Text>
+                          <Text style={styles.paymentMeta}>{p.amount} {p.currency ?? 'CAD'} · {enabled ? 'Disponible' : 'Verrouillé'}</Text>
+                        </View>
+                        {enabled ? (
+                          <TouchableOpacity style={styles.payBtn} activeOpacity={0.85} onPress={() => handlePayNow(p)}>
+                            <Text style={styles.payBtnText}>Payer</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={styles.lockedPill}>
+                            <Ionicons name="lock-closed" size={14} color={Colors.textMuted} />
+                          </View>
+                        )}
+                      </View>
+                    );
+                  });
+                })()}
+              </View>
             )}
           </View>
         )}
@@ -266,8 +330,8 @@ export default function ProjetScreen() {
                   <Text style={styles.advisorName}>{advisor.name ?? advisor.nom}</Text>
                   <Text style={styles.advisorTitle}>{advisor.title ?? advisor.titre}</Text>
                 </View>
-                <TouchableOpacity style={styles.msgBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/messagerie')}>
-                  <Ionicons name="chatbubble-outline" size={20} color={Colors.orange} />
+                <TouchableOpacity style={styles.msgBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/inside' as any)}>
+                  <Ionicons name="sparkles-outline" size={20} color={Colors.orange} />
                 </TouchableOpacity>
               </View>
             )}
@@ -281,7 +345,7 @@ export default function ProjetScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16 },
   emptyTitle: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },
@@ -292,7 +356,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 24, fontWeight: '800', color: Colors.text },
   headerSub: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
   refreshBtn: { marginTop: 4, padding: 8 },
-  progressSection: { marginHorizontal: 20, marginBottom: 16, backgroundColor: Colors.surface, borderRadius: 16, padding: 16 },
+  progressSection: { marginHorizontal: 20, marginBottom: 16, backgroundColor: Colors.surface, borderRadius: 16, padding: 16, ...UI.cardBorder, ...UI.cardShadow },
   progressTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   progressLabel: { fontSize: 13, fontWeight: '600', color: Colors.text },
   progressPct: { fontSize: 16, fontWeight: '800', color: Colors.orange },
@@ -312,7 +376,7 @@ const styles = StyleSheet.create({
   stepLeft: { alignItems: 'center', width: 34 },
   stepDotOuter: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
   stepLine: { flex: 1, width: 0, borderLeftWidth: 2, borderStyle: 'dashed', marginVertical: 4 },
-  stepCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 14 },
+  stepCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 14, ...UI.cardBorder, ...UI.cardShadow },
   stepTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
   stepTitle: { fontSize: 14, fontWeight: '600', color: Colors.text, flex: 1 },
   statusBadge: { borderRadius: 20, paddingVertical: 3, paddingHorizontal: 8 },
@@ -321,7 +385,7 @@ const styles = StyleSheet.create({
   dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dueDate: { fontSize: 11, color: Colors.textMuted },
   // Documents
-  docCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  docCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, ...UI.cardBorder, ...UI.cardShadow },
   docIconBox: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   docTitle: { fontSize: 13, fontWeight: '600', color: Colors.text },
   docStatus: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
@@ -330,7 +394,7 @@ const styles = StyleSheet.create({
   emptyServicesBox: { alignItems: 'center', gap: 14, paddingVertical: 20 },
   addServiceBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.orange, paddingVertical: 10, paddingHorizontal: 20 },
   addServiceText: { fontSize: 14, fontWeight: '600', color: Colors.orange },
-  serviceCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  serviceCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, ...UI.cardBorder, ...UI.cardShadow },
   serviceIconBox: { width: 42, height: 42, borderRadius: 12, backgroundColor: Colors.orange + '15', justifyContent: 'center', alignItems: 'center' },
   serviceTitle: { fontSize: 13, fontWeight: '600', color: Colors.text },
   serviceStatus: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
@@ -339,10 +403,23 @@ const styles = StyleSheet.create({
   noAdvisorBox: { alignItems: 'center', gap: 12, paddingVertical: 32 },
   noAdvisorTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
   noAdvisorSub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
-  advisorCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 16, padding: 18, gap: 14 },
+  advisorCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 16, padding: 18, gap: 14, ...UI.cardBorder, ...UI.cardShadow },
   advisorAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.orange + '25', justifyContent: 'center', alignItems: 'center' },
   advisorInitial: { fontSize: 26, fontWeight: '800', color: Colors.orange },
   advisorName: { fontSize: 16, fontWeight: '700', color: Colors.text },
   advisorTitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   msgBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: Colors.orange + '15', justifyContent: 'center', alignItems: 'center' },
+
+  // Paiements (dans Projet)
+  paymentsCard: { marginTop: 10, backgroundColor: Colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
+  paymentsHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  paymentsTitle: { fontSize: 14, fontWeight: '800', color: Colors.text },
+  paymentsSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2, lineHeight: 17 },
+  paymentsEmpty: { fontSize: 13, color: Colors.textMuted, paddingVertical: 6 },
+  paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: Colors.border },
+  paymentLabel: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  paymentMeta: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  payBtn: { backgroundColor: Colors.orange, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14 },
+  payBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  lockedPill: { width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.offWhite, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
 });

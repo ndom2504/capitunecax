@@ -36,7 +36,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#e87722"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "scheme": "capitune",
     "experiments": {

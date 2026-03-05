@@ -1,4 +1,4 @@
-# 🚀 CAPITUNE - Plateforme d'Accompagnement Immigration Canada
+ 🚀 CAPITUNE - Plateforme d'Accompagnement Immigration Canada
 
 [![Vercel](https://img.shields.io/badge/Déployer-Vercel-black?logo=vercel)](https://vercel.com/new/clone?repository-url=https://github.com/ndom2504/capituneca)
 [![Astro](https://img.shields.io/badge/Astro-5.13-blueviolet?logo=astro)](https://astro.build)

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
+import { CapiAvatar } from '../../components/CapiAvatar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useCapiSession } from '../../context/CapiContext';
 import type { CapiMotif } from '../../lib/api';
 
@@ -89,9 +91,7 @@ export default function CapiProgrammeScreen() {
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.capiHeader}>
-          <View style={styles.capiAvatar}>
-            <Text style={styles.capiEmoji}>🤖</Text>
-          </View>
+          <CapiAvatar size={44} state="idle" />
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>Basé sur votre objectif, voici les programmes immigration qui correspondent. Lequel vous intéresse ?</Text>
           </View>
@@ -158,20 +158,19 @@ export default function CapiProgrammeScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 },
   progressBarOuter: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
   progressBarInner: { height: 4, backgroundColor: Colors.orange, borderRadius: 2 },
   stepLabel: { fontSize: 12, color: Colors.textMuted, minWidth: 32 },
   capiHeader: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 12, alignItems: 'flex-start' },
-  capiAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.orange + '25', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  capiEmoji: { fontSize: 22 },
+
   bubble: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderTopLeftRadius: 4, padding: 14 },
   bubbleText: { fontSize: 14, color: Colors.text, lineHeight: 21 },
   question: { fontSize: 20, fontWeight: '700', color: Colors.text, paddingHorizontal: 20, marginBottom: 16 },
   list: { paddingHorizontal: 20, gap: 12 },
-  card: { backgroundColor: Colors.surface, borderRadius: 14, padding: 16, borderWidth: 1.5, borderColor: Colors.border },
+  card: { backgroundColor: Colors.surface, borderRadius: 14, padding: 16, borderWidth: 1.5, borderColor: Colors.border, ...UI.cardShadow },
   cardSelected: { borderColor: Colors.orange, backgroundColor: Colors.orange + '08' },
   cardTop: { marginBottom: 10 },
   cardTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 },

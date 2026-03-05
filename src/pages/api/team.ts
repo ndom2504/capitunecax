@@ -65,7 +65,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
               NULL AS pro_experience_years,
               created_at
             FROM users
-            WHERE role = 'admin'
+            WHERE role = 'admin' OR account_type = 'pro'
             ORDER BY created_at ASC
           `)
           .all();
@@ -124,7 +124,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
             NULL::integer AS pro_experience_years,
             created_at::text AS created_at
           FROM users
-          WHERE role = 'admin'
+          WHERE role = 'admin' OR account_type = 'pro'
           ORDER BY created_at ASC
         `;
       }

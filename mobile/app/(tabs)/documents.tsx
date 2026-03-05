@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, type Document } from '../../lib/api';
 
@@ -144,7 +145,7 @@ export default function DocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8,
@@ -168,8 +169,8 @@ const styles = StyleSheet.create({
   docCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2, shadowRadius: 6, elevation: 1,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
   },
   docIcon: { width: 44, height: 44, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   docInfo: { flex: 1 },

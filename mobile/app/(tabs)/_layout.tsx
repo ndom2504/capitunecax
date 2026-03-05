@@ -16,9 +16,8 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: Colors.primaryDark },
         tabBarStyle: {
-          backgroundColor: Colors.dark,
+          backgroundColor: Colors.tabBar,
           borderTopColor: isPro ? Colors.primary : Colors.border,
           borderTopWidth: isPro ? 2 : 1,
           height: 62,
@@ -50,26 +49,24 @@ export default function TabsLayout() {
         }
       />
 
-      {/* ── Messages (tous) ── */}
+      {/* ── Inside (communauté) (tous) ── */}
       <Tabs.Screen
-        name="messagerie"
-        options={{
-          tabBarLabel: 'Messages',
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" size={size} color={color} />,
-        }}
-      />
-
-      {/* ── Paiements (client seulement) ── */}
-      <Tabs.Screen
-        name="paiements"
+        name="inside"
         options={isPro
-          ? { href: null }  // masqué pour les pros
+          ? { href: null }
           : {
-              tabBarLabel: 'Paiements',
-              tabBarIcon: ({ color, size }) => <Ionicons name="card" size={size} color={color} />,
+              tabBarLabel: 'Inside',
+              tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
             }
         }
       />
+
+      {/* ── Anciennes routes masquées (compat deep-link) ── */}
+      <Tabs.Screen name="paiements" options={{ href: null }} />
+      <Tabs.Screen name="messagerie" options={{ href: null }} />
+
+      {/* ── Route cachée : Trouver un conseiller ── */}
+      <Tabs.Screen name="conseillers" options={{ href: null }} />
 
       {/* ── Documents (tous) ── */}
       <Tabs.Screen

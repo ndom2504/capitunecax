@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
+import { CapiAvatar } from '../../components/CapiAvatar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useCapiSession } from '../../context/CapiContext';
 import type { CapiAdvisor, CapiMotif } from '../../lib/api';
+import { buildAutonomieProject } from '../../lib/autonomie-steps';
+
+type Mode = 'choix' | 'conseiller' | 'autonomie';
 
 // Conseillers mock — en prod ce serait matchAdvisors()
 function getMockAdvisors(motif: CapiMotif): CapiAdvisor[] {
@@ -68,40 +73,119 @@ export default function CapiConseillerScreen() {
   const router = useRouter();
   const { session, updateSession } = useCapiSession();
   const motif = session.motif ?? 'visiter';
-  const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<Mode>('choix');
+  const [loading, setLoading] = useState(false);
   const [advisors, setAdvisors] = useState<CapiAdvisor[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadAdvisors = () => {
+    setLoading(true);
     const t = setTimeout(() => {
       setAdvisors(getMockAdvisors(motif));
       setLoading(false);
     }, 1200);
     return () => clearTimeout(t);
-  }, []);
+  };
 
-  const next = () => {
+  const handleChooseConseiller = () => {
+    setMode('conseiller');
+    loadAdvisors();
+  };
+
+  const handleChooseAutonomie = () => {
+    const project = buildAutonomieProject(motif);
+    updateSession({ autonomie: project, step: 8 });
+    router.push('/capi/autonomie' as never);
+  };
+
+  const confirmAdvisor = () => {
     if (!selected) return;
     const advisor = advisors.find(a => a.id === selected);
     updateSession({ advisor, step: 8 });
     router.push('/capi/activation');
   };
 
-  return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <View style={styles.progressBarOuter}>
-          <View style={[styles.progressBarInner, { width: '87.5%' }]} />
+  /* ── Écran de choix ─────────────────────────────────────────────────── */
+  const renderChoix = () => (
+    <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <View style={styles.capiHeader}>
+        <CapiAvatar size={44} state="speaking" />
+        <View style={styles.bubble}>
+          <Text style={styles.bubbleText}>
+            Comment souhaitez-vous <Text style={{ fontWeight: '700', color: Colors.orange }}>avancer dans votre démarche</Text> ? Vous pouvez choisir un conseiller qui vous accompagne, ou gérer vous-même votre dossier étape par étape.
+          </Text>
         </View>
-        <Text style={styles.stepLabel}>7 / 8</Text>
       </View>
 
+      <View style={styles.choixContainer}>
+        {/* Carte Conseiller */}
+        <TouchableOpacity style={styles.choixCard} onPress={handleChooseConseiller} activeOpacity={0.88}>
+          <View style={[styles.choixIconWrap, { backgroundColor: Colors.orange + '20' }]}>
+            <Text style={styles.choixIcon}>🧑‍💼</Text>
+          </View>
+          <Text style={styles.choixTitle}>Choisir un conseiller</Text>
+          <Text style={styles.choixDesc}>
+            Un expert en immigration vous accompagne personnellement, prépare votre dossier et répond à toutes vos questions.
+          </Text>
+          <View style={styles.choixPills}>
+            <View style={[styles.pill, { backgroundColor: Colors.orange + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.orange }]}>✓ Suivi personnalisé</Text>
+            </View>
+            <View style={[styles.pill, { backgroundColor: Colors.orange + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.orange }]}>✓ Dossier préparé</Text>
+            </View>
+            <View style={[styles.pill, { backgroundColor: Colors.orange + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.orange }]}>✓ Représentation IRCC</Text>
+            </View>
+          </View>
+          <View style={styles.choixArrow}>
+            <Ionicons name="arrow-forward" size={16} color={Colors.orange} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Séparateur */}
+        <View style={styles.orRow}>
+          <View style={styles.orLine} />
+          <Text style={styles.orText}>OU</Text>
+          <View style={styles.orLine} />
+        </View>
+
+        {/* Carte Autonomie */}
+        <TouchableOpacity style={[styles.choixCard, styles.choixCardPrimary]} onPress={handleChooseAutonomie} activeOpacity={0.88}>
+          <View style={[styles.choixIconWrap, { backgroundColor: Colors.primary + '25' }]}>
+            <Text style={styles.choixIcon}>🗺️</Text>
+          </View>
+          <Text style={[styles.choixTitle, { color: Colors.primary }]}>Mode autonomie guidée</Text>
+          <Text style={styles.choixDesc}>
+            Gérez votre demande vous-même grâce à un plan d'action personnalisé, des ressources officielles et un suivi de progression.
+          </Text>
+          <View style={styles.choixPills}>
+            <View style={[styles.pill, { backgroundColor: Colors.primary + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.primary }]}>✓ Plan étape par étape</Text>
+            </View>
+            <View style={[styles.pill, { backgroundColor: Colors.primary + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.primary }]}>✓ Liens officiels</Text>
+            </View>
+            <View style={[styles.pill, { backgroundColor: Colors.primary + '18' }]}>
+              <Text style={[styles.pillText, { color: Colors.primary }]}>✓ Score de préparation</Text>
+            </View>
+          </View>
+          <View style={[styles.choixArrow, { borderColor: Colors.primary + '30' }]}>
+            <Ionicons name="arrow-forward" size={16} color={Colors.primary} />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
+  );
+
+  /* ── Liste des conseillers ───────────────────────────────────────────── */
+  const renderConseiller = () => (
+    <>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.capiHeader}>
-          <View style={styles.capiAvatar}><Text style={styles.capiEmoji}>🤖</Text></View>
+          <CapiAvatar size={44} state="speaking" />
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>
               J'ai sélectionné les <Text style={{ fontWeight: '700', color: Colors.orange }}>meilleurs conseillers</Text> selon votre profil, votre province cible et votre langue. Choisissez celui qui vous correspond.
@@ -125,13 +209,10 @@ export default function CapiConseillerScreen() {
                   onPress={() => setSelected(adv.id)}
                   activeOpacity={0.85}
                 >
-                  {/* Badge score compatibilité */}
                   <View style={styles.scoreCorner}>
                     <Text style={styles.scoreNum}>{adv.score}%</Text>
                     <Text style={styles.scoreLabel}>match</Text>
                   </View>
-
-                  {/* Avatar + nom */}
                   <View style={styles.advisorTop}>
                     <View style={styles.avatarCircle}>
                       <Text style={styles.avatarInitial}>{adv.nom[0]}</Text>
@@ -146,68 +227,33 @@ export default function CapiConseillerScreen() {
                       </View>
                     )}
                   </View>
-
-                  {/* Barre compatibilité */}
                   <View style={styles.matchBar}>
                     <View style={[styles.matchFill, { width: `${adv.score}%` }]} />
                   </View>
-
-                  {/* Bio */}
                   <Text style={styles.bio}>{adv.bio}</Text>
-
-                  {/* Infos */}
                   <View style={styles.metaGrid}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{adv.province}</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{adv.experience} exp.</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="people-outline" size={13} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{adv.nbClients} clients</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="cash-outline" size={13} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{adv.tarifConsultation} {adv.deviseConsultation}/h</Text>
-                    </View>
+                    <View style={styles.metaItem}><Ionicons name="location-outline" size={13} color={Colors.textMuted} /><Text style={styles.metaText}>{adv.province}</Text></View>
+                    <View style={styles.metaItem}><Ionicons name="time-outline" size={13} color={Colors.textMuted} /><Text style={styles.metaText}>{adv.experience} exp.</Text></View>
+                    <View style={styles.metaItem}><Ionicons name="people-outline" size={13} color={Colors.textMuted} /><Text style={styles.metaText}>{adv.nbClients} clients</Text></View>
+                    <View style={styles.metaItem}><Ionicons name="cash-outline" size={13} color={Colors.textMuted} /><Text style={styles.metaText}>{adv.tarifConsultation} {adv.deviseConsultation}/h</Text></View>
                   </View>
-
-                  {/* Spécialités */}
                   <View style={styles.tags}>
-                    {adv.specialites.map((s, i) => (
-                      <View key={i} style={styles.tag}>
-                        <Text style={styles.tagText}>{s}</Text>
-                      </View>
-                    ))}
+                    {adv.specialites.map((s, i) => <View key={i} style={styles.tag}><Text style={styles.tagText}>{s}</Text></View>)}
                   </View>
-
-                  {/* Langues */}
-                  <View style={styles.langues}>
-                    <Ionicons name="chatbubble-outline" size={12} color={Colors.textMuted} />
-                    <Text style={styles.languesText}>{adv.langues.join(' · ')}</Text>
-                  </View>
-
-                  {/* Disponibilité */}
-                  <View style={styles.dispo}>
-                    <View style={styles.dispoDot} />
-                    <Text style={styles.dispoText}>{adv.disponibilite}</Text>
-                  </View>
+                  <View style={styles.langues}><Ionicons name="chatbubble-outline" size={12} color={Colors.textMuted} /><Text style={styles.languesText}>{adv.langues.join(' · ')}</Text></View>
+                  <View style={styles.dispo}><View style={styles.dispoDot} /><Text style={styles.dispoText}>{adv.disponibilite}</Text></View>
                 </TouchableOpacity>
               );
             })}
           </View>
         )}
-
         <View style={{ height: 100 }} />
       </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.nextBtn, !selected && styles.nextBtnDisabled]}
-          onPress={next}
+          onPress={confirmAdvisor}
           disabled={!selected}
           activeOpacity={0.85}
         >
@@ -217,26 +263,44 @@ export default function CapiConseillerScreen() {
           {selected && <Ionicons name="arrow-forward" size={18} color="#fff" />}
         </TouchableOpacity>
       </View>
+    </>
+  );
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={mode === 'conseiller' ? () => setMode('choix') : () => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
+        </TouchableOpacity>
+        <View style={styles.progressBarOuter}>
+          <View style={[styles.progressBarInner, { width: '87.5%' }]} />
+        </View>
+        <Text style={styles.stepLabel}>7 / 8</Text>
+      </View>
+
+      {mode === 'choix' ? renderChoix() : renderConseiller()}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 },
   progressBarOuter: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
   progressBarInner: { height: 4, backgroundColor: Colors.orange, borderRadius: 2 },
   stepLabel: { fontSize: 12, color: Colors.textMuted, minWidth: 32 },
   capiHeader: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, gap: 12, alignItems: 'flex-start' },
-  capiAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.orange + '25', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  capiEmoji: { fontSize: 22 },
+
   bubble: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderTopLeftRadius: 4, padding: 14 },
   bubbleText: { fontSize: 14, color: Colors.text, lineHeight: 21 },
   loadingBox: { alignItems: 'center', paddingTop: 60, gap: 16 },
   loadingText: { fontSize: 14, color: Colors.textMuted },
   list: { paddingHorizontal: 20, gap: 14 },
-  card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 16, borderWidth: 1.5, borderColor: Colors.border, position: 'relative', overflow: 'hidden' },
+  card: { backgroundColor: Colors.surface, borderRadius: 18, padding: 16, borderWidth: 1.5, borderColor: Colors.border, position: 'relative', overflow: 'hidden', ...UI.cardShadow },
   cardSelected: { borderColor: Colors.orange },
   scoreCorner: { position: 'absolute', top: 14, right: 14, backgroundColor: Colors.orange + '18', borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10, alignItems: 'center' },
   scoreNum: { fontSize: 16, fontWeight: '800', color: Colors.orange },
@@ -265,4 +329,19 @@ const styles = StyleSheet.create({
   nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.orange, borderRadius: 14, paddingVertical: 16, gap: 8 },
   nextBtnDisabled: { backgroundColor: Colors.border },
   nextBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  // Mode choix
+  choixContainer: { paddingHorizontal: 20, gap: 6 },
+  choixCard: { backgroundColor: Colors.surface, borderRadius: 18, padding: 20, borderWidth: 1.5, borderColor: Colors.border, ...UI.cardShadow },
+  choixCardPrimary: { borderColor: Colors.primary + '50' },
+  choixIconWrap: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  choixIcon: { fontSize: 26 },
+  choixTitle: { fontSize: 17, fontWeight: '800', color: Colors.orange, marginBottom: 8 },
+  choixDesc: { fontSize: 14, color: Colors.textMuted, lineHeight: 21, marginBottom: 14 },
+  choixPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  pill: { borderRadius: 20, paddingVertical: 4, paddingHorizontal: 10 },
+  pillText: { fontSize: 12, fontWeight: '600' },
+  choixArrow: { alignSelf: 'flex-end', width: 32, height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.orange + '30', justifyContent: 'center', alignItems: 'center' },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
+  orLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  orText: { fontSize: 13, fontWeight: '700', color: Colors.textMuted },
 });

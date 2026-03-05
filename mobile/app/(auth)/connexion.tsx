@@ -8,8 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
-import { saveSession } from '../../lib/auth';
 import type { UserInfo } from '../../lib/api';
 
 const BACKEND = 'https://capituneweb.vercel.app';
@@ -22,7 +22,7 @@ function homeRoute(accountType?: string) {
 
 export default function ConnexionScreen() {
   const router = useRouter();
-  const { login, setUser } = useAuth();
+  const { login, setSession } = useAuth();
 
   const [accountType, setAccountType] = useState<AccountType>('client');
   const [email, setEmail]       = useState('');
@@ -53,8 +53,7 @@ export default function ConnexionScreen() {
         account_type: atParam as UserInfo['account_type'],
       };
 
-      await saveSession(decodeURIComponent(token), user);
-      setUser(user);
+      await setSession(decodeURIComponent(token), user);
       router.replace(homeRoute(atParam) as any);
     } catch {
       Alert.alert('Erreur', 'Impossible de finaliser la connexion OAuth.');
@@ -104,7 +103,7 @@ export default function ConnexionScreen() {
     }
 
     setLoading(true);
-    const result = await login(email.trim().toLowerCase(), password);
+    const result = await login(email.trim().toLowerCase(), password, accountType);
     setLoading(false);
 
     if (result.pending) {
@@ -255,39 +254,42 @@ export default function ConnexionScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: 24 },
   logoWrap: { alignItems: 'center', marginBottom: 24 },
-  logoText: { fontSize: 34, fontWeight: '800', color: Colors.white, letterSpacing: 3 },
-  logoSub: { fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 4, letterSpacing: 1 },
+  logoText: { fontSize: 34, fontWeight: '800', color: Colors.primary, letterSpacing: 3 },
+  logoSub: { fontSize: 13, color: Colors.textMuted, marginTop: 4, letterSpacing: 1 },
   // Toggle type
   typeRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   typeBtn: {
-    flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    flex: 1, borderWidth: 1, borderColor: Colors.border,
     borderRadius: 12, paddingVertical: 12, alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: Colors.white,
   },
-  typeBtnActive: { borderColor: Colors.orange, backgroundColor: 'rgba(232,119,34,0.18)' },
-  typeText: { color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600' },
-  typeTextActive: { color: Colors.orangeLight, fontWeight: '800' },
+  typeBtnActive: { borderColor: Colors.orange, backgroundColor: Colors.orange + '12' },
+  typeText: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
+  typeTextActive: { color: Colors.orange, fontWeight: '800' },
   // Carte
   card: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 20, padding: 28,
+    ...UI.cardShadow,
   },
   cardPro: {
-    borderColor: 'rgba(31,75,110,0.6)',
-    backgroundColor: 'rgba(31,75,110,0.12)',
+    borderColor: Colors.primary + '35',
+    backgroundColor: Colors.primary + '08',
   },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.white, marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 24 },
   field: { marginBottom: 18 },
-  label: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
+  label: { fontSize: 12, color: Colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 10, padding: 14,
-    color: Colors.white, fontSize: 15,
+    color: Colors.text, fontSize: 15,
   },
   btn: {
     backgroundColor: Colors.orange, borderRadius: 12,
@@ -297,21 +299,23 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText: { color: Colors.white, fontSize: 16, fontWeight: '700' },
   linkRow: { alignItems: 'center', marginTop: 14 },
-  linkText: { color: Colors.orangeLight, fontSize: 13 },
+  linkText: { color: Colors.orange, fontSize: 13 },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
-  footerText: { color: 'rgba(255,255,255,0.55)', fontSize: 14 },
+  footerText: { color: Colors.textMuted, fontSize: 14 },
   footerLink: { color: Colors.orange, fontSize: 14, fontWeight: '700' },
   // OAuth
   separator: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  separatorLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
-  separatorText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginHorizontal: 12 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  separatorText: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 12 },
   oauthBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 12, paddingVertical: 14, marginBottom: 12,
+    ...UI.cardShadow,
   },
   oauthBtnMs: { marginBottom: 0 },
-  oauthBtnText: { color: Colors.white, fontSize: 15, fontWeight: '600' },
+  oauthBtnText: { color: Colors.text, fontSize: 15, fontWeight: '600' },
   googleG: { fontSize: 16, fontWeight: '800', color: '#EA4335' },
 });

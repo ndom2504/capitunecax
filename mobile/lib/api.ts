@@ -35,9 +35,11 @@ async function request<T>(
 // -- Auth ---------------------------------------------------------------------
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    request<{ success?: boolean; pending?: boolean; message?: string; user?: UserInfo }>(
-      '/api/oauth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  login: (email: string, password: string, accountType: 'client' | 'pro') =>
+    request<{ success?: boolean; pending?: boolean; message?: string; token?: string; user?: UserInfo }>(
+      '/api/oauth/signin/credentials',
+      { method: 'POST', body: JSON.stringify({ email, password, accountType, mobile: true }) }
+    ),
 
   signup: (payload: SignupPayload) =>
     request<{ success?: boolean; pending?: boolean; email?: string; message?: string }>(
@@ -45,10 +47,21 @@ export const authApi = {
 
   me: (token: string) => request<UserInfo>('/api/me', {}, token),
 
-  logout: (token: string) => request('/api/oauth/logout', { method: 'POST' }, token),
+  logout: (token: string) => request('/api/oauth/signout', { method: 'POST' }, token),
 
   resendVerification: (email: string) =>
     request('/api/resend-verification', { method: 'POST', body: JSON.stringify({ email }) }),
+};
+
+// -- Profil utilisateur -------------------------------------------------------
+
+export const userApi = {
+  getProfile: (token: string) => request<UserProfile>('/api/user/profile', {}, token),
+  updateProfile: (token: string, payload: UserProfileUpdate) =>
+    request<{ ok?: boolean; persisted?: boolean; error?: string }>('/api/user/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }, token),
 };
 
 // -- CAPI � Agent IA d'orientation --------------------------------------------
@@ -102,6 +115,27 @@ export const dashboardApi = {
     request<{ payments: Payment[] }>('/api/payments', {}, token),
 };
 
+// -- Conseillers / Équipe ----------------------------------------------------
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  location: string;
+  bio: string;
+  avatar_key: string;
+  pro_services: string[];
+  pro_pack_prices: Record<string, number>;
+  pro_pack_services: Record<string, string[]>;
+  pro_diploma: string;
+  pro_competences: string;
+  pro_experience_years: number | null;
+  created_at: string | null;
+};
+
+export const teamApi = {
+  list: (token: string) => request<{ team: TeamMember[]; error?: string }>('/api/team', {}, token),
+};
+
 // -- Types Auth ----------------------------------------------------------------
 
 export interface UserInfo {
@@ -122,6 +156,28 @@ export interface SignupPayload {
   country?: string;
   accountType: 'client' | 'pro';
 }
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  location: string;
+  bio: string;
+  avatar_key: string;
+  role: 'client' | 'admin' | 'pro';
+  notif_email: boolean;
+  notif_rdv: boolean;
+  notif_msg: boolean;
+  currency_code: string;
+  premium_expires_at: string | null;
+  premium_active: boolean;
+}
+
+export type UserProfileUpdate = Partial<Pick<
+  UserProfile,
+  'name' | 'phone' | 'location' | 'bio' | 'notif_email' | 'notif_rdv' | 'notif_msg' | 'currency_code' | 'avatar_key'
+>>;
 
 // -- Types CAPI ----------------------------------------------------------------
 
@@ -144,6 +200,7 @@ export interface CapiSession {
   services?: CapiService[];
   timeline?: CapiTimelineStep[];
   advisor?: CapiAdvisor;
+  autonomie?: AutonomieProject;
   updatedAt?: string;
 }
 
@@ -164,6 +221,55 @@ export interface CapiProfileData {
   offreEmploi?: boolean;
   niveauEtudes?: string;
   chiffreAffaires?: number;
+  // Champs spécifiques visa visiteur
+  nombrePersonnes?: number;
+  dureeSejour?: number;      // en jours
+  paysResidence?: string;    // région pour estimation billets (RegionCode)
+  paysCode?: string;         // code ISO 3166-1 alpha-2 du pays de résidence
+  crdvVille?: string;        // centre biométrie le plus proche
+  typeHebergement?: 'hotel' | 'famille_amis' | 'airbnb';
+}
+
+export interface VisiteurPlan {
+  nombrePersonnes: number;
+  dureeSejour: number;
+  region: string;
+  crdvVille?: string;
+  notesPays?: string;
+  fraisVisa: number;
+  fraisBiometrie: number;
+  fraisBiometrieTotal: number;
+  examenMedical: boolean;
+  coutExamenMedical: string;
+  budgetParJourParPersonne: number;
+  totalBudgetSejour: number;
+  fourchetteBillets: string;
+  coutEnvoiPasseport: string;
+  preuveFondsMin: number;
+  documents: string[];
+  documentsOptionnels: string[];
+  conseils: string[];
+  totalEstimatif: number;
+}
+
+export interface MotifPlanFee {
+  label: string;
+  montant: string;
+}
+
+export interface MotifPlan {
+  motif: CapiMotif;
+  fraisGouvernementaux: MotifPlanFee[];
+  totalGouvernement: number;
+  biometrieRequise: boolean;
+  crdvVille?: string;
+  /** true = la position du centre est incertaine — l’utilisateur doit vérifier sur canada.ca */
+  crdvIncertain?: boolean;
+  examenMedical: boolean;
+  notesPays?: string;
+  documents: string[];
+  documentsOptionnels: string[];
+  conseils: string[];
 }
 
 export interface CapiEvaluation {
@@ -173,6 +279,8 @@ export interface CapiEvaluation {
   risques: string[];
   points_forts: string[];
   disclaimer: string;
+  visiteurPlan?: VisiteurPlan;
+  motifPlan?: MotifPlan;
 }
 
 export interface CapiService {
@@ -211,6 +319,61 @@ export interface CapiAdvisor {
   experience?: string;
   nbClients?: number;
   bio?: string;
+}
+
+// -- Types Autonomie Guidée --------------------------------------------------
+
+export type AutonomieStepStatus = 'pending' | 'in_progress' | 'done';
+
+export interface AutonomieCheckItem {
+  id: string;
+  label: string;
+  done: boolean;
+}
+
+export interface AutonomieRessource {
+  titre: string;
+  description: string;
+  url: string;
+}
+
+export interface AutonomieStep {
+  id: string;
+  ordre: number;
+  title: string;
+  description: string;
+  icon: string;
+  status: AutonomieStepStatus;
+  checkItems: AutonomieCheckItem[];   // affichés comme actions (non-cochables en UI)
+  ressources: AutonomieRessource[];
+  actionLabel?: string;
+  actionUrl?: string;
+  delaiEstime?: string;               // ex: "2–4 semaines"
+  documents?: string[];               // documents requis pour cette étape
+}
+
+export interface BudgetCategorie {
+  label: string;
+  icon: string;
+  montant: number;       // en CAD
+  fourchette?: string;   // ex: "16 000 – 28 000"
+  description: string;
+}
+
+export interface MotifBudget {
+  motif: CapiMotif;
+  categories: BudgetCategorie[];
+  totalEstime: number;
+  totalFourchette: string;
+  devise: string;
+  notesBudget: string;
+}
+
+export interface AutonomieProject {
+  motif: CapiMotif;
+  steps: AutonomieStep[];
+  createdAt: string;
+  scorePreparation: number; // 0-100
 }
 
 export interface CapiMatchContext {

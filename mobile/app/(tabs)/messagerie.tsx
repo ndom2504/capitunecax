@@ -1,22 +1,49 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TextInput,
-  TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
+import { getAvatarSource } from '../../lib/avatar';
 import { dashboardApi, type Message } from '../../lib/api';
 
 const DEMO_MESSAGES: Message[] = [
-  { id: '1', content: 'Bienvenue sur Capitune ! Je suis votre conseiller pour ce dossier.', sender: 'pro', senderName: 'Sarah Legrand', createdAt: '2026-02-10T09:00:00Z', read: true },
-  { id: '2', content: 'Merci ! Par où commencer ?', sender: 'client', senderName: 'Vous', createdAt: '2026-02-10T09:05:00Z', read: true },
-  { id: '3', content: 'Commencez par téléverser votre passeport et une photo d\'identité dans l\'onglet Documents.', sender: 'pro', senderName: 'Sarah Legrand', createdAt: '2026-02-10T09:07:00Z', read: true },
-  { id: '4', content: 'Votre dossier est en révision. Les pièces jointes sont conformes ✅', sender: 'pro', senderName: 'Sarah Legrand', createdAt: '2026-03-01T10:32:00Z', read: true },
-  { id: '5', content: 'Merci ! Quand aura lieu le dépôt officiel ?', sender: 'client', senderName: 'Vous', createdAt: '2026-03-01T10:35:00Z', read: true },
-  { id: '6', content: 'Nous prévoyons le dépôt d\'ici 5 jours ouvrables 📅', sender: 'pro', senderName: 'Sarah Legrand', createdAt: '2026-03-01T10:37:00Z', read: false },
+  {
+    id: '1',
+    content: 'Bonjour 👋 Je suis votre conseiller. Dites-moi où vous en êtes, je vous guide.',
+    sender: 'pro',
+    senderName: 'Conseiller Capitune',
+    createdAt: '2026-03-02T09:00:00Z',
+    read: true,
+  },
+  {
+    id: '2',
+    content: 'Merci ! Je commence par quels documents ? ',
+    sender: 'client',
+    senderName: 'Vous',
+    createdAt: '2026-03-02T09:03:00Z',
+    read: true,
+  },
+  {
+    id: '3',
+    content: "On commence par passeport + photo d'identité. Ensuite, on valide l'étape 1 dans Mon Projet.",
+    sender: 'pro',
+    senderName: 'Conseiller Capitune',
+    createdAt: '2026-03-02T09:05:00Z',
+    read: true,
+  },
 ];
 
 function formatTime(iso: string): string {
@@ -27,28 +54,51 @@ function formatTime(iso: string): string {
 export default function MessagerieScreen() {
   const { token, user } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const advisorName = typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller Capitune';
+  const advisorAvatarKey = typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '';
+  const shouldPrefill = String(params.prefill ?? '') === '1';
+  const advisorAvatarSource = getAvatarSource(advisorAvatarKey);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const listRef = useRef<FlatList>(null);
+  const didPrefillRef = useRef(false);
+  const listRef = useRef<FlatList<Message>>(null);
 
   const load = async () => {
-    if (!token) { setMessages(DEMO_MESSAGES); setLoading(false); return; }
-    const res = await dashboardApi.getMessages(token);
-    const msgs = res.data?.messages;
-    setMessages(msgs?.length ? msgs : DEMO_MESSAGES);
-    setLoading(false);
+    setLoading(true);
+    try {
+      if (!token) {
+        setMessages(DEMO_MESSAGES);
+        return;
+      }
+      const res = await dashboardApi.getMessages(token);
+      const msgs = res.data?.messages;
+      setMessages(msgs?.length ? msgs : DEMO_MESSAGES);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, [token]);
+  useEffect(() => {
+    load();
+  }, [token]);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  };
+  useEffect(() => {
+    if (!shouldPrefill) return;
+    if (didPrefillRef.current) return;
+    if (input.trim()) {
+      didPrefillRef.current = true;
+      return;
+    }
+    const firstName = advisorName.split(' ')[0] || advisorName;
+    setInput(`Bonjour ${firstName}, j’aimerais discuter de mon dossier.`);
+    didPrefillRef.current = true;
+  }, [shouldPrefill, advisorName, input]);
 
   const send = async () => {
     const content = input.trim();
@@ -62,33 +112,38 @@ export default function MessagerieScreen() {
       createdAt: new Date().toISOString(),
       read: false,
     };
+
     setMessages(prev => [...prev, optimistic]);
     setInput('');
     setSending(true);
 
-    if (token) await dashboardApi.sendMessage(token, content);
-    setSending(false);
-
-    setTimeout(() => {
-      listRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    try {
+      if (token) await dashboardApi.sendMessage(token, content);
+    } finally {
+      setSending(false);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    }
   };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.proAvatar}>
-          <Text style={styles.proInitial}>S</Text>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <View style={styles.advisorAvatar}>
+          {advisorAvatarSource ? (
+            <Image source={advisorAvatarSource} style={styles.advisorAvatarImg} />
+          ) : (
+            <Text style={styles.advisorAvatarInitial}>{(advisorName?.[0] ?? 'C').toUpperCase()}</Text>
+          )}
         </View>
-        <View>
-          <Text style={styles.proName}>Sarah Legrand</Text>
-          <Text style={styles.proTitle}>Conseillère Capitune</Text>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{advisorName}</Text>
+          <Text style={styles.headerSub}>Point de contact</Text>
         </View>
-        <View style={styles.onlineIndicator} />
 
         <TouchableOpacity
           style={styles.headerAction}
-          onPress={() => router.push('/(tabs)/documents')}
+          onPress={() => router.push('/(tabs)/documents' as any)}
           activeOpacity={0.85}
           accessibilityLabel="Aller aux documents"
         >
@@ -97,16 +152,14 @@ export default function MessagerieScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator color={Colors.orange} style={{ marginTop: 60 }} />
+        <ActivityIndicator color={Colors.orange} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           ref={listRef}
           data={messages}
-          keyExtractor={m => m.id}
+          keyExtractor={(m) => m.id}
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
           renderItem={({ item }) => {
             const isMe = item.sender === 'client' || item.sender === 'user';
             return (
@@ -114,32 +167,21 @@ export default function MessagerieScreen() {
                 <Text style={[styles.bubbleText, isMe ? styles.bubbleTextMe : styles.bubbleTextThem]}>
                   {item.content}
                 </Text>
-                <Text style={[styles.bubbleTime, isMe && styles.bubbleTimeMe]}>
-                  {formatTime(item.createdAt)}
-                  {isMe && (
-                    <Ionicons
-                      name={item.read ? 'checkmark-done' : 'checkmark'}
-                      size={12} color="rgba(255,255,255,0.6)"
-                    />
-                  )}
-                </Text>
+                <Text style={[styles.bubbleTime, isMe && styles.bubbleTimeMe]}>{formatTime(item.createdAt)}</Text>
               </View>
             );
           }}
         />
       )}
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={90}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Écrire un message..."
-            placeholderTextColor="#94a3b8"
+            placeholder="Écrire au conseiller…"
+            placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={1000}
           />
@@ -147,12 +189,10 @@ export default function MessagerieScreen() {
             style={[styles.sendBtn, (!input.trim() || sending) && styles.sendBtnDisabled]}
             onPress={send}
             disabled={!input.trim() || sending}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
+            accessibilityLabel="Envoyer"
           >
-            {sending
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="send" size={18} color="#fff" />
-            }
+            {sending ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="send" size={18} color="#fff" />}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -161,65 +201,77 @@ export default function MessagerieScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 16, backgroundColor: Colors.surface,
-    borderBottomWidth: 1, borderBottomColor: Colors.border,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 10,
   },
-  proAvatar: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center',
+  advisorAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    overflow: 'hidden',
   },
-  proInitial: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  proName: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  proTitle: { fontSize: 12, color: Colors.textMuted },
-  onlineIndicator: {
-    width: 10, height: 10, borderRadius: 5,
-    backgroundColor: Colors.success, marginLeft: 'auto',
-  },
+  advisorAvatarImg: { width: 36, height: 36, borderRadius: 18 },
+  advisorAvatarInitial: { color: Colors.white, fontSize: 14, fontWeight: '900' },
+  headerTitle: { fontSize: 22, fontWeight: '800', color: Colors.text },
+  headerSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   headerAction: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: Colors.primaryDark,
-    borderWidth: 1, borderColor: Colors.border,
-    justifyContent: 'center', alignItems: 'center',
-    marginLeft: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
   },
   messagesList: { padding: 16, gap: 10, paddingBottom: 8 },
-  bubble: {
-    maxWidth: '80%', borderRadius: 16, padding: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 4,
-  },
-  bubbleMe: {
-    alignSelf: 'flex-end', backgroundColor: Colors.primary,
-    borderBottomRightRadius: 4,
-  },
-  bubbleThem: {
-    alignSelf: 'flex-start', backgroundColor: '#1c2436',
-    borderBottomLeftRadius: 4,
-  },
+  bubble: { maxWidth: '84%', borderRadius: 16, padding: 12 },
+  bubbleMe: { alignSelf: 'flex-end', backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
+  bubbleThem: { alignSelf: 'flex-start', backgroundColor: Colors.surface, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: Colors.border },
   bubbleText: { fontSize: 14, lineHeight: 20 },
-  bubbleTextMe: { color: '#fff' },
+  bubbleTextMe: { color: Colors.white },
   bubbleTextThem: { color: Colors.text },
-  bubbleTime: { fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4, textAlign: 'right' },
-  bubbleTimeMe: { color: 'rgba(255,255,255,0.55)' },
+  bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
+  bubbleTimeMe: { color: 'rgba(255,255,255,0.65)' },
   inputRow: {
-    flexDirection: 'row', alignItems: 'flex-end', gap: 10,
-    padding: 12, backgroundColor: Colors.surface,
-    borderTopWidth: 1, borderTopColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    padding: 12,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
   input: {
-    flex: 1, backgroundColor: Colors.primaryDark,
-    borderWidth: 1, borderColor: Colors.border,
-    borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10,
-    fontSize: 14, color: Colors.text, maxHeight: 100,
+    flex: 1,
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.text,
+    maxHeight: 110,
   },
   sendBtn: {
-    width: 42, height: 42, borderRadius: 21,
-    backgroundColor: Colors.orange, justifyContent: 'center', alignItems: 'center',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.orange,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sendBtnDisabled: { opacity: 0.4 },
 });

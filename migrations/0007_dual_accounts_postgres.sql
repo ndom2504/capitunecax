@@ -1,4 +1,4 @@
--- ============================================================
+ ============================================================
 --  CAPITUNE — Postgres/Neon Schema — Migration 0007
 --  Objectif: autoriser un même email en "client" ET en "pro"
 --            via une unicité (email, account_type)

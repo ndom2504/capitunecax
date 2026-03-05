@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } fr
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { authApi } from '../../lib/api';
+import { UI } from '../../constants/UI';
 
 export default function VerificationEnAttenteScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -62,20 +63,22 @@ export default function VerificationEnAttenteScreen() {
 
 const styles = StyleSheet.create({
   root: {
-    flex: 1, backgroundColor: Colors.primaryDark,
+    flex: 1, backgroundColor: Colors.bgLight,
     justifyContent: 'center', padding: 24,
   },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1, borderColor: 'rgba(232,119,34,0.35)',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.orange + '35',
     borderRadius: 20, padding: 32, alignItems: 'center',
+    ...UI.cardShadow,
   },
   icon: { fontSize: 52, marginBottom: 16 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.white, marginBottom: 12, textAlign: 'center' },
-  desc: { fontSize: 14, color: 'rgba(255,255,255,0.65)', textAlign: 'center' },
+  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 12, textAlign: 'center' },
+  desc: { fontSize: 14, color: Colors.textMuted, textAlign: 'center' },
   email: { fontSize: 16, fontWeight: '700', color: Colors.orange, marginVertical: 8, textAlign: 'center' },
   hint: {
-    fontSize: 13, color: 'rgba(255,255,255,0.50)',
+    fontSize: 13, color: Colors.textMuted,
     textAlign: 'center', lineHeight: 20, marginBottom: 24,
   },
   btn: {
@@ -86,5 +89,5 @@ const styles = StyleSheet.create({
   btnText: { color: Colors.white, fontWeight: '700', fontSize: 14 },
   sentMsg: { color: '#4ade80', fontWeight: '700', marginBottom: 16, fontSize: 14 },
   backBtn: { marginTop: 8 },
-  backText: { color: 'rgba(255,255,255,0.45)', fontSize: 13 },
+  backText: { color: Colors.textMuted, fontSize: 13 },
 });

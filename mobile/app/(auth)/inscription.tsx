@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { authApi, type SignupPayload, type UserInfo } from '../../lib/api';
 import { saveSession } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
@@ -256,33 +257,36 @@ export default function InscriptionScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.primaryDark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flexGrow: 1, padding: 24, paddingTop: 60 },
   logoWrap: { alignItems: 'center', marginBottom: 28 },
-  logoText: { fontSize: 30, fontWeight: '800', color: Colors.white, letterSpacing: 3 },
-  logoSub: { fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 4 },
+  logoText: { fontSize: 30, fontWeight: '800', color: Colors.primary, letterSpacing: 3 },
+  logoSub: { fontSize: 13, color: Colors.textMuted, marginTop: 4 },
   card: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 20, padding: 24,
+    ...UI.cardShadow,
   },
-  sectionLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
+  sectionLabel: { fontSize: 12, color: Colors.textMuted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
   toggleRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
   toggleBtn: {
-    flex: 1, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    flex: 1, borderWidth: 1, borderColor: Colors.border,
     borderRadius: 10, padding: 10, alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: Colors.white,
   },
-  toggleBtnActive: { borderColor: Colors.orange, backgroundColor: 'rgba(232,119,34,0.15)' },
-  toggleText: { color: 'rgba(255,255,255,0.55)', fontSize: 12, textAlign: 'center' },
-  toggleTextActive: { color: Colors.orangeLight, fontWeight: '700' },
+  toggleBtnActive: { borderColor: Colors.orange, backgroundColor: Colors.orange + '12' },
+  toggleText: { color: Colors.textMuted, fontSize: 12, textAlign: 'center' },
+  toggleTextActive: { color: Colors.orange, fontWeight: '700' },
   field: { marginBottom: 16 },
-  label: { fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
+  label: { fontSize: 11, color: Colors.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.8 },
   input: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 10, padding: 13,
-    color: Colors.white, fontSize: 14,
+    color: Colors.text, fontSize: 14,
   },
   btn: {
     backgroundColor: Colors.orange, borderRadius: 12,
@@ -291,18 +295,20 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText: { color: Colors.white, fontSize: 15, fontWeight: '700' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24, marginBottom: 40 },
-  footerText: { color: 'rgba(255,255,255,0.55)', fontSize: 14 },
+  footerText: { color: Colors.textMuted, fontSize: 14 },
   footerLink: { color: Colors.orange, fontSize: 14, fontWeight: '700' },
   separator: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  separatorLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.15)' },
-  separatorText: { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginHorizontal: 12 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  separatorText: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 12 },
   oauthBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 12, paddingVertical: 14, marginBottom: 12,
+    ...UI.cardShadow,
   },
   oauthBtnMs: { marginBottom: 0 },
-  oauthBtnText: { color: Colors.white, fontSize: 15, fontWeight: '600' },
+  oauthBtnText: { color: Colors.text, fontSize: 15, fontWeight: '600' },
   googleG: { fontSize: 16, fontWeight: '800', color: '#EA4335' },
 });

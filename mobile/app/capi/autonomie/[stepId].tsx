@@ -1,0 +1,494 @@
+import React, { useMemo, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../../../constants/Colors';
+import { UI } from '../../../constants/UI';
+import { useCapiSession } from '../../../context/CapiContext';
+import {
+  getBiometrieUrl, getMedecinDesigneUrl, getPaysLabel,
+} from '../../../lib/dli-data';
+
+// ---------------------------------------------------------------------------
+// Utilitaire : URL intelligente selon l'étape et le pays
+// ---------------------------------------------------------------------------
+
+function resolveActionUrl(stepId: string, baseUrl: string | undefined, paysCode?: string): string | undefined {
+  if (!baseUrl) return undefined;
+  // Étapes biométrie → VFS Global selon pays
+  if (stepId.includes('biometrie')) return getBiometrieUrl(paysCode);
+  // Étapes examens médicaux → DMP IRCC avec filtre pays
+  if (stepId.includes('exam-medical') || stepId.includes('examens-medicaux')) return getMedecinDesigneUrl(paysCode);
+  return baseUrl;
+}
+
+function resolveRessourceUrl(stepId: string, baseUrl: string, paysCode?: string): string {
+  if (stepId.includes('biometrie') && baseUrl.includes('biometrie')) return getBiometrieUrl(paysCode);
+  if ((stepId.includes('exam-medical') || stepId.includes('examens-medicaux')) && baseUrl.includes('dmp')) return getMedecinDesigneUrl(paysCode);
+  return baseUrl;
+}
+
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
+
+export default function AutonomieStepScreen() {
+  const router = useRouter();
+  const { stepId } = useLocalSearchParams<{ stepId: string }>();
+  const { session } = useCapiSession();
+
+  const project = session.autonomie;
+  // Récupère le code pays depuis le profil CAPI (ex: "MA", "DZ", "FR")
+  const paysCode = session.profile?.paysCode;
+
+  const step = useMemo(
+    () => project?.steps.find(s => s.id === stepId),
+    [project, stepId],
+  );
+
+  const stepIndex = useMemo(
+    () => project?.steps.findIndex(s => s.id === stepId) ?? -1,
+    [project, stepId],
+  );
+
+  // Drapeaux pour les étapes spéciales
+  const isEtablissement = stepId === 'choisir-etablissement';
+  const isBiometrie = typeof stepId === 'string' && stepId.includes('biometrie');
+  const isMedical = typeof stepId === 'string' &&
+    (stepId.includes('exam-medical') || stepId.includes('examens-medicaux'));
+
+  const openUrl = useCallback(async (url: string) => {
+    try {
+      const ok = await Linking.canOpenURL(url);
+      if (ok) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Lien indisponible', url);
+      }
+    } catch {
+      Alert.alert('Erreur', "Impossible d'ouvrir ce lien.");
+    }
+  }, []);
+
+  const goToStep = useCallback((offset: number) => {
+    if (!project) return;
+    const target = project.steps[stepIndex + offset];
+    if (target) router.replace(`/capi/autonomie/${target.id}` as never);
+  }, [project, stepIndex, router]);
+
+  if (!project || !step) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>Étape introuvable.</Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.emptyBtn}>
+            <Text style={styles.emptyBtnText}>Retour</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const hasPrev = stepIndex > 0;
+  const hasNext = stepIndex < project.steps.length - 1;
+
+  // URLs résolues intelligemment
+  const smartActionUrl = resolveActionUrl(stepId as string, step.actionUrl, paysCode);
+  const paysLabel = getPaysLabel(paysCode);
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      {/* Header avec navigation */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>
+          Étape {step.ordre} / {project.steps.length}
+        </Text>
+        <View style={styles.navRow}>
+          <TouchableOpacity
+            onPress={() => goToStep(-1)}
+            disabled={!hasPrev}
+            style={[styles.navBtn, !hasPrev && styles.navBtnDisabled]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={20} color={hasPrev ? Colors.text : Colors.border} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => goToStep(1)}
+            disabled={!hasNext}
+            style={[styles.navBtn, !hasNext && styles.navBtnDisabled]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-forward" size={20} color={hasNext ? Colors.text : Colors.border} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View style={styles.heroIconWrap}>
+            <Text style={styles.heroIconEmoji}>{step.icon}</Text>
+          </View>
+          {step.delaiEstime && (
+            <View style={styles.delaiBadge}>
+              <Ionicons name="time-outline" size={13} color={Colors.primary} />
+              <Text style={styles.delaiText}>{step.delaiEstime}</Text>
+            </View>
+          )}
+          <Text style={styles.heroTitle}>{step.title}</Text>
+          <Text style={styles.heroDesc}>{step.description}</Text>
+        </View>
+
+        {/* ── ÉTAPE SPÉCIALE : Choisir un établissement DLI ─────────────── */}
+        {isEtablissement && (
+          <View style={styles.specialSection}>
+            <View style={styles.specialHeader}>
+              <Text style={styles.specialEmoji}>🎓</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.specialTitle}>Recherche d'établissement</Text>
+                <Text style={styles.specialSub}>Base de données DLI interactive — 60+ institutions</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.dliBtn}
+              onPress={() => router.push('/capi/autonomie/dli-search' as never)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="search-outline" size={18} color="#fff" />
+              <Text style={styles.dliBtnText}>Rechercher un établissement désigné</Text>
+              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+            <View style={styles.dliInfo}>
+              <Ionicons name="checkmark-circle-outline" size={14} color={Colors.success} />
+              <Text style={styles.dliInfoText}>Filtre par province, type, domaine — bouton "Demande d'admission" directement vers le site officiel</Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── ÉTAPE SPÉCIALE : Biométrie — lien VFS selon pays ─────────── */}
+        {isBiometrie && (
+          <View style={styles.paysBanner}>
+            <Text style={styles.paysEmoji}>🖐️</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.paysTitle}>Centre VFS Global — {paysLabel}</Text>
+              <Text style={styles.paysSub}>
+                {paysCode
+                  ? `Lien généré spécifiquement pour les résidents de ${paysLabel}`
+                  : 'Définissez votre pays dans votre profil pour un lien personnalisé'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* ── ÉTAPE SPÉCIALE : Examen médical — DMP selon pays ─────────── */}
+        {isMedical && (
+          <View style={styles.paysBanner}>
+            <Text style={styles.paysEmoji}>🏥</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.paysTitle}>Médecins désignés — {paysLabel}</Text>
+              <Text style={styles.paysSub}>
+                {paysCode
+                  ? `Recherche filtrée pour ${paysLabel} sur le portail DMP d'IRCC`
+                  : 'Définissez votre pays dans votre profil pour filtrer par pays'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Actions à réaliser (bullet points non-cliquables) */}
+        {step.checkItems.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="list-outline" size={16} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Ce que vous devez faire</Text>
+            </View>
+            <View style={styles.actionsCard}>
+              {step.checkItems.map((item, i) => (
+                <View
+                  key={item.id}
+                  style={[styles.actionRow, i < step.checkItems.length - 1 && styles.actionRowBorder]}
+                >
+                  <View style={styles.bullet} />
+                  <Text style={styles.actionLabel}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Documents requis */}
+        {step.documents && step.documents.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="document-text-outline" size={16} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Documents requis</Text>
+            </View>
+            <View style={styles.docsCard}>
+              {step.documents.map((doc, i) => (
+                <View
+                  key={i}
+                  style={[styles.docRow, i < step.documents!.length - 1 && styles.docRowBorder]}
+                >
+                  <Ionicons name="document-outline" size={16} color="#e87722" />
+                  <Text style={styles.docLabel}>{doc}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Ressources officielles */}
+        {step.ressources.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="link-outline" size={16} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Ressources officielles</Text>
+            </View>
+            <View style={styles.ressourcesList}>
+              {step.ressources.map((r, i) => {
+                const resolvedUrl = resolveRessourceUrl(stepId as string, r.url, paysCode);
+                return (
+                  <View key={i} style={styles.ressourceCard}>
+                    <View style={styles.ressourceIconWrap}>
+                      <Ionicons name="globe-outline" size={18} color={Colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.ressourceTitre}>{r.titre}</Text>
+                      <Text style={styles.ressourceDesc}>{r.description}</Text>
+                      {/* Badge "personnalisé" si URL modifiée */}
+                      {resolvedUrl !== r.url && (
+                        <View style={styles.smartBadge}>
+                          <Ionicons name="locate-outline" size={11} color={Colors.primary} />
+                          <Text style={styles.smartBadgeText}>Lien adapté — {paysLabel}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.ressourceOpenBtn}
+                      onPress={() => openUrl(resolvedUrl)}
+                      activeOpacity={0.75}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.ressourceOpenText}>Ouvrir</Text>
+                      <Ionicons name="open-outline" size={14} color={Colors.primary} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Bouton action principal */}
+        {step.actionLabel && smartActionUrl && (
+          <View style={styles.actionSection}>
+            {/* Badge "intelligent" si l'URL a été adaptée */}
+            {smartActionUrl !== step.actionUrl && (
+              <View style={styles.smartActionBadge}>
+                <Ionicons name="locate-outline" size={13} color={Colors.primary} />
+                <Text style={styles.smartActionText}>
+                  Lien personnalisé pour {paysLabel}
+                </Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => openUrl(smartActionUrl)}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.actionBtnText}>{step.actionLabel}</Text>
+              <Ionicons name="open-outline" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Navigation bas de page */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={[styles.bottomNavBtn, !hasPrev && styles.bottomNavBtnDisabled]}
+            onPress={() => goToStep(-1)}
+            disabled={!hasPrev}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="arrow-back" size={15} color={hasPrev ? Colors.primary : Colors.border} />
+            <Text style={[styles.bottomNavText, !hasPrev && styles.bottomNavTextDisabled]}>
+              Précédente
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomNavBtn, styles.bottomNavBtnRight, !hasNext && styles.bottomNavBtnDisabled]}
+            onPress={() => goToStep(1)}
+            disabled={!hasNext}
+            activeOpacity={0.75}
+          >
+            <Text style={[styles.bottomNavText, !hasNext && styles.bottomNavTextDisabled]}>
+              Suivante
+            </Text>
+            <Ionicons name="arrow-forward" size={15} color={hasNext ? Colors.primary : Colors.border} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.bgLight },
+  scroll: { flex: 1 },
+
+  // Header
+  header: {
+    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
+    paddingVertical: 14, gap: 12, backgroundColor: Colors.surface,
+    borderBottomWidth: 1, borderBottomColor: Colors.border,
+  },
+  headerTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.text },
+  navRow: { flexDirection: 'row', gap: 4 },
+  navBtn: { padding: 6, borderRadius: 8, backgroundColor: Colors.bgLight },
+  navBtnDisabled: { opacity: 0.3 },
+
+  // Hero
+  hero: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 28, paddingBottom: 16 },
+  heroIconWrap: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: Colors.primary + '15', borderWidth: 2, borderColor: Colors.primary + '30',
+    justifyContent: 'center', alignItems: 'center', marginBottom: 14,
+  },
+  heroIconEmoji: { fontSize: 38 },
+  delaiBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: Colors.primary + '12', borderRadius: 20,
+    paddingVertical: 5, paddingHorizontal: 12, marginBottom: 14,
+  },
+  delaiText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+  heroTitle: { fontSize: 20, fontWeight: '800', color: Colors.text, textAlign: 'center', marginBottom: 10 },
+  heroDesc: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 22, maxWidth: 320 },
+
+  // ── Sections spéciales ──
+  specialSection: {
+    marginHorizontal: 20, marginBottom: 8,
+    backgroundColor: Colors.primary + '08', borderRadius: 18, padding: 16,
+    borderWidth: 1.5, borderColor: Colors.primary + '30',
+  },
+  specialHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  specialEmoji: { fontSize: 28 },
+  specialTitle: { fontSize: 15, fontWeight: '800', color: Colors.text },
+  specialSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  dliBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 15, paddingHorizontal: 18,
+    marginBottom: 12,
+  },
+  dliBtnText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#fff' },
+  dliInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
+  dliInfoText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
+
+  // Bannière pays (biométrie / médical)
+  paysBanner: {
+    marginHorizontal: 20, marginBottom: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    backgroundColor: '#e87722' + '12', borderRadius: 14, padding: 14,
+    borderLeftWidth: 3, borderLeftColor: '#e87722',
+  },
+  paysEmoji: { fontSize: 24 },
+  paysTitle: { fontSize: 13, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  paysSub: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+
+  // Section
+  section: { paddingHorizontal: 20, marginTop: 22 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 12 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
+
+  // Actions
+  actionsCard: {
+    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1,
+    borderColor: Colors.border, overflow: 'hidden', ...UI.cardShadow,
+  },
+  actionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingHorizontal: 18, paddingVertical: 14 },
+  actionRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  bullet: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary, marginTop: 7, flexShrink: 0 },
+  actionLabel: { flex: 1, fontSize: 14, color: Colors.text, lineHeight: 21 },
+
+  // Documents
+  docsCard: {
+    backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1,
+    borderColor: Colors.border, overflow: 'hidden', ...UI.cardShadow,
+  },
+  docRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 13 },
+  docRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  docLabel: { flex: 1, fontSize: 14, color: Colors.text, lineHeight: 20 },
+
+  // Ressources
+  ressourcesList: { gap: 10 },
+  ressourceCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.surface,
+    borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow,
+  },
+  ressourceIconWrap: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: Colors.primary + '15', justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+  },
+  ressourceTitre: { fontSize: 13, fontWeight: '700', color: Colors.text, marginBottom: 2 },
+  ressourceDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+  smartBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5,
+    backgroundColor: Colors.primary + '12', borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7,
+    alignSelf: 'flex-start',
+  },
+  smartBadgeText: { fontSize: 10, fontWeight: '700', color: Colors.primary },
+  ressourceOpenBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingVertical: 7, paddingHorizontal: 10, borderRadius: 10, backgroundColor: Colors.primary + '12',
+  },
+  ressourceOpenText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+
+  // Bouton action principal
+  actionSection: { paddingHorizontal: 20, marginTop: 26 },
+  smartActionBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    justifyContent: 'center', marginBottom: 10,
+  },
+  smartActionText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
+  actionBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: Colors.primary, borderRadius: 16, paddingVertical: 17,
+  },
+  actionBtnText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+
+  // Navigation bas
+  bottomNav: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 20, marginTop: 30, gap: 12,
+  },
+  bottomNavBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 14, paddingHorizontal: 16,
+    backgroundColor: Colors.surface, borderRadius: 14,
+    borderWidth: 1.5, borderColor: Colors.primary + '40',
+  },
+  bottomNavBtnRight: { justifyContent: 'flex-end' },
+  bottomNavBtnDisabled: { borderColor: Colors.border, opacity: 0.4 },
+  bottomNavText: { fontSize: 13, fontWeight: '700', color: Colors.primary },
+  bottomNavTextDisabled: { color: Colors.textMuted },
+
+  // Empty
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16, padding: 32 },
+  emptyText: { fontSize: 15, color: Colors.textMuted, textAlign: 'center' },
+  emptyBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 24 },
+  emptyBtnText: { color: '#fff', fontWeight: '700' },
+});

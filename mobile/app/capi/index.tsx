@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
 import { useCapiSession } from '../../context/CapiContext';
 import type { CapiMotif } from '../../lib/api';
+import { CapiAvatar } from '../../components/CapiAvatar';
 
 const MOTIFS: {
   id: CapiMotif;
@@ -31,13 +33,13 @@ export default function CapiMotifScreen() {
   const { updateSession } = useCapiSession();
 
   const select = (motif: CapiMotif) => {
-    updateSession({ motif, step: 2 });
+    updateSession({ motif, step: 2, profile: undefined, evaluation: undefined, services: undefined, timeline: undefined });
     router.push('/capi/programme');
   };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -53,9 +55,7 @@ export default function CapiMotifScreen() {
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* CAPI Avatar */}
         <View style={styles.capiHeader}>
-          <View style={styles.capiAvatar}>
-            <Text style={styles.capiEmoji}>🤖</Text>
-          </View>
+          <CapiAvatar size={44} state="idle" />
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>Bonjour ! Je suis CAPI, votre agent d'orientation immigration.{'\n\n'}Commençons par le plus important :</Text>
           </View>
@@ -88,20 +88,19 @@ export default function CapiMotifScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark },
+  root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 },
   progressBarOuter: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
   progressBarInner: { height: 4, backgroundColor: Colors.orange, borderRadius: 2 },
   stepLabel: { fontSize: 12, color: Colors.textMuted, minWidth: 32, textAlign: 'right' },
   capiHeader: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 12, alignItems: 'flex-start' },
-  capiAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.orange + '25', justifyContent: 'center', alignItems: 'center', marginTop: 4 },
-  capiEmoji: { fontSize: 22 },
+
   bubble: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderTopLeftRadius: 4, padding: 14 },
   bubbleText: { fontSize: 14, color: Colors.text, lineHeight: 21 },
   question: { fontSize: 20, fontWeight: '700', color: Colors.text, paddingHorizontal: 20, marginBottom: 16 },
   options: { paddingHorizontal: 20, gap: 10 },
-  optionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 16, gap: 14, borderWidth: 1, borderColor: Colors.border },
+  optionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 16, gap: 14, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
   optionEmoji: { fontSize: 26 },
   optionText: { flex: 1 },
   optionLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
