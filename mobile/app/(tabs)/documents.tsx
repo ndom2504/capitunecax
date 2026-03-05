@@ -49,7 +49,10 @@ export default function DocumentsScreen() {
   const pickAndUpload = async () => {
     const result = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: false });
     if (result.canceled) return;
-    Alert.alert('Document sélectionné', result.assets[0].name + '\n(Upload à implémenter côté API)');
+    Alert.alert(
+      'Document sélectionné',
+      result.assets[0].name + '\n(Upload à implémenter côté API)',
+    );
   };
 
   const filtered = filter === 'all' ? docs : docs.filter(d => d.status === filter);
@@ -102,8 +105,13 @@ export default function DocumentsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
           renderItem={({ item }) => {
             const cfg = STATUS_CONFIG[item.status];
+            const canUpload = item.status === 'missing' || item.status === 'rejected';
             return (
-              <TouchableOpacity style={styles.docCard} activeOpacity={0.75}>
+              <TouchableOpacity
+                style={styles.docCard}
+                activeOpacity={canUpload ? 0.75 : 1}
+                onPress={canUpload ? pickAndUpload : undefined}
+              >
                 <View style={[styles.docIcon, { backgroundColor: `${cfg.color}18` }]}>
                   <Ionicons
                     name={item.type === 'image' ? 'image' : 'document-text'}
@@ -114,6 +122,9 @@ export default function DocumentsScreen() {
                   <Text style={styles.docName} numberOfLines={1}>{item.name}</Text>
                   {item.uploadedAt && (
                     <Text style={styles.docDate}>Envoyé le {item.uploadedAt}</Text>
+                  )}
+                  {canUpload && (
+                    <Text style={styles.docHint}>Appuyez pour téléverser</Text>
                   )}
                 </View>
                 <View style={styles.docStatus}>
@@ -164,6 +175,7 @@ const styles = StyleSheet.create({
   docInfo: { flex: 1 },
   docName: { fontSize: 14, fontWeight: '600', color: Colors.text },
   docDate: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  docHint: { fontSize: 11, color: Colors.orangeLight, marginTop: 2, fontWeight: '600' },
   docStatus: { alignItems: 'center', gap: 2 },
   docStatusText: { fontSize: 10, fontWeight: '700' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 60, fontSize: 14 },

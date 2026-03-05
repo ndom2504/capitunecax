@@ -38,8 +38,8 @@ export default function ProjetScreen() {
     try {
       const token = await AsyncStorage.getItem('auth_token');
       if (!token) return;
-      const data = await dashboardApi.getProject(token);
-      setProject(data);
+      const res = await dashboardApi.getProject(token);
+      setProject(res.data?.project ?? null);
     } catch (err) {
       console.log('MonProjet load error:', err);
     } finally {
@@ -62,7 +62,7 @@ export default function ProjetScreen() {
     );
   }
 
-  if (!project || !project.id) {
+  if (!project) {
     return (
       <SafeAreaView style={styles.root} edges={['top']}>
         <View style={styles.emptyBox}>
@@ -201,9 +201,13 @@ export default function ProjetScreen() {
                       <Text style={styles.docStatus}>{isDone ? 'Reçu' : 'À fournir'}</Text>
                     </View>
                     {!isDone && (
-                      <View style={styles.uploadBtn}>
+                      <TouchableOpacity
+                        style={styles.uploadBtn}
+                        activeOpacity={0.85}
+                        onPress={() => router.push('/(tabs)/documents')}
+                      >
                         <Ionicons name="cloud-upload-outline" size={16} color={Colors.orange} />
-                      </View>
+                      </TouchableOpacity>
                     )}
                   </View>
                 );
@@ -262,7 +266,7 @@ export default function ProjetScreen() {
                   <Text style={styles.advisorName}>{advisor.name ?? advisor.nom}</Text>
                   <Text style={styles.advisorTitle}>{advisor.title ?? advisor.titre}</Text>
                 </View>
-                <TouchableOpacity style={styles.msgBtn}>
+                <TouchableOpacity style={styles.msgBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/messagerie')}>
                   <Ionicons name="chatbubble-outline" size={20} color={Colors.orange} />
                 </TouchableOpacity>
               </View>
@@ -277,7 +281,7 @@ export default function ProjetScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.dark },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
   loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16 },
   emptyTitle: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },

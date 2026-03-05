@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, type ProjectData } from '../../lib/api';
+import { useRouter } from 'expo-router';
 
 const STEPS_LABELS = [
   'Analyse du profil',
@@ -96,6 +97,7 @@ function ProDashboard({ name }: { name: string }) {
 // ── Tableau de bord Client ─────────────────────────────────────────────────────
 export default function DashboardScreen() {
   const { user, token } = useAuth();
+  const router = useRouter();
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -178,12 +180,17 @@ export default function DashboardScreen() {
               <Text style={styles.sectionTitle}>Accès rapide</Text>
               <View style={styles.shortcutsGrid}>
                 {[
-                  { icon: 'folder' as const, label: 'Documents', color: '#3b82f6' },
-                  { icon: 'chatbubbles' as const, label: 'Messagerie', color: Colors.orange },
-                  { icon: 'card' as const, label: 'Paiements', color: Colors.success },
-                  { icon: 'people' as const, label: 'Mon équipe', color: '#a855f7' },
+                  { icon: 'folder' as const, label: 'Documents', color: '#3b82f6', route: '/(tabs)/documents' },
+                  { icon: 'chatbubbles' as const, label: 'Messagerie', color: Colors.orange, route: '/(tabs)/messagerie' },
+                  { icon: 'card' as const, label: 'Paiements', color: Colors.success, route: '/(tabs)/paiements' },
+                  { icon: 'folder-open' as const, label: 'Mon Projet', color: '#a855f7', route: '/(tabs)/projet' },
                 ].map(item => (
-                  <TouchableOpacity key={item.label} style={styles.shortcut} activeOpacity={0.75}>
+                  <TouchableOpacity
+                    key={item.label}
+                    style={styles.shortcut}
+                    activeOpacity={0.75}
+                    onPress={() => router.push(item.route as any)}
+                  >
                     <View style={[styles.shortcutIcon, { backgroundColor: `${item.color}22` }]}>
                       <Ionicons name={item.icon} size={22} color={item.color} />
                     </View>

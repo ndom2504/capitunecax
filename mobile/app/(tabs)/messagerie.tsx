@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, type Message } from '../../lib/api';
@@ -25,8 +26,10 @@ function formatTime(iso: string): string {
 
 export default function MessagerieScreen() {
   const { token, user } = useAuth();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const listRef = useRef<FlatList>(null);
@@ -40,6 +43,12 @@ export default function MessagerieScreen() {
   };
 
   useEffect(() => { load(); }, [token]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
 
   const send = async () => {
     const content = input.trim();
@@ -76,6 +85,15 @@ export default function MessagerieScreen() {
           <Text style={styles.proTitle}>Conseillère Capitune</Text>
         </View>
         <View style={styles.onlineIndicator} />
+
+        <TouchableOpacity
+          style={styles.headerAction}
+          onPress={() => router.push('/(tabs)/documents')}
+          activeOpacity={0.85}
+          accessibilityLabel="Aller aux documents"
+        >
+          <Ionicons name="folder-open-outline" size={18} color={Colors.text} />
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -87,6 +105,8 @@ export default function MessagerieScreen() {
           keyExtractor={m => m.id}
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           renderItem={({ item }) => {
             const isMe = item.sender === 'client' || item.sender === 'user';
             return (
@@ -129,7 +149,10 @@ export default function MessagerieScreen() {
             disabled={!input.trim() || sending}
             activeOpacity={0.8}
           >
-            <Ionicons name="send" size={18} color="#fff" />
+            {sending
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Ionicons name="send" size={18} color="#fff" />
+            }
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -156,6 +179,13 @@ const styles = StyleSheet.create({
   onlineIndicator: {
     width: 10, height: 10, borderRadius: 5,
     backgroundColor: Colors.success, marginLeft: 'auto',
+  },
+  headerAction: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: Colors.primaryDark,
+    borderWidth: 1, borderColor: Colors.border,
+    justifyContent: 'center', alignItems: 'center',
+    marginLeft: 10,
   },
   messagesList: { padding: 16, gap: 10, paddingBottom: 8 },
   bubble: {

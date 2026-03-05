@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  RefreshControl, ActivityIndicator,
+  RefreshControl, ActivityIndicator, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +27,21 @@ export default function PaiementsScreen() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const openSupport = () => {
+    Linking.openURL('mailto:equipe@capitune.com?subject=Paiement%20CAPITUNE');
+  };
+
+  const handlePayNow = (p: Payment) => {
+    Alert.alert(
+      'Paiement',
+      `Le paiement in-app est en cours d'intégration.\n\nFacture: ${p.label}\nMontant: ${p.amount} ${p.currency ?? 'CAD'}`,
+      [
+        { text: 'OK' },
+        { text: 'Contacter le support', onPress: openSupport },
+      ],
+    );
+  };
 
   const load = async () => {
     if (!token) { setPayments(DEMO_PAYMENTS); setLoading(false); return; }
@@ -88,7 +103,7 @@ export default function PaiementsScreen() {
                     <Text style={[styles.payBadgeText, { color: cfg.color }]}>{cfg.label}</Text>
                   </View>
                   {isPending && (
-                    <TouchableOpacity style={styles.payNowBtn} activeOpacity={0.8}>
+                    <TouchableOpacity style={styles.payNowBtn} activeOpacity={0.8} onPress={() => handlePayNow(item)}>
                       <Text style={styles.payNowText}>Payer</Text>
                     </TouchableOpacity>
                   )}
@@ -96,6 +111,13 @@ export default function PaiementsScreen() {
               </View>
             );
           }}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Ionicons name="receipt-outline" size={36} color={Colors.textMuted} />
+              <Text style={styles.emptyTitle}>Aucun paiement</Text>
+              <Text style={styles.emptySub}>Vos factures et paiements apparaîtront ici.</Text>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
@@ -115,6 +137,9 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: 11, color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 },
   summaryAmount: { fontSize: 18, fontWeight: '800', marginTop: 4 },
   list: { padding: 16, gap: 10 },
+  emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 10 },
+  emptyTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  emptySub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 40, lineHeight: 18 },
   payCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
     backgroundColor: Colors.surface, borderRadius: 14, padding: 16,
