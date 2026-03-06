@@ -78,7 +78,7 @@ function InstitutionCard({
         <View style={{ flex: 1 }}>
           <Text style={cardStyles.nom} numberOfLines={2}>{item.nom}</Text>
           <Text style={cardStyles.ville}>
-            📍 {item.ville} · {provLabel}
+            📍 {item.ville ? `${item.ville} · ` : ''}{provLabel}
           </Text>
         </View>
       </View>
@@ -220,8 +220,10 @@ export default function DLISearchScreen() {
   // Ouvrir uniquement la page d'admission — sans marquer comme sélectionné
   const handleViewAdmission = useCallback(async (inst: DLIInstitution) => {
     try {
-      const ok = await Linking.canOpenURL(inst.admissionsUrl);
-      await Linking.openURL(ok ? inst.admissionsUrl : 'https://www.cicic.ca/869/resultats.canada?search=');
+      const fallback = `https://www.cicic.ca/869/resultats.canada?search=${encodeURIComponent(inst.nom)}`;
+      const target = inst.admissionsUrl?.trim() ? inst.admissionsUrl : fallback;
+      const ok = await Linking.canOpenURL(target);
+      await Linking.openURL(ok ? target : fallback);
     } catch {
       Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
     }

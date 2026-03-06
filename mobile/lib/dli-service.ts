@@ -91,6 +91,59 @@ async function fetchWithTimeout(
   }
 }
 
+function normalizeInstitutionName(name: string): string {
+  return (name ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+const CITY_KEYWORDS: string[] = [
+  'sherbrooke',
+  'montreal', 'montréal',
+  'quebec', 'québec',
+  'ottawa',
+  'toronto',
+  'vancouver',
+  'calgary',
+  'edmonton',
+  'winnipeg',
+  'halifax',
+  'gatineau',
+  'laval',
+  'longueuil',
+  'brossard',
+  'saguenay',
+  'trois-rivieres', 'trois-rivières',
+  'rimouski',
+  'chicoutimi',
+  'drummondville',
+  'victoria',
+  'kelowna',
+  'saskatoon',
+  'regina',
+  'moncton',
+  'fredericton',
+  'st john', 'saint john',
+  'st john\'s', 'saint john\'s',
+];
+
+function inferCityFromName(name: string): string {
+  const normalized = normalizeInstitutionName(name);
+  for (const k of CITY_KEYWORDS) {
+    const kn = normalizeInstitutionName(k);
+    if (kn && normalized.includes(kn)) {
+      // Retourne une version "jolie" (sans être parfaite) : on ré-utilise k
+      // en privilégiant la forme avec accents si fournie.
+      return k;
+    }
+  }
+  return '';
+}
+
 // ── Lecture / écriture cache ──────────────────────────────────────────────────
 
 async function readCache(): Promise<DLIInstitution[] | null> {
@@ -172,10 +225,11 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
         const nom = entry.n ?? '';
+        const ville = inferCityFromName(nom);
         return {
           id: `dli-${slug}-${i}`,
           nom,
-          ville: '',
+          ville,
           province: toProvinceCode(entry.p ?? ''),
           type: toTypeCode(entry.t ?? ''),
           // L'IRCC ne fournit pas le site officiel par établissement.
@@ -223,7 +277,7 @@ async function fetchFromHipolabs(): Promise<DLIInstitution[]> {
       return {
         id: `hipo-${slug}-${i}`,
         nom,
-        ville: '',
+        ville: inferCityFromName(nom),
         province: prov,
         type,
         admissionsUrl: url || 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
@@ -351,9 +405,20 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
       if (data.length > 100) {
         // Enrichissement optionnel avec hipolabs (universités non encore dans IRCC)
         const hipoItems = await fetchFromHipolabs();
-        const seen = new Set(data.map(d => d.nom.toLowerCase().slice(0, 40)));
-        const extras = hipoItems.filter(h => !seen.has(h.nom.toLowerCase().slice(0, 40)));
-        const merged = [...data, ...extras];
+        const seen = new Set(data.map(d => normalizeInstitutionName(d.nom).slice(0, 60)));
+        const hipoByName = new Map(hipoItems.map(h => [normalizeInstitutionName(h.nom), h]));
+
+        // 1) Remplace admissionsUrl par le site officiel pour les matches exacts
+        const enriched = data.map(d => {
+          const match = hipoByName.get(normalizeInstitutionName(d.nom));
+          if (!match?.admissionsUrl) return d;
+          // On conserve l'id IRCC mais on met le lien officiel hipolabs.
+          return { ...d, admissionsUrl: match.admissionsUrl };
+        });
+
+        // 2) Ajoute des entrées hipolabs absentes du dataset IRCC
+        const extras = hipoItems.filter(h => !seen.has(normalizeInstitutionName(h.nom).slice(0, 60)));
+        const merged = [...enriched, ...extras];
         _memCache = merged;
         await writeCache(merged, `${source}+hipolabs`);
         return merged;
