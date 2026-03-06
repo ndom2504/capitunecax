@@ -218,8 +218,12 @@ export async function getUserFromSessionAny(
     return { id: user.id, email: user.email, name: user.name, role: user.role, account_type: user.account_type };
   }
   if (/^[0-9a-f]{64}$/.test(sessionToken)) {
-    const user = await getUserFromSessionNeon(sessionToken);
-    if (user) return { id: user.id, email: user.email, name: user.name, role: user.role, account_type: user.account_type };
+    try {
+      const user = await getUserFromSessionNeon(sessionToken);
+      if (user) return { id: user.id, email: user.email, name: user.name, role: user.role, account_type: user.account_type };
+    } catch {
+      // Neon indisponible ou table inexistante — on tombe sur le fallback base64
+    }
   }
   return getUserFromBase64Session(sessionToken);
 }
@@ -230,11 +234,16 @@ export async function getUserFromSessionFullAny(
 ): Promise<User | null> {
   if (!sessionToken) return null;
   if (db && /^[0-9a-f]{64}$/.test(sessionToken)) return getUserFromSession(db, sessionToken);
-  if (/^[0-9a-f]{64}$/.test(sessionToken)) return getUserFromSessionNeon(sessionToken);
+  if (/^[0-9a-f]{64}$/.test(sessionToken)) {
+    try {
+      return await getUserFromSessionNeon(sessionToken);
+    } catch {
+      // Neon indisponible — fallback base64
+    }
+  }
   // Fallback: token base64 (session sans DB — utilisé quand la DB était indisponible au login)
   const basic = getUserFromBase64Session(sessionToken);
   if (!basic) return null;
-  // On retourne un User partiel compatible (id/email/name/role/account_type suffisent pour l'auth)
   return basic as unknown as User;
 }
 
