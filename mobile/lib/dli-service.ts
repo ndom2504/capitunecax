@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { DLI_INSTITUTIONS } from './dli-data';
 import type { DLIInstitution as DLIDataInstitution } from './dli-data';
+import { HIPOLABS_CANADA } from './hipolabs-canada';
 
 const BASE_URL: string =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
@@ -53,7 +54,7 @@ export interface DLISearchParams {
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const DLI_CACHE_KEY = 'dli_full_cache_v6';  // v6 = JSON statique pré-compilé (102 KB)
+const DLI_CACHE_KEY = 'dli_full_cache_v7';  // v7 = refresh liens officiels (hipolabs embarqué)
 const DLI_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h en ms
 
 interface DLICache {
@@ -252,29 +253,9 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
 // public/hipolabs-canada.json (servi en HTTPS via Vercel/GitHub raw).
 
 async function fetchHipolabsSnapshot(): Promise<Array<{ n: string; u: string }>> {
-  const URLS = [
-    `${BASE_URL}/hipolabs-canada.json`,
-    'https://raw.githubusercontent.com/ndom2504/capitunecax/main/public/hipolabs-canada.json',
-  ];
-
-  for (const url of URLS) {
-    try {
-      const res = await fetchWithTimeout(
-        url,
-        { headers: { 'Accept': 'application/json' } },
-        12000,
-      );
-      if (!res.ok) continue;
-      const text = await res.text();
-      const cleaned = text.replace(/^\uFEFF/, '');
-      const raw = JSON.parse(cleaned) as Array<{ n: string; u: string }>;
-      if (!Array.isArray(raw) || raw.length < 50) continue;
-      return raw.filter(x => !!x?.n && !!x?.u);
-    } catch {
-      continue;
-    }
-  }
-  return [];
+  // On embarque le snapshot dans le bundle RN pour garantir les URLs officielles
+  // même sans réseau / si Vercel/GitHub est indisponible.
+  return HIPOLABS_CANADA;
 }
 
 function findBestHipolabsUrl(
