@@ -87,6 +87,20 @@ export default function AutonomieIndexScreen() {
       }
 
       const res = await autonomiePaymentApi.stripeCheckout(sessionToken, motif);
+
+      // Session expirée → invite à se reconnecter
+      if (res.status === 401) {
+        Alert.alert(
+          'Session expirée',
+          'Votre session a expiré. Veuillez vous reconnecter pour continuer.',
+          [
+            { text: 'Se connecter', onPress: () => router.replace('/(auth)/connexion' as any) },
+            { text: 'Annuler', style: 'cancel' },
+          ]
+        );
+        return;
+      }
+
       const url = res.data?.url;
       if (res.status < 200 || res.status >= 300 || !url) {
         throw new Error((res.data as any)?.error ?? res.error ?? 'Paiement indisponible');

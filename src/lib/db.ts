@@ -231,7 +231,11 @@ export async function getUserFromSessionFullAny(
   if (!sessionToken) return null;
   if (db && /^[0-9a-f]{64}$/.test(sessionToken)) return getUserFromSession(db, sessionToken);
   if (/^[0-9a-f]{64}$/.test(sessionToken)) return getUserFromSessionNeon(sessionToken);
-  return null;
+  // Fallback: token base64 (session sans DB — utilisé quand la DB était indisponible au login)
+  const basic = getUserFromBase64Session(sessionToken);
+  if (!basic) return null;
+  // On retourne un User partiel compatible (id/email/name/role/account_type suffisent pour l'auth)
+  return basic as unknown as User;
 }
 
 // ── Créer une session (30 jours) ──────────────────────────────────────────
