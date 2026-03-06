@@ -1,4 +1,4 @@
----
+﻿---
 const sessionId = Astro.url.searchParams.get('session_id') ?? '';
 const deepLink = sessionId
   ? `capitune://capi/autonomie/payment?session_id=${encodeURIComponent(sessionId)}`
@@ -8,46 +8,53 @@ const deepLink = sessionId
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Paiement confirmé</title>
+    <title>Paiement confirme - Capitune</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: #f0f6ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+      .card { background: white; border-radius: 20px; padding: 40px 32px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+      .icon { font-size: 56px; margin-bottom: 16px; }
+      h1 { font-size: 24px; color: #1a1a2e; margin-bottom: 8px; }
+      .subtitle { color: #666; margin-bottom: 32px; font-size: 15px; }
+      #btn-open { display: block; background: #e87722; color: white; text-decoration: none; font-size: 17px; font-weight: 600; padding: 16px 24px; border-radius: 12px; margin-bottom: 12px; }
+      .hint { font-size: 13px; color: #999; margin-top: 16px; }
+      #status { font-size: 14px; color: #555; margin-bottom: 16px; }
+    </style>
   </head>
-  <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px;">
-    <h1>Paiement confirmé ✓</h1>
-    {sessionId ? (
-      <>
-        <p>Retour à l’application en cours…</p>
-        <p>
-          <a href={deepLink}>Ouvrir Capitune</a>
-        </p>
-        <script>
-          {String.raw`
-            (function(){
-              try {
-                var url = ${JSON.stringify(deepLink)};
-                if (!url) return;
-                var sessionId = ${JSON.stringify(sessionId)};
-                var key = 'capitune_autonomie_redirect_' + (sessionId || '');
-
-                // Évite une boucle : si l'utilisateur revient sur cette page (bouton retour),
-                // on ne relance pas automatiquement l'ouverture de l'app.
+  <body>
+    <div class="card">
+      <div class="icon">✅</div>
+      <h1>Paiement confirme !</h1>
+      <p class="subtitle">Votre acces Autonomie guidee est active.</p>
+      {sessionId ? (
+        <>
+          <p id="status">Retour a l'application en cours...</p>
+          <a id="btn-open" href={deepLink}>Retourner dans Capitune</a>
+          <p class="hint">Si l'application ne s'ouvre pas automatiquement, appuyez sur le bouton ci-dessus.</p>
+          <script>
+            {String.raw`
+              (function(){
                 try {
-                  if (sessionId && window.sessionStorage && window.sessionStorage.getItem(key) === '1') {
-                    return;
-                  }
-                  if (sessionId && window.sessionStorage) {
-                    window.sessionStorage.setItem(key, '1');
-                  }
+                  var url = ${JSON.stringify(deepLink)};
+                  if (!url) return;
+                  var sessionId = ${JSON.stringify(sessionId)};
+                  var key = 'cap_pay_' + (sessionId || '');
+                  try {
+                    if (sessionId && window.sessionStorage && window.sessionStorage.getItem(key) === '1') {
+                      document.getElementById('status').textContent = "Appuyez sur le bouton pour revenir dans l'application.";
+                      return;
+                    }
+                    if (sessionId && window.sessionStorage) window.sessionStorage.setItem(key, '1');
+                  } catch (e) {}
+                  setTimeout(function(){ window.location.href = url; }, 400);
                 } catch (e) {}
-
-                setTimeout(function(){
-                  window.location.href = url;
-                }, 150);
-              } catch (e) {}
-            })();
-          `}
-        </script>
-      </>
-    ) : (
-      <p>Session de paiement manquante.</p>
-    )}
+              })();
+            `}
+          </script>
+        </>
+      ) : (
+        <p style="color:#999">Session de paiement manquante.</p>
+      )}
+    </div>
   </body>
 </html>

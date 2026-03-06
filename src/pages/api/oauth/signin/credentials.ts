@@ -102,50 +102,68 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         sessionToken = await createSessionAny(db, user.id);
       }
     } else if (useNeon) {
-      const sql = await getNeonSqlClient();
-      if (!sql) return json({ message: 'Configuration base de données manquante.' }, 500);
-
-      let hasAccountTypeColumn = true;
-      let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null } | null;
+      // Neon peut échouer (table inexistante, timeout, connexion refusée).
+      // Dans ce cas on tombe sur le fallback base64 pour ne jamais bloquer le login.
+      let neonSuccess = false;
       try {
-        const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
-          `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} AND account_type = ${requestedAccountType} LIMIT 1`;
-        user = rows[0] ?? null;
-      } catch {
-        hasAccountTypeColumn = false;
-        const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
-          `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
-        user = rows[0] ?? null;
+        const sql = await getNeonSqlClient();
+        if (sql) {
+          let hasAccountTypeColumn = true;
+          let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null } | null;
+          try {
+            const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
+              `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} AND account_type = ${requestedAccountType} LIMIT 1`;
+            user = rows[0] ?? null;
+          } catch {
+            hasAccountTypeColumn = false;
+            const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
+              `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
+            user = rows[0] ?? null;
+          }
+
+          if (!user) {
+            const userId = uuid();
+            userIdForResponse = userId;
+            displayName = nameFromEmail(emailStr);
+            role = isAdminEmail(emailStr) ? 'admin' : 'client';
+            try {
+              await sql`INSERT INTO users (id, email, name, role, account_type) VALUES (${userId}, ${emailStr}, ${displayName}, ${role}, ${requestedAccountType})`;
+            } catch {
+              await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
+            }
+            sessionToken = await createSessionAny(null, userId);
+          } else {
+            userIdForResponse = user.id;
+            if (user.password_hash) {
+              const valid = await verifyPassword(user.password_hash, String(password));
+              if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
+            }
+            if (user.email_verified === false) {
+              return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
+            }
+            displayName = user.name || nameFromEmail(emailStr);
+            role = isAdminEmail(emailStr) ? 'admin' : user.role;
+            account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
+            if (role === 'admin' && user.role !== 'admin') {
+              await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
+            }
+            sessionToken = await createSessionAny(null, user.id);
+          }
+          neonSuccess = true;
+        }
+      } catch (neonErr) {
+        console.warn('[credentials] Neon unavailable, falling back to base64 session:', neonErr);
+        neonSuccess = false;
       }
 
-      if (!user) {
-        const userId = uuid();
-        userIdForResponse = userId;
+      if (!neonSuccess) {
+        // Fallback base64 quand Neon est indisponible
         displayName = nameFromEmail(emailStr);
         role = isAdminEmail(emailStr) ? 'admin' : 'client';
-        try {
-          await sql`INSERT INTO users (id, email, name, role, account_type) VALUES (${userId}, ${emailStr}, ${displayName}, ${role}, ${requestedAccountType})`;
-        } catch {
-          await sql`INSERT INTO users (id, email, name, role) VALUES (${userId}, ${emailStr}, ${displayName}, ${role})`;
-        }
-        sessionToken = await createSessionAny(null, userId);
-      } else {
-        userIdForResponse = user.id;
-        if (user.password_hash) {
-          const valid = await verifyPassword(user.password_hash, String(password));
-          if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
-        }
-        // Bloquer si email non vérifié
-        if (user.email_verified === false) {
-          return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
-        }
-        displayName = user.name || nameFromEmail(emailStr);
-        role = isAdminEmail(emailStr) ? 'admin' : user.role;
-        account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
-        if (role === 'admin' && user.role !== 'admin') {
-          await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
-        }
-        sessionToken = await createSessionAny(null, user.id);
+        account_type = requestedAccountType;
+        const sessionData = JSON.stringify({ email: emailStr, name: displayName, role, account_type, expires: Date.now() + 7 * 86400000 });
+        sessionToken = btoa(encodeURIComponent(sessionData));
+        userIdForResponse = '';
       }
     } else {
       // Fallback sans DB
