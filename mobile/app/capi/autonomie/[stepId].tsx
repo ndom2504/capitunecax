@@ -185,6 +185,7 @@ export default function AutonomieStepScreen() {
   const isLastStep = stepIndex === project.steps.length - 1;
   const allCurrentDone = step.checkItems.length === 0 || step.checkItems.every(i => i.done);
   const showBonVoyage = isLastStep && allCurrentDone;
+  const showPreparationVideoInline = isLastStep && project.motif === 'visiter' && !allCurrentDone;
 
   const onBonVoyagePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
     if (!status.isLoaded) return;
@@ -300,6 +301,31 @@ export default function AutonomieStepScreen() {
           <Text style={styles.heroTitle}>{step.title}</Text>
           <Text style={styles.heroDesc}>{step.description}</Text>
         </View>
+
+        {/* Vidéo de préparation (Visa visiteur) — visible dès l'étape 5 */}
+        {showPreparationVideoInline && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="videocam-outline" size={16} color={Colors.primary} />
+              <Text style={styles.sectionTitle}>Vidéo de préparation</Text>
+            </View>
+            <View style={styles.videoWrapper}>
+              <Video
+                ref={videoRef}
+                source={require('../../../assets/videos/preparation-depart.mp4')}
+                style={styles.video}
+                useNativeControls={true}
+                resizeMode={ResizeMode.COVER}
+                isLooping={false}
+                shouldPlay={false}
+                onPlaybackStatusUpdate={onBonVoyagePlaybackStatusUpdate}
+                onError={() => {
+                  Alert.alert('Vidéo indisponible', 'Impossible de lire la vidéo de préparation.');
+                }}
+              />
+            </View>
+          </View>
+        )}
 
         {/* ── ÉTAPE SPÉCIALE : Choisir un établissement DLI ─────────────── */}
         {isEtablissement && (
