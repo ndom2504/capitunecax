@@ -53,7 +53,7 @@ export interface DLISearchParams {
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const DLI_CACHE_KEY = 'dli_full_cache_v4';  // v4 = canada.ca render=true (2000+ DLI)
+const DLI_CACHE_KEY = 'dli_full_cache_v5';  // v5 = IRCC CSV direct depuis mobile
 const DLI_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h en ms
 
 interface DLICache {
@@ -114,6 +114,75 @@ async function fetchFromAPI(): Promise<{ data: DLIInstitution[]; source: string 
     throw new Error('Réponse API DLI invalide');
   }
   return { data: json.data, source: json.source ?? 'api' };
+}
+
+// ── Fetch direct CSV IRCC (React Native, pas de CORS) ────────────────────────
+// IRCC publie des TSV officiels avec ~1300 DLI uniques.
+// Colonnes clés : EN_DLI_PROVINCE_TERRITORY, EN_DESIGNATED_LEARNING_INSTITU(T)ION, EN_INSTITUTION_TYPE
+
+async function fetchFromIRCCCSV(): Promise<{ data: DLIInstitution[]; source: string }> {
+  const URLS = [
+    // DLI × Province × Institution Type (University / College / Language School …)
+    'https://www.ircc.canada.ca/opendata-donneesouvertes/data/ODP-TR-Study-DLI_name_PT_Inst_type.csv',
+    // DLI × Province × Admin type (Public / Private) — fallback
+    'https://www.ircc.canada.ca/opendata-donneesouvertes/data/ODP-TR-Study-DLI_name_PT_Admin_type.csv',
+  ];
+
+  for (const url of URLS) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'Accept': 'text/csv,text/plain,*/*', 'User-Agent': 'Capitune/1.0' },
+        signal: AbortSignal.timeout(25000),
+      });
+      if (!res.ok) continue;
+
+      const text = await res.text();
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 10) continue;
+
+      // Header tab-séparé
+      const header = lines[0].split('\t').map(h => h.trim().replace(/\r/g, '').toLowerCase());
+      const provIdx = header.findIndex(h => h === 'en_dli_province_territory' || h.includes('province'));
+      const nameIdx = header.findIndex(h => h.includes('learning_institu')); // gère typo "instituion"
+      const typeIdx = header.findIndex(h => h === 'en_institution_type' || h === 'en_admin_type');
+
+      if (provIdx < 0 || nameIdx < 0) continue;
+
+      const seen = new Set<string>();
+      const data: DLIInstitution[] = [];
+
+      for (const line of lines.slice(1)) {
+        const cells = line.split('\t');
+        if (cells.length <= Math.max(provIdx, nameIdx)) continue;
+        const nom = cells[nameIdx]?.trim().replace(/\r/g, '') ?? '';
+        const prov = cells[provIdx]?.trim().replace(/\r/g, '') ?? '';
+        const rawType = typeIdx >= 0 ? (cells[typeIdx]?.trim().replace(/\r/g, '') ?? '') : '';
+        if (nom.length < 3 || prov.length < 2) continue;
+
+        const key = `${nom.toLowerCase().slice(0, 40)}|${prov.toLowerCase().slice(0, 10)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const slug = nom.toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
+        data.push({
+          id: `ircc-${slug}-${data.length}`,
+          nom,
+          ville: '',
+          province: toProvinceCode(prov),
+          type: toTypeCode(rawType),
+          admissionsUrl: 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
+          source: 'live',
+        });
+      }
+
+      if (data.length > 200) {
+        return { data, source: `ircc-csv (${data.length})` };
+      }
+    } catch { continue; }
+  }
+  throw new Error('IRCC CSV inaccessible');
 }
 
 // ── Fetch direct open.canada.ca CKAN (pas de CORS en React Native) ───────────
@@ -204,9 +273,10 @@ async function fetchFromOpenCanada(): Promise<{ data: DLIInstitution[]; source: 
  * Ordre de priorité :
  *   1. Mémoire (même session)
  *   2. AsyncStorage (< 24 h)
- *   3. API Astro /api/dli (ScraperAPI → 1 500+ établissements)
- *   4. open.canada.ca CKAN API directe (React Native n'a pas de CORS) → 500–3000
- *   5. Fallback statique embarqué (62 établissements)
+ *   3. API Astro /api/dli (si Vercel disponible)
+ *   4. CSV officiel IRCC direct (ircc.canada.ca, pas de CORS en RN) → ~1300 DLI
+ *   5. open.canada.ca CKAN API directe → 500–3000
+ *   6. Fallback statique embarqué (62 établissements)
  */
 export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
   // Cache mémoire
@@ -237,6 +307,16 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
         await new Promise(r => setTimeout(r, 1500));
       }
     }
+
+    // CSV officiel IRCC direct (React Native, pas de CORS) → ~1300 DLI
+    try {
+      const { data, source } = await fetchFromIRCCCSV();
+      if (data.length > 200) {
+        _memCache = data;
+        await writeCache(data, source);
+        return data;
+      }
+    } catch { /* continuer */ }
 
     // open.canada.ca CKAN direct (pas de proxy nécessaire en RN)
     try {
