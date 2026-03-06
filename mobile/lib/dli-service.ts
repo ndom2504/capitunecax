@@ -10,7 +10,7 @@ import { HIPOLABS_CANADA } from './hipolabs-canada';
 
 const BASE_URL: string =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  'https://capituneweb.vercel.app';
+  'https://www.capitune.com';
 
 // Convertit le format dli-data (riche) vers le format service (simplifié)
 function fromStaticData(items: DLIDataInstitution[]): DLIInstitution[] {

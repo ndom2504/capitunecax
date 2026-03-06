@@ -12,7 +12,7 @@ import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
 import type { UserInfo } from '../../lib/api';
 
-const BACKEND = 'https://capitunecax.vercel.app';
+const BACKEND = 'https://www.capitune.com';
 
 type AccountType = 'client' | 'pro';
 

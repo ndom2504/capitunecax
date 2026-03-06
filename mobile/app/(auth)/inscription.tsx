@@ -13,7 +13,7 @@ import { authApi, type SignupPayload, type UserInfo } from '../../lib/api';
 import { saveSession } from '../../lib/auth';
 import { useAuth } from '../../context/AuthContext';
 
-const BACKEND = 'https://capituneweb.vercel.app';
+const BACKEND = 'https://www.capitune.com';
 
 type AccountType = 'client' | 'pro';
 

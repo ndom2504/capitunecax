@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 
 const BASE_URL: string =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  'https://capituneweb.vercel.app';
+  'https://www.capitune.com';
 
 function guessMimeFromBase64(b64: string): string {
   if (b64.startsWith('iVBOR')) return 'image/png';

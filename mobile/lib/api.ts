@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 
 const BASE_URL: string =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
-  'https://capituneweb.vercel.app';
+  'https://www.capitune.com';
 
 export interface ApiResponse<T = unknown> {
   data?: T;

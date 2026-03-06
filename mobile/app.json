@@ -44,7 +44,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://capitunecax.vercel.app"
+      "apiBaseUrl": "https://www.capitune.com"
     }
   }
 }

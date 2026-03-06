@@ -394,7 +394,7 @@ export default function ProfilScreen() {
           <MenuItem
             icon="shield-checkmark"
             label="Politique de confidentialité"
-            onPress={() => Linking.openURL('https://capitunecax.vercel.app/confidentialite')}
+            onPress={() => Linking.openURL('https://www.capitune.com/confidentialite')}
           />
         </View>
 
