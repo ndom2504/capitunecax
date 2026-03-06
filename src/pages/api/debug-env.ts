@@ -17,6 +17,7 @@ export const GET: APIRoute = async ({ locals }) => {
     process_stripe: stripeProcess ? 'SET ('+String(stripeProcess).substring(0,8)+'...)' : 'MISSING',
     process_has_keys: keys,
     total_process_keys: Object.keys(penv).length,
+    all_keys_prefix: Object.keys(penv).map(k => k.substring(0, 6)).sort(),
     node_env: penv.NODE_ENV,
   }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
