@@ -221,9 +221,35 @@ export default function DLISearchScreen() {
   const handleViewAdmission = useCallback(async (inst: DLIInstitution) => {
     try {
       const fallback = `https://www.cicic.ca/869/resultats.canada?search=${encodeURIComponent(inst.nom)}`;
-      const target = inst.admissionsUrl?.trim() ? inst.admissionsUrl : fallback;
-      const ok = await Linking.canOpenURL(target);
-      await Linking.openURL(ok ? target : fallback);
+      const rawTarget = inst.admissionsUrl?.trim() ? inst.admissionsUrl.trim() : '';
+      const candidates: string[] = [];
+
+      if (rawTarget) {
+        // Beaucoup d'URLs hipolabs sont en http; on essaie d'abord https.
+        if (rawTarget.startsWith('http://')) {
+          candidates.push(rawTarget.replace(/^http:\/\//, 'https://'));
+          candidates.push(rawTarget);
+        } else {
+          candidates.push(rawTarget);
+        }
+      }
+
+      candidates.push(fallback);
+
+      let opened = false;
+      for (const url of candidates) {
+        try {
+          await Linking.openURL(url);
+          opened = true;
+          break;
+        } catch {
+          // essayer le suivant
+        }
+      }
+
+      if (!opened) {
+        Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
+      }
     } catch {
       Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
     }
