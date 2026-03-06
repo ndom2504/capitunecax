@@ -1,0 +1,21 @@
+{
+  "titre": "FAQ Capitune",
+  "questions_reponses": [
+    {
+      "question": "Qu’est-ce que Capitune ?",
+      "reponse": "Capitune est une plateforme qui aide à structurer les projets liés au Canada en connectant les utilisateurs à des services, des ressources et des professionnels."
+    },
+    {
+      "question": "Puis-je gérer ma demande moi-même ?",
+      "reponse": "Oui. L’application propose un mode autonomie guidée avec checklist, étapes et rappels."
+    },
+    {
+      "question": "Est-ce que Capitune garantit l’obtention d’un visa ?",
+      "reponse": "Non. Capitune aide à structurer le projet, mais ne garantit jamais une décision administrative."
+    },
+    {
+      "question": "Puis-je parler à un conseiller ?",
+      "reponse": "Oui, selon votre besoin, l’agent peut vous orienter vers un professionnel."
+    }
+  ]
+}

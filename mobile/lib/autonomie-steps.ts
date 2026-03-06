@@ -824,10 +824,10 @@ const stepsVisiter: AutonomieStep[] = [
       {
         titre: 'Avez-vous besoin d\'un visa pour visiter le Canada ?',
         description: 'Outil officiel IRCC.',
-        url: 'https://ircc.canada.ca/francais/visiter/visas.asp',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/entree.html',
       },
     ],
-    { label: 'Vérifier visa requis', url: 'https://ircc.canada.ca/francais/visiter/visas.asp' },
+    { label: 'Vérifier visa requis', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/entree.html' },
   ),
 
   step(
@@ -837,13 +837,20 @@ const stepsVisiter: AutonomieStep[] = [
     '📋',
     'Rassemblez les documents requis pour votre demande de visa de visiteur.',
     [
-      { id: 'c1', label: 'Formulaire IMM 5257 rempli' },
+      { id: 'c1', label: 'Formulaire IMM 5257 rempli (utilisez notre agent CAPI pour de l\'aide)' },
       { id: 'c2', label: 'Photos conformes aux normes IRCC' },
       { id: 'c3', label: 'Preuve de fonds suffisants (relevé bancaire)' },
       { id: 'c4', label: 'Lettre d\'invitation (si applicable)' },
       { id: 'c5', label: 'Preuve d\'attaches au pays d\'origine (emploi, famille)' },
     ],
-    [],
+    [
+      {
+        titre: 'Formulaire IMM 5257 (Téléchargement direct)',
+        description: 'Téléchargez le formulaire officiel requis. Vous pouvez demander de l\'aide à CAPI.',
+        url: 'https://www.canada.ca/content/dam/ircc/migration/ircc/francais/pdf/trousses/form/imm5257f.pdf',
+      },
+    ],
+    { label: 'Ouvrir IMM 5257', url: 'https://www.canada.ca/content/dam/ircc/migration/ircc/francais/pdf/trousses/form/imm5257f.pdf' },
   ),
 
   step(

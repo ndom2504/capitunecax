@@ -1,0 +1,29 @@
+{
+  "titre": "Glossaire",
+  "termes": [
+    {
+      "terme": "IRCC",
+      "definition": "Administration fédérale canadienne en charge de l’immigration et de la citoyenneté."
+    },
+    {
+      "terme": "MIFI",
+      "definition": "Autorité québécoise liée à l’immigration au Québec."
+    },
+    {
+      "terme": "EED",
+      "definition": "Établissement d’enseignement désigné."
+    },
+    {
+      "terme": "Biométrie",
+      "definition": "Collecte des empreintes et photo quand exigée."
+    },
+    {
+      "terme": "Preuve de fonds",
+      "definition": "Montant que l’utilisateur doit pouvoir démontrer pour soutenir son projet."
+    },
+    {
+      "terme": "Lettre explicative",
+      "definition": "Document rédigé pour clarifier le projet, la cohérence du parcours et les ressources."
+    }
+  ]
+}

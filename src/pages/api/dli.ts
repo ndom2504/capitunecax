@@ -198,7 +198,7 @@ async function fetchFromCanadaCA(): Promise<RawDLI[]> {
     try {
       const res = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; Capitune/1.0; +https://capituneweb.vercel.app)',
+          'User-Agent': 'Mozilla/5.0 (compatible; CAPI/1.0; +https://capituneweb.vercel.app)',
           'Accept': 'text/html,application/xhtml+xml',
           'Accept-Language': 'fr-CA,fr;q=0.9,en-CA;q=0.8',
         },
@@ -241,7 +241,7 @@ async function fetchFromOpenData(): Promise<RawDLI[]> {
       const res = await fetch(tsvUrl, {
         headers: {
           'Accept': 'text/csv,text/plain,*/*',
-          'User-Agent': 'Mozilla/5.0 (compatible; Capitune/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; CAPI/1.0)',
         },
         signal: AbortSignal.timeout(25000),
       });

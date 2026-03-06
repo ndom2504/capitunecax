@@ -24,7 +24,7 @@ const DEMO_MESSAGES: Message[] = [
     id: '1',
     content: 'Bonjour 👋 Je suis votre conseiller. Dites-moi où vous en êtes, je vous guide.',
     sender: 'pro',
-    senderName: 'Conseiller Capitune',
+    senderName: 'Conseiller CAPI',
     createdAt: '2026-03-02T09:00:00Z',
     read: true,
   },
@@ -40,7 +40,7 @@ const DEMO_MESSAGES: Message[] = [
     id: '3',
     content: "On commence par passeport + photo d'identité. Ensuite, on valide l'étape 1 dans Mon Projet.",
     sender: 'pro',
-    senderName: 'Conseiller Capitune',
+    senderName: 'Conseiller CAPI',
     createdAt: '2026-03-02T09:05:00Z',
     read: true,
   },
@@ -57,7 +57,7 @@ export default function MessagerieScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  const advisorName = typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller Capitune';
+  const advisorName = typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPI';
   const advisorAvatarKey = typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '';
   const shouldPrefill = String(params.prefill ?? '') === '1';
   const advisorAvatarSource = getAvatarSource(advisorAvatarKey);

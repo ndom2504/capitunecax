@@ -1,0 +1,33 @@
+nom_du_champ,type_de_donnees,description
+unique_id,string,Identifiant unique de l'école
+province_code,string,Code alphabétique de la province
+geocode,int64,Code numérique de la province
+source_id,int64,Identifiant de la source des données
+provider,string,Nom du fournisseur de données
+authority_id,string,Identifiant de l'autorité (commission scolaire)
+authority_name,string,Nom de l'autorité (commission scolaire)
+full_address,string,Adresse de l'école telle que fournie dans la source
+school_id,string,Identifiant original de l'école dans la source
+facility_name,string,Nom de l'établissement
+streetAddress,string,Adresse de la rue (si disponible)
+postOfficeBoxNumber,string,Numéro de la boîte postale (si disponible)
+postalCode,string,Code postal
+addressLocality,string,Localisation de l'école
+min_grade,string,Niveau minimum enseigné à l'école
+max_grade,string,Niveau maximum enseigné à l'école
+ISCED010,string,Classification CITE010 (1=oui 0=non)
+ISCED020,string,Classification CITE020 (1=oui 0=non)
+ISCED1,string,Classification CITE1 (1=oui 0=non)
+ISCED2,string,Classification CITE2 (1=oui 0=non)
+ISCED3,string,Classification CITE3 (1=oui 0=non)
+ISCED4Plus,string,Classification CITE4 ou supérieure (1=oui 0=non)
+is_OLMS,string,École de la minorité de langue officielle (1=oui 0=non)
+french_immersion,string,École d'immersion française (1=oui 0=non)
+early_immersion,string,École d'immersion française précoce (1=oui 0=non)
+middle_immersion,string,École d'immersion française intermédiaire (1=oui 0=non)
+late_immersion,string,École d'immersion française tardive (1=oui 0=non)
+facility_type,string,"Description du type d’école, brute telle que fournie par la source"
+dguid,string,Identifiant unique de la subdivision de recensement
+csdname,string,Nom de la subdivision de recensement
+geometry,geometry,Coordonnées géographiques de l'établissement
+date_updated,date32[day],Dernière mise à jour de la source

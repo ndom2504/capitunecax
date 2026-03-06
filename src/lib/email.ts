@@ -21,7 +21,7 @@ export async function sendEmail(
     return { ok: false, error: 'RESEND_API_KEY_MISSING' };
   }
 
-  const from = payload.from ?? 'Capitune <no-reply@capitune.com>';
+  const from = payload.from ?? 'CAPI <no-reply@capitune.com>';
 
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -58,7 +58,7 @@ export function buildVerificationEmail(name: string, verifyUrl: string): string 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Vérifiez votre courriel — Capitune</title>
+  <title>Vérifiez votre courriel — CAPI</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f7fa;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fa;padding:40px 16px;">
@@ -67,7 +67,7 @@ export function buildVerificationEmail(name: string, verifyUrl: string): string 
 
         <!-- En-tête -->
         <tr><td style="background:#1f4b6e;padding:28px 36px;text-align:center;">
-          <span style="color:#ffffff;font-size:24px;font-weight:700;letter-spacing:.5px;">Capitune</span>
+          <span style="color:#ffffff;font-size:24px;font-weight:700;letter-spacing:.5px;">CAPI</span>
         </td></tr>
 
         <!-- Corps -->
@@ -79,7 +79,7 @@ export function buildVerificationEmail(name: string, verifyUrl: string): string 
             Bonjour <strong>${escHtml(name)}</strong>,
           </p>
           <p style="margin:0 0 28px;color:#555;font-size:15px;line-height:1.7;">
-            Bienvenue sur Capitune ! Pour activer votre compte et accéder à tous nos services,
+            Bienvenue sur CAPI ! Pour activer votre compte et accéder à tous nos services,
             veuillez confirmer votre adresse courriel en cliquant sur le bouton ci-dessous.
           </p>
           <div style="text-align:center;margin-bottom:28px;">
@@ -102,10 +102,10 @@ export function buildVerificationEmail(name: string, verifyUrl: string): string 
         <!-- Pied de page -->
         <tr><td style="background:#f8f9fa;padding:18px 40px;text-align:center;border-top:1px solid #eee;">
           <p style="margin:0;color:#aaa;font-size:12px;">
-            Si vous n'avez pas créé de compte sur Capitune, ignorez simplement cet email.
+            Si vous n'avez pas créé de compte sur CAPI, ignorez simplement cet email.
           </p>
           <p style="margin:6px 0 0;color:#ccc;font-size:11px;">
-            © ${new Date().getFullYear()} Capitune — Tous droits réservés
+            © ${new Date().getFullYear()} CAPI — Tous droits réservés
           </p>
         </td></tr>
 

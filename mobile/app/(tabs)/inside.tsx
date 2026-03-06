@@ -42,7 +42,7 @@ const DEMO_POSTS: InsidePost[] = [
     content:
       "Cette publication annonce notre vidéo de préparation. Dans Inside, vous retrouverez des posts officiels avec des images, des vidéos, des sondages et des articles pédagogiques (contenus officiels, simples et actionnables).",
     createdAt: '2026-03-03T10:00:00Z',
-    authorName: 'Admin Capitune',
+    authorName: 'Admin CAPI',
     media: { type: 'video', source: require('../../assets/videos/preparation-depart.mp4') },
     reactions: { like: 12, fire: 4, clap: 7 },
   },
@@ -52,7 +52,7 @@ const DEMO_POSTS: InsidePost[] = [
     content:
       "Cette publication annonce notre vidéo d'intégration (logement, démarches, premiers jours). Les contenus Inside seront des posts officiels : images, vidéos, sondages, et articles pédagogiques validés.",
     createdAt: '2026-03-01T14:30:00Z',
-    authorName: 'Admin Capitune',
+    authorName: 'Admin CAPI',
     media: { type: 'video', source: require('../../assets/videos/integration-canada.mp4') },
     reactions: { like: 9, fire: 2, clap: 5 },
   },

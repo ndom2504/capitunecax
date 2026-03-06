@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Capitune Colors */
+  --color-primary: #1f4b6e;       /* Bleu marine — couleur principale */
+  --color-primary-dark: #0a1628;  /* Bleu très foncé — texte principal */
+  --color-orange: #e87722;        /* Orange Capitune — accents, CTA */
+  --color-orange-light: #f8a855;  /* Orange clair — variante */
+  
+  --color-bg-light: #f5f7fa;      /* Fond clair */
+  --color-surface: #ffffff;       /* Surface / Card Bg */
+  --color-border: #e2e8f0;        /* Bordures */
+  
+  --color-text: #0a1628;          /* Texte principal */
+  --color-text-secondary: #334155;/* Texte secondaire */
+  --color-text-muted: #64748b;    /* Texte muet */
+  
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-light);
+  color: var(--color-text);
+}

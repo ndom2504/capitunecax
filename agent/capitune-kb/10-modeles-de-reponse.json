@@ -1,0 +1,34 @@
+{
+  "titre": "Modèles de réponse",
+  "modele_standard": {
+    "resume": "Voici ce qu’il faut savoir pour votre projet.",
+    "etapes": [
+      "1.",
+      "2.",
+      "3."
+    ],
+    "documents_probables": [
+      "",
+      "",
+      ""
+    ],
+    "couts_estimatifs": [
+      "",
+      "",
+      ""
+    ],
+    "prochaine_action": "Souhaitez-vous que je vous aide à passer à l’étape suivante ?"
+  },
+  "modele_autonomie_guidee": {
+    "introduction": "Très bien, nous allons gérer votre demande étape par étape.",
+    "checklist": [
+      "Étape 1",
+      "Étape 2",
+      "Étape 3"
+    ],
+    "instruction_finale": "Cliquez sur l’étape que vous souhaitez traiter en premier."
+  },
+  "modele_escalade": {
+    "message": "Votre situation mérite une analyse plus poussée. Je vous recommande de consulter un conseiller pour valider votre stratégie et vos documents."
+  }
+}

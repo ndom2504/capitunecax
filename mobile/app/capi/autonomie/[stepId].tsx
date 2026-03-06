@@ -123,20 +123,23 @@ export default function AutonomieStepScreen() {
   }, []);
 
   const goToStep = useCallback((offset: number) => {
-    if (!project) return;
+    if (!project || !step) return;
 
-    // Gating : depuis l'étape 2, on ne passe pas à l'étape 3 (CAQ) tant que tout n'est pas validé.
-    if (stepId === 'demande-admission' && offset > 0 && !isAdmissionComplete) {
-      Alert.alert(
-        'Validation requise',
-        "Chaque étape de 'Ce que vous devez faire' doit être marquée comme faite avant de continuer.",
-      );
-      return;
+    // Gating global : on ne passe pas à l'étape suivante tant que tout n'est pas validé.
+    if (offset > 0) {
+      const allDone = step.checkItems.length === 0 || step.checkItems.every(i => i.done);
+      if (!allDone) {
+        Alert.alert(
+          'Validation requise',
+          "Chaque point doit être marqué comme fait avant de passer à l'étape suivante."
+        );
+        return;
+      }
     }
 
     const target = project.steps[stepIndex + offset];
     if (target) router.replace(`/capi/autonomie/${target.id}` as never);
-  }, [project, stepIndex, router, stepId, isAdmissionComplete]);
+  }, [project, stepIndex, router, step]);
 
   const toggleCheckItem = useCallback((itemId: string) => {
     if (!project || !step || typeof stepId !== 'string') return;

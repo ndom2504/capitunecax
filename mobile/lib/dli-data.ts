@@ -195,14 +195,7 @@ const VFS_MAP: Record<string, string> = {
  * Fallback vers la page IRCC générique.
  */
 export function getBiometrieUrl(paysCode2?: string): string {
-  if (!paysCode2) {
-    return 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html';
-  }
-  const code3 = VFS_MAP[paysCode2.toUpperCase()];
-  if (code3) {
-    return `https://visa.vfsglobal.com/${code3}/en/can/apply-visa`;
-  }
-  return 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html';
+
 }
 
 /**

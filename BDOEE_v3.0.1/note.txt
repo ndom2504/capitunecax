@@ -1,0 +1,4 @@
+# Mise à jour du 17 novembre 2025
+
+- La colonne « facility_type » a été supprimée par erreur et a été rétablie. 
+- Les informations erronées concernant les écoles de la langue officielle minoritaire au Manitoba ont été corrigées.

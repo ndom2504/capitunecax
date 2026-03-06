@@ -95,7 +95,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const result = await sendEmail(
       {
         to: email,
-        subject: 'Confirmez votre adresse courriel — Capitune',
+        subject: 'Confirmez votre adresse courriel — CAPI',
         html: buildVerificationEmail(userName, verifyUrl),
       },
       resendApiKey,

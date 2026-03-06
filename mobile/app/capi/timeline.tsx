@@ -20,7 +20,7 @@ function buildTimeline(motif: CapiMotif, programme?: string, examenMedical?: boo
       {
         id: 'v1',
         titre: 'Analyse d\'admissibilité',
-        description: 'Votre conseiller Capitune étudie votre profil, vérifie les critères IRCC et établit une stratégie personnalisée.',
+        description: 'Votre conseiller CAPI étudie votre profil, vérifie les critères IRCC et établit une stratégie personnalisée.',
         responsable: 'conseiller',
         dureeEstimee: '2–3 jours',
         documents: [],
@@ -56,7 +56,7 @@ function buildTimeline(motif: CapiMotif, programme?: string, examenMedical?: boo
       {
         id: 'v5',
         titre: 'Soumission de la demande',
-        description: 'Votre conseiller Capitune dépose officiellement votre demande de visa visiteur (IMM5257) auprès de l\'IRCC.',
+        description: 'Votre conseiller CAPI dépose officiellement votre demande de visa visiteur (IMM5257) auprès de l\'IRCC.',
         responsable: 'conseiller',
         dureeEstimee: '1 jour',
         documents: ['Formulaire IMM5257 complété', 'Lettre d\'explication', 'Tous documents collectés'],
@@ -83,7 +83,7 @@ function buildTimeline(motif: CapiMotif, programme?: string, examenMedical?: boo
       {
         id: 'v8',
         titre: 'Réception visa & préparation voyage',
-        description: 'Votre passeport avec le visa vous est retourné. Capitune vous accompagne dans la préparation du voyage.',
+        description: 'Votre passeport avec le visa vous est retourné. CAPI vous accompagne dans la préparation du voyage.',
         responsable: 'conseiller',
         dureeEstimee: '1 semaine',
         documents: ['Visa apposé sur passeport', 'Assurance voyage', 'Billet aller-retour confirmé'],

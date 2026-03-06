@@ -135,14 +135,14 @@ function computeEvaluation(profile: CapiProfileData): CapiEvaluation {
       risques.push('Séjour > 90 jours — justifications financières renforcées requises');
     else
       points.push('Durée de séjour raisonnable — facilite l\'approbation');
-    points.push('Dossier complet préparé par Capitune');
+    points.push('Dossier complet préparé par CAPI');
     return {
       faisabilite: profile.refusAnterieur ? 62 : 78,
       complexite: profile.refusAnterieur ? 'moyenne' : 'faible',
       delaiEstime: '2 – 8 semaines',
       risques,
       points_forts: points,
-      disclaimer: 'Les frais et délais sont indicatifs selon les barèmes IRCC 2024-2025. Un conseiller Capitune validera votre dossier avant toute soumission.',
+      disclaimer: 'Les frais et délais sont indicatifs selon les barèmes IRCC 2024-2025. Un conseiller CAPI validera votre dossier avant toute soumission.',
       visiteurPlan,
     };
   }
@@ -192,7 +192,7 @@ function computeEvaluation(profile: CapiProfileData): CapiEvaluation {
     delaiEstime: DELAI_LABELS[profile.motif] ?? '6-12 mois',
     risques,
     points_forts: points,
-    disclaimer: 'Cette analyse est indicative. Un conseiller Capitune validera votre profil avant toute soumission officielle.',
+    disclaimer: 'Cette analyse est indicative. Un conseiller CAPI validera votre profil avant toute soumission officielle.',
     motifPlan,
   };
 }
@@ -389,8 +389,8 @@ function VisiteurPlanView({ plan }: { plan: VisiteurPlan }) {
         {plan.documentsOptionnels.map((d, i) => <DocItem key={i} text={d} optional />)}
       </SectionCard>
 
-      {/* Conseils Capitune */}
-      <SectionCard title="💡 Conseils Capitune">
+      {/* Conseils CAPI */}
+      <SectionCard title="💡 Conseils CAPI">
         {plan.conseils.map((c, i) => (
           <View key={i} style={pStyles.conseilRow}>
             <Ionicons name="bulb-outline" size={15} color={Colors.orange} style={{ marginTop: 2 }} />

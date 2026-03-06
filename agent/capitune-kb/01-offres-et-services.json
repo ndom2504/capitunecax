@@ -1,0 +1,30 @@
+{
+  "titre": "Offres et services Capitune",
+  "description": "Capitune est une plateforme qui connecte des porteurs de projets liés au Canada à des professionnels intervenant de la conception à la réalisation.",
+  "categories_de_services": [
+    "Consultation stratégique",
+    "Orientation et choix du programme",
+    "Montage complet du dossier",
+    "Suivi et communication",
+    "Recherche d’institutions",
+    "Accueil et intégration",
+    "Conversion et préparation documentaire",
+    "Budget et preuve de fonds",
+    "Recherche de logement",
+    "Assistance à la demande d’admission"
+  ],
+  "modes_accompagnement": [
+    "1. Choisir un conseiller",
+    "2. Gérer ma demande moi-même"
+  ],
+  "si_utilisateur_choisit_gerer_demande_seul": {
+    "action": "L’agent doit activer un mode autonomie guidée avec :",
+    "elements": [
+      "checklist progressive",
+      "étapes claires",
+      "ressources officielles",
+      "modèles de documents",
+      "rappels des coûts"
+    ]
+  }
+}

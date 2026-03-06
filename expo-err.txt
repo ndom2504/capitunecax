@@ -1,3 +1,5 @@
 The following packages should be updated for best compatibility with the installed expo version:
   typescript@5.9.3 - expected version: ~5.3.3
 Your project may not work correctly until you install the expected versions of the packages.
+Tunnel connection has been closed. This is often related to intermittent connection problems with the Ngrok servers. Restart the dev server to try connecting to Ngrok again.
+Check the Ngrok status page for outages: https://status.ngrok.com/

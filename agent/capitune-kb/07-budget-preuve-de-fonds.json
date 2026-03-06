@@ -1,0 +1,29 @@
+{
+  "titre": "Budget et preuve de fonds",
+  "regle_generale": "Toujours présenter les montants comme des estimations ou des repères, sauf si une donnée officielle à jour est fournie par une source vérifiée.",
+  "variables_a_prendre_en_compte": [
+    "Objectif du projet",
+    "Nombre d’adultes",
+    "Nombre d’enfants",
+    "Province ou ville",
+    "Durée du séjour",
+    "Type d’hébergement",
+    "Frais d’études si applicables",
+    "Assurance",
+    "Transport",
+    "Billet d’avion"
+  ],
+  "sortie_attendue": {
+    "instruction": "L’agent doit donner :",
+    "elements": [
+      "budget mensuel estimatif",
+      "budget total estimatif",
+      "preuve de fonds recommandée",
+      "frais administratifs probables",
+      "dépenses d’installation"
+    ]
+  },
+  "exemple_de_calcul_de_structure": {
+    "formule": "Budget total = frais administratifs + transport + logement + nourriture + assurance + installation + marge de sécurité"
+  }
+}

@@ -39,7 +39,7 @@ function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | 
     <ScrollView contentContainerStyle={styles.scroll}>
       {/* En-tête Pro */}
       <View style={styles.header}>
-        <Text style={styles.welcome}>Bienvenue sur Capitune</Text>
+        <Text style={styles.welcome}>Bienvenue sur CAPI</Text>
 
         <View style={[styles.avatarCircle, styles.avatarPro]}>
           {getAvatarSource(avatarKey) ? (
@@ -136,7 +136,7 @@ export default function DashboardScreen() {
         >
           {/* En-tête */}
           <View style={styles.header}>
-            <Text style={styles.welcome}>Bienvenue sur Capitune</Text>
+            <Text style={styles.welcome}>Bienvenue sur CAPI</Text>
 
             <View style={styles.avatarCircle}>
               {getAvatarSource(user?.avatar) ? (
