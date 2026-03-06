@@ -53,7 +53,7 @@ export interface DLISearchParams {
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const DLI_CACHE_KEY = 'dli_full_cache_v5';  // v5 = IRCC CSV direct depuis mobile
+const DLI_CACHE_KEY = 'dli_full_cache_v6';  // v6 = JSON statique pré-compilé (102 KB)
 const DLI_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h en ms
 
 interface DLICache {
@@ -116,73 +116,95 @@ async function fetchFromAPI(): Promise<{ data: DLIInstitution[]; source: string 
   return { data: json.data, source: json.source ?? 'api' };
 }
 
-// ── Fetch direct CSV IRCC (React Native, pas de CORS) ────────────────────────
-// IRCC publie des TSV officiels avec ~1300 DLI uniques.
-// Colonnes clés : EN_DLI_PROVINCE_TERRITORY, EN_DESIGNATED_LEARNING_INSTITU(T)ION, EN_INSTITUTION_TYPE
+// ── Fetch JSON statique pré-compilé (1 344 DLI, 102 KB) ──────────────────────
+// Stocké dans public/dli.json du repo → servi par Vercel ET GitHub raw.
+// Beaucoup plus rapide que le CSV IRCC de 6.8 MB.
 
-async function fetchFromIRCCCSV(): Promise<{ data: DLIInstitution[]; source: string }> {
+async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: string }> {
   const URLS = [
-    // DLI × Province × Institution Type (University / College / Language School …)
-    'https://www.ircc.canada.ca/opendata-donneesouvertes/data/ODP-TR-Study-DLI_name_PT_Inst_type.csv',
-    // DLI × Province × Admin type (Public / Private) — fallback
-    'https://www.ircc.canada.ca/opendata-donneesouvertes/data/ODP-TR-Study-DLI_name_PT_Admin_type.csv',
+    // Fichier statique Vercel (public/dli.json)
+    `${BASE_URL}/dli.json`,
+    // GitHub raw — toujours disponible même si Vercel est down
+    'https://raw.githubusercontent.com/ndom2504/capitunecax/main/public/dli.json',
   ];
 
   for (const url of URLS) {
     try {
       const res = await fetch(url, {
-        headers: { 'Accept': 'text/csv,text/plain,*/*', 'User-Agent': 'Capitune/1.0' },
-        signal: AbortSignal.timeout(25000),
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(18000),
       });
       if (!res.ok) continue;
 
-      const text = await res.text();
-      const lines = text.split('\n').filter(l => l.trim());
-      if (lines.length < 10) continue;
+      // Le JSON a la forme [{n, p, t}, …] — champs courts pour réduire la taille
+      const raw = await res.json() as Array<{ n: string; p: string; t: string }>;
+      if (!Array.isArray(raw) || raw.length < 100) continue;
 
-      // Header tab-séparé
-      const header = lines[0].split('\t').map(h => h.trim().replace(/\r/g, '').toLowerCase());
-      const provIdx = header.findIndex(h => h === 'en_dli_province_territory' || h.includes('province'));
-      const nameIdx = header.findIndex(h => h.includes('learning_institu')); // gère typo "instituion"
-      const typeIdx = header.findIndex(h => h === 'en_institution_type' || h === 'en_admin_type');
-
-      if (provIdx < 0 || nameIdx < 0) continue;
-
-      const seen = new Set<string>();
-      const data: DLIInstitution[] = [];
-
-      for (const line of lines.slice(1)) {
-        const cells = line.split('\t');
-        if (cells.length <= Math.max(provIdx, nameIdx)) continue;
-        const nom = cells[nameIdx]?.trim().replace(/\r/g, '') ?? '';
-        const prov = cells[provIdx]?.trim().replace(/\r/g, '') ?? '';
-        const rawType = typeIdx >= 0 ? (cells[typeIdx]?.trim().replace(/\r/g, '') ?? '') : '';
-        if (nom.length < 3 || prov.length < 2) continue;
-
-        const key = `${nom.toLowerCase().slice(0, 40)}|${prov.toLowerCase().slice(0, 10)}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        const slug = nom.toLowerCase()
+      const data: DLIInstitution[] = raw.map((entry, i) => {
+        const slug = (entry.n ?? '').toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
-        data.push({
-          id: `ircc-${slug}-${data.length}`,
-          nom,
+        return {
+          id: `dli-${slug}-${i}`,
+          nom: entry.n ?? '',
           ville: '',
-          province: toProvinceCode(prov),
-          type: toTypeCode(rawType),
+          province: toProvinceCode(entry.p ?? ''),
+          type: toTypeCode(entry.t ?? ''),
           admissionsUrl: 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
-          source: 'live',
-        });
-      }
+          source: 'live' as const,
+        };
+      }).filter(i => i.nom.length > 2);
 
-      if (data.length > 200) {
-        return { data, source: `ircc-csv (${data.length})` };
+      if (data.length > 100) {
+        return { data, source: `static-json (${data.length})` };
       }
     } catch { continue; }
   }
-  throw new Error('IRCC CSV inaccessible');
+  throw new Error('JSON statique DLI inaccessible');
+}
+
+// ── Fetch hipolabs (157 universités canadiennes) ──────────────────────────────
+// API gratuite, aucune auth, inclut cégeps et collèges, petite réponse.
+
+async function fetchFromHipolabs(): Promise<DLIInstitution[]> {
+  try {
+    const res = await fetch(
+      'https://universities.hipolabs.com/search?country=Canada',
+      {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+    if (!res.ok) return [];
+    const raw = await res.json() as Array<{
+      name: string;
+      'state-province': string | null;
+      web_pages?: string[];
+      domains?: string[];
+    }>;
+    if (!Array.isArray(raw)) return [];
+
+    return raw.map((u, i) => {
+      const nom = u.name ?? '';
+      const prov = toProvinceCode(u['state-province'] ?? '');
+      const type = toTypeCode(nom);
+      const url = u.web_pages?.[0] ?? '';
+      const slug = nom.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
+      return {
+        id: `hipo-${slug}-${i}`,
+        nom,
+        ville: '',
+        province: prov,
+        type,
+        admissionsUrl: url || 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
+        source: 'live' as const,
+      };
+    }).filter(i => i.nom.length > 2);
+  } catch {
+    return [];
+  }
 }
 
 // ── Fetch direct open.canada.ca CKAN (pas de CORS en React Native) ───────────
@@ -273,10 +295,11 @@ async function fetchFromOpenCanada(): Promise<{ data: DLIInstitution[]; source: 
  * Ordre de priorité :
  *   1. Mémoire (même session)
  *   2. AsyncStorage (< 24 h)
- *   3. API Astro /api/dli (si Vercel disponible)
- *   4. CSV officiel IRCC direct (ircc.canada.ca, pas de CORS en RN) → ~1300 DLI
- *   5. open.canada.ca CKAN API directe → 500–3000
- *   6. Fallback statique embarqué (62 établissements)
+ *   3. JSON statique public/dli.json via Vercel (102 KB, 1 344 DLI) ou GitHub raw
+ *   4. API Astro /api/dli (si Vercel disponible)
+ *   5. hipolabs.com — 157 universités canadiennes (petit, fiable)
+ *   6. open.canada.ca CKAN API directe → 500–3000
+ *   7. Fallback statique embarqué (62 établissements)
  */
 export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
   // Cache mémoire
@@ -293,6 +316,21 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
       return cached;
     }
 
+    // JSON statique pré-compilé (Vercel ou GitHub raw) → 1 344 DLI, 102 KB
+    try {
+      const { data, source } = await fetchFromStaticJSON();
+      if (data.length > 100) {
+        // Enrichissement optionnel avec hipolabs (universités non encore dans IRCC)
+        const hipoItems = await fetchFromHipolabs();
+        const seen = new Set(data.map(d => d.nom.toLowerCase().slice(0, 40)));
+        const extras = hipoItems.filter(h => !seen.has(h.nom.toLowerCase().slice(0, 40)));
+        const merged = [...data, ...extras];
+        _memCache = merged;
+        await writeCache(merged, `${source}+hipolabs`);
+        return merged;
+      }
+    } catch { /* continuer */ }
+
     // API Astro avec 1 retry
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -308,13 +346,13 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
       }
     }
 
-    // CSV officiel IRCC direct (React Native, pas de CORS) → ~1300 DLI
+    // hipolabs seul → 157 universités si tout le reste échoue
     try {
-      const { data, source } = await fetchFromIRCCCSV();
-      if (data.length > 200) {
-        _memCache = data;
-        await writeCache(data, source);
-        return data;
+      const hipoItems = await fetchFromHipolabs();
+      if (hipoItems.length > 50) {
+        _memCache = hipoItems;
+        await writeCache(hipoItems, `hipolabs (${hipoItems.length})`);
+        return hipoItems;
       }
     } catch { /* continuer */ }
 
