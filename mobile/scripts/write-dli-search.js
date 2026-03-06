@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+const fs = require('fs');
+const content = `import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, Linking, Alert, ActivityIndicator, Keyboard, Platform, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -226,7 +227,7 @@ export default function DLISearchScreen() {
 
       if (rawTarget) {
         if (rawTarget.startsWith('http://')) {
-          candidates.push(rawTarget.replace(/^http:\/\//, 'https://'));
+          candidates.push(rawTarget.replace(/^http:\\/\\//, 'https://'));
           candidates.push(rawTarget);
         } else {
           candidates.push(rawTarget);
@@ -443,3 +444,5 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 16, fontSize: 15, color: Colors.textMuted, fontWeight: '600' },
   errorText: { marginTop: 16, fontSize: 15, color: Colors.textMuted, fontWeight: '600' },
 });
+`;
+fs.writeFileSync('app/capi/autonomie/dli-search.tsx', content, 'utf8');

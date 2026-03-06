@@ -65,7 +65,7 @@ const stepsEtudier: AutonomieStep[] = [
     'Soumettez votre dossier académique à l\'établissement et obtenez une lettre d\'acceptation (LOA).',
     [
       { id: 'c1', label: 'Réunir relevés de notes, diplômes, traductions certifiées' },
-      { id: 'c2', label: 'Préparer lettre de motivation et CV académique' },
+      { id: 'c2', label: 'Rédiger la lettre via l\'agent CAPI + obtenir un score de chance' },
       { id: 'c3', label: 'Payer les frais de dossier d\'admission' },
       { id: 'c4', label: 'Soumettre la demande avant la date limite' },
       { id: 'c5', label: 'Recevoir et sauvegarder la Lettre d\'Acceptation (LOA)' },

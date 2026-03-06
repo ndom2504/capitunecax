@@ -1,16 +1,18 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import {
   getBiometrieUrl, getMedecinDesigneUrl, getPaysLabel,
 } from '../../../lib/dli-data';
+import type { AutonomieProject, AutonomieStep, AutonomieCheckItem } from '../../../lib/api';
 
 // ---------------------------------------------------------------------------
 // Utilitaire : URL intelligente selon l'étape et le pays
@@ -38,7 +40,9 @@ function resolveRessourceUrl(stepId: string, baseUrl: string, paysCode?: string)
 export default function AutonomieStepScreen() {
   const router = useRouter();
   const { stepId } = useLocalSearchParams<{ stepId: string }>();
-  const { session } = useCapiSession();
+  const { session, updateSession } = useCapiSession();
+
+  const [selectedDli, setSelectedDli] = useState<Array<{ id: string; nom: string; ville?: string; province?: string; type?: string; admissionsUrl?: string }> | null>(null);
 
   const project = session.autonomie;
   // Récupère le code pays depuis le profil CAPI (ex: "MA", "DZ", "FR")
@@ -56,9 +60,54 @@ export default function AutonomieStepScreen() {
 
   // Drapeaux pour les étapes spéciales
   const isEtablissement = stepId === 'choisir-etablissement';
+  const isAdmission = stepId === 'demande-admission';
+  const isCAQ = stepId === 'caq-mifi';
   const isBiometrie = typeof stepId === 'string' && stepId.includes('biometrie');
   const isMedical = typeof stepId === 'string' &&
     (stepId.includes('exam-medical') || stepId.includes('examens-medicaux'));
+
+  const admissionStep = useMemo(
+    () => project?.steps.find(s => s.id === 'demande-admission'),
+    [project],
+  );
+
+  const isAdmissionComplete = useMemo(() => {
+    if (!admissionStep) return false;
+    return admissionStep.checkItems.length > 0 && admissionStep.checkItems.every(i => i.done);
+  }, [admissionStep]);
+
+  // Bloque l'accès à l'étape CAQ tant que la demande d'admission n'est pas validée.
+  useEffect(() => {
+    if (!project) return;
+    if (!isCAQ) return;
+    if (isAdmissionComplete) return;
+
+    Alert.alert(
+      'Étape 2 requise',
+      'Validez toutes les actions de la demande d\'admission avant de passer au CAQ.',
+      [{ text: 'OK', onPress: () => router.replace('/capi/autonomie/demande-admission' as never) }],
+    );
+  }, [project, isCAQ, isAdmissionComplete, router]);
+
+  // Charge les 3 choix validés (étape 1) pour l'étape 2.
+  useEffect(() => {
+    if (!isAdmission) return;
+    let alive = true;
+    AsyncStorage.getItem('capi_selected_dli')
+      .then(raw => {
+        if (!alive) return;
+        if (!raw) { setSelectedDli([]); return; }
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setSelectedDli(parsed);
+          else setSelectedDli([]);
+        } catch {
+          setSelectedDli([]);
+        }
+      })
+      .catch(() => { if (alive) setSelectedDli([]); });
+    return () => { alive = false; };
+  }, [isAdmission]);
 
   const openUrl = useCallback(async (url: string) => {
     try {
@@ -75,9 +124,37 @@ export default function AutonomieStepScreen() {
 
   const goToStep = useCallback((offset: number) => {
     if (!project) return;
+
+    // Gating : depuis l'étape 2, on ne passe pas à l'étape 3 (CAQ) tant que tout n'est pas validé.
+    if (stepId === 'demande-admission' && offset > 0 && !isAdmissionComplete) {
+      Alert.alert(
+        'Validation requise',
+        "Chaque étape de 'Ce que vous devez faire' doit être marquée comme faite avant de continuer.",
+      );
+      return;
+    }
+
     const target = project.steps[stepIndex + offset];
     if (target) router.replace(`/capi/autonomie/${target.id}` as never);
-  }, [project, stepIndex, router]);
+  }, [project, stepIndex, router, stepId, isAdmissionComplete]);
+
+  const toggleCheckItem = useCallback((itemId: string) => {
+    if (!project || !step || typeof stepId !== 'string') return;
+
+    const nextSteps: AutonomieStep[] = project.steps.map((s) => {
+      if (s.id !== stepId) return s;
+      const nextItems: AutonomieCheckItem[] = s.checkItems.map((ci) =>
+        (ci.id === itemId ? { ...ci, done: !ci.done } : ci)
+      );
+      const anyDone = nextItems.some(i => i.done);
+      const allDone = nextItems.length > 0 && nextItems.every(i => i.done);
+      const nextStatus: AutonomieStep['status'] = allDone ? 'done' : anyDone ? 'in_progress' : 'pending';
+      return { ...s, checkItems: nextItems, status: nextStatus };
+    });
+
+    const nextProject: AutonomieProject = { ...project, steps: nextSteps };
+    updateSession({ autonomie: nextProject });
+  }, [project, step, stepId, updateSession]);
 
   if (!project || !step) {
     return (
@@ -175,6 +252,178 @@ export default function AutonomieStepScreen() {
           </View>
         )}
 
+        {/* ── ÉTAPE SPÉCIALE : Demande d'admission — afficher les choix validés ── */}
+        {isAdmission && (
+          <View style={styles.specialSection}>
+            <View style={styles.specialHeader}>
+              <Text style={styles.specialEmoji}>✅</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.specialTitle}>Vos 3 choix validés</Text>
+                <Text style={styles.specialSub}>Ces établissements doivent apparaître ici avant de continuer.</Text>
+              </View>
+            </View>
+
+            <View style={styles.actionsCard}>
+              {selectedDli === null ? (
+                <View style={styles.actionRow}>
+                  <Ionicons name="time-outline" size={16} color={Colors.textMuted} />
+                  <Text style={[styles.actionLabel, { marginLeft: 10 }]}>Chargement…</Text>
+                </View>
+              ) : selectedDli.length === 0 ? (
+                <View style={styles.actionRow}>
+                  <Ionicons name="alert-circle-outline" size={16} color={Colors.warning} />
+                  <Text style={[styles.actionLabel, { marginLeft: 10 }]}>Aucun choix enregistré. Retournez à l'étape 1 pour valider vos 3 établissements.</Text>
+                </View>
+              ) : (
+                selectedDli.slice(0, 3).map((inst, idx) => (
+                  <View
+                    key={inst.id ?? String(idx)}
+                    style={[styles.actionRow, idx < Math.min(3, selectedDli.length) - 1 && styles.actionRowBorder]}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={[styles.actionLabel, { fontWeight: '800' }]}>{inst.nom}</Text>
+                      <Text style={styles.ressourceDesc} numberOfLines={2}>
+                        {(inst.ville ? inst.ville : '—')}{inst.province ? ` · ${inst.province}` : ''}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={async () => {
+                        const name = inst.nom ?? 'Établissement';
+                        const google = `https://www.google.com/search?q=${encodeURIComponent(`${name} admissions Canada`)}`;
+                        const normalizeUrl = (u: string): string => {
+                          const trimmed = u.trim();
+                          if (!trimmed) return '';
+                          if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+                          if (trimmed.startsWith('www.')) return `https://${trimmed}`;
+                          if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(trimmed)) return `https://${trimmed}`;
+                          return trimmed;
+                        };
+
+                        const buildAdmissionUrls = (official: string): string[] => {
+                          try {
+                            const url = new URL(official);
+                            const origin = url.origin;
+                            const path = (url.pathname || '/').toLowerCase();
+                            const looksLikeAdmission = /admission|admissions|apply|future-students|prospective|international/.test(path);
+                            const suffixes = [
+                              '/admissions',
+                              '/admission',
+                              '/apply',
+                              '/apply-now',
+                              '/future-students',
+                              '/prospective-students',
+                              '/international',
+                              '/international-students',
+                              '/international/admissions',
+                              '/en/admissions',
+                              '/fr/admission',
+                            ];
+                            const derived = suffixes.map(s => `${origin}${s}`);
+                            return Array.from(new Set([
+                              ...(looksLikeAdmission ? [official] : []),
+                              ...derived,
+                              official,
+                              origin,
+                            ].filter(Boolean)));
+                          } catch {
+                            return official ? [official] : [];
+                          }
+                        };
+
+                        const raw = normalizeUrl(inst.admissionsUrl?.trim() ?? '');
+                        if (!raw) {
+                          Alert.alert('Lien officiel indisponible', 'Ouverture d\'une recherche web.', [
+                            { text: 'OK', onPress: () => { Linking.openURL(google).catch(() => {}); } },
+                          ]);
+                          return;
+                        }
+
+                        const tries: string[] = [];
+                        if (raw.toLowerCase().includes('usherb.ca')) {
+                          tries.push('https://www.usherbrooke.ca/');
+                        }
+
+                        // D'abord essayer les pages d'admission dérivées
+                        tries.push(...buildAdmissionUrls(raw));
+
+                        if (raw.startsWith('http://')) {
+                          tries.push(raw.replace(/^http:\/\//, 'https://'));
+                          tries.push(raw);
+                        } else if (raw.startsWith('https://')) {
+                          tries.push(raw);
+                          tries.push(raw.replace(/^https:\/\//, 'http://'));
+                        } else {
+                          tries.push(raw);
+                        }
+
+                        let opened = false;
+                        for (const u of Array.from(new Set(tries.filter(Boolean)))) {
+                          try {
+                            await Linking.openURL(u);
+                            opened = true;
+                            break;
+                          } catch {
+                            // next
+                          }
+                        }
+
+                        if (!opened) {
+                          Alert.alert('Lien non ouvrable', 'Ouvrir une recherche web ?', [
+                            { text: 'Annuler', style: 'cancel' },
+                            { text: 'Rechercher', onPress: () => { Linking.openURL(google).catch(() => {}); } },
+                          ]);
+                        }
+                      }}
+                      style={styles.smallActionBtn}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.smallActionBtnText}>Admission</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.dliBtn, { marginTop: 12 }]}
+              onPress={() => router.push('/capi/autonomie/dli-search' as never)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="create-outline" size={18} color="#fff" />
+              <Text style={styles.dliBtnText}>Modifier mes choix (étape 1)</Text>
+              <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+
+            <View style={{ height: 12 }} />
+
+            <View style={styles.actionsCard}>
+              <View style={[styles.actionRow, styles.actionRowBorder]}>
+                <Ionicons name="sparkles-outline" size={16} color={Colors.primary} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={[styles.actionLabel, { fontWeight: '800' }]}>Agent CAPI — Lettre & relevés</Text>
+                  <Text style={styles.ressourceDesc}>
+                    {typeof session.evaluation?.faisabilite === 'number'
+                      ? `Score de chance (indicatif) : ${session.evaluation.faisabilite}%`
+                      : "Ouvrez la messagerie pour faire réviser votre lettre et vos documents."}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push('/(tabs)/messagerie' as never)}
+                  style={styles.smallActionBtn}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.smallActionBtnText}>Ouvrir</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.actionRow}>
+                <Ionicons name="information-circle-outline" size={16} color={Colors.textMuted} />
+                <Text style={[styles.actionLabel, { marginLeft: 10 }]}>Cochez l'action quand vous avez reçu votre score et vos corrections.</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* ── ÉTAPE SPÉCIALE : Biométrie — lien VFS selon pays ─────────── */}
         {isBiometrie && (
           <View style={styles.paysBanner}>
@@ -214,15 +463,31 @@ export default function AutonomieStepScreen() {
             </View>
             <View style={styles.actionsCard}>
               {step.checkItems.map((item, i) => (
-                <View
+                <TouchableOpacity
                   key={item.id}
                   style={[styles.actionRow, i < step.checkItems.length - 1 && styles.actionRowBorder]}
+                  onPress={() => toggleCheckItem(item.id)}
+                  activeOpacity={0.75}
                 >
-                  <View style={styles.bullet} />
-                  <Text style={styles.actionLabel}>{item.label}</Text>
-                </View>
+                  <Ionicons
+                    name={item.done ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={18}
+                    color={item.done ? Colors.success : Colors.textMuted}
+                  />
+                  <Text style={[styles.actionLabel, { marginLeft: 10 }, item.done && { color: Colors.text }]}> {item.label}</Text>
+                </TouchableOpacity>
               ))}
             </View>
+
+            {/* Indication blocante pour l'étape 2 */}
+            {isAdmission && !isAdmissionComplete && (
+              <View style={styles.noteCardInline}>
+                <Ionicons name="lock-closed-outline" size={15} color={Colors.warning} />
+                <Text style={styles.noteInlineText}>
+                  Validez tout avant de passer à l'étape 3 (CAQ).
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -358,6 +623,29 @@ const styles = StyleSheet.create({
     paddingVertical: 14, gap: 12, backgroundColor: Colors.surface,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
+  smallActionBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: Colors.primary + '15',
+    borderWidth: 1,
+    borderColor: Colors.primary + '35',
+  },
+  smallActionBtnText: { fontSize: 12, fontWeight: '800', color: Colors.primary },
+
+  noteCardInline: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  noteInlineText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 16, fontWeight: '600' },
   headerTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: Colors.text },
   navRow: { flexDirection: 'row', gap: 4 },
   navBtn: { padding: 6, borderRadius: 8, backgroundColor: Colors.bgLight },

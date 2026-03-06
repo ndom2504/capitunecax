@@ -49,12 +49,13 @@ export interface DLIInstitution {
 export interface DLISearchParams {
   query?: string;
   province?: ProvinceCode | string;
+  city?: string;
   type?: DLIType | string;
 }
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 
-const DLI_CACHE_KEY = 'dli_full_cache_v7';  // v7 = refresh liens officiels (hipolabs embarqué)
+const DLI_CACHE_KEY = 'dli_full_cache_v9';  // v9 = overrides d'URLs officielles (CÉGEPs / collèges) + refresh cache
 const DLI_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h en ms
 
 interface DLICache {
@@ -234,8 +235,8 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
           province: toProvinceCode(entry.p ?? ''),
           type: toTypeCode(entry.t ?? ''),
           // L'IRCC ne fournit pas le site officiel par établissement.
-          // On dirige vers une recherche CICIC (plus "direct" qu'une page générique).
-          admissionsUrl: `https://www.cicic.ca/869/resultats.canada?search=${encodeURIComponent(nom)}`,
+          // On laisse vide et on gère la redirection côté UI (officiel si dispo, sinon recherche web).
+          admissionsUrl: '',
           source: 'live' as const,
         };
       }).filter(i => i.nom.length > 2);
@@ -256,6 +257,79 @@ async function fetchHipolabsSnapshot(): Promise<Array<{ n: string; u: string }>>
   // On embarque le snapshot dans le bundle RN pour garantir les URLs officielles
   // même sans réseau / si Vercel/GitHub est indisponible.
   return HIPOLABS_CANADA;
+}
+
+// ── Overrides d'URLs officielles (ex: CÉGEPs) ───────────────────────────────
+
+type InstitutionOverride = { n: string; u: string };
+
+const EMBEDDED_INSTITUTION_OVERRIDES: InstitutionOverride[] = [
+  { n: 'Cégep de Sherbrooke', u: 'https://www.cegepsherbrooke.qc.ca/' },
+  // Champlain Regional College – Lennoxville (souvent listé sous des variantes)
+  { n: 'Champlain Regional College - Lennoxville', u: 'https://www.crc-lennox.qc.ca/' },
+  { n: 'Champlain College Lennoxville', u: 'https://www.crc-lennox.qc.ca/' },
+  { n: 'Champlain Regional College', u: 'https://www.crc-lennox.qc.ca/' },
+];
+
+async function fetchInstitutionOverrides(): Promise<InstitutionOverride[]> {
+  const urls = [
+    `${BASE_URL}/institution-overrides.json`,
+    'https://raw.githubusercontent.com/ndom2504/capitunecax/main/public/institution-overrides.json',
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetchWithTimeout(
+        url,
+        { headers: { 'Accept': 'application/json' } },
+        12000,
+      );
+      if (!res.ok) continue;
+      const text = await res.text();
+      const cleaned = text.replace(/^\uFEFF/, '').trim();
+      const json = JSON.parse(cleaned) as unknown;
+      if (!Array.isArray(json)) continue;
+
+      const parsed = json
+        .map((x: any) => ({ n: String(x?.n ?? ''), u: String(x?.u ?? '') }))
+        .filter(x => x.n.length > 2 && x.u.startsWith('http'));
+
+      if (parsed.length > 0) return parsed;
+    } catch {
+      continue;
+    }
+  }
+
+  return EMBEDDED_INSTITUTION_OVERRIDES;
+}
+
+function findBestOverrideUrl(
+  dliName: string,
+  overrides: InstitutionOverride[],
+): string {
+  const dn = normalizeInstitutionName(dliName);
+  if (!dn) return '';
+
+  // 1) Match exact
+  for (const o of overrides) {
+    if (normalizeInstitutionName(o.n) === dn) return o.u;
+  }
+
+  // 2) Match "contient" (prend le plus long match)
+  let bestUrl = '';
+  let bestLen = 0;
+  for (const o of overrides) {
+    const on = normalizeInstitutionName(o.n);
+    if (on.length < 8) continue;
+    if (dn.includes(on) || on.includes(dn)) {
+      const score = Math.min(on.length, dn.length);
+      if (score > bestLen) {
+        bestLen = score;
+        bestUrl = o.u;
+      }
+    }
+  }
+  return bestUrl;
 }
 
 function findBestHipolabsUrl(
@@ -403,6 +477,7 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
       if (data.length > 100) {
         // Enrichissement optionnel via snapshot hipolabs (URLs officielles)
         const hipolabs = await fetchHipolabsSnapshot();
+        const overrides = await fetchInstitutionOverrides();
         const seen = new Set(data.map(d => normalizeInstitutionName(d.nom).slice(0, 60)));
 
         // 1) Pour les établissements qui matchent, remplacer CICIC par URL officielle
@@ -431,9 +506,15 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
             };
           });
 
-        const merged = [...enriched, ...extras];
+        // 3) Appliquer les overrides (utile pour CÉGEPs/Collèges non couverts par hipolabs)
+        const merged = [...enriched, ...extras].map(d => {
+          if (d.admissionsUrl && d.admissionsUrl.trim().length > 0) return d;
+          const u = findBestOverrideUrl(d.nom, overrides);
+          if (!u) return d;
+          return { ...d, admissionsUrl: u };
+        });
         _memCache = merged;
-        await writeCache(merged, `${source}+hipolabs`);
+        await writeCache(merged, `${source}+hipolabs+overrides`);
         return merged;
       }
     } catch { /* continuer */ }
@@ -457,6 +538,7 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
     try {
       const hipolabs = await fetchHipolabsSnapshot();
       if (hipolabs.length > 50) {
+        const overrides = await fetchInstitutionOverrides();
         const items: DLIInstitution[] = hipolabs.map((h, i) => {
           const nom = h.n;
           const slug = nom.toLowerCase()
@@ -472,9 +554,15 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
             source: 'live' as const,
           };
         });
-        _memCache = items;
-        await writeCache(items, `hipolabs-snapshot (${items.length})`);
-        return items;
+        const merged = items.map(d => {
+          if (d.admissionsUrl && d.admissionsUrl.trim().length > 0) return d;
+          const u = findBestOverrideUrl(d.nom, overrides);
+          if (!u) return d;
+          return { ...d, admissionsUrl: u };
+        });
+        _memCache = merged;
+        await writeCache(merged, `hipolabs-snapshot+overrides (${merged.length})`);
+        return merged;
       }
     } catch { /* continuer */ }
 
@@ -528,6 +616,10 @@ export function filterDLI(
 
   if (params.province) {
     result = result.filter(i => i.province === params.province);
+  }
+
+  if (params.city) {
+    result = result.filter(i => i.ville === params.city);
   }
 
   if (params.type) {

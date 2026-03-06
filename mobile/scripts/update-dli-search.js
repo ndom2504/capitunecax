@@ -1,28 +1,27 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView, Linking, Alert, ActivityIndicator, Keyboard, Platform, Image, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors } from '../../../constants/Colors';
-import { UI } from '../../../constants/UI';
-import { useCapiSession } from '../../../context/CapiContext';
-import { PROVINCE_LABELS, TYPE_LABELS, TYPE_EMOJI } from '../../../lib/dli-data';
-import { fetchDLIInstitutions, filterDLI, DLIInstitution, ProvinceCode, DLIType } from '../../../lib/dli-service';
+const fs = require('fs');
+let code = fs.readFileSync('app/capi/autonomie/dli-search.tsx', 'utf8');
 
-const DLI_SELECTED_KEY = 'capi_selected_dli';
+const selectModalCode = `
+// ---------------------------------------------------------------------------
+// Composant SelectModal
+// ---------------------------------------------------------------------------
+import { Modal } from 'react-native';
 
 function SelectDropdown({ 
   label, value, options, onSelect 
 }: { 
-  label: string; value: string; options: {label: string, value: string}[]; onSelect: (val: string) => void; 
+  label: string; value: string; options: {label: string, value: string}[]; onSelect: (val: any) => void; 
 }) {
   const [open, setOpen] = useState(false);
   const selectedLabel = options.find(o => o.value === value)?.label || label;
   
   return (
     <>
-      <TouchableOpacity style={dropdownStyles.button} onPress={() => setOpen(true)} activeOpacity={0.8}>
+      <TouchableOpacity 
+        style={dropdownStyles.button} 
+        onPress={() => setOpen(true)}
+        activeOpacity={0.8}
+      >
         <Text style={[dropdownStyles.buttonText, value !== 'all' && dropdownStyles.buttonTextActive]} numberOfLines={1}>
           {selectedLabel}
         </Text>
@@ -77,6 +76,12 @@ const dropdownStyles = StyleSheet.create({
   optionText: { fontSize: 16, color: Colors.text },
   optionTextActive: { color: Colors.primary, fontWeight: '700' },
 });
+`;
+
+code = code.replace(/function FilterChip[\s\S]*?labelActive: \{ color: '#fff' \},\n\}\);/, selectModalCode.trim());
+
+const newCardCode = `
+import { Image } from 'react-native';
 
 function InstitutionCard({
   item, selected, canAdd, onViewAdmission, onValidate,
@@ -141,11 +146,20 @@ function InstitutionCard({
 }
 
 const cardStyles = StyleSheet.create({
-  card: { backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden', borderWidth: 1.5, borderColor: Colors.border, marginBottom: 16, ...UI.cardShadow },
+  card: {
+    backgroundColor: Colors.surface, borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1.5, borderColor: Colors.border, marginBottom: 16, ...UI.cardShadow,
+  },
   cardSelected: { borderColor: Colors.success, backgroundColor: Colors.success + '05', borderWidth: 2 },
-  banner: { height: 100, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: Colors.border, position: 'relative' },
+  banner: {
+    height: 100, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center',
+    borderBottomWidth: 1, borderBottomColor: Colors.border, position: 'relative'
+  },
   avatar: { width: 64, height: 64, borderRadius: 12 },
-  typeBadge: { position: 'absolute', top: 12, left: 12, backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
+  typeBadge: {
+    position: 'absolute', top: 12, left: 12, backgroundColor: 'rgba(255,255,255,0.95)',
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow,
+  },
   typeBadgeText: { fontSize: 10, fontWeight: '700', color: Colors.textMuted },
   selBadge: { position: 'absolute', top: 12, right: 12, backgroundColor: Colors.success, borderRadius: 12, padding: 2 },
   content: { padding: 16 },
@@ -153,47 +167,31 @@ const cardStyles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
   metaText: { fontSize: 13, color: Colors.textMuted, fontWeight: '500' },
   actions: { flexDirection: 'row', gap: 8 },
-  viewBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ff7a00', borderRadius: 8, paddingVertical: 12 },
+  viewBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#ff7a00', borderRadius: 8, paddingVertical: 12,
+  },
   viewBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  validateBtn: { width: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 8 },
+  validateBtn: {
+    width: 44, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: Colors.primary, borderRadius: 8,
+  },
   validateBtnSelected: { backgroundColor: Colors.border, borderColor: Colors.border },
   validateBtnDisabled: { borderColor: Colors.border, opacity: 0.5 },
 });
+`;
 
-export default function DLISearchScreen() {
-  const router = useRouter();
-  const { session } = useCapiSession();
-  const project = session.autonomie;
+code = code.replace(/function InstitutionCard[\s\S]*?validateBtnText: \{ fontSize: 12, fontWeight: '700', color: '#fff' \},\n\}\);/, newCardCode.trim());
 
-  const [query, setQuery] = useState('');
-  const [province, setProvince] = useState<string>('all');
+// Update states
+code = code.replace(/const \[province, setProvince\] = useState<ProvinceCode \| null>\(null\);\s*const \[typeFilter, setTypeFilter\] = useState<DLIType \| null>\(null\);/, 
+`const [province, setProvince] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
-  const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [levelFilter, setLevelFilter] = useState<string>('all');`);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [debouncedQ, setDebouncedQ] = useState('');
-
-  const [allInstitutions, setAllInstitutions] = useState<DLIInstitution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchDLIInstitutions()
-      .then(data => { if (!cancelled) { setAllInstitutions(data); setLoading(false); } })
-      .catch(() => { if (!cancelled) { setLoadError(true); setLoading(false); } });
-    return () => { cancelled = true; };
-  }, []);
-
-  const onChangeQuery = useCallback((text: string) => {
-    setQuery(text);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setDebouncedQ(text), 300);
-  }, []);
-
-  const results = useMemo(() => {
+// Update logic
+code = code.replace(/const results = useMemo\([\s\S]*?\[allInstitutions, debouncedQ, province, typeFilter\],\n  \);/,
+`const results = useMemo(() => {
     let matchType = (item: DLIInstitution) => {
       if (levelFilter === 'all') return true;
       if (levelFilter === 'university') return item.type === 'universite';
@@ -207,117 +205,22 @@ export default function DLISearchScreen() {
     });
     
     return res.filter(matchType);
-  }, [allInstitutions, debouncedQ, province, cityFilter, levelFilter]);
+  }, [allInstitutions, debouncedQ, province, cityFilter, levelFilter]);`);
 
-  const provincesDisponibles = useMemo(() => {
+// Update dropdowns content building
+code = code.replace(/const provincesDisponibles = useMemo<ProvinceCode\[\]>\([\s\S]*?\[allInstitutions\],\n  \);/,
+`const provincesDisponibles = useMemo(() => {
     return Array.from(new Set(allInstitutions.map(i => i.province as string))).filter(Boolean).sort();
   }, [allInstitutions]);
 
   const citiesDisponibles = useMemo(() => {
     const subset = province === 'all' ? allInstitutions : allInstitutions.filter(i => i.province === province);
     return Array.from(new Set(subset.map(i => i.ville))).filter(v => v && v.length > 1).sort();
-  }, [allInstitutions, province]);
+  }, [allInstitutions, province]);`);
 
-  const handleViewAdmission = useCallback(async (inst: DLIInstitution) => {
-    try {
-      const fallback = "https://www.cicic.ca/869/resultats.canada?search=" + encodeURIComponent(inst.nom);
-      const rawTarget = inst.admissionsUrl?.trim() ? inst.admissionsUrl.trim() : '';
-      const candidates: string[] = [];
-
-      if (rawTarget) {
-        if (rawTarget.startsWith('http://')) {
-          candidates.push(rawTarget.replace(/^http:\/\//, 'https://'));
-          candidates.push(rawTarget);
-        } else {
-          candidates.push(rawTarget);
-        }
-      }
-      candidates.push(fallback);
-
-      let opened = false;
-      for (const url of candidates) {
-        try {
-          await Linking.openURL(url);
-          opened = true;
-          break;
-        } catch { }
-      }
-      if (!opened) {
-        Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
-      }
-    } catch {
-      Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
-    }
-  }, []);
-
-  const handleToggleSelect = useCallback(async (inst: DLIInstitution) => {
-    setSelectedIds(prev => {
-      if (prev.includes(inst.id)) return prev.filter(id => id !== inst.id);
-      if (prev.length >= 3) return prev;
-      return [...prev, inst.id];
-    });
-    try {
-      const newIds = selectedIds.includes(inst.id)
-        ? selectedIds.filter(id => id !== inst.id)
-        : selectedIds.length < 3 ? [...selectedIds, inst.id] : selectedIds;
-      const selectedInsts = allInstitutions.filter(i => newIds.includes(i.id));
-      await AsyncStorage.setItem(DLI_SELECTED_KEY, JSON.stringify(selectedInsts));
-    } catch { }
-  }, [selectedIds, allInstitutions]);
-
-  const handleContinue = useCallback(async () => {
-    setSaving(true);
-    const nextStep = project?.steps.find((s: any) => s.id === 'demande-admission');
-    setTimeout(() => {
-      setSaving(false);
-      if (nextStep) {
-        router.replace('/capi/autonomie/' + nextStep.id as never);
-      } else {
-        router.back();
-      }
-    }, 600);
-  }, [project, router]);
-
-  const hasSelection = selectedIds.length > 0;
-
-  return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-      </View>
-
-      {/* Barre collée */}
-      {hasSelection && (
-        <View style={styles.choixBanner}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.choixBannerTitle}>{selectedIds.length}/3 établissement{selectedIds.length > 1 ? 's' : ''} choisi{selectedIds.length > 1 ? 's' : ''}</Text>
-            <Text style={styles.choixBannerSub}>Vous y êtes presque!</Text>
-          </View>
-          <TouchableOpacity style={styles.choixBannerBtn} onPress={handleContinue} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" /> : (
-              <>
-                <Text style={styles.choixBannerBtnText}>Continuer</Text>
-                <Ionicons name="arrow-forward" size={16} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Chargement du registre...</Text>
-        </View>
-      ) : loadError ? (
-        <View style={styles.center}>
-          <Ionicons name="cloud-offline" size={48} color={Colors.textMuted} />
-          <Text style={styles.errorText}>Oups, impossible de charger les écoles.</Text>
-        </View>
-      ) : (
+// Build UI blocks
+const searchAndFilters = `
+        {/* -- Section Web-like -- */}
         <View style={styles.fixedTop}>
           <View style={styles.webStyleHeader}>
             <View>
@@ -350,20 +253,20 @@ export default function DLISearchScreen() {
               <SelectDropdown 
                 label="Province" 
                 value={province} 
-                options={[{label: 'Toutes', value: 'all'}, ...provincesDisponibles.map(p => ({label: PROVINCE_LABELS[p as ProvinceCode] || p, value: p}))]} 
+                options={[{label: 'Toutes provinces', value: 'all'}, ...provincesDisponibles.map(p => ({label: PROVINCE_LABELS[p as ProvinceCode] || p, value: p}))]} 
                 onSelect={(v) => { setProvince(v); setCityFilter('all'); }} 
               />
               <SelectDropdown 
                 label="Ville" 
                 value={cityFilter} 
-                options={[{label: 'Toutes', value: 'all'}, ...citiesDisponibles.map(c => ({label: c, value: c}))]} 
+                options={[{label: 'Toutes villes', value: 'all'}, ...citiesDisponibles.map(c => ({label: c, value: c}))]} 
                 onSelect={(v) => setCityFilter(v)} 
               />
               <SelectDropdown 
                 label="Niveau" 
                 value={levelFilter} 
                 options={[
-                  {label: 'Tous', value: 'all'},
+                  {label: 'Tous niveaux', value: 'all'},
                   {label: 'Université', value: 'university'},
                   {label: 'Collège / Cégep', value: 'college'},
                 ]} 
@@ -374,55 +277,16 @@ export default function DLISearchScreen() {
               {results.length} résultats affichés sur {allInstitutions.length}
             </Text>
           </View>
-        </View>
-      )}
+`;
 
-      {!loading && !loadError && (
-        <FlatList
-          data={results}
-          keyExtractor={item => item.id}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.listContent}
-          initialNumToRender={15}
-          maxToRenderPerBatch={20}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="search" size={48} color={Colors.border} />
-              <Text style={styles.emptyText}>Aucun établissement trouvé pour cette recherche.</Text>
-            </View>
-          }
-          renderItem={({ item }) => {
-            const isSelected = selectedIds.includes(item.id);
-            const canAdd = selectedIds.length < 3;
-            return (
-              <InstitutionCard
-                item={item}
-                selected={isSelected}
-                canAdd={canAdd}
-                onViewAdmission={() => handleViewAdmission(item)}
-                onValidate={() => handleToggleSelect(item)}
-              />
-            );
-          }}
-        />
-      )}
-    </SafeAreaView>
-  );
-}
+code = code.replace(/<View style=\{styles\.fixedTop\}>[\s\S]*?<\/ScrollView>/, searchAndFilters.trim());
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 10, paddingTop: 10 },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: Colors.text },
-  headerSub: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
-  
-  choixBanner: { backgroundColor: Colors.surface, padding: 16, borderBottomWidth: 1, borderBottomColor: Colors.border, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  choixBannerTitle: { fontSize: 15, fontWeight: '800', color: Colors.text, marginBottom: 2 },
-  choixBannerSub: { fontSize: 13, color: Colors.textMuted },
-  choixBannerBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, gap: 6 },
-  choixBannerBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  
-  fixedTop: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, backgroundColor: Colors.bgLight },
+// Remove old header title inside layout
+code = code.replace(/<View style=\{\{ flex: 1 \}\}>\s*<Text style=\{styles.headerTitle\}>Trouver un établissement<\/Text>\s*<Text style=\{styles.headerSub\}>\s*\{loading \? 'Chargement…' : `\$\{results.length\} \/ \$\{allInstitutions.length\} DLI`\}\s*<\/Text>\s*<\/View>/, '<View style={{ flex: 1 }} />');
+
+// Update styling
+code = code.replace(/fixedTop: \{[\s\S]*?\},/, 
+`fixedTop: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, backgroundColor: Colors.bgLight },
   webStyleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, flexWrap: 'wrap', gap: 10 },
   webStyleTitle: { fontSize: 24, fontWeight: '800', color: Colors.text, marginBottom: 4 },
   webStyleSub: { fontSize: 13, color: Colors.textMuted },
@@ -431,15 +295,10 @@ const styles = StyleSheet.create({
   connectedBadgeText: { fontSize: 12, fontWeight: '600', color: Colors.primary },
   webStyleFiltersContainer: { backgroundColor: Colors.surface, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
   dropdownsRow: { flexDirection: 'row', gap: 0, marginTop: 10, marginHorizontal: -3 },
-  resultsCountText: { fontSize: 11, color: Colors.textMuted, textAlign: 'right', marginTop: 10, fontWeight: '500' },
+  resultsCountText: { fontSize: 11, color: Colors.textMuted, textAlign: 'right', marginTop: 10, fontWeight: '500' },`);
 
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.bgLight, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: Colors.border },
-  searchInput: { flex: 1, fontSize: 15, color: Colors.text, marginLeft: 8 },
-  
-  listContent: { padding: 16, paddingBottom: 40 },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  emptyText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', marginTop: 16 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { marginTop: 16, fontSize: 15, color: Colors.textMuted, fontWeight: '600' },
-  errorText: { marginTop: 16, fontSize: 15, color: Colors.textMuted, fontWeight: '600' },
-});
+if (!code.includes('import { Image, Modal,')) {
+  code = code.replace(/import \{/, "import { Image, Modal,");
+}
+
+fs.writeFileSync('app/capi/autonomie/dli-search.tsx', code, 'utf8');
