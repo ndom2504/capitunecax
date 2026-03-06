@@ -43,3 +43,4 @@ lost+found/
 cookies.txt
 headers_login.txt
 login.json
+.vercel
