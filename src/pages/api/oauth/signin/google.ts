@@ -66,8 +66,11 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/google`;
-  // Encoder :mobile dans le state → survit à l'aller-retour Google sans cookie supplémentaire
-  const state = mobile ? `${crypto.randomUUID()}:mobile` : crypto.randomUUID();
+  // Encoder isMobile + redirectUri dans le state → plus fiable que cookie (serverless)
+  // Format: {uuid}   ou   {uuid}|mob|{btoa(redirectUri)}
+  const state = mobile
+    ? `${crypto.randomUUID()}|mob|${btoa(mobileRedirectUri)}`
+    : crypto.randomUUID();
 
   const isHttps = origin.startsWith('https');
 
@@ -87,15 +90,7 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     maxAge: 60 * 10,
   });
 
-  if (mobile) {
-    cookies.set('oauth_mobile_redirect', mobileRedirectUri, {
-      path: '/',
-      httpOnly: true,
-      secure: isHttps,
-      sameSite: 'lax',
-      maxAge: 60 * 10,
-    });
-  }
+  // Note: mobileRedirectUri est maintenant encodé dans state (plus besoin de cookie)
 
   return redirect(buildGoogleAuthUrl(clientId, callbackUrl, state));
 };

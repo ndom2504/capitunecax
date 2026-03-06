@@ -40,7 +40,10 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
   }
 
   const callbackUrl = `${origin}/api/oauth/callback/microsoft-entra-id`;
-  const state = mobile ? `${crypto.randomUUID()}:mobile` : crypto.randomUUID();
+  // Format: {uuid}   ou   {uuid}|mob|{btoa(redirectUri)}
+  const state = mobile
+    ? `${crypto.randomUUID()}|mob|${btoa(mobileRedirectUri)}`
+    : crypto.randomUUID();
 
   const isHttps = origin.startsWith('https');
 
@@ -60,15 +63,7 @@ export const GET: APIRoute = async ({ request, redirect, cookies }) => {
     maxAge: 60 * 10,
   });
 
-  if (mobile) {
-    cookies.set('oauth_mobile_redirect', mobileRedirectUri, {
-      path: '/',
-      httpOnly: true,
-      secure: isHttps,
-      sameSite: 'lax',
-      maxAge: 60 * 10,
-    });
-  }
+  // Note: mobileRedirectUri est encodé dans state (plus besoin de cookie)
 
   return redirect(buildMicrosoftAuthUrl(clientId, tenantId, callbackUrl, state));
 };

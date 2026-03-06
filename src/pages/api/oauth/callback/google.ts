@@ -48,10 +48,14 @@ export const GET: APIRoute = async ({ request, cookies, redirect, locals }) => {
     return redirect('/connexion?error=InvalidState');
   }
 
-  // state peut contenir le suffixe :mobile (ajouté par signin/google.ts) pour signaler l'app mobile
-  const isMobile = !!(state && state.endsWith(':mobile'));
-  // Lire et supprimer le cookie redirect URI mobile (exp://... en Expo Go, capitune://oauth en prod)
-  const mobileRedirectUri = cookies.get('oauth_mobile_redirect')?.value ?? 'capitune://oauth';
+  // Parser le state : format '{uuid}|mob|{btoa(redirectUri)}' (mobile) ou '{uuid}' (web)
+  const stateParts = (state ?? '').split('|');
+  const isMobile = stateParts.length === 3 && stateParts[1] === 'mob';
+  let mobileRedirectUri = 'capitune://oauth';
+  if (isMobile && stateParts[2]) {
+    try { mobileRedirectUri = atob(stateParts[2]); } catch { /* garder la valeur par défaut */ }
+  }
+  // Compat cookies ancienne version (à supprimer dans une future mise à jour)
   if (isMobile) cookies.delete('oauth_mobile_redirect', { path: '/' });
 
   try {
