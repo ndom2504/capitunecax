@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
-import { getUserFromSessionAny, getUserFromSessionFullAny, hasNeonDatabase } from '../../../lib/db';
+import { getUserFromSessionAny } from '../../../lib/db';
 
 const ALLOWED_MOTIFS = [
   'visiter',
@@ -16,7 +16,6 @@ type Motif = (typeof ALLOWED_MOTIFS)[number];
 
 export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
-  const useNeon = !db && hasNeonDatabase();
 
   const authHeader = request.headers.get('Authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -25,13 +24,8 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
   if (!token) return json({ error: 'Non connecté' }, 401);
 
-  if (!db && !useNeon) {
-    const user = await getUserFromSessionAny(null, token);
-    if (!user) return json({ error: 'Session expirée' }, 401);
-    return json({ error: 'DB non disponible' }, 503);
-  }
-
-  const me = await getUserFromSessionFullAny(db, token);
+  // getUserFromSessionAny gère : token hex64 (D1/Neon) + token base64 (fallback sans DB)
+  const me = await getUserFromSessionAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
 
   const stripeKey = (locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY || '').trim();
