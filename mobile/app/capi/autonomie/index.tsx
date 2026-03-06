@@ -1,6 +1,6 @@
-﻿import React, { useMemo } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,7 +9,9 @@ import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import { buildMotifBudget } from '../../../lib/autonomie-steps';
-import type { AutonomieStep } from '../../../lib/api';
+import { autonomiePaymentApi } from '../../../lib/api';
+import type { AutonomieStep, CapiMotif } from '../../../lib/api';
+import { useAuth } from '../../../context/AuthContext';
 
 // ---------------------------------------------------------------------------
 // Labels
@@ -52,9 +54,13 @@ const MOTIF_EMOJI: Record<string, string> = {
 export default function AutonomieIndexScreen() {
   const router = useRouter();
   const { session } = useCapiSession();
+  const { token } = useAuth();
+  const [paying, setPaying] = useState(false);
   const project = session.autonomie;
-  const motif = project?.motif ?? 'visiter';
+  const motif: CapiMotif = (project?.motif ?? 'visiter') as CapiMotif;
   const motifLabel = MOTIF_LABELS[motif] ?? 'Projet';
+
+  const hasPaidAutonomie = Boolean(project?.hasPaidAutonomie);
 
   const budget = useMemo(() => buildMotifBudget(motif), [motif]);
 
@@ -70,6 +76,41 @@ export default function AutonomieIndexScreen() {
       </SafeAreaView>
     );
   }
+
+  const startCheckout = async () => {
+    setPaying(true);
+    try {
+      const sessionToken = String(token ?? '').trim();
+      if (!sessionToken) {
+        Alert.alert('Connexion requise', 'Connectez-vous pour procéder au paiement.');
+        return;
+      }
+
+      const res = await autonomiePaymentApi.stripeCheckout(sessionToken, motif);
+      const url = res.data?.url;
+      if (res.status < 200 || res.status >= 300 || !url) {
+        throw new Error((res.data as any)?.error ?? res.error ?? 'Paiement indisponible');
+      }
+
+      await Linking.openURL(url);
+    } catch (err: any) {
+      Alert.alert('Paiement', err?.message ?? 'Impossible de démarrer le paiement.');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const onLockedStepPress = () => {
+    if (paying) return;
+    Alert.alert(
+      'Paiement requis',
+      "Pour accéder aux 5 étapes guidées, merci d'effectuer le paiement Autonomie.",
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Payer', onPress: startCheckout },
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -144,13 +185,49 @@ export default function AutonomieIndexScreen() {
         {/* Plan d'action */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Plan d'action — {project.steps.length} etapes</Text>
+
+          {!hasPaidAutonomie && (
+            <View style={styles.paywallCard}>
+              <View style={styles.paywallRow}>
+                <View style={styles.paywallIcon}>
+                  <Ionicons name="lock-closed" size={16} color={Colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.paywallTitle}>Paiement requis</Text>
+                  <Text style={styles.paywallText}>
+                    Débloquez l'accès aux 5 étapes guidées pour votre projet.
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[styles.paywallBtn, paying && styles.paywallBtnDisabled]}
+                onPress={startCheckout}
+                disabled={paying}
+                activeOpacity={0.85}
+              >
+                {paying ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.paywallBtnText}>Payer avec Stripe</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
           {project.steps.map((step, index) => (
             <StepCard
               key={step.id}
               step={step}
               index={index}
               total={project.steps.length}
-              onPress={() => router.push(`/capi/autonomie/${step.id}` as never)}
+              locked={!hasPaidAutonomie}
+              onPress={() => {
+                if (!hasPaidAutonomie) {
+                  onLockedStepPress();
+                  return;
+                }
+                router.push(`/capi/autonomie/${step.id}` as never);
+              }}
             />
           ))}
         </View>
@@ -165,10 +242,11 @@ export default function AutonomieIndexScreen() {
 // Composant carte etape
 // ---------------------------------------------------------------------------
 
-function StepCard({ step, index, total, onPress }: {
+function StepCard({ step, index, total, locked, onPress }: {
   step: AutonomieStep;
   index: number;
   total: number;
+  locked: boolean;
   onPress: () => void;
 }) {
   const isLast = index === total - 1;
@@ -178,7 +256,7 @@ function StepCard({ step, index, total, onPress }: {
       <View style={cardStyles.numWrap}>
         <Text style={cardStyles.numText}>{step.ordre}</Text>
       </View>
-      <TouchableOpacity style={cardStyles.card} onPress={onPress} activeOpacity={0.85}>
+      <TouchableOpacity style={[cardStyles.card, locked && cardStyles.cardLocked]} onPress={onPress} activeOpacity={locked ? 1 : 0.85}>
         <View style={cardStyles.top}>
           <Text style={cardStyles.stepIcon}>{step.icon}</Text>
           <View style={{ flex: 1 }}>
@@ -186,7 +264,7 @@ function StepCard({ step, index, total, onPress }: {
             <Text style={cardStyles.desc} numberOfLines={2}>{step.description}</Text>
           </View>
           <View style={cardStyles.arrowWrap}>
-            <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
+            <Ionicons name={locked ? 'lock-closed' : 'chevron-forward'} size={14} color={locked ? Colors.textMuted : Colors.primary} />
           </View>
         </View>
         {step.checkItems.length > 0 && (
@@ -212,6 +290,7 @@ const cardStyles = StyleSheet.create({
     flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 14,
     borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow,
   },
+  cardLocked: { opacity: 0.6 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stepIcon: { fontSize: 22, width: 28, textAlign: 'center' },
   title: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 2 },
@@ -264,6 +343,35 @@ const styles = StyleSheet.create({
     fontSize: 11, fontWeight: '700', color: Colors.textMuted, letterSpacing: 1,
     textTransform: 'uppercase', marginBottom: 12,
   },
+  paywallCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: 14,
+    marginBottom: 12,
+    ...UI.cardShadow,
+  },
+  paywallRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  paywallIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paywallTitle: { fontSize: 13, fontWeight: '800', color: Colors.text },
+  paywallText: { fontSize: 12, color: Colors.textMuted, marginTop: 2, lineHeight: 18 },
+  paywallBtn: {
+    marginTop: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  paywallBtnDisabled: { opacity: 0.7 },
+  paywallBtnText: { color: '#fff', fontWeight: '800' },
   budgetCard: {
     backgroundColor: Colors.surface, borderRadius: 18, borderWidth: 1,
     borderColor: Colors.border, overflow: 'hidden', ...UI.cardShadow,

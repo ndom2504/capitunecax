@@ -21,28 +21,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const syncAvatarFromProfile = async (sessionToken: string, sessionUser: UserInfo) => {
-    try {
-      const res = await userApi.getProfile(sessionToken);
-      const avatarKey = String(res.data?.avatar_key ?? '').trim();
-      if (res.status === 200 && avatarKey) {
-        const currentAvatar = String(sessionUser.avatar ?? '').trim();
-        const currentRenderable = resolveAvatarUri(currentAvatar);
-        const profileRenderable = resolveAvatarUri(avatarKey);
+    // On ne synchronise l'avatar qu'une seule fois au démarrage, sans bloquer.
+    // On utilise setTimeout pour ne pas être dans le chemin critique du rendu initial.
+    setTimeout(async () => {
+      try {
+        const res = await userApi.getProfile(sessionToken);
+        const avatarKey = String(res.data?.avatar_key ?? '').trim();
+        if (res.status === 200 && avatarKey) {
+          const currentAvatar = String(sessionUser.avatar ?? '').trim();
+          const currentRenderable = resolveAvatarUri(currentAvatar);
+          const profileRenderable = resolveAvatarUri(avatarKey);
 
-        const shouldReplace = !currentAvatar || !currentRenderable;
-        if (!profileRenderable) return;
-        const nextUser: UserInfo = {
-          ...sessionUser,
-          avatar: shouldReplace ? profileRenderable : sessionUser.avatar,
-        };
-        if (nextUser.avatar !== sessionUser.avatar) {
-          await saveSession(sessionToken, nextUser);
-          setUser(nextUser);
+          const shouldReplace = !currentAvatar || !currentRenderable;
+          if (!profileRenderable) return;
+          const nextUser: UserInfo = {
+            ...sessionUser,
+            avatar: shouldReplace ? profileRenderable : sessionUser.avatar,
+          };
+          if (nextUser.avatar !== sessionUser.avatar) {
+            await saveSession(sessionToken, nextUser);
+            setUser(nextUser);
+          }
         }
+      } catch {
+        // ignore: pas bloquant si l'API profil est indisponible
       }
-    } catch {
-      // ignore: pas bloquant si l'API profil est indisponible
-    }
+    }, 2000); // délai post-rendu initial
   };
 
   const setSession = async (sessionToken: string, sessionUser: UserInfo) => {

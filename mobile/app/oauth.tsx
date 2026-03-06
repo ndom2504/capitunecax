@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { Colors } from '../constants/Colors';
 import { useAuth } from '../context/AuthContext';
-import { saveSession } from '../lib/auth';
 import type { UserInfo } from '../lib/api';
 
 /**
@@ -21,9 +20,15 @@ export default function OAuthCallback() {
     account_type?: string;
   }>();
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { setSession } = useAuth();
+
+  // En dev (React 18 StrictMode), l'effet peut s'exécuter 2 fois.
+  const didRunRef = useRef(false);
 
   useEffect(() => {
+    if (didRunRef.current) return;
+    didRunRef.current = true;
+
     (async () => {
       try {
         // Récupérer depuis les query params directs OU depuis l'URL complète
@@ -59,8 +64,7 @@ export default function OAuthCallback() {
           account_type: atParam as UserInfo['account_type'],
         };
 
-        await saveSession(decodeURIComponent(token), user);
-        setUser(user);
+        await setSession(decodeURIComponent(token), user);
         router.replace('/(tabs)/dashboard');
       } catch {
         router.replace('/(auth)/connexion');

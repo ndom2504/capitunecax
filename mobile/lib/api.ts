@@ -24,11 +24,42 @@ async function request<T>(
     headers['Cookie'] = `capitune_session=${sessionToken}`;
   }
   try {
-    const res = await fetch(`${BASE_URL}${path}`, { ...options, headers, credentials: 'include' });
-    const data = await res.json().catch(() => ({})) as T;
-    return { data, status: res.status };
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    let res: Response;
+    try {
+      res = await fetch(`${BASE_URL}${path}`, { ...options, headers, credentials: 'include', signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    let data: unknown = {};
+    let nonJsonText: string | undefined;
+    try {
+      data = await res.json();
+    } catch {
+      try {
+        nonJsonText = (await res.text()).trim();
+      } catch {
+        nonJsonText = undefined;
+      }
+    }
+
+    const status = res.status;
+    if (!res.ok) {
+      const messageFromJson = (data as any)?.error as string | undefined;
+      const messageFromText = nonJsonText ? nonJsonText.slice(0, 300) : undefined;
+      return { data: data as T, status, error: messageFromJson ?? messageFromText ?? `HTTP ${status}` };
+    }
+
+    return { data: data as T, status };
   } catch (e) {
-    return { error: String(e), status: 0 };
+    const msg = String(e);
+    // AbortError = timeout → message explicite
+    if (msg.includes('AbortError') || msg.includes('aborted')) {
+      return { error: 'Délai dépassé (serveur injoignable)', status: 0 };
+    }
+    return { error: msg, status: 0 };
   }
 }
 
@@ -113,6 +144,22 @@ export const dashboardApi = {
 
   getPayments: (token: string) =>
     request<{ payments: Payment[] }>('/api/payments', {}, token),
+};
+
+// -- Paiement Autonomie (Stripe Checkout) -----------------------------------
+
+export const autonomiePaymentApi = {
+  stripeCheckout: (token: string, motif: CapiMotif) =>
+    request<{ url?: string; error?: string }>('/api/autonomie/stripe-checkout', {
+      method: 'POST',
+      body: JSON.stringify({ motif }),
+    }, token),
+
+  stripeConfirm: (token: string, sessionId: string) =>
+    request<{ ok?: boolean; persisted?: boolean; error?: string }>('/api/autonomie/stripe-confirm', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId }),
+    }, token),
 };
 
 // -- Conseillers / Équipe ----------------------------------------------------
@@ -374,6 +421,7 @@ export interface AutonomieProject {
   steps: AutonomieStep[];
   createdAt: string;
   scorePreparation: number; // 0-100
+  hasPaidAutonomie?: boolean;
 }
 
 export interface CapiMatchContext {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Alert, Switch, Linking, TextInput, ActivityIndicator, Image,
@@ -18,8 +18,12 @@ export default function ProfilScreen() {
   const { user, token, logout, setUser } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [draft, setDraft] = useState<UserProfileUpdate>({});
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  // Pré-remplissage immédiat depuis le contexte Auth (déjà chargé)
+  const [draft, setDraft] = useState<UserProfileUpdate>({
+    name: user?.name ?? '',
+    avatar_key: user?.avatar ?? '',
+  });
+  const [loadingProfile, setLoadingProfile] = useState(false); // pas de spinner au démarrage
   const [saving, setSaving] = useState(false);
   const [pickingAvatar, setPickingAvatar] = useState(false);
 
@@ -90,7 +94,7 @@ export default function ProfilScreen() {
     return nextName.length >= 2;
   }, [draft.name, profile]);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoadingProfile(true);
     try {
       if (!token) {
@@ -121,11 +125,11 @@ export default function ProfilScreen() {
     } finally {
       setLoadingProfile(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     loadProfile();
-  }, [token]);
+  }, [loadProfile]);
 
   const handleLogout = () => {
     Alert.alert(

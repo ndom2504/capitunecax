@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
   let session: any;
   try {
-    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' as any });
     session = await stripe.checkout.sessions.retrieve(sessionId);
   } catch (err: any) {
     const msg = err?.message ?? String(err);

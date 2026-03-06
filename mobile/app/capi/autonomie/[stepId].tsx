@@ -1,8 +1,9 @@
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,6 +44,8 @@ export default function AutonomieStepScreen() {
   const { session, updateSession } = useCapiSession();
 
   const [selectedDli, setSelectedDli] = useState<Array<{ id: string; nom: string; ville?: string; province?: string; type?: string; admissionsUrl?: string }> | null>(null);
+  const videoRef = useRef<Video>(null);
+  const [videoFinished, setVideoFinished] = useState(false);
 
   const project = session.autonomie;
   // Récupère le code pays depuis le profil CAPI (ex: "MA", "DZ", "FR")
@@ -178,6 +181,75 @@ export default function AutonomieStepScreen() {
   // URLs résolues intelligemment
   const smartActionUrl = resolveActionUrl(stepId as string, step.actionUrl, paysCode);
   const paysLabel = getPaysLabel(paysCode);
+
+  const isLastStep = stepIndex === project.steps.length - 1;
+  const allCurrentDone = step.checkItems.length === 0 || step.checkItems.every(i => i.done);
+  const showBonVoyage = isLastStep && allCurrentDone;
+
+  const onBonVoyagePlaybackStatusUpdate = useCallback((status: AVPlaybackStatus) => {
+    if (!status.isLoaded) return;
+    if (status.didJustFinish && !videoFinished) {
+      setVideoFinished(true);
+      void (async () => {
+        try {
+          await videoRef.current?.setIsLoopingAsync(true);
+          await videoRef.current?.replayAsync();
+        } catch {
+          // ignore
+        }
+      })();
+    }
+  }, [videoFinished]);
+
+  if (showBonVoyage) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="arrow-back" size={24} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Félicitations ! 🎉</Text>
+        </View>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.bonVoyageContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.heroIconWrap}>
+            <Text style={styles.heroIconEmoji}>✈️</Text>
+          </View>
+          <Text style={styles.heroTitle}>Bon voyage !</Text>
+          <Text style={styles.heroDesc}>Un dernier conseil avant votre départ vers le Canada</Text>
+
+          <View style={styles.videoWrapper}>
+            <Video
+              ref={videoRef}
+              source={require('../../../assets/videos/preparation-depart.mp4')}
+              style={styles.video}
+              useNativeControls={true}
+              resizeMode={ResizeMode.COVER}
+              isLooping={false}
+              shouldPlay
+              onPlaybackStatusUpdate={onBonVoyagePlaybackStatusUpdate}
+              onError={() => {
+                Alert.alert('Vidéo indisponible', 'Impossible de lire la vidéo de préparation.');
+                setVideoFinished(true);
+              }}
+            />
+          </View>
+
+          {videoFinished && (
+            <View style={styles.actionSection}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => router.replace('/capi/integration' as never)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.actionBtnText}>Lancer la Phase Intégration</Text>
+                <Ionicons name="arrow-forward" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -619,6 +691,20 @@ export default function AutonomieStepScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flex: 1 },
+
+  // Bon voyage
+  bonVoyageContainer: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40, alignItems: 'center' },
+  videoWrapper: {
+    alignSelf: 'stretch',
+    marginTop: 18,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...UI.cardShadow,
+  },
+  video: { width: '100%', aspectRatio: 16 / 9, backgroundColor: Colors.bgLight },
 
   // Header
   header: {

@@ -105,16 +105,18 @@ export default function DashboardScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // pas de spinner bloquant au démarrage
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = async () => {
+  const load = async (showLoader = false) => {
+    if (showLoader) setLoading(true);
     if (!token) { setLoading(false); return; }
     const res = await dashboardApi.getProject(token);
     if (res.data?.project) setProject(res.data.project);
     setLoading(false);
   };
 
+  // Chargement silencieux en arrière-plan (n'bloque pas l'affichage)
   useEffect(() => { load(); }, [token]);
 
   const onRefresh = async () => {

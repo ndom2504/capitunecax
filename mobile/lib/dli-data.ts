@@ -195,7 +195,13 @@ const VFS_MAP: Record<string, string> = {
  * Fallback vers la page IRCC générique.
  */
 export function getBiometrieUrl(paysCode2?: string): string {
-
+  if (paysCode2) {
+    const code3 = VFS_MAP[paysCode2.toUpperCase()];
+    if (code3) {
+      return `https://visa.vfsglobal.com/${code3}/fr/can/book-an-appointment`;
+    }
+  }
+  return 'https://ircc.canada.ca/francais/visiter/biometrie.asp';
 }
 
 /**

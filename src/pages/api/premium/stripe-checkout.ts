@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const cancel_url = `${origin}/dashboard?premium=cancelled`;
 
   try {
-    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-01-27.acacia' as any });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

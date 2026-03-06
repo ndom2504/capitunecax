@@ -30,19 +30,20 @@ const DEMO_DOCS: Document[] = [
 
 export default function DocumentsScreen() {
   const { token } = useAuth();
-  const [docs, setDocs] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [docs, setDocs] = useState<Document[]>(DEMO_DOCS); // affiché immédiatement
+  const [loading, setLoading] = useState(false); // pas de spinner bloquant
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | Document['status']>('all');
 
   const load = async () => {
-    if (!token) { setDocs(DEMO_DOCS); setLoading(false); return; }
+    if (!token) return; // DEMO_DOCS déjà affiché
     const res = await dashboardApi.getDocuments(token);
     const fetchedDocs = res.data?.documents;
-    setDocs(fetchedDocs?.length ? fetchedDocs : DEMO_DOCS);
+    if (fetchedDocs?.length) setDocs(fetchedDocs);
     setLoading(false);
   };
 
+  // Chargement silencieux en arrière-plan
   useEffect(() => { load(); }, [token]);
 
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };

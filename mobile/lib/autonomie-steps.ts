@@ -824,10 +824,10 @@ const stepsVisiter: AutonomieStep[] = [
       {
         titre: 'Avez-vous besoin d\'un visa pour visiter le Canada ?',
         description: 'Outil officiel IRCC.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/entree.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/verifiez-visa-ave.html',
       },
     ],
-    { label: 'Vérifier visa requis', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/entree.html' },
+    { label: 'Vérifier visa requis', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/visiter-canada/verifiez-visa-ave.html' },
   ),
 
   step(
