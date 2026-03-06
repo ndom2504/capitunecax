@@ -68,6 +68,29 @@ interface DLICache {
 let _memCache: DLIInstitution[] | null = null;
 let _fetchPromise: Promise<DLIInstitution[]> | null = null;
 
+// ── Helper fetch avec timeout compatible RN ─────────────────────────────────
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit | undefined,
+  timeoutMs: number,
+): Promise<Response> {
+  // Sur certaines versions RN/Expo, AbortSignal.timeout() n'existe pas.
+  // On utilise AbortController si dispo, sinon on fait un fetch sans timeout.
+  const AbortControllerRef: typeof AbortController | undefined = (globalThis as any).AbortController;
+  if (!AbortControllerRef) {
+    return fetch(url, init);
+  }
+
+  const controller = new AbortControllerRef();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...(init ?? {}), signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Lecture / écriture cache ──────────────────────────────────────────────────
 
 async function readCache(): Promise<DLIInstitution[] | null> {
@@ -100,10 +123,11 @@ async function writeCache(data: DLIInstitution[], source: string): Promise<void>
 // ── Fetch depuis l'API Astro /api/dli ─────────────────────────────────────────
 
 async function fetchFromAPI(): Promise<{ data: DLIInstitution[]; source: string }> {
-  const res = await fetch(`${BASE_URL}/api/dli`, {
-    headers: { 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(15000),
-  });
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/api/dli`,
+    { headers: { 'Accept': 'application/json' } },
+    15000,
+  );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json() as {
     total: number;
@@ -130,27 +154,33 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
 
   for (const url of URLS) {
     try {
-      const res = await fetch(url, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(18000),
-      });
+      const res = await fetchWithTimeout(
+        url,
+        { headers: { 'Accept': 'application/json' } },
+        18000,
+      );
       if (!res.ok) continue;
 
       // Le JSON a la forme [{n, p, t}, …] — champs courts pour réduire la taille
-      const raw = await res.json() as Array<{ n: string; p: string; t: string }>;
+      const text = await res.text();
+      const cleaned = text.replace(/^\uFEFF/, '');
+      const raw = JSON.parse(cleaned) as Array<{ n: string; p: string; t: string }>;
       if (!Array.isArray(raw) || raw.length < 100) continue;
 
       const data: DLIInstitution[] = raw.map((entry, i) => {
         const slug = (entry.n ?? '').toLowerCase()
           .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
+        const nom = entry.n ?? '';
         return {
           id: `dli-${slug}-${i}`,
-          nom: entry.n ?? '',
+          nom,
           ville: '',
           province: toProvinceCode(entry.p ?? ''),
           type: toTypeCode(entry.t ?? ''),
-          admissionsUrl: 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
+          // L'IRCC ne fournit pas le site officiel par établissement.
+          // On dirige vers une recherche CICIC (plus "direct" qu'une page générique).
+          admissionsUrl: `https://www.cicic.ca/869/resultats.canada?search=${encodeURIComponent(nom)}`,
           source: 'live' as const,
         };
       }).filter(i => i.nom.length > 2);
@@ -168,12 +198,10 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
 
 async function fetchFromHipolabs(): Promise<DLIInstitution[]> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       'https://universities.hipolabs.com/search?country=Canada',
-      {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(10000),
-      },
+      { headers: { 'Accept': 'application/json' } },
+      10000,
     );
     if (!res.ok) return [];
     const raw = await res.json() as Array<{
@@ -250,10 +278,11 @@ async function fetchFromOpenCanada(): Promise<{ data: DLIInstitution[]; source: 
   for (const rid of RESOURCE_IDS) {
     try {
       const url = `https://open.canada.ca/data/api/3/action/datastore_search?resource_id=${rid}&limit=3000`;
-      const res = await fetch(url, {
-        signal: AbortSignal.timeout(20000),
-        headers: { 'Accept': 'application/json' },
-      });
+      const res = await fetchWithTimeout(
+        url,
+        { headers: { 'Accept': 'application/json' } },
+        20000,
+      );
       if (!res.ok) continue;
       const json = await res.json() as { result?: { records?: Record<string, string>[] } };
       const records = json?.result?.records;

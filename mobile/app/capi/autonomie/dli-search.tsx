@@ -90,7 +90,7 @@ function InstitutionCard({
         </View>
         {item.source === 'live' && (
           <View style={cardStyles.liveBadge}>
-            <Text style={cardStyles.liveBadgeText}>● IRCC live</Text>
+            <Text style={cardStyles.liveBadgeText}>● Données live</Text>
           </View>
         )}
       </View>
