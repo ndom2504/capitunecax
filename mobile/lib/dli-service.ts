@@ -247,46 +247,63 @@ async function fetchFromStaticJSON(): Promise<{ data: DLIInstitution[]; source: 
   throw new Error('JSON statique DLI inaccessible');
 }
 
-// ── Fetch hipolabs (157 universités canadiennes) ──────────────────────────────
-// API gratuite, aucune auth, inclut cégeps et collèges, petite réponse.
+// ── Fetch hipolabs snapshot (157 URLs officielles) ──────────────────────────
+// hipolabs ne supporte pas HTTPS de façon fiable, donc on versionne un snapshot
+// public/hipolabs-canada.json (servi en HTTPS via Vercel/GitHub raw).
 
-async function fetchFromHipolabs(): Promise<DLIInstitution[]> {
-  try {
-    const res = await fetchWithTimeout(
-      'https://universities.hipolabs.com/search?country=Canada',
-      { headers: { 'Accept': 'application/json' } },
-      10000,
-    );
-    if (!res.ok) return [];
-    const raw = await res.json() as Array<{
-      name: string;
-      'state-province': string | null;
-      web_pages?: string[];
-      domains?: string[];
-    }>;
-    if (!Array.isArray(raw)) return [];
+async function fetchHipolabsSnapshot(): Promise<Array<{ n: string; u: string }>> {
+  const URLS = [
+    `${BASE_URL}/hipolabs-canada.json`,
+    'https://raw.githubusercontent.com/ndom2504/capitunecax/main/public/hipolabs-canada.json',
+  ];
 
-    return raw.map((u, i) => {
-      const nom = u.name ?? '';
-      const prov = toProvinceCode(u['state-province'] ?? '');
-      const type = toTypeCode(nom);
-      const url = u.web_pages?.[0] ?? '';
-      const slug = nom.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
-      return {
-        id: `hipo-${slug}-${i}`,
-        nom,
-        ville: inferCityFromName(nom),
-        province: prov,
-        type,
-        admissionsUrl: url || 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
-        source: 'live' as const,
-      };
-    }).filter(i => i.nom.length > 2);
-  } catch {
-    return [];
+  for (const url of URLS) {
+    try {
+      const res = await fetchWithTimeout(
+        url,
+        { headers: { 'Accept': 'application/json' } },
+        12000,
+      );
+      if (!res.ok) continue;
+      const text = await res.text();
+      const cleaned = text.replace(/^\uFEFF/, '');
+      const raw = JSON.parse(cleaned) as Array<{ n: string; u: string }>;
+      if (!Array.isArray(raw) || raw.length < 50) continue;
+      return raw.filter(x => !!x?.n && !!x?.u);
+    } catch {
+      continue;
+    }
   }
+  return [];
+}
+
+function findBestHipolabsUrl(
+  dliName: string,
+  hipolabs: Array<{ n: string; u: string }>,
+): string {
+  const dn = normalizeInstitutionName(dliName);
+  if (!dn) return '';
+
+  // 1) Match exact
+  for (const h of hipolabs) {
+    if (normalizeInstitutionName(h.n) === dn) return h.u;
+  }
+
+  // 2) Match "contient" (prend le plus long match)
+  let bestUrl = '';
+  let bestLen = 0;
+  for (const h of hipolabs) {
+    const hn = normalizeInstitutionName(h.n);
+    if (hn.length < 8) continue;
+    if (dn.includes(hn) || hn.includes(dn)) {
+      const score = Math.min(hn.length, dn.length);
+      if (score > bestLen) {
+        bestLen = score;
+        bestUrl = h.u;
+      }
+    }
+  }
+  return bestUrl;
 }
 
 // ── Fetch direct open.canada.ca CKAN (pas de CORS en React Native) ───────────
@@ -403,21 +420,36 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
     try {
       const { data, source } = await fetchFromStaticJSON();
       if (data.length > 100) {
-        // Enrichissement optionnel avec hipolabs (universités non encore dans IRCC)
-        const hipoItems = await fetchFromHipolabs();
+        // Enrichissement optionnel via snapshot hipolabs (URLs officielles)
+        const hipolabs = await fetchHipolabsSnapshot();
         const seen = new Set(data.map(d => normalizeInstitutionName(d.nom).slice(0, 60)));
-        const hipoByName = new Map(hipoItems.map(h => [normalizeInstitutionName(h.nom), h]));
 
-        // 1) Remplace admissionsUrl par le site officiel pour les matches exacts
+        // 1) Pour les établissements qui matchent, remplacer CICIC par URL officielle
         const enriched = data.map(d => {
-          const match = hipoByName.get(normalizeInstitutionName(d.nom));
-          if (!match?.admissionsUrl) return d;
-          // On conserve l'id IRCC mais on met le lien officiel hipolabs.
-          return { ...d, admissionsUrl: match.admissionsUrl };
+          const url = findBestHipolabsUrl(d.nom, hipolabs);
+          if (!url) return d;
+          return { ...d, admissionsUrl: url };
         });
 
-        // 2) Ajoute des entrées hipolabs absentes du dataset IRCC
-        const extras = hipoItems.filter(h => !seen.has(normalizeInstitutionName(h.nom).slice(0, 60)));
+        // 2) Ajouter les entrées hipolabs absentes du dataset IRCC
+        const extras: DLIInstitution[] = hipolabs
+          .filter(h => !seen.has(normalizeInstitutionName(h.n).slice(0, 60)))
+          .map((h, i) => {
+            const nom = h.n;
+            const slug = nom.toLowerCase()
+              .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+              .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
+            return {
+              id: `hipo-${slug}-${i}`,
+              nom,
+              ville: inferCityFromName(nom),
+              province: '',
+              type: toTypeCode(nom),
+              admissionsUrl: h.u,
+              source: 'live' as const,
+            };
+          });
+
         const merged = [...enriched, ...extras];
         _memCache = merged;
         await writeCache(merged, `${source}+hipolabs`);
@@ -440,13 +472,28 @@ export async function fetchDLIInstitutions(): Promise<DLIInstitution[]> {
       }
     }
 
-    // hipolabs seul → 157 universités si tout le reste échoue
+    // hipolabs snapshot seul → URLs officielles si tout le reste échoue
     try {
-      const hipoItems = await fetchFromHipolabs();
-      if (hipoItems.length > 50) {
-        _memCache = hipoItems;
-        await writeCache(hipoItems, `hipolabs (${hipoItems.length})`);
-        return hipoItems;
+      const hipolabs = await fetchHipolabsSnapshot();
+      if (hipolabs.length > 50) {
+        const items: DLIInstitution[] = hipolabs.map((h, i) => {
+          const nom = h.n;
+          const slug = nom.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').slice(0, 36);
+          return {
+            id: `hipo-${slug}-${i}`,
+            nom,
+            ville: inferCityFromName(nom),
+            province: '',
+            type: toTypeCode(nom),
+            admissionsUrl: h.u,
+            source: 'live' as const,
+          };
+        });
+        _memCache = items;
+        await writeCache(items, `hipolabs-snapshot (${items.length})`);
+        return items;
       }
     } catch { /* continuer */ }
 
