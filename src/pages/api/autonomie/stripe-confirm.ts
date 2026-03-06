@@ -28,7 +28,12 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const me = await getUserFromSessionFullAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
 
-  const stripeKey = (locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY || '').trim();
+  const stripeKey = (
+    locals?.runtime?.env?.STRIPE_SECRET_KEY ||
+    import.meta.env.STRIPE_SECRET_KEY ||
+    (globalThis as any).process?.env?.STRIPE_SECRET_KEY ||
+    ''
+  ).trim();
   if (!stripeKey) return json({ error: 'Stripe not configured' }, 500);
 
   let body: any;

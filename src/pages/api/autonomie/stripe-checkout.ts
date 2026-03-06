@@ -28,11 +28,17 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const me = await getUserFromSessionAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
 
-  const stripeKey = (locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY || '').trim();
+  const stripeKey = (
+    locals?.runtime?.env?.STRIPE_SECRET_KEY ||
+    import.meta.env.STRIPE_SECRET_KEY ||
+    (globalThis as any).process?.env?.STRIPE_SECRET_KEY ||
+    ''
+  ).trim();
   const configuredCurrency =
     locals?.runtime?.env?.PAYMENT_CURRENCY ||
     import.meta.env.PAYMENT_CURRENCY ||
     import.meta.env.PUBLIC_PAYMENT_CURRENCY ||
+    (globalThis as any).process?.env?.PAYMENT_CURRENCY ||
     'CAD';
   const currency = String(configuredCurrency).toLowerCase();
 
@@ -114,10 +120,11 @@ function getAutonomieProductName(motif: Motif) {
 
 function getAutonomiePriceCents(motif: Motif, locals: any): number | null {
   const env = locals?.runtime?.env ?? {};
+  const penv = (globalThis as any).process?.env ?? {};
 
   const motifKey = `AUTONOMIE_PRICE_${motif.toUpperCase()}_CENTS`;
-  const rawMotif = (env[motifKey] ?? (import.meta.env as any)[motifKey]) as unknown;
-  const rawDefault = (env.AUTONOMIE_PRICE_DEFAULT_CENTS ?? (import.meta.env as any).AUTONOMIE_PRICE_DEFAULT_CENTS) as unknown;
+  const rawMotif = (env[motifKey] ?? penv[motifKey] ?? (import.meta.env as any)[motifKey]) as unknown;
+  const rawDefault = (env.AUTONOMIE_PRICE_DEFAULT_CENTS ?? penv.AUTONOMIE_PRICE_DEFAULT_CENTS ?? (import.meta.env as any).AUTONOMIE_PRICE_DEFAULT_CENTS) as unknown;
 
   const parse = (v: unknown) => {
     const n = Number(String(v ?? '').trim());
