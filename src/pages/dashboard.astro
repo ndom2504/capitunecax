@@ -3138,6 +3138,9 @@ const proSvcList = [
           // Réafficher le bouton annulation si projet existant
           var btnC = document.getElementById('btnCancelProjet');
           if (btnC) btnC.style.display = '';
+
+          // Orientation basée profil (bulle + badge) au retour sur le dashboard
+          setTimeout(function(){ triggerOrientation('load'); }, 900);
         }
         var rs = localStorage.getItem('capitune_service');
         if (rs) {
@@ -3331,6 +3334,8 @@ const proSvcList = [
       switchTab('services');
       // Déclencher l'analyse automatique en arrière-plan
       setTimeout(function(){ triggerAutoReponse(type); }, 1500);
+      // Déclencher une orientation (bulle + notification) basée sur le profil
+      setTimeout(function(){ triggerOrientation('profil'); }, 900);
     };
 
     //  SERVICES 
@@ -3488,7 +3493,7 @@ const proSvcList = [
     };
 
     //  MESSAGERIE 
-    window.sendMessage = function() {
+    window.sendMessage = async function() {
       var input=document.getElementById('msgInput');
       var val=input&&input.value.trim();
       if(!val) return;
@@ -3496,6 +3501,31 @@ const proSvcList = [
       input.value='';
       // Persistance D1
       dbSync('/api/messages', 'POST', { content: val, sender: 'user' });
+
+      // Réponse automatique de l'agent (basée KB locale)
+      try {
+        var tip = showTypingIndicator();
+        var resp = await fetch('/api/agent/answer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: val,
+            project: ST && ST.projet ? {
+              type: ST.projet.type,
+              province: ST.projet.province,
+              pays: ST.projet.pays,
+              langues: ST.projet.langues,
+            } : null,
+          }),
+        });
+        var data = await resp.json();
+        if (tip) tip.remove();
+        if (data && data.replyHtml) {
+          appendBotMessage(data.replyHtml);
+        }
+      } catch(_) {
+        // silence : la messagerie reste utilisable même si l'agent échoue
+      }
     };
 
     window.openAgentChat = function() {
@@ -3509,6 +3539,9 @@ const proSvcList = [
         var chat = document.getElementById('chatMessages');
         if (chat) chat.scrollTop = chat.scrollHeight;
       }, 50);
+
+      // Au premier accès, proposer une orientation basée sur le profil
+      setTimeout(function(){ triggerOrientation('open'); }, 250);
     };
 
     function hideEmptyState() {
@@ -3600,15 +3633,18 @@ const proSvcList = [
       return div;
     }
 
-    function addMsgBadge() {
-      if (document.getElementById('msg-notif-badge')) return;
+    function addMsgBadge(count) {
       var link = document.querySelector('.dash-nav-item[data-tab="messagerie"] a');
       if (!link) return;
-      var badge = document.createElement('span');
-      badge.id = 'msg-notif-badge';
-      badge.className = 'tab-badge';
-      badge.textContent = '1';
-      link.appendChild(badge);
+      var badge = document.getElementById('msg-notif-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.id = 'msg-notif-badge';
+        badge.className = 'tab-badge';
+        link.appendChild(badge);
+      }
+      var n = parseInt(String(count || 1), 10);
+      badge.textContent = String(isNaN(n) || n <= 0 ? 1 : n);
     }
 
     function removeMsgBadge() {
@@ -3622,10 +3658,59 @@ const proSvcList = [
       removeMsgBadge();
     }
 
+    async function triggerOrientation(source) {
+      try {
+        // Signature simple : évite de spammer la même orientation
+        var sig = JSON.stringify({
+          projet: (ST && ST.projet) ? {
+            type: ST.projet.type || '',
+            province: ST.projet.province || '',
+            pays: ST.projet.pays || '',
+            langues: ST.projet.langues || [],
+          } : null,
+          soumis: !!(ST && ST.soumis),
+          pack: (ST && ST.pack) ? ST.pack : null,
+        });
+        var lastSig = localStorage.getItem('capitune_agent_orientation_sig') || '';
+        if (lastSig === sig && source !== 'open') return;
+        localStorage.setItem('capitune_agent_orientation_sig', sig);
+
+        var msgActive = document.getElementById('tab-messagerie')
+          && document.getElementById('tab-messagerie').classList.contains('active');
+
+        // Notification dès qu'une orientation est prête
+        if (!msgActive) addMsgBadge((_pendingBotMsgs.length || 0) + 1);
+
+        var resp = await fetch('/api/agent/orientation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project: (ST && ST.projet) ? ST.projet : null,
+            state: { soumis: !!(ST && ST.soumis), packId: (ST && ST.pack) ? ST.pack : null },
+          }),
+        });
+        var data = await resp.json();
+        if (!data || !data.replyHtml) return;
+
+        if (msgActive) {
+          var tip = showTypingIndicator();
+          setTimeout(function(){
+            if (tip) tip.remove();
+            appendBotMessage(data.replyHtml);
+          }, 900);
+        } else {
+          _pendingBotMsgs.push(data.replyHtml);
+          addMsgBadge(_pendingBotMsgs.length);
+        }
+      } catch(_) {
+        // silence
+      }
+    }
+
     async function triggerAutoReponse(projType) {
       var info = IMMIG_INFO[projType];
       if (!info) return;
-      addMsgBadge();
+      addMsgBadge((_pendingBotMsgs.length || 0) + 1);
 
       // Si messagerie déjà ouverte, afficher les dots puis le message
       var msgActive = document.getElementById('tab-messagerie')
@@ -3668,6 +3753,7 @@ const proSvcList = [
           }, 1800);
         } else {
           _pendingBotMsgs.push(html);
+          addMsgBadge(_pendingBotMsgs.length);
         }
       } catch(_) {
         // Fallback statique sans live
@@ -3680,6 +3766,7 @@ const proSvcList = [
           }, 1200);
         } else {
           _pendingBotMsgs.push(html2);
+          addMsgBadge(_pendingBotMsgs.length);
         }
       }
     }
