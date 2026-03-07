@@ -6,6 +6,8 @@ import {
   hasNeonDatabase,
 } from '../../../lib/db';
 
+import { effectiveRoleForUser } from '../../../lib/admin-emails';
+
 // KB packagée dans le bundle (compatible Cloudflare Workers)
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import kb from '../../../../agent/capitune-kb/capitune-knowledge-base.json';
@@ -39,14 +41,13 @@ async function isPayingUserAny(locals: unknown, sessionToken: string): Promise<b
   if (!db && !useNeon) {
     const basicUser = await getUserFromSessionFullAny(null, sessionToken);
     if (!basicUser) return false;
-    const isAdmin = String((basicUser as any)?.role ?? '') === 'admin';
-    return isAdmin;
+    return effectiveRoleForUser(basicUser as any) === 'admin';
   }
 
   const user = await getUserFromSessionFullAny(db, sessionToken);
   if (!user) return false;
 
-  const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  const isAdmin = effectiveRoleForUser(user as any) === 'admin';
   if (isAdmin) return true;
 
   // Achat "autonomie" (persisté dans capi_sessions.session_data)
