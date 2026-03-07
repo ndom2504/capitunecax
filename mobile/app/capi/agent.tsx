@@ -1,0 +1,289 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Colors } from '../../constants/Colors';
+import { UI } from '../../constants/UI';
+import { agentApi } from '../../lib/api';
+import { generateCapiReplyText } from '../../lib/capi-agent-local';
+import { useAuth } from '../../context/AuthContext';
+
+type ChatMsg = {
+  id: string;
+  content: string;
+  sender: 'user' | 'bot';
+  createdAt: string;
+};
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+export default function CapiAgentScreen() {
+  const { token } = useAuth();
+  const router = useRouter();
+  const { stepId, stepTitle, itemLabel } = useLocalSearchParams<{
+    stepId?: string;
+    stepTitle?: string;
+    itemLabel?: string;
+  }>();
+  const insets = useSafeAreaInsets();
+  const listRef = useRef<FlatList<ChatMsg>>(null);
+
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const [lastSource, setLastSource] = useState<'openai' | 'kb' | 'local' | 'error' | null>(null);
+
+  const contextLine = (() => {
+    const parts: string[] = [];
+    if (stepTitle) parts.push(`Étape : ${stepTitle}`);
+    if (itemLabel) parts.push(`Point : ${itemLabel}`);
+    if (parts.length) return parts.join(' · ');
+    if (stepId) return `Étape : ${stepId}`;
+    return '';
+  })();
+
+  useEffect(() => {
+    const now = new Date().toISOString();
+    setMessages([
+      {
+        id: `welcome-${Date.now()}`,
+        sender: 'bot',
+        createdAt: now,
+        content:
+          `Bonjour, je suis CAPI. Posez-moi votre question (je réponds de façon générale, sans garantie ni avis juridique).${contextLine ? `\n\nContexte : ${contextLine}` : ''}`,
+      },
+    ]);
+  }, [contextLine]);
+
+  useEffect(() => {
+    if (input.trim()) return;
+    if (!contextLine) return;
+    setInput(`Question sur ${itemLabel ? `“${itemLabel}”` : 'cette étape'} : `);
+  }, [contextLine, itemLabel]);
+
+  const send = async () => {
+    const content = input.trim();
+    if (!content || sending) return;
+
+    const now = new Date().toISOString();
+    const optimistic: ChatMsg = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      createdAt: now,
+      content,
+    };
+
+    setMessages(prev => [...prev, optimistic]);
+    setInput('');
+    setSending(true);
+
+    try {
+      const contentForApi = contextLine ? `Contexte: ${contextLine}\n\nQuestion: ${content}` : content;
+      const res = await agentApi.answer(contentForApi, null, token ?? undefined);
+      const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
+
+      if (res.status >= 200 && res.status < 300) {
+        setLastSource((res.data as any)?.meta?.source ?? 'kb');
+      }
+
+      if (res.status === 404 || res.error || !reply) {
+        const local = generateCapiReplyText(content, null);
+        const msg = res.status === 404
+          ? local
+          : (reply ? reply : local);
+        const errBot: ChatMsg = {
+          id: `e-${Date.now()}`,
+          sender: 'bot',
+          createdAt: new Date().toISOString(),
+          content: msg,
+        };
+        setMessages(prev => [...prev, errBot]);
+        setLastSource(res.status === 404 ? 'local' : 'error');
+        return;
+      }
+
+      const botMsg: ChatMsg = {
+        id: `b-${Date.now()}`,
+        sender: 'bot',
+        createdAt: new Date().toISOString(),
+        content: reply,
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } finally {
+      setSending(false);
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 80);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.root} edges={['top']}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          activeOpacity={0.85}
+          onPress={() => {
+            const canGoBack = (router as any)?.canGoBack?.();
+            if (canGoBack) router.back();
+            else router.replace('/capi/autonomie' as any);
+          }}
+          accessibilityLabel="Retour"
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="chevron-back" size={18} color={Colors.text} />
+        </TouchableOpacity>
+
+        <View style={styles.avatar}>
+          <Text style={styles.avatarTxt}>C</Text>
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text style={styles.title}>CAPI</Text>
+          <Text style={styles.subtitle}>
+            Agent d’orientation{lastSource ? ` · ${lastSource === 'openai' ? 'API (OpenAI)' : lastSource === 'kb' ? 'API (KB)' : lastSource === 'local' ? 'Local (fallback)' : 'Erreur API'}` : ''}
+          </Text>
+        </View>
+      </View>
+
+      <FlatList
+        ref={listRef}
+        data={messages}
+        keyExtractor={(m) => m.id}
+        contentContainerStyle={styles.messagesList}
+        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+        renderItem={({ item }) => {
+          const isMe = item.sender === 'user';
+          return (
+            <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
+              <Text style={[styles.bubbleText, isMe ? styles.bubbleTextMe : styles.bubbleTextThem]}>
+                {item.content}
+              </Text>
+              <Text style={[styles.bubbleTime, isMe && styles.bubbleTimeMe]}>{formatTime(item.createdAt)}</Text>
+            </View>
+          );
+        }}
+      />
+
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+        <View style={styles.inputRow}>
+          <TextInput
+            style={styles.input}
+            value={input}
+            onChangeText={setInput}
+            placeholder="Écrire à CAPI…"
+            placeholderTextColor={Colors.textMuted}
+            multiline
+            maxLength={1500}
+          />
+          <TouchableOpacity
+            style={[styles.sendBtn, (!input.trim() || sending) && styles.sendBtnDisabled]}
+            onPress={send}
+            disabled={!input.trim() || sending}
+            activeOpacity={0.85}
+            accessibilityLabel="Envoyer"
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="send" size={18} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: Colors.bgLight },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    ...UI.cardShadow,
+  },
+  avatarTxt: { color: Colors.white, fontSize: 14, fontWeight: '900' },
+  title: { fontSize: 22, fontWeight: '800', color: Colors.text },
+  subtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  messagesList: { padding: 16, gap: 10, paddingBottom: 8 },
+  bubble: { maxWidth: '84%', borderRadius: 16, padding: 12 },
+  bubbleMe: { alignSelf: 'flex-end', backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
+  bubbleThem: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.surface,
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  bubbleText: { fontSize: 14, lineHeight: 20 },
+  bubbleTextMe: { color: Colors.white },
+  bubbleTextThem: { color: Colors.text },
+  bubbleTime: { fontSize: 10, color: Colors.textMuted, marginTop: 4, textAlign: 'right' },
+  bubbleTimeMe: { color: 'rgba(255,255,255,0.65)' },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+    padding: 12,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.text,
+    maxHeight: 110,
+  },
+  sendBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.orange,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendBtnDisabled: { opacity: 0.4 },
+});

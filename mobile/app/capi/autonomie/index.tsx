@@ -12,6 +12,8 @@ import { buildMotifBudget } from '../../../lib/autonomie-steps';
 import { autonomiePaymentApi, userApi } from '../../../lib/api';
 import type { AutonomieStep, CapiMotif } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
+import { CapiOrientationBubble } from '../../../components/CapiOrientationBubble';
+import { CapiHelpFab } from '../../../components/CapiHelpFab';
 
 // ---------------------------------------------------------------------------
 // Labels
@@ -207,6 +209,10 @@ export default function AutonomieIndexScreen() {
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
+        <CapiOrientationBubble
+          text={`Je suis CAPI. Ouvrez une étape pour voir les actions à faire et les liens officiels. Je reste avec vous tout au long du parcours.`}
+        />
+
         {/* Hero banner */}
         <View style={styles.heroBanner}>
           <View style={styles.heroLeft}>
@@ -309,7 +315,7 @@ export default function AutonomieIndexScreen() {
                   onLockedStepPress();
                   return;
                 }
-                router.push(`/capi/autonomie/${step.id}` as never);
+                router.push({ pathname: '/capi/autonomie/flow', params: { start: step.id } } as any);
               }}
             />
           ))}
@@ -317,6 +323,12 @@ export default function AutonomieIndexScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CapiHelpFab
+        onPress={() =>
+          router.push('/capi/agent' as any)
+        }
+      />
     </SafeAreaView>
   );
 }

@@ -10,6 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
+import { CapiOrientationBubble } from '../../../components/CapiOrientationBubble';
+import { CapiHelpFab } from '../../../components/CapiHelpFab';
 import {
   getBiometrieUrl, getMedecinDesigneUrl, getPaysLabel,
 } from '../../../lib/dli-data';
@@ -32,6 +34,41 @@ function resolveRessourceUrl(stepId: string, baseUrl: string, paysCode?: string)
   if (stepId.includes('biometrie') && baseUrl.includes('biometrie')) return getBiometrieUrl(paysCode);
   if ((stepId.includes('exam-medical') || stepId.includes('examens-medicaux')) && baseUrl.includes('dmp')) return getMedecinDesigneUrl(paysCode);
   return baseUrl;
+}
+
+function getDefaultOfficialResourcesForItem(
+  stepId: string,
+  step: AutonomieStep,
+  paysCode?: string,
+): Array<{ label: string; url: string; kind?: 'link' | 'button' }> {
+  if (step.ressources && step.ressources.length > 0) {
+    const r = step.ressources[0];
+    return [
+      {
+        label: r.titre,
+        url: resolveRessourceUrl(stepId, r.url, paysCode),
+        kind: 'link',
+      },
+    ];
+  }
+
+  if (step.actionUrl) {
+    return [
+      {
+        label: step.actionLabel ?? 'Ouvrir la ressource officielle',
+        url: resolveRessourceUrl(stepId, step.actionUrl, paysCode),
+        kind: 'link',
+      },
+    ];
+  }
+
+  return [
+    {
+      label: 'Immigration et citoyenneté (Canada.ca)',
+      url: 'https://www.canada.ca/fr/services/immigration-citoyennete.html',
+      kind: 'link',
+    },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -113,6 +150,10 @@ export default function AutonomieStepScreen() {
   }, [isAdmission]);
 
   const openUrl = useCallback(async (url: string) => {
+    if (url.startsWith('/')) {
+      router.push(url as never);
+      return;
+    }
     try {
       const ok = await Linking.canOpenURL(url);
       if (ok) {
@@ -123,7 +164,7 @@ export default function AutonomieStepScreen() {
     } catch {
       Alert.alert('Erreur', "Impossible d'ouvrir ce lien.");
     }
-  }, []);
+  }, [router]);
 
   const goToStep = useCallback((offset: number) => {
     if (!project || !step) return;
@@ -248,6 +289,12 @@ export default function AutonomieStepScreen() {
             </View>
           )}
         </ScrollView>
+
+        <CapiHelpFab
+          onPress={() =>
+            router.push('/capi/agent' as any)
+          }
+        />
       </SafeAreaView>
     );
   }
@@ -286,6 +333,10 @@ export default function AutonomieStepScreen() {
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        <CapiOrientationBubble
+          text={`Je suis CAPI. Je vous accompagne à chaque étape : cochez chaque action, utilisez les ressources officielles, puis passez à l’étape suivante.`}
+        />
 
         {/* Hero */}
         <View style={styles.hero}>
@@ -510,7 +561,7 @@ export default function AutonomieStepScreen() {
                   </Text>
                 </View>
                 <TouchableOpacity
-                  onPress={() => router.push('/(tabs)/messagerie' as never)}
+                  onPress={() => router.push('/capi/agent' as any)}
                   style={styles.smallActionBtn}
                   activeOpacity={0.85}
                 >
@@ -564,19 +615,48 @@ export default function AutonomieStepScreen() {
             </View>
             <View style={styles.actionsCard}>
               {step.checkItems.map((item, i) => (
-                <TouchableOpacity
+                <View
                   key={item.id}
-                  style={[styles.actionRow, i < step.checkItems.length - 1 && styles.actionRowBorder]}
-                  onPress={() => toggleCheckItem(item.id)}
-                  activeOpacity={0.75}
+                  style={[styles.actionBlock, i < step.checkItems.length - 1 && styles.actionRowBorder]}
                 >
-                  <Ionicons
-                    name={item.done ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={18}
-                    color={item.done ? Colors.success : Colors.textMuted}
-                  />
-                  <Text style={[styles.actionLabel, { marginLeft: 10 }, item.done && { color: Colors.text }]}> {item.label}</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.actionRow}
+                    onPress={() => toggleCheckItem(item.id)}
+                    activeOpacity={0.75}
+                  >
+                    <Ionicons
+                      name={item.done ? 'checkmark-circle' : 'ellipse-outline'}
+                      size={18}
+                      color={item.done ? Colors.success : Colors.textMuted}
+                    />
+                    <Text style={[styles.actionLabel, { marginLeft: 10 }, item.done && { color: Colors.text }]}> {item.label}</Text>
+                  </TouchableOpacity>
+
+                  {(() => {
+                    const resources = (item.officialResources && item.officialResources.length > 0)
+                      ? item.officialResources
+                      : getDefaultOfficialResourcesForItem(stepId as string, step, paysCode);
+                    return (
+                    <View style={styles.actionResources}>
+                      {resources.map((r) => (
+                        <TouchableOpacity
+                          key={`${item.id}:${r.url}:${r.label}`}
+                          style={styles.actionResourceBtn}
+                          onPress={() => openUrl(r.url)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons
+                            name={r.kind === 'button' ? 'navigate-outline' : 'link-outline'}
+                            size={14}
+                            color={Colors.primary}
+                          />
+                          <Text style={styles.actionResourceText}>{r.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    );
+                  })()}
+                </View>
               ))}
             </View>
 
@@ -706,6 +786,12 @@ export default function AutonomieStepScreen() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      <CapiHelpFab
+        onPress={() =>
+          router.push('/capi/agent' as any)
+        }
+      />
     </SafeAreaView>
   );
 }
@@ -822,8 +908,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1,
     borderColor: Colors.border, overflow: 'hidden', ...UI.cardShadow,
   },
+  actionBlock: { backgroundColor: 'transparent' },
   actionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingHorizontal: 18, paddingVertical: 14 },
   actionRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  actionResources: { paddingHorizontal: 18, paddingBottom: 12, gap: 8, marginTop: -4 },
+  actionResourceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.primary + '12',
+    borderRadius: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+  },
+  actionResourceText: { fontSize: 12, fontWeight: '700', color: Colors.primary },
   bullet: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary, marginTop: 7, flexShrink: 0 },
   actionLabel: { flex: 1, fontSize: 14, color: Colors.text, lineHeight: 21 },
 

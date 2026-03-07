@@ -146,6 +146,32 @@ export const dashboardApi = {
     request<{ payments: Payment[] }>('/api/payments', {}, token),
 };
 
+// -- Agent KB (sans auth, compatible mobile) ---------------------------------
+
+type AgentProject = {
+  type?: string;
+  province?: string;
+  pays?: string;
+  langues?: string[];
+};
+
+export const agentApi = {
+  answer: (message: string, project?: AgentProject | null, token?: string) =>
+    request<{
+      replyText?: string;
+      replyHtml?: string;
+      meta?: {
+        topic?: string;
+        source?: 'openai' | 'kb';
+        openaiError?: string;
+      };
+    }>(
+      '/api/capi/answer',
+      { method: 'POST', body: JSON.stringify({ message, project: project ?? null }) },
+      token,
+    ),
+};
+
 // -- Paiement Autonomie (Stripe Checkout) -----------------------------------
 
 export const autonomiePaymentApi = {
@@ -381,10 +407,19 @@ export interface CapiAdvisor {
 
 export type AutonomieStepStatus = 'pending' | 'in_progress' | 'done';
 
+export type AutonomieOfficialResourceKind = 'link' | 'button';
+
+export interface AutonomieOfficialResource {
+  label: string;
+  url: string;
+  kind?: AutonomieOfficialResourceKind;
+}
+
 export interface AutonomieCheckItem {
   id: string;
   label: string;
   done: boolean;
+  officialResources?: AutonomieOfficialResource[];
 }
 
 export interface AutonomieRessource {

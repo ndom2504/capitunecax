@@ -9,6 +9,8 @@ import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import { PROVINCE_LABELS, TYPE_LABELS, TYPE_EMOJI } from '../../../lib/dli-data';
 import { fetchDLIInstitutions, filterDLI, DLIInstitution, ProvinceCode, DLIType } from '../../../lib/dli-service';
+import { CapiOrientationBubble } from '../../../components/CapiOrientationBubble';
+import { CapiHelpFab } from '../../../components/CapiHelpFab';
 
 const DLI_SELECTED_KEY = 'capi_selected_dli';
 
@@ -322,6 +324,12 @@ export default function DLISearchScreen() {
           <View style={styles.webStyleHeader}>
             <View>
               <Text style={styles.webStyleTitle}>Trouver une formation</Text>
+
+          <CapiHelpFab
+            onPress={() =>
+              router.push('/capi/agent' as any)
+            }
+          />
               <Text style={styles.webStyleSub}>Recherchez parmi les EED au Canada.</Text>
             </View>
             {!loading && (
@@ -331,6 +339,11 @@ export default function DLISearchScreen() {
               </View>
             )}
           </View>
+
+          <CapiOrientationBubble
+            text={`Je suis CAPI. Sélectionnez 3 établissements (DLI), puis validez pour débloquer l’étape d’admission.`}
+            style={{ paddingHorizontal: 0, paddingTop: 10, paddingBottom: 6 }}
+          />
 
           <View style={styles.webStyleFiltersContainer}>
             <View style={styles.searchBar}>

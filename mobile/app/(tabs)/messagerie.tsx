@@ -17,7 +17,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { getAvatarSource } from '../../lib/avatar';
-import { dashboardApi, type Message } from '../../lib/api';
+import { agentApi, dashboardApi, type Message } from '../../lib/api';
 
 const DEMO_MESSAGES: Message[] = [
   {
@@ -57,8 +57,14 @@ export default function MessagerieScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  const advisorName = typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPI';
-  const advisorAvatarKey = typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '';
+  const isCapiAgent = String(params.agent ?? '') === 'capi';
+
+  const advisorName = isCapiAgent
+    ? 'CAPI'
+    : (typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPI');
+  const advisorAvatarKey = isCapiAgent
+    ? ''
+    : (typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '');
   const shouldPrefill = String(params.prefill ?? '') === '1';
   const advisorAvatarSource = getAvatarSource(advisorAvatarKey);
 
@@ -72,6 +78,10 @@ export default function MessagerieScreen() {
   const load = async () => {
     setLoading(true);
     try {
+      if (isCapiAgent) {
+        setMessages([]);
+        return;
+      }
       if (!token) {
         setMessages(DEMO_MESSAGES);
         return;
@@ -86,9 +96,10 @@ export default function MessagerieScreen() {
 
   useEffect(() => {
     load();
-  }, [token]);
+  }, [token, isCapiAgent]);
 
   useEffect(() => {
+    if (isCapiAgent) return;
     if (!shouldPrefill) return;
     if (didPrefillRef.current) return;
     if (input.trim()) {
@@ -118,6 +129,36 @@ export default function MessagerieScreen() {
     setSending(true);
 
     try {
+      if (isCapiAgent) {
+        const res = await agentApi.answer(content, null, token ?? undefined);
+        const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
+
+        if (res.error || !reply) {
+          const errMsg = res.error || 'Je n’ai pas réussi à répondre. Réessayez.';
+          const errBot: Message = {
+            id: `${Date.now()}-err`,
+            content: errMsg,
+            sender: 'bot',
+            senderName: 'CAPI',
+            createdAt: new Date().toISOString(),
+            read: true,
+          };
+          setMessages(prev => [...prev, errBot]);
+          return;
+        }
+
+        const botMsg: Message = {
+          id: `${Date.now()}-bot`,
+          content: reply,
+          sender: 'bot',
+          senderName: 'CAPI',
+          createdAt: new Date().toISOString(),
+          read: true,
+        };
+        setMessages(prev => [...prev, botMsg]);
+        return;
+      }
+
       if (token) await dashboardApi.sendMessage(token, content);
     } finally {
       setSending(false);
@@ -138,7 +179,7 @@ export default function MessagerieScreen() {
 
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{advisorName}</Text>
-          <Text style={styles.headerSub}>Point de contact</Text>
+          <Text style={styles.headerSub}>{isCapiAgent ? 'Agent d’orientation' : 'Point de contact'}</Text>
         </View>
 
         <TouchableOpacity
@@ -180,7 +221,7 @@ export default function MessagerieScreen() {
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Écrire au conseiller…"
+            placeholder={isCapiAgent ? 'Écrire à CAPI…' : 'Écrire au conseiller…'}
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={1000}

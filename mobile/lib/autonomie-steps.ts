@@ -1,4 +1,4 @@
-import type { AutonomieProject, AutonomieStep, BudgetCategorie, CapiMotif, MotifBudget } from './api';
+import type { AutonomieOfficialResource, AutonomieProject, AutonomieStep, BudgetCategorie, CapiMotif, MotifBudget } from './api';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -10,7 +10,7 @@ const step = (
   title: string,
   icon: string,
   description: string,
-  checkItems: { id: string; label: string }[],
+  checkItems: { id: string; label: string; officialResources?: AutonomieOfficialResource[] }[],
   ressources: { titre: string; description: string; url: string }[],
   action?: { label: string; url: string },
 ): AutonomieStep => ({
@@ -47,12 +47,12 @@ const stepsEtudier: AutonomieStep[] = [
       {
         titre: 'Liste des DLI (établissements désignés)',
         description: 'Liste officielle d\'IRCC des établissements d\'enseignement désignés.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/preparer/liste-etablissements-designes.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/preparer/liste-etablissements-enseignement-designes.html',
       },
       {
-        titre: 'EduCanada — Annuaire d\'établissements',
-        description: 'Moteur de recherche d\'établissements postsecondaires canadiens.',
-        url: 'https://www.educanada.ca/schools-ecoles/index.aspx?lang=fra',
+        titre: 'Étudier au Canada (IRCC)',
+        description: 'Informations officielles pour étudier au Canada (écoles, permis, préparation).',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada.html',
       },
     ],
   ),
@@ -70,7 +70,13 @@ const stepsEtudier: AutonomieStep[] = [
       { id: 'c4', label: 'Soumettre la demande avant la date limite' },
       { id: 'c5', label: 'Recevoir et sauvegarder la Lettre d\'Acceptation (LOA)' },
     ],
-    [],
+    [
+      {
+        titre: 'Se préparer à étudier au Canada (IRCC)',
+        description: 'Choix d\'une école, admission et lettre d\'acceptation (LOA).',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/preparer.html',
+      },
+    ],
   ),
 
   step(
@@ -116,7 +122,7 @@ const stepsEtudier: AutonomieStep[] = [
         url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm1294.html',
       },
     ],
-    { label: 'Portail IRCC', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/obtenir.html' },
+    { label: 'Comment présenter une demande (IRCC)', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/presenter-demande.html' },
   ),
 
   step(
@@ -135,10 +141,10 @@ const stepsEtudier: AutonomieStep[] = [
       {
         titre: 'Trouver un médecin désigné',
         description: 'Base de données des médecins accrédités IRCC.',
-        url: 'https://dmp.ircc.ca/',
+        url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil',
       },
     ],
-    { label: 'Trouver un médecin désigné', url: 'https://dmp.ircc.ca/' },
+    { label: 'Trouver un médecin désigné', url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil' },
   ),
 
   step(
@@ -157,10 +163,10 @@ const stepsEtudier: AutonomieStep[] = [
       {
         titre: 'Centres de collecte biométrique',
         description: 'Trouver le centre le plus proche.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html',
       },
     ],
-    { label: 'Trouver un centre biométrie', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html' },
+    { label: 'Trouver un centre biométrie', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html' },
   ),
 
   step(
@@ -197,7 +203,13 @@ const stepsEtudier: AutonomieStep[] = [
       { id: 'c4', label: 'Confirmer l\'inscription à l\'établissement' },
       { id: 'c5', label: 'Récupérer le permis d\'études en arrivant au port d\'entrée' },
     ],
-    [],
+    [
+      {
+        titre: 'Documents de voyage pour entrer au Canada (ASFC)',
+        description: 'Pièces d\'identité et documents nécessaires à l\'entrée au Canada.',
+        url: 'https://www.cbsa-asfc.gc.ca/travel-voyage/td-dv-fra.html',
+      },
+    ],
   ),
 ];
 
@@ -286,10 +298,10 @@ const stepsTravailler: AutonomieStep[] = [
       {
         titre: 'Centres de collecte biométrique',
         description: 'Trouver le centre le plus proche.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html',
       },
     ],
-    { label: 'Trouver un centre biométrie', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html' },
+    { label: 'Trouver un centre biométrie', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html' },
   ),
 
   step(
@@ -324,7 +336,13 @@ const stepsTravailler: AutonomieStep[] = [
       { id: 'c3', label: 'Récupérer le permis de travail au port d\'entrée' },
       { id: 'c4', label: 'Confirmer le début d\'emploi avec l\'employeur' },
     ],
-    [],
+    [
+      {
+        titre: 'Documents de voyage pour entrer au Canada (ASFC)',
+        description: 'Pièces d\'identité et documents nécessaires à l\'entrée au Canada.',
+        url: 'https://www.cbsa-asfc.gc.ca/travel-voyage/td-dv-fra.html',
+      },
+    ],
   ),
 ];
 
@@ -340,16 +358,76 @@ const stepsRP: AutonomieStep[] = [
     '📊',
     'Soumettez votre Déclaration d\'intérêt (DOI) dans le système Entrée Express d\'IRCC.',
     [
-      { id: 'c1', label: 'Évaluer votre score CRS (outil officiel IRCC)' },
-      { id: 'c2', label: 'Identifier le bon programme (FCE, TQF, CEC)' },
-      { id: 'c3', label: 'Passer IELTS/TEF et faire évaluer diplômes (ECA/DCE)' },
-      { id: 'c4', label: 'Créer profil Entrée Express et le valider' },
+      {
+        id: 'c1',
+        label: 'Évaluer votre score CRS (outil officiel IRCC)',
+        officialResources: [
+          {
+            label: 'Calculateur CRS (IRCC)',
+            url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note.html',
+            kind: 'link',
+          },
+        ],
+      },
+      {
+        id: 'c2',
+        label: 'Identifier le bon programme (FCE, TQF, CEC)',
+        officialResources: [
+          {
+            label: 'Qui peut présenter une demande (IRCC)',
+            url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/qui-presenter-demande.html',
+            kind: 'link',
+          },
+          {
+            label: 'Outil « Venir au Canada » (admissibilité)',
+            url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/outil-venir-canada.html',
+            kind: 'link',
+          },
+        ],
+      },
+      {
+        id: 'c3',
+        label: 'Passer IELTS/TEF et faire évaluer diplômes (ECA/DCE)',
+        officialResources: [
+          {
+            label: 'Tests de langue acceptés (IRCC)',
+            url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/documents/examen-linguistique.html',
+            kind: 'link',
+          },
+          {
+            label: 'TEF Canada — trouver un centre agréé',
+            url: 'https://www.lefrancaisdesaffaires.fr/candidat/trouver-un-centre-agree/',
+            kind: 'link',
+          },
+          {
+            label: 'TCF Canada — centres d’examen',
+            url: 'https://www.france-education-international.fr/centres-d-examen/carte?type-centre=tcf',
+            kind: 'link',
+          },
+          {
+            label: 'Trouver un centre proche',
+            url: '/capi/autonomie/centres-langue',
+            kind: 'button',
+          },
+        ],
+      },
+      {
+        id: 'c4',
+        label: 'Créer profil Entrée Express et le valider',
+        officialResources: [
+          {
+            label: 'Portail Entrée Express (IRCC)',
+            url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express.html',
+            kind: 'link',
+          },
+        ],
+      },
     ],
     [
       {
         titre: 'Calculateur de pointage CRS',
         description: 'Estimez votre score avant de créer votre profil.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/admissibilite/systeme-classement-global.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note.html',
       },
       {
         titre: 'Portail Entrée Express',
@@ -357,7 +435,7 @@ const stepsRP: AutonomieStep[] = [
         url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express.html',
       },
     ],
-    { label: 'Calculer mon score CRS', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/admissibilite/systeme-classement-global.html' },
+    { label: 'Calculer mon score CRS', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note.html' },
   ),
 
   step(
@@ -376,7 +454,7 @@ const stepsRP: AutonomieStep[] = [
       {
         titre: 'Programmes des candidats des provinces',
         description: 'Liste complète des PNP par province.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/admissibilite/candidats-provinces.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/candidats-provinces.html',
       },
     ],
   ),
@@ -396,7 +474,7 @@ const stepsRP: AutonomieStep[] = [
       {
         titre: 'Résultats des tirages Entrée Express',
         description: 'Suivez les rounds passés et les seuils CRS.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/soumission-demande/invitation-etat/tours-invitation.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/rondes-invitations.html',
       },
     ],
   ),
@@ -413,7 +491,18 @@ const stepsRP: AutonomieStep[] = [
       { id: 'c3', label: 'Payer les frais (1 365 $ adulte + frais RD 515 $)' },
       { id: 'c4', label: 'Soumettre avant l\'expiration de l\'invitation (60 jours)' },
     ],
-    [],
+    [
+      {
+        titre: 'Entrée Express (IRCC)',
+        description: 'Informations officielles sur Entrée Express et votre compte IRCC.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express.html',
+      },
+      {
+        titre: 'Vérifier l\'état de votre demande (IRCC)',
+        description: 'Suivre votre demande après soumission.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-etat.html',
+      },
+    ],
   ),
 
   step(
@@ -431,10 +520,10 @@ const stepsRP: AutonomieStep[] = [
       {
         titre: 'Trouver un médecin désigné',
         description: 'Base de données des médecins accrédités.',
-        url: 'https://dmp.ircc.ca/',
+        url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil',
       },
     ],
-    { label: 'Trouver un médecin désigné', url: 'https://dmp.ircc.ca/' },
+    { label: 'Trouver un médecin désigné', url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil' },
   ),
 
   step(
@@ -452,7 +541,7 @@ const stepsRP: AutonomieStep[] = [
       {
         titre: 'Centres biométriques',
         description: 'Trouver le centre le plus proche.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html',
       },
     ],
   ),
@@ -469,7 +558,18 @@ const stepsRP: AutonomieStep[] = [
       { id: 'c3', label: 'Se présenter à la frontière canadienne avec la CoPR' },
       { id: 'c4', label: 'Attendre la carte RP (par la poste ~8 semaines)' },
     ],
-    [],
+    [
+      {
+        titre: 'Vérifier l\'état de votre demande (IRCC)',
+        description: 'Suivre votre dossier et les mises à jour.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-etat.html',
+      },
+      {
+        titre: 'Vérifier les délais de traitement (IRCC)',
+        description: 'Temps de traitement estimé en temps réel.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-delais-traitement.html',
+      },
+    ],
   ),
 ];
 
@@ -493,10 +593,10 @@ const stepsFamille: AutonomieStep[] = [
       {
         titre: 'Critères de parrainage famillial',
         description: 'Conditions officielles IRCC.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/regroupement-familial/parrainer-membre-famille.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/parrainer-membre-famille.html',
       },
     ],
-    { label: 'Vérifier les critères', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/regroupement-familial/parrainer-membre-famille.html' },
+    { label: 'Vérifier les critères', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/parrainer-membre-famille.html' },
   ),
 
   step(
@@ -511,7 +611,13 @@ const stepsFamille: AutonomieStep[] = [
       { id: 'c3', label: 'Joindre pièces justificatives (statut au Canada, revenus)' },
       { id: 'c4', label: 'Soumettre à IRCC (voie en ligne ou postale)' },
     ],
-    [],
+    [
+      {
+        titre: 'Parrainer un membre de la famille (IRCC)',
+        description: 'Processus officiel et étapes pour le parrainage familial.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/parrainer-membre-famille.html',
+      },
+    ],
   ),
 
   step(
@@ -526,7 +632,13 @@ const stepsFamille: AutonomieStep[] = [
       { id: 'c3', label: 'Remplir le questionnaire sur les antécédents (IMM 5406, IMM 5669)' },
       { id: 'c4', label: 'Préparer photos conformes IRCC' },
     ],
-    [],
+    [
+      {
+        titre: 'Parrainer un membre de la famille (IRCC)',
+        description: 'Pièces, formulaires et instructions officielles.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/parrainer-membre-famille.html',
+      },
+    ],
   ),
 
   step(
@@ -544,10 +656,10 @@ const stepsFamille: AutonomieStep[] = [
       {
         titre: 'Trouver un médecin désigné',
         description: 'Base de données des médecins accrédités.',
-        url: 'https://dmp.ircc.ca/',
+        url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil',
       },
     ],
-    { label: 'Trouver un médecin désigné', url: 'https://dmp.ircc.ca/' },
+    { label: 'Trouver un médecin désigné', url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil' },
   ),
 
   step(
@@ -565,7 +677,7 @@ const stepsFamille: AutonomieStep[] = [
       {
         titre: 'Centres biométriques',
         description: 'Trouver le centre le plus proche.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html',
       },
     ],
   ),
@@ -582,7 +694,18 @@ const stepsFamille: AutonomieStep[] = [
       { id: 'c3', label: 'Planifier l\'arrivée au Canada (port d\'entrée)' },
       { id: 'c4', label: 'Attendre la carte RP par la poste' },
     ],
-    [],
+    [
+      {
+        titre: 'Vérifier l\'état de votre demande (IRCC)',
+        description: 'Suivre votre dossier et les mises à jour.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-etat.html',
+      },
+      {
+        titre: 'Documents de voyage pour entrer au Canada (ASFC)',
+        description: 'Ce qu\'il faut avoir sur soi à l\'arrivée.',
+        url: 'https://www.cbsa-asfc.gc.ca/travel-voyage/td-dv-fra.html',
+      },
+    ],
   ),
 ];
 
@@ -606,10 +729,10 @@ const stepsEntreprendre: AutonomieStep[] = [
       {
         titre: 'Programme Visa pour démarrage d\'entreprise',
         description: 'Critères et processus officiels.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage-entreprise.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage.html',
       },
     ],
-    { label: 'Lire les critères SUV', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage-entreprise.html' },
+    { label: 'Lire les critères SUV', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage.html' },
   ),
 
   step(
@@ -628,7 +751,7 @@ const stepsEntreprendre: AutonomieStep[] = [
       {
         titre: 'Organisations désignées SUV',
         description: 'Liste officielle des organisations acceptées.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage-entreprise/organismes-designes.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage/participer.html',
       },
     ],
   ),
@@ -645,7 +768,13 @@ const stepsEntreprendre: AutonomieStep[] = [
       { id: 'c3', label: 'Payer les frais de traitement et RD' },
       { id: 'c4', label: 'Soumettre la demande en ligne' },
     ],
-    [],
+    [
+      {
+        titre: 'Visa pour démarrage d\'entreprise (SUV) (IRCC)',
+        description: 'Critères et processus officiels.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage.html',
+      },
+    ],
   ),
 
   step(
@@ -659,7 +788,18 @@ const stepsEntreprendre: AutonomieStep[] = [
       { id: 'c2', label: 'Remplir le formulaire additionnel' },
       { id: 'c3', label: 'Joindre la Lettre de Soutien de l\'organisation désignée' },
     ],
-    [],
+    [
+      {
+        titre: 'Travailler au Canada (IRCC)',
+        description: 'Permis de travail, prolongation et informations officielles.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/travailler-canada.html',
+      },
+      {
+        titre: 'Visa pour démarrage d\'entreprise (SUV) (IRCC)',
+        description: 'Rappels des exigences SUV (langue, organisation désignée, etc.).',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/visa-demarrage.html',
+      },
+    ],
   ),
 
   step(
@@ -677,7 +817,7 @@ const stepsEntreprendre: AutonomieStep[] = [
       {
         titre: 'Trouver un médecin désigné',
         description: 'Base de données des médecins accrédités.',
-        url: 'https://dmp.ircc.ca/',
+        url: 'https://secure.cic.gc.ca/PanelPhysicianMedecinDesigne/fr/Accueil',
       },
     ],
   ),
@@ -694,7 +834,13 @@ const stepsEntreprendre: AutonomieStep[] = [
       { id: 'c3', label: 'Enregistrer l\'entreprise au registre provincial' },
       { id: 'c4', label: 'Ouvrir un compte bancaire d\'entreprise' },
     ],
-    [],
+    [
+      {
+        titre: 'S\'établir au Canada (IRCC)',
+        description: 'Services gratuits et démarches d\'installation pour nouveaux arrivants.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/setablir-canada.html',
+      },
+    ],
   ),
 ];
 
@@ -717,11 +863,11 @@ const stepsRegularisation: AutonomieStep[] = [
     [
       {
         titre: 'Options si votre statut expire',
-        description: 'Guide officiel IRCC.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/prolonger-modifier-statut.html',
+        description: 'Formulaire et instructions officielles pour proroger/modifier certaines conditions de séjour (incl. restauration selon cas).',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5708.html',
       },
     ],
-    { label: 'Options statut IRCC', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/prolonger-modifier-statut.html' },
+    { label: 'Formulaire IMM 5708', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5708.html' },
   ),
 
   step(
@@ -736,7 +882,13 @@ const stepsRegularisation: AutonomieStep[] = [
       { id: 'c3', label: 'Payer les frais de restauration' },
       { id: 'c4', label: 'Soumettre rapidement' },
     ],
-    [],
+    [
+      {
+        titre: 'Formulaire IMM 5708 (IRCC)',
+        description: 'Modifier les conditions, proroger le séjour ou demeurer au Canada (incl. restauration selon situation).',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/imm5708.html',
+      },
+    ],
   ),
 
   step(
@@ -754,7 +906,7 @@ const stepsRegularisation: AutonomieStep[] = [
       {
         titre: 'Demande pour motifs humanitaires',
         description: 'Guide et formulaires IRCC.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/motifs-humanitaires.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides/considerations-ordre-humanitaire.html',
       },
     ],
   ),
@@ -771,7 +923,13 @@ const stepsRegularisation: AutonomieStep[] = [
       { id: 'c3', label: 'Preuves d\'établissement (loyer, emploi, impôts)' },
       { id: 'c4', label: 'Casier judiciaire du pays d\'origine' },
     ],
-    [],
+    [
+      {
+        titre: 'Formulaires et guides de demande (IRCC)',
+        description: 'Répertoire officiel des formulaires et listes de contrôle.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/formulaires-demande-guides.html',
+      },
+    ],
   ),
 
   step(
@@ -785,7 +943,13 @@ const stepsRegularisation: AutonomieStep[] = [
       { id: 'c2', label: 'Payer les frais applicables' },
       { id: 'c3', label: 'Soumettre la demande et conserver la confirmation' },
     ],
-    [],
+    [
+      {
+        titre: 'Vérifier l\'état de votre demande (IRCC)',
+        description: 'Récapitulatif des façons de suivre une demande.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-etat.html',
+      },
+    ],
   ),
 
   step(
@@ -800,7 +964,18 @@ const stepsRegularisation: AutonomieStep[] = [
       { id: 'c3', label: 'Répondre aux demandes de renseignements supplémentaires' },
       { id: 'c4', label: 'Recevoir et analyser la décision' },
     ],
-    [],
+    [
+      {
+        titre: 'Vérifier l\'état de votre demande (IRCC)',
+        description: 'Suivre les mises à jour et connaître les prochains gestes.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-etat.html',
+      },
+      {
+        titre: 'Vérifier les délais de traitement (IRCC)',
+        description: 'Temps de traitement estimé en temps réel.',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-delais-traitement.html',
+      },
+    ],
   ),
 ];
 
@@ -890,7 +1065,7 @@ const stepsVisiter: AutonomieStep[] = [
       {
         titre: 'Centres biométriques',
         description: 'Trouver le centre le plus proche.',
-        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/biometrie/ou.html',
+        url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/biometrie/ou-fournir-donnees-biometriques.html',
       },
     ],
   ),
@@ -907,7 +1082,13 @@ const stepsVisiter: AutonomieStep[] = [
       { id: 'c3', label: 'Connaître l\'adresse de séjour au Canada' },
       { id: 'c4', label: 'Ne pas dépasser 6 mois de séjour (sauf autorisation)' },
     ],
-    [],
+    [
+      {
+        titre: 'Information frontalière pour les visiteurs (ASFC)',
+        description: 'Documents requis, déclaration et attentes à la frontière.',
+        url: 'https://www.cbsa-asfc.gc.ca/travel-voyage/ivc-rnc-fra.html',
+      },
+    ],
   ),
 ];
 
