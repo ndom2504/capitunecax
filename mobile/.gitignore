@@ -23,3 +23,7 @@ expo-env.d.ts
 # local tooling binaries/scripts
 cloudflared.exe
 start-tunnel.ps1
+
+# generated audit outputs
+scripts/audit-autonomie-urls.json
+scripts/audit-autonomie-urls.txt
