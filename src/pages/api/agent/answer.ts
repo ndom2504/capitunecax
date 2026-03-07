@@ -5,7 +5,6 @@ import {
   getUserFromSessionFullAny,
   hasNeonDatabase,
 } from '../../../lib/db';
-import { isPremiumActive } from '../../../lib/premium';
 
 // KB packagée dans le bundle (compatible Cloudflare Workers)
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -35,21 +34,19 @@ async function isPayingUserAny(locals: unknown, sessionToken: string): Promise<b
   const db = (runtimeEnv?.DB as D1Database | null | undefined) ?? null;
   const useNeon = !db && hasNeonDatabase();
 
-  // Sans DB, on ne peut valider que les infos présentes dans le token (admin/pro).
+  // Sans DB, on ne peut pas vérifier l'achat autonomie. On autorise seulement les admins.
   if (!db && !useNeon) {
     const basicUser = await getUserFromSessionFullAny(null, sessionToken);
     if (!basicUser) return false;
     const isAdmin = String((basicUser as any)?.role ?? '') === 'admin';
-    const isPro = String((basicUser as any)?.account_type ?? '') === 'pro';
-    return isAdmin || isPro;
+    return isAdmin;
   }
 
   const user = await getUserFromSessionFullAny(db, sessionToken);
   if (!user) return false;
 
   const isAdmin = String((user as any)?.role ?? '') === 'admin';
-  const isPro = String((user as any)?.account_type ?? '') === 'pro';
-  if (isAdmin || isPro || isPremiumActive((user as any)?.premium_expires_at)) return true;
+  if (isAdmin) return true;
 
   // Achat "autonomie" (persisté dans capi_sessions.session_data)
   let sessionData: string | null = null;
