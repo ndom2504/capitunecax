@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       if (!client) return json({ error: 'Client introuvable' }, 404);
 
       const pro = await db
-        .prepare(`SELECT id FROM users WHERE id=? AND role='admin'`)
+        .prepare(`SELECT id FROM users WHERE id=? AND (role='admin' OR account_type='pro')`)
         .bind(targetProId)
         .first();
       if (!pro) return json({ error: 'Pro introuvable' }, 404);
@@ -75,7 +75,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     if (!clientRows[0]) return json({ error: 'Client introuvable' }, 404);
 
     const proRows = await sql<{ id: string }>
-      `SELECT id::text as id FROM users WHERE id = ${targetProId} AND role='admin' LIMIT 1`;
+      `SELECT id::text as id FROM users WHERE id = ${targetProId}::uuid AND (role='admin' OR account_type='pro') LIMIT 1`;
     if (!proRows[0]) return json({ error: 'Pro introuvable' }, 404);
 
     const existingRows = await sql<{ pro_id: string }>

@@ -9,6 +9,8 @@ import {
   getUserFromSessionFullAny,
   hasNeonDatabase,
 } from '../../../lib/db';
+import { isAdminEmail } from '../../../lib/admin-emails';
+import { isTestEmail } from '../../../lib/test-access';
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -37,6 +39,9 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
     const user = await getUserFromSessionFullAny(db, token);
     if (!user) return json({ error: 'Session expirée' }, 401);
 
+    const isAdmin = user.role === 'admin' || isAdminEmail(user.email);
+    const testAccess = isTestEmail(user.email, locals);
+
     let sessionData: string | null = null;
     if (db) {
       const row = await db
@@ -46,7 +51,8 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
       sessionData = row?.session_data ?? null;
     } else {
       const sql = await getNeonSqlClient();
-      const rows = await sql`
+      if (!sql) return json({ session: null, persisted: false });
+      const rows = await sql<{ session_data: string }>`
         SELECT session_data FROM capi_sessions
         WHERE user_id = ${user.id}
         ORDER BY updated_at DESC LIMIT 1
@@ -54,7 +60,15 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
       sessionData = rows[0]?.session_data ?? null;
     }
 
-    return json({ session: sessionData ? JSON.parse(sessionData) : null });
+    const sessionObj = sessionData ? JSON.parse(sessionData) : null;
+    if ((isAdmin || testAccess) && sessionObj && typeof sessionObj === 'object') {
+      const autonomie = (sessionObj as any).autonomie;
+      if (autonomie && typeof autonomie === 'object') {
+        (sessionObj as any).autonomie = { ...autonomie, hasPaidAutonomie: true };
+      }
+    }
+
+    return json({ session: sessionObj });
   } catch (err) {
     console.error('CAPI session GET error:', err);
     return json({ session: null });
@@ -103,6 +117,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
       }
     } else {
       const sql = await getNeonSqlClient();
+      if (!sql) return json({ ok: true, persisted: false });
       await sql`
         INSERT INTO capi_sessions (user_id, session_data, created_at, updated_at)
         VALUES (${user.id}, ${sessionJson}, ${now}, ${now})

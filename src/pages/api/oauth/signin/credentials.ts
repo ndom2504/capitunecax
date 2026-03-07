@@ -19,6 +19,15 @@ function normalizeAccountType(input: unknown): 'client' | 'pro' {
   return String(input ?? '').toLowerCase().trim() === 'pro' ? 'pro' : 'client';
 }
 
+type DbUserRow = {
+  id: string;
+  name: string;
+  password_hash: string | null;
+  role: string;
+  account_type?: string | null;
+  email_verified?: number | null;
+};
+
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   try {
     const body = await request.json() as Record<string, unknown>;
@@ -44,24 +53,35 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
 
     if (db) {
       let hasAccountTypeColumn = true;
-      let user:
-        | { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }
-        | null
-        | undefined;
+      let users: DbUserRow[] = [];
       try {
-        user = await db
-          .prepare(`SELECT * FROM users WHERE email = ? AND account_type = ?`)
-          .bind(emailStr, requestedAccountType)
-          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: number | null }>();
+        const allRes = await db
+          .prepare(`SELECT id, name, password_hash, role, account_type, email_verified FROM users WHERE email = ?`)
+          .bind(emailStr)
+          .all<DbUserRow>();
+        users = (allRes as any)?.results ?? [];
       } catch {
         hasAccountTypeColumn = false;
-        user = await db
-          .prepare(`SELECT * FROM users WHERE email = ?`)
+        const allRes = await db
+          .prepare(`SELECT id, name, password_hash, role, email_verified FROM users WHERE email = ?`)
           .bind(emailStr)
-          .first<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: number | null }>();
+          .all<DbUserRow>();
+        users = (allRes as any)?.results ?? [];
       }
 
-      if (!user) {
+      const matching = hasAccountTypeColumn
+        ? users.filter((u) => (u.account_type === 'pro' ? 'pro' : 'client') === requestedAccountType)
+        : users;
+
+      const user = matching[0] ?? null;
+      const fallbackUser = !user && users.length === 1 ? users[0] : null;
+      const chosen = user ?? fallbackUser;
+
+      if (!chosen && users.length > 1) {
+        return json({ message: 'Plusieurs profils existent pour cet email. Sélectionnez Client ou Pro.', account_type_mismatch: true }, 409);
+      }
+
+      if (!chosen) {
         // Auto-inscription si le compte n'existe pas (comportement MVP)
         const userId = uuid();
         userIdForResponse = userId;
@@ -83,23 +103,23 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         }
         sessionToken = await createSessionAny(db, userId);
       } else {
-        userIdForResponse = user.id;
+        userIdForResponse = chosen.id;
         // Vérification mot de passe si hash présent
-        if (user.password_hash) {
-          const valid = await verifyPassword(user.password_hash, String(password));
+        if (chosen.password_hash) {
+          const valid = await verifyPassword(chosen.password_hash, String(password));
           if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
         }
         // Bloquer si email non vérifié
-        if ((user.email_verified ?? 1) === 0) {
+        if ((chosen.email_verified ?? 1) === 0) {
           return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
         }
-        displayName = user.name || nameFromEmail(emailStr);
-        role = isAdminEmail(emailStr) ? 'admin' : user.role;
-        account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
-        if (role === 'admin' && user.role !== 'admin') {
-          await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(user.id).run();
+        displayName = chosen.name || nameFromEmail(emailStr);
+        role = isAdminEmail(emailStr) ? 'admin' : chosen.role;
+        account_type = hasAccountTypeColumn ? (chosen.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
+        if (role === 'admin' && chosen.role !== 'admin') {
+          await db.prepare(`UPDATE users SET role='admin', updated_at=datetime('now') WHERE id=?`).bind(chosen.id).run();
         }
-        sessionToken = await createSessionAny(db, user.id);
+        sessionToken = await createSessionAny(db, chosen.id);
       }
     } else if (useNeon) {
       // Neon peut échouer (table inexistante, timeout, connexion refusée).
@@ -109,19 +129,26 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
         const sql = await getNeonSqlClient();
         if (sql) {
           let hasAccountTypeColumn = true;
-          let user: { id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null } | null;
+          let users: Array<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null }> = [];
           try {
-            const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
-              `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} AND account_type = ${requestedAccountType} LIMIT 1`;
-            user = rows[0] ?? null;
+            users = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null; email_verified?: boolean | null }>
+              `SELECT id, name, password_hash, role, account_type, email_verified FROM users WHERE email = ${emailStr}`;
           } catch {
             hasAccountTypeColumn = false;
-            const rows = await sql<{ id: string; name: string; password_hash: string | null; role: string; account_type?: string | null }>
-              `SELECT id, name, password_hash, role, account_type FROM users WHERE email = ${emailStr} LIMIT 1`;
-            user = rows[0] ?? null;
+            users = await sql<{ id: string; name: string; password_hash: string | null; role: string; email_verified?: boolean | null }>
+              `SELECT id, name, password_hash, role, email_verified FROM users WHERE email = ${emailStr}`;
           }
 
-          if (!user) {
+          const matching = hasAccountTypeColumn
+            ? users.filter((u) => (u.account_type === 'pro' ? 'pro' : 'client') === requestedAccountType)
+            : users;
+          const chosen = matching[0] ?? (users.length === 1 ? users[0] : null);
+
+          if (!chosen && users.length > 1) {
+            return json({ message: 'Plusieurs profils existent pour cet email. Sélectionnez Client ou Pro.', account_type_mismatch: true }, 409);
+          }
+
+          if (!chosen) {
             const userId = uuid();
             userIdForResponse = userId;
             displayName = nameFromEmail(emailStr);
@@ -133,21 +160,21 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
             }
             sessionToken = await createSessionAny(null, userId);
           } else {
-            userIdForResponse = user.id;
-            if (user.password_hash) {
-              const valid = await verifyPassword(user.password_hash, String(password));
+            userIdForResponse = chosen.id;
+            if (chosen.password_hash) {
+              const valid = await verifyPassword(chosen.password_hash, String(password));
               if (!valid) return json({ message: 'Mot de passe incorrect.' }, 401);
             }
-            if (user.email_verified === false) {
+            if (chosen.email_verified === false) {
               return json({ message: 'Veuillez vérifier votre adresse courriel avant de vous connecter.', email_not_verified: true, email: emailStr }, 403);
             }
-            displayName = user.name || nameFromEmail(emailStr);
-            role = isAdminEmail(emailStr) ? 'admin' : user.role;
-            account_type = hasAccountTypeColumn ? (user.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
-            if (role === 'admin' && user.role !== 'admin') {
-              await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${user.id}`;
+            displayName = chosen.name || nameFromEmail(emailStr);
+            role = isAdminEmail(emailStr) ? 'admin' : chosen.role;
+            account_type = hasAccountTypeColumn ? (chosen.account_type === 'pro' ? 'pro' : 'client') : requestedAccountType;
+            if (role === 'admin' && chosen.role !== 'admin') {
+              await sql`UPDATE users SET role = 'admin', updated_at = now() WHERE id = ${chosen.id}`;
             }
-            sessionToken = await createSessionAny(null, user.id);
+            sessionToken = await createSessionAny(null, chosen.id);
           }
           neonSuccess = true;
         }

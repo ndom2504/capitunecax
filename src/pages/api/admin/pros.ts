@@ -1,5 +1,9 @@
 /**
- * GET /api/admin/pros — Liste des pros/admins (pour assignations)
+ * GET /api/admin/pros — Liste des comptes pro/admin (pour assignations)
+ *
+ * IMPORTANT: côté mobile, les conseillers visibles utilisent la logique:
+ *   role='admin' OR account_type='pro'
+ * On aligne donc la liste d'assignation admin sur cette même règle.
  */
 import type { APIRoute } from 'astro';
 import { getNeonSqlClient, hasNeonDatabase, getUserFromSessionAny } from '../../../lib/db';
@@ -19,9 +23,9 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
     if (db) {
       const rows = await db
         .prepare(
-          `SELECT id, name, email, avatar_key, created_at
+          `SELECT id, name, email, avatar_key, role, account_type, suspended, created_at
            FROM users
-           WHERE role='admin'
+           WHERE role='admin' OR account_type='pro'
            ORDER BY created_at ASC`
         )
         .all<Record<string, unknown>>();
@@ -32,9 +36,17 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
     if (!sql) return json({ error: 'DB non disponible' }, 503);
 
     const pros = await sql<Record<string, unknown>>`
-      SELECT id::text as id, name, email, avatar_key, created_at::text as created_at
+      SELECT
+        id::text as id,
+        name,
+        email,
+        avatar_key,
+        role,
+        account_type,
+        suspended,
+        created_at::text as created_at
       FROM users
-      WHERE role='admin'
+      WHERE role='admin' OR account_type='pro'
       ORDER BY created_at ASC
     `;
 

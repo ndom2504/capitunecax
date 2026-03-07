@@ -198,6 +198,8 @@ export interface UserInfo {
   role: 'client' | 'pro' | 'admin';
   account_type: 'client' | 'pro';
   avatar?: string | null;
+  premium_active?: boolean;
+  autonomie_unlocked?: boolean;
 }
 
 export interface SignupPayload {
@@ -225,6 +227,7 @@ export interface UserProfile {
   currency_code: string;
   premium_expires_at: string | null;
   premium_active: boolean;
+  autonomie_unlocked: boolean;
 }
 
 export type UserProfileUpdate = Partial<Pick<

@@ -7,9 +7,13 @@ import type { APIRoute } from 'astro';
 import { getNeonSqlClient, hasNeonDatabase, getUserFromSessionAny } from '../../lib/db';
 import { isValidCatalogId } from '../../lib/catalog';
 
-export const GET: APIRoute = async ({ cookies, locals }) => {
+export const GET: APIRoute = async ({ cookies, locals, request }) => {
   // Authentification requise (client ou admin)
-  const token = cookies.get('capitune_session')?.value;
+  // Support header Bearer token (mobile) + cookie (web)
+  const authHeader = request.headers.get('Authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const cookieToken = cookies.get('capitune_session')?.value;
+  const token = bearerToken ?? cookieToken;
   if (!token) return json({ error: 'Non connecté' }, 401);
 
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);

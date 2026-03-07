@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getUserFromSessionFullAny, hasNeonDatabase } from '../../../lib/db';
+import { isTestEmail } from '../../../lib/test-access';
 
 export const POST: APIRoute = async ({ cookies, locals }) => {
   const token = cookies.get('capitune_session')?.value;
@@ -11,6 +12,11 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
 
   const me = await getUserFromSessionFullAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
+
+  // Compte test : aucun paiement ne doit être créé.
+  if (isTestEmail(me.email, locals)) {
+    return json({ error: 'Paiements désactivés pour ce compte de test.' }, 403);
+  }
 
   const clientId = locals?.runtime?.env?.PAYPAL_CLIENT_ID || import.meta.env.PAYPAL_CLIENT_ID;
   const secret = locals?.runtime?.env?.PAYPAL_SECRET || import.meta.env.PAYPAL_SECRET;

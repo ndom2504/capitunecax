@@ -9,7 +9,7 @@ import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import { buildMotifBudget } from '../../../lib/autonomie-steps';
-import { autonomiePaymentApi } from '../../../lib/api';
+import { autonomiePaymentApi, userApi } from '../../../lib/api';
 import type { AutonomieStep, CapiMotif } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -54,7 +54,7 @@ const MOTIF_EMOJI: Record<string, string> = {
 export default function AutonomieIndexScreen() {
   const router = useRouter();
   const { session } = useCapiSession();
-  const { token, user } = useAuth();
+  const { token, user, setUser } = useAuth();
   const [paying, setPaying] = useState(false);
   const [priceCents, setPriceCents] = useState<number | null>(null);
   const [priceCurrency, setPriceCurrency] = useState<string>('CAD');
@@ -62,9 +62,30 @@ export default function AutonomieIndexScreen() {
   const motif: CapiMotif = (project?.motif ?? 'visiter') as CapiMotif;
   const motifLabel = MOTIF_LABELS[motif] ?? 'Projet';
 
-  const hasPaidAutonomie = Boolean(project?.hasPaidAutonomie) || user?.role === 'admin';
+  const hasPaidAutonomie =
+    Boolean(project?.hasPaidAutonomie) ||
+    user?.role === 'admin' ||
+    Boolean(user?.autonomie_unlocked) ||
+    Boolean(user?.premium_active);
 
   const budget = useMemo(() => buildMotifBudget(motif), [motif]);
+
+  // Rafraîchir silencieusement le profil : utile si l'admin a débloqué Autonomie.
+  useEffect(() => {
+    let alive = true;
+    if (!token || !user) return;
+    userApi.getProfile(token).then((res) => {
+      if (!alive) return;
+      if (res.status !== 200 || !res.data) return;
+      const next = {
+        ...user,
+        premium_active: Boolean((res.data as any).premium_active),
+        autonomie_unlocked: Boolean((res.data as any).autonomie_unlocked),
+      };
+      setUser(next);
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [token]);
 
   const payAmountLabel = useMemo(() => {
     if (!priceCents || priceCents <= 0) return null;

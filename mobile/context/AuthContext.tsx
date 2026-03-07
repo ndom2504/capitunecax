@@ -26,22 +26,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTimeout(async () => {
       try {
         const res = await userApi.getProfile(sessionToken);
-        const avatarKey = String(res.data?.avatar_key ?? '').trim();
-        if (res.status === 200 && avatarKey) {
-          const currentAvatar = String(sessionUser.avatar ?? '').trim();
-          const currentRenderable = resolveAvatarUri(currentAvatar);
-          const profileRenderable = resolveAvatarUri(avatarKey);
+        if (res.status !== 200 || !res.data) return;
 
-          const shouldReplace = !currentAvatar || !currentRenderable;
-          if (!profileRenderable) return;
-          const nextUser: UserInfo = {
-            ...sessionUser,
-            avatar: shouldReplace ? profileRenderable : sessionUser.avatar,
-          };
-          if (nextUser.avatar !== sessionUser.avatar) {
-            await saveSession(sessionToken, nextUser);
-            setUser(nextUser);
-          }
+        const avatarKey = String(res.data?.avatar_key ?? '').trim();
+        const currentAvatar = String(sessionUser.avatar ?? '').trim();
+        const currentRenderable = resolveAvatarUri(currentAvatar);
+        const profileRenderable = resolveAvatarUri(avatarKey);
+
+        const shouldReplaceAvatar = Boolean(avatarKey) && Boolean(profileRenderable) && (!currentAvatar || !currentRenderable);
+
+        const premiumActive = Boolean((res.data as any).premium_active);
+        const autonomieUnlocked = Boolean((res.data as any).autonomie_unlocked);
+
+        const nextUser: UserInfo = {
+          ...sessionUser,
+          avatar: shouldReplaceAvatar ? profileRenderable : sessionUser.avatar,
+          premium_active: premiumActive,
+          autonomie_unlocked: autonomieUnlocked,
+        };
+
+        const changed =
+          nextUser.avatar !== sessionUser.avatar ||
+          Boolean((sessionUser as any).premium_active) !== premiumActive ||
+          Boolean((sessionUser as any).autonomie_unlocked) !== autonomieUnlocked;
+
+        if (changed) {
+          await saveSession(sessionToken, nextUser);
+          setUser(nextUser);
         }
       } catch {
         // ignore: pas bloquant si l'API profil est indisponible

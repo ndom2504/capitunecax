@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -24,14 +24,14 @@ export default function ConseillersScreen() {
   const { token } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const listRef = useRef<FlatList<TeamMember>>(null);
 
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const cardW = useMemo(() => Math.min(SCREEN_W - 32, 420), []);
-  const sidePad = useMemo(() => Math.max(16, (SCREEN_W - cardW) / 2), [cardW]);
+  const cardW = Math.min(SCREEN_W - 32, 440);
+  const cardGap = 12;
+  const sidePad = Math.max(16, (SCREEN_W - cardW) / 2);
 
   const load = async () => {
     setLoading(true);
@@ -51,6 +51,10 @@ export default function ConseillersScreen() {
   useEffect(() => {
     load();
   }, [token]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [team.length]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -88,69 +92,121 @@ export default function ConseillersScreen() {
         </View>
       ) : (
         <FlatList
-          ref={listRef}
           data={team}
           keyExtractor={(m) => m.id}
           horizontal
-          pagingEnabled
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: sidePad }}
-          snapToAlignment="start"
           decelerationRate="fast"
+          snapToInterval={cardW + cardGap}
+          snapToAlignment="start"
+          disableIntervalMomentum
+          contentContainerStyle={{ paddingHorizontal: sidePad }}
+          ItemSeparatorComponent={() => <View style={{ width: cardGap }} />}
           onMomentumScrollEnd={(e) => {
             const x = e.nativeEvent.contentOffset.x;
-            const idx = Math.round(x / cardW);
+            const idx = Math.round(x / (cardW + cardGap));
             setActiveIndex(Math.max(0, Math.min(team.length - 1, idx)));
           }}
           renderItem={({ item }) => {
             const src = getAvatarSource(item.avatar_key);
+            const services = Array.isArray(item.pro_services) ? item.pro_services.filter(Boolean) : [];
+            const shown = services.slice(0, 3);
+            const extra = Math.max(0, services.length - shown.length);
+            const initials = String(item.name ?? 'C')
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join('')
+              .toUpperCase();
             return (
               <View style={[styles.card, { width: cardW }]}>
-                <View style={styles.photoWrap}>
-                  {src ? (
-                    <Image source={src} style={styles.photo} resizeMode="cover" />
-                  ) : (
-                    <View style={styles.photoPlaceholder}>
-                      <Text style={styles.photoInitial}>{(item.name?.[0] ?? 'C').toUpperCase()}</Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={styles.cardBody}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  {!!item.location && (
-                    <View style={styles.metaRow}>
-                      <Ionicons name="location-outline" size={14} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{item.location}</Text>
-                    </View>
-                  )}
-                  {!!item.pro_experience_years && (
-                    <View style={styles.metaRow}>
-                      <Ionicons name="school-outline" size={14} color={Colors.textMuted} />
-                      <Text style={styles.metaText}>{item.pro_experience_years} ans d'expérience</Text>
-                    </View>
-                  )}
-
-                  {!!item.bio && <Text style={styles.bio}>{item.bio}</Text>}
-
-                  <View style={styles.actionsRow}>
-                    <TouchableOpacity
-                      style={styles.contactBtn}
-                      activeOpacity={0.85}
-                      onPress={() => router.push({
-                        pathname: '/(tabs)/messagerie',
-                        params: {
-                          advisorName: item.name,
-                          advisorAvatarKey: item.avatar_key,
-                          prefill: '1',
-                        },
-                      } as any)}
-                    >
-                      <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
-                      <Text style={styles.contactText}>Contacter</Text>
-                    </TouchableOpacity>
+                <View style={styles.cardTopRow}>
+                  <View style={styles.avatarWrap}>
+                    {src ? (
+                      <Image source={src} style={styles.avatarImg} />
+                    ) : (
+                      <View style={styles.avatarFallback}>
+                        <Text style={styles.avatarInitial}>{initials}</Text>
+                      </View>
+                    )}
                   </View>
+
+                  <View style={styles.cardTopText}>
+                    <Text style={styles.name}>{item.name}</Text>
+                    {!!item.pro_diploma ? (
+                      <Text style={styles.titleLine} numberOfLines={1}>{item.pro_diploma}</Text>
+                    ) : (
+                      <Text style={styles.titleLine} numberOfLines={1}>Conseiller Pro CAPITUNE</Text>
+                    )}
+                    <View style={styles.metaRow}>
+                      {!!item.location && (
+                        <View style={styles.metaItem}>
+                          <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
+                          <Text style={styles.metaText} numberOfLines={1}>{item.location}</Text>
+                        </View>
+                      )}
+                      {!!item.pro_experience_years && (
+                        <View style={styles.metaItem}>
+                          <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
+                          <Text style={styles.metaText}>{item.pro_experience_years} ans</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.contactIconBtn}
+                    activeOpacity={0.85}
+                    onPress={() => router.push({
+                      pathname: '/(tabs)/messagerie',
+                      params: {
+                        advisorName: item.name,
+                        advisorAvatarKey: item.avatar_key,
+                        prefill: '1',
+                      },
+                    } as any)}
+                    accessibilityLabel="Contacter"
+                  >
+                    <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.orange} />
+                  </TouchableOpacity>
                 </View>
+
+                {!!item.bio && (
+                  <Text style={styles.bio} numberOfLines={3}>{item.bio}</Text>
+                )}
+
+                {(shown.length > 0 || extra > 0) && (
+                  <View style={styles.tags}>
+                    {shown.map((s, i) => (
+                      <View key={`${item.id}-tag-${i}`} style={styles.tag}>
+                        <Text style={styles.tagText} numberOfLines={1}>{s}</Text>
+                      </View>
+                    ))}
+                    {extra > 0 && (
+                      <View style={styles.tag}>
+                        <Text style={styles.tagText}>+{extra}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+
+                <TouchableOpacity
+                  style={styles.contactBtn}
+                  activeOpacity={0.85}
+                  onPress={() => router.push({
+                    pathname: '/(tabs)/messagerie',
+                    params: {
+                      advisorName: item.name,
+                      advisorAvatarKey: item.avatar_key,
+                      prefill: '1',
+                    },
+                  } as any)}
+                >
+                  <Ionicons name="chatbubble-ellipses-outline" size={18} color="#fff" />
+                  <Text style={styles.contactText}>Contacter</Text>
+                </TouchableOpacity>
               </View>
             );
           }}
@@ -185,6 +241,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   counter: { fontSize: 12, color: Colors.textMuted, marginTop: 10 },
 
+  listContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24, gap: 12 },
+
   emptyBox: { alignItems: 'center', justifyContent: 'center', paddingTop: 90, paddingHorizontal: 32, gap: 10 },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
   emptySub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
@@ -194,26 +252,36 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: Colors.border,
-    overflow: 'hidden',
-    marginHorizontal: 0,
+    padding: 14,
     ...UI.cardShadow,
   },
-  photoWrap: { height: 250, backgroundColor: Colors.offWhite },
-  photo: { width: '100%', height: '100%' },
-  photoPlaceholder: {
-    flex: 1,
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatarWrap: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: Colors.offWhite },
+  avatarImg: { width: '100%', height: '100%' },
+  avatarFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primary },
+  avatarInitial: { fontSize: 15, fontWeight: '900', color: Colors.white },
+  cardTopText: { flex: 1, minWidth: 0 },
+  name: { fontSize: 15, fontWeight: '900', color: Colors.text },
+  titleLine: { fontSize: 12, color: Colors.textMuted, marginTop: 1 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 6, flexWrap: 'wrap' },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4, maxWidth: '75%' },
+  metaText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
+  contactIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.primary,
   },
-  photoInitial: { fontSize: 46, fontWeight: '900', color: Colors.white },
-  cardBody: { padding: 16, gap: 8 },
-  name: { fontSize: 18, fontWeight: '900', color: Colors.text },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
-  bio: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19, marginTop: 4 },
+  bio: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19, marginTop: 12 },
 
-  actionsRow: { flexDirection: 'row', marginTop: 10 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  tag: { backgroundColor: Colors.orange + '15', borderRadius: 20, paddingVertical: 3, paddingHorizontal: 10 },
+  tagText: { fontSize: 11, color: Colors.orange, fontWeight: '600', maxWidth: 220 },
+
   contactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -223,7 +291,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    flex: 1,
+    marginTop: 12,
   },
   contactText: { color: Colors.white, fontSize: 14, fontWeight: '900' },
 });

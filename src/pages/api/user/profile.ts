@@ -10,6 +10,8 @@ import {
   getUserFromSessionFullAny,
   hasNeonDatabase,
 } from '../../../lib/db';
+import { isAdminEmail } from '../../../lib/admin-emails';
+import { isTestEmail } from '../../../lib/test-access';
 
 export const GET: APIRoute = async ({ cookies, locals }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
@@ -21,6 +23,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
   if (!db && !useNeon) {
     const user = await getUserFromSessionAny(null, token);
     if (!user) return json({ error: 'Session expirée' }, 401);
+    const admin = user.role === 'admin' || isAdminEmail(user.email);
     return json({
       id: user.id,
       email: user.email,
@@ -35,7 +38,8 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
       notif_msg: false,
       currency_code: 'CAD',
       premium_expires_at: null,
-      premium_active: false,
+      premium_active: admin,
+      autonomie_unlocked: admin,
     });
   }
 
@@ -43,8 +47,32 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
   if (!user) return json({ error: 'Session expirée' }, 401);
 
   const premiumExpiresAt = user.premium_expires_at ?? null;
-  const premiumActive = isPremiumActive(premiumExpiresAt);
+  const admin = user.role === 'admin' || isAdminEmail(user.email);
+  const testAccess = isTestEmail(user.email, locals);
+  const premiumActive = admin || testAccess || isPremiumActive(premiumExpiresAt);
   const currencyCode = typeof user.currency_code === 'string' && user.currency_code.trim() ? user.currency_code.trim().toUpperCase() : 'CAD';
+
+  // Déblocage Autonomie (voir les étapes) : toggle admin stocké en DB
+  let autonomieUnlocked = admin;
+  try {
+    if (db) {
+      const row = await db
+        .prepare(`SELECT unlocked FROM autonomie_unlocks WHERE user_id=? LIMIT 1`)
+        .bind(String(user.id))
+        .first<{ unlocked?: number | boolean | null }>();
+      autonomieUnlocked = admin || Boolean((row as any)?.unlocked);
+    } else {
+      const sql = await getNeonSqlClient();
+      if (sql) {
+        const rows = await sql<{ unlocked: boolean | null }>`
+          SELECT unlocked FROM autonomie_unlocks WHERE user_id = ${String(user.id)} LIMIT 1
+        `;
+        autonomieUnlocked = admin || Boolean(rows[0]?.unlocked);
+      }
+    }
+  } catch {
+    autonomieUnlocked = admin;
+  }
 
   return json({
     id: user.id,
@@ -61,6 +89,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
     currency_code: currencyCode,
     premium_expires_at: premiumExpiresAt,
     premium_active: premiumActive,
+    autonomie_unlocked: autonomieUnlocked,
   });
 };
 

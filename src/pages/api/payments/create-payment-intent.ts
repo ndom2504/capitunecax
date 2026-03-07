@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
+import { isTestEmail } from '../../../lib/test-access';
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -23,6 +24,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     });
     
     const { amount, invoiceId, services, customerEmail, customerName } = await request.json();
+
+    // Compte test : aucun paiement ne doit être créé.
+    if (isTestEmail(customerEmail, locals)) {
+      return new Response(JSON.stringify({ error: 'Paiements désactivés pour ce compte de test.' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     
     if (!amount || amount <= 0) {
       return new Response(JSON.stringify({ error: 'Invalid amount' }), { 

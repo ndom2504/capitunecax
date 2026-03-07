@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { getUserFromSessionAny } from '../../../lib/db';
+import { isTestEmail } from '../../../lib/test-access';
 
 const ALLOWED_MOTIFS = [
   'visiter',
@@ -27,6 +28,11 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   // getUserFromSessionAny gère : token hex64 (D1/Neon) + token base64 (fallback sans DB)
   const me = await getUserFromSessionAny(db, token);
   if (!me) return json({ error: 'Session expirée' }, 401);
+
+  // Compte test : aucun paiement ne doit être créé.
+  if (isTestEmail(me.email, locals)) {
+    return json({ error: 'Paiements désactivés pour ce compte de test.' }, 403);
+  }
 
   const stripeKey = (
     locals?.runtime?.env?.STRIPE_SECRET_KEY ||

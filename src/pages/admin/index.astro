@@ -573,7 +573,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       d.pros.forEach(function(p) {
         if (!p || !p.id) return;
         if (String(p.id) === String(_meId)) return;
-        var label = (p.name ? String(p.name) : 'Pro') + (p.email ? ' — ' + String(p.email) : '');
+        var roleLabel = p.role === 'admin' ? 'Admin' : (p.account_type === 'pro' ? 'Pro' : 'Compte');
+        var label = (p.name ? String(p.name) : 'Pro')
+          + (p.email ? ' — ' + String(p.email) : '')
+          + ' (' + roleLabel + ')';
         sel.appendChild(new Option(label, String(p.id)));
       });
       sel.value = _meId;
@@ -874,8 +877,48 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       + infoCell('Téléphone', u.phone || '—') + infoCell('Ville / Pays', u.location || '—')
       + infoCell('Rôle', u.role) + infoCell('Inscrit le', new Date(u.created_at).toLocaleDateString('fr-CA'))
       + '</div>'
+      + '<div class="drawer-section" style="margin-top:18px">'
+      +   '<div class="drawer-section-title">Accès</div>'
+      +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">'
+      +     '<div style="min-width:0">'
+      +       '<div style="font-weight:700">Autonomie (étapes)</div>'
+      +       '<div style="color:var(--muted);font-size:12px;margin-top:2px">'
+      +         (u.autonomie_unlocked ? 'Débloqué' : 'Bloqué (paiement requis)')
+      +       '</div>'
+      +     '</div>'
+      +     '<button class="btn-sm" onclick="toggleAutonomieUnlock()">'
+      +       (u.autonomie_unlocked ? 'Rebloquer' : 'Débloquer')
+      +     '</button>'
+      +   '</div>'
+      + '</div>'
       + (u.bio ? '<div style="margin-top:12px;background:var(--card);border-radius:8px;padding:14px;font-size:13px;color:var(--muted)"><strong style="color:var(--text)">Bio :</strong> ' + esc(u.bio) + '</div>' : '')
       + '</div>';
+  }
+
+  async function toggleAutonomieUnlock() {
+    if (!_clientData || !_currentClient) return;
+    var u = _clientData.user || {};
+    var next = !u.autonomie_unlocked;
+    var label = next ? 'Débloquer Autonomie (voir les étapes)' : 'Rebloquer Autonomie (paiement requis)';
+    if (!confirm(label + ' ?')) return;
+
+    try {
+      const r = await fetch('/api/admin/autonomie-unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: _currentClient, unlocked: next }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) {
+        _clientData.user.autonomie_unlocked = !!d.unlocked;
+        toast('Accès Autonomie mis à jour ✓');
+        renderDrawerTab('profil');
+      } else {
+        toast(d.error || 'Erreur', true);
+      }
+    } catch {
+      toast('Erreur de connexion', true);
+    }
   }
 
   function renderPaiements() {

@@ -1,4 +1,4 @@
-const DEFAULT_ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com'];
+const DEFAULT_ADMIN_EMAILS = ['info@misterdil.ca', 'divinegismille@gmail.com', 'morelstevensndong@gmail.com'];
 const DEFAULT_SUPER_ADMIN_EMAILS: string[] = [];
 
 function normalizeEmail(value: unknown): string {
@@ -21,7 +21,10 @@ let cachedAdminEmails: string[] | null = null;
 
 export function getAdminEmails(): string[] {
   if (cachedAdminEmails) return cachedAdminEmails;
-  const parsed = parseAdminEmails((import.meta as any).env?.ADMIN_EMAILS);
+  const raw =
+    (import.meta as any).env?.ADMIN_EMAILS ??
+    (globalThis as any).process?.env?.ADMIN_EMAILS;
+  const parsed = parseAdminEmails(raw);
   cachedAdminEmails = parsed.length ? parsed : DEFAULT_ADMIN_EMAILS;
   return cachedAdminEmails;
 }
@@ -30,7 +33,10 @@ let cachedSuperAdminEmails: string[] | null = null;
 
 export function getSuperAdminEmails(): string[] {
   if (cachedSuperAdminEmails) return cachedSuperAdminEmails;
-  const parsed = parseAdminEmails((import.meta as any).env?.SUPER_ADMIN_EMAILS);
+  const raw =
+    (import.meta as any).env?.SUPER_ADMIN_EMAILS ??
+    (globalThis as any).process?.env?.SUPER_ADMIN_EMAILS;
+  const parsed = parseAdminEmails(raw);
   cachedSuperAdminEmails = parsed.length ? parsed : DEFAULT_SUPER_ADMIN_EMAILS;
   return cachedSuperAdminEmails;
 }

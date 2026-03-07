@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
   // Tous les admins peuvent consulter la fiche de n'importe quel client
 
   if (db) {
-    const [user, projects, messages, payments] = await Promise.all([
+    const [user, projects, messages, payments, unlockRow] = await Promise.all([
       db.prepare(`SELECT id, name, email, phone, location, bio, role, created_at FROM users WHERE id=?`)
         .bind(id).first<Record<string, unknown>>(),
 
@@ -34,9 +34,22 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
 
       db.prepare(`SELECT * FROM payments WHERE user_id=? ORDER BY created_at DESC`)
         .bind(id).all<Record<string, unknown>>(),
+
+      (async () => {
+        try {
+          return await db
+            .prepare(`SELECT unlocked FROM autonomie_unlocks WHERE user_id=? LIMIT 1`)
+            .bind(id)
+            .first<{ unlocked?: number | boolean | null }>();
+        } catch {
+          return null;
+        }
+      })(),
     ]);
 
     if (!user) return json({ error: 'Client introuvable' }, 404);
+
+    (user as any).autonomie_unlocked = Boolean((unlockRow as any)?.unlocked);
 
     return json({
       user,
@@ -51,7 +64,7 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
 
   // Tous les admins peuvent consulter la fiche de n'importe quel client
 
-  const [userRows, projects, messages, payments] = await Promise.all([
+  const [userRows, projects, messages, payments, unlockRows] = await Promise.all([
     sql<Record<string, unknown>>`
       SELECT id::text as id, name, email, phone, location, bio, role, created_at::text as created_at
       FROM users WHERE id = ${id} LIMIT 1
@@ -74,10 +87,21 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
       FROM payments WHERE user_id = ${id}
       ORDER BY created_at DESC
     `,
+
+    (async () => {
+      try {
+        return await sql<{ unlocked: boolean | null }>`
+          SELECT unlocked FROM autonomie_unlocks WHERE user_id = ${String(id)} LIMIT 1
+        `;
+      } catch {
+        return [] as Array<{ unlocked: boolean | null }>;
+      }
+    })(),
   ]);
 
   const user = userRows[0] ?? null;
   if (!user) return json({ error: 'Client introuvable' }, 404);
+  (user as any).autonomie_unlocked = Boolean((unlockRows as any)?.[0]?.unlocked);
   return json({ user, projects, messages, payments });
 };
 
