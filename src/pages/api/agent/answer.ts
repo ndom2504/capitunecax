@@ -388,24 +388,15 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   // --- Mode Autonomie : OpenAI strict (pas de fallback KB) -----------------
   if (context === 'autonomie') {
+    // Mode dev/test: pas d'obligation de paiement, mais on exige une session.
     if (!hasSession) {
       return json(
         {
-          error: 'Paiement requis pour le mode autonomie guidée.',
-          code: 'PAYMENT_REQUIRED',
-          meta: { topic, source: 'paywall' },
+          error: 'Non connecté.',
+          code: 'AUTH_REQUIRED',
+          meta: { topic, source: 'error' },
         },
-        402
-      );
-    }
-    if (!isPaying) {
-      return json(
-        {
-          error: 'Paiement requis pour le mode autonomie guidée.',
-          code: 'PAYMENT_REQUIRED',
-          meta: { topic, source: 'paywall' },
-        },
-        402
+        401
       );
     }
     if (!openaiKey) {
