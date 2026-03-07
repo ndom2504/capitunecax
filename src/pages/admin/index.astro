@@ -105,7 +105,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .avatar-sm {
       width: 34px; height: 34px; border-radius: 50%; background: var(--accent);
       display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0;
+      overflow: hidden;
     }
+    .avatar-sm img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .client-name { font-weight: 600; }
     .client-email { color: var(--muted); font-size: 12px; }
     .status-pill {
@@ -165,7 +167,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .avatar-lg {
       width: 48px; height: 48px; border-radius: 50%; background: var(--accent);
       display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #fff; flex-shrink: 0;
+      overflow: hidden;
     }
+    .avatar-lg img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .drawer-name { font-size: 16px; font-weight: 700; }
     .drawer-email { color: var(--muted); font-size: 13px; }
     .btn-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; }
@@ -535,9 +539,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     }
     tbody.innerHTML = d.recentUsers.map(function(u) {
       var initials = (u.name || u.email).charAt(0).toUpperCase();
+      var av = avatarSmHtml(u.avatar_key, u.name || u.email);
       var date = new Date(u.created_at).toLocaleDateString('fr-CA');
       return '<tr class="client-row" onclick="openClient(\''+u.id+'\')">'
-        + '<td><div style="display:flex;align-items:center;gap:10px"><div class="avatar-sm">'+initials+'</div>'
+        + '<td><div style="display:flex;align-items:center;gap:10px">' + av
         + '<span class="client-name">'+esc(u.name || '—')+'</span></div></td>'
         + '<td class="client-email">'+esc(u.email)+'</td>'
         + '<td style="color:var(--muted);font-size:12px">'+date+'</td>'
@@ -621,6 +626,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     }
     tbody.innerHTML = d.clients.map(function(c) {
       var initials = (c.name || c.email).charAt(0).toUpperCase();
+      var av = avatarSmHtml(c.avatar_key, c.name || c.email);
       var type = c.project_type ? c.project_type.replace(/_/g,' ') : '—';
       var status = c.project_status || 'aucun';
       var pillClass = 'pill-' + status;
@@ -631,7 +637,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         var assignLabel = _isSuper ? 'Assigner' : "M'assigner";
         return '<tr>'
           + '<td><div style="display:flex;align-items:center;gap:10px">'
-          + '<div class="avatar-sm">'+initials+'</div>'
+          + av
           + '<div><div class="client-name">'+esc(c.name||'—')+'</div><div class="client-email">'+esc(c.email)+'</div></div></div></td>'
           + '<td style="font-size:12px">'+esc(type)+'</td>'
           + '<td><span class="status-pill '+pillClass+'">'+pillLabel+'</span></td>'
@@ -648,7 +654,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       var delBtn = '<button class="btn-delete" onclick="event.stopPropagation();deleteUser(\''+c.id+'\', \''+esc(c.name||c.email)+'\')"><i class="fa fa-trash"></i></button>';
       return '<tr class="client-row" onclick="openClient(\''+c.id+'\')">'  
         + '<td><div style="display:flex;align-items:center;gap:10px">'
-        + '<div class="avatar-sm">'+initials+'</div>'
+        + av
         + '<div><div class="client-name">'+esc(c.name||'—')+'</div><div class="client-email">'+esc(c.email)+'</div></div></div></td>'
         + '<td style="font-size:12px">'+esc(type)+'</td>'
         + '<td><span class="status-pill '+pillClass+'">'+pillLabel+'</span></td>'
@@ -694,6 +700,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       }
       tbody.innerHTML = d.pros.map(function(p) {
         var initials = (p.name || p.email || '?').charAt(0).toUpperCase();
+        var av = avatarSmHtml(p.avatar_key, p.name || p.email || '?');
         var roleBadge = p.role === 'admin'
           ? '<span class="pro-badge badge-admin"><i class="fa fa-shield-alt"></i> Admin</span>'
           : '';
@@ -722,7 +729,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         var suspBadgePro = isSuspPro ? ' <span class="badge-suspended"><i class="fa fa-ban"></i> Suspendu</span>' : '';
         return '<tr>'
           + '<td><div style="display:flex;align-items:center;gap:10px">'
-          + '<div class="avatar-sm">' + initials + '</div>'
+          + av
           + '<div><div class="client-name">' + esc(p.name || '—') + suspBadgePro + '</div><div class="client-email">' + esc(p.email) + '</div></div>'
           + '</div></td>'
           + '<td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + roleBadge + ' ' + typeBadge + '</div></td>'
@@ -796,7 +803,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     var u = _clientData.user;
     document.getElementById('dr-name').textContent  = u.name || '—';
     document.getElementById('dr-email').textContent = u.email;
-    document.getElementById('dr-avatar').textContent = (u.name || u.email).charAt(0).toUpperCase();
+    setAvatarEl(document.getElementById('dr-avatar'), u.avatar_key, (u.name || u.email));
 
     renderDrawerTab('messages');
     // Activer le 1er onglet
@@ -1116,6 +1123,41 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
   function esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function isValidAvatarKey(v) {
+    if (!v) return false;
+    var s = String(v).trim();
+    return /^https?:\/\//i.test(s) || /^data:image\//i.test(s);
+  }
+
+  function avatarSmHtml(avatarKey, fallbackText) {
+    var fb = (fallbackText || '?').charAt(0).toUpperCase();
+    if (isValidAvatarKey(avatarKey)) {
+      return '<div class="avatar-sm"><img src="' + esc(avatarKey) + '" alt="Avatar" /></div>';
+    }
+    return '<div class="avatar-sm">' + esc(fb) + '</div>';
+  }
+
+  function setAvatarEl(el, avatarKey, fallbackText) {
+    if (!el) return;
+    var fb = (fallbackText || '?').charAt(0).toUpperCase();
+    if (!isValidAvatarKey(avatarKey)) {
+      el.textContent = fb;
+      return;
+    }
+    try {
+      el.innerHTML = '';
+      var img = document.createElement('img');
+      img.alt = 'Avatar';
+      img.src = String(avatarKey);
+      img.onerror = function() {
+        el.textContent = fb;
+      };
+      el.appendChild(img);
+    } catch (e) {
+      el.textContent = fb;
+    }
   }
 
   function toast(msg, error) {

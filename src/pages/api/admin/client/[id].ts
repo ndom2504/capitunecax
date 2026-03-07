@@ -49,7 +49,7 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
 
     if (db) {
       const user = await db
-        .prepare(`SELECT id, name, email, phone, location, bio, role, created_at FROM users WHERE id=?`)
+        .prepare(`SELECT id, name, email, phone, location, bio, avatar_key, role, created_at FROM users WHERE id=?`)
         .bind(id)
         .first<Record<string, unknown>>();
 
@@ -103,7 +103,7 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
     if (!sql) return json({ error: 'DB non disponible' }, 503);
 
     const userRows = await sql<Record<string, unknown>>`
-      SELECT id::text as id, name, email, phone, location, bio, role, created_at::text as created_at
+      SELECT id::text as id, name, email, phone, location, bio, avatar_key, role, created_at::text as created_at
       FROM users WHERE id = ${id} LIMIT 1
     `;
     const user = userRows[0] ?? null;

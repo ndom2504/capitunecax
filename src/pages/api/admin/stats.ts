@@ -64,10 +64,10 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
     // 5 derniers clients inscrits
     const recent = await db
       .prepare(
-        `SELECT id, name, email, created_at FROM users
+        `SELECT id, name, email, avatar_key, created_at FROM users
          WHERE role='client' ORDER BY created_at DESC LIMIT 5`
       )
-      .all<{ id: string; name: string; email: string; created_at: string }>();
+      .all<{ id: string; name: string; email: string; avatar_key?: string; created_at: string }>();
 
       return json({
       users:    users?.n    ?? 0,
@@ -98,8 +98,8 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
 
   const revenue = await sql<{ total: number }>
     `SELECT COALESCE(SUM(amount), 0)::float8 as total FROM payments WHERE status='paid'`;
-  const recent = await sql<{ id: string; name: string; email: string; created_at: string }>
-    `SELECT id::text as id, name, email, created_at::text as created_at
+  const recent = await sql<{ id: string; name: string; email: string; avatar_key?: string | null; created_at: string }>
+    `SELECT id::text as id, name, email, avatar_key, created_at::text as created_at
      FROM users WHERE role='client' ORDER BY created_at DESC LIMIT 5`;
 
     return json({
