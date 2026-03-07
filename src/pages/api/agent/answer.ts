@@ -402,7 +402,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     if (!openaiKey) {
       return json(
         {
-          error: 'Service IA indisponible.',
+          error: 'Clé OpenAI non configurée (OPENAI_API_KEY).',
           code: 'OPENAI_NOT_CONFIGURED',
           meta: { topic, source: 'error' },
         },
@@ -420,9 +420,10 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     });
 
     if (!ai.ok) {
+      const details = String(ai.error || '').trim();
       return json(
         {
-          error: 'Service IA indisponible.',
+          error: `Erreur OpenAI: ${details ? details.slice(0, 220) : 'inconnue'}`,
           code: 'OPENAI_ERROR',
           details: ai.error,
           meta: { topic, source: 'error' },
