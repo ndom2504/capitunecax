@@ -7,6 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "build:vercel": "astro build --config astro.config.vercel.mjs",
+    "vercel-build": "npm run build:vercel",
     "preview": "astro build && wrangler dev",
     "astro": "astro",
     "cf-typegen": "wrangler types"

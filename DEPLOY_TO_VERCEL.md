@@ -113,21 +113,14 @@ openssl rand -base64 32
 ### vercel.json
 ```json
 {
-  "buildCommand": "astro build --config astro.config.vercel.mjs",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run vercel-build",
   "framework": "astro",
   "devCommand": "astro dev",
   "installCommand": "npm install",
   "env": {
     "NODE_VERSION": "20.x"
   },
-  "regions": ["iad1"],
-  "functions": {
-    "src/pages/api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  "regions": ["iad1"]
 }
 ```
 
@@ -157,6 +150,15 @@ Le `.vercelignore` exclut :
 ---
 
 ## 🌐 Après le Déploiement
+
+### 0. Vérifier que les routes API “agent” existent
+
+Dans un navigateur (ou via curl), testez :
+
+- `GET https://votre-app.vercel.app/api/agent/answer` → doit répondre **405** (méthode non supportée)
+- `POST https://votre-app.vercel.app/api/agent/answer` avec JSON → doit répondre **200**
+
+Si vous obtenez **404**, c’est un souci de build/routage Vercel (pas le code de l’endpoint).
 
 ### 1. Récupérer l'URL de Production
 
