@@ -1,5 +1,12 @@
 import type { APIRoute } from 'astro';
 
+import {
+  getNeonSqlClient,
+  getUserFromSessionFullAny,
+  hasNeonDatabase,
+} from '../../../lib/db';
+import { isPremiumActive } from '../../../lib/premium';
+
 // KB packagée dans le bundle (compatible Cloudflare Workers)
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import kb from '../../../../agent/capitune-kb/capitune-knowledge-base.json';
@@ -20,6 +27,61 @@ type EnvLike = {
   OPENAI_API_KEY?: string;
   OPENAI_MODEL?: string;
 };
+
+async function isPayingUserAny(locals: unknown, sessionToken: string): Promise<boolean> {
+  if (!sessionToken) return false;
+
+  const runtimeEnv = (locals as any)?.runtime?.env as any;
+  const db = (runtimeEnv?.DB as D1Database | null | undefined) ?? null;
+  const useNeon = !db && hasNeonDatabase();
+
+  // Sans DB, on ne peut valider que les infos présentes dans le token (admin/pro).
+  if (!db && !useNeon) {
+    const basicUser = await getUserFromSessionFullAny(null, sessionToken);
+    if (!basicUser) return false;
+    const isAdmin = String((basicUser as any)?.role ?? '') === 'admin';
+    const isPro = String((basicUser as any)?.account_type ?? '') === 'pro';
+    return isAdmin || isPro;
+  }
+
+  const user = await getUserFromSessionFullAny(db, sessionToken);
+  if (!user) return false;
+
+  const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  const isPro = String((user as any)?.account_type ?? '') === 'pro';
+  if (isAdmin || isPro || isPremiumActive((user as any)?.premium_expires_at)) return true;
+
+  // Achat "autonomie" (persisté dans capi_sessions.session_data)
+  let sessionData: string | null = null;
+  try {
+    if (db) {
+      const row = await db
+        .prepare('SELECT session_data FROM capi_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT 1')
+        .bind(user.id)
+        .first<{ session_data: string }>();
+      sessionData = row?.session_data ?? null;
+    } else {
+      const sql = await getNeonSqlClient();
+      if (!sql) return false;
+      const rows = await sql<{ session_data: string }>`
+        SELECT session_data FROM capi_sessions
+        WHERE user_id = ${user.id}
+        ORDER BY updated_at DESC LIMIT 1
+      `;
+      sessionData = rows[0]?.session_data ?? null;
+    }
+  } catch {
+    sessionData = null;
+  }
+
+  if (!sessionData) return false;
+  try {
+    const obj = JSON.parse(sessionData) as any;
+    return Boolean(obj?.autonomie?.hasPaidAutonomie);
+  } catch {
+    return false;
+  }
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -310,17 +372,20 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     `</div>`;
 
   // --- OpenAI (optionnel) --------------------------------------------------
-  // Par sécurité/coûts : on n’active OpenAI que si l’utilisateur est connecté.
+  // Par sécurité/coûts : OpenAI uniquement pour les utilisateurs payants.
   const authHeader = request.headers.get('Authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
   const cookieToken = cookies.get('capitune_session')?.value ?? null;
-  const hasSession = Boolean(bearerToken || cookieToken);
+  const sessionToken = bearerToken || cookieToken;
+  const hasSession = Boolean(sessionToken);
 
   const env = (locals.runtime?.env as EnvLike | undefined) ?? undefined;
   const openaiKey = String(env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY || '').trim();
   const model = String(env?.OPENAI_MODEL || import.meta.env.OPENAI_MODEL || 'gpt-4o-mini').trim();
 
-  if (hasSession && openaiKey) {
+  const isPaying = hasSession ? await isPayingUserAny(locals, String(sessionToken)) : false;
+
+  if (hasSession && openaiKey && isPaying) {
     const ai = await openAiAnswer({
       apiKey: openaiKey,
       model,
