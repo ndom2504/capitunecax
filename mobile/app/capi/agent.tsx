@@ -123,7 +123,8 @@ export default function CapiAgentScreen() {
       }
 
       if (res.status === 404 || res.error || !reply) {
-        const msg = reply || "Service temporairement indisponible. Réessayez dans quelques instants.";
+        const apiError = (res.error || (res.data as any)?.error || '').trim();
+        const msg = reply || apiError || "Service temporairement indisponible. Réessayez dans quelques instants.";
         const errBot: ChatMsg = {
           id: `e-${Date.now()}`,
           sender: 'bot',
