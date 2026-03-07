@@ -130,7 +130,7 @@ export default function MessagerieScreen() {
 
     try {
       if (isCapiAgent) {
-        const res = await agentApi.answer(content, null, token ?? undefined);
+        const res = await agentApi.answer(content, null, token ?? undefined, 'general');
         const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
 
         if (res.error || !reply) {

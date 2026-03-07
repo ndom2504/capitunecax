@@ -20,6 +20,7 @@ type Project = {
 type Body = {
   message?: string;
   project?: Project | null;
+  context?: 'general' | 'autonomie';
 };
 
 type EnvLike = {
@@ -244,6 +245,8 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const message = String(body.message || '').trim();
   if (!message) return json({ error: 'Message vide' }, 400);
 
+  const context: Body['context'] = body.context === 'autonomie' ? 'autonomie' : 'general';
+
   const project = (body.project ?? {}) || {};
   const topic = detectTopic(message, String(project.type || '').trim() || undefined);
   const official = officialLinkForTopic(topic);
@@ -381,6 +384,65 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const model = String(env?.OPENAI_MODEL || import.meta.env.OPENAI_MODEL || 'gpt-4o-mini').trim();
 
   const isPaying = hasSession ? await isPayingUserAny(locals, String(sessionToken)) : false;
+
+  // --- Mode Autonomie : OpenAI strict (pas de fallback KB) -----------------
+  if (context === 'autonomie') {
+    if (!hasSession) {
+      return json(
+        {
+          error: 'Paiement requis pour le mode autonomie guidée.',
+          code: 'PAYMENT_REQUIRED',
+          meta: { topic, source: 'paywall' },
+        },
+        402
+      );
+    }
+    if (!isPaying) {
+      return json(
+        {
+          error: 'Paiement requis pour le mode autonomie guidée.',
+          code: 'PAYMENT_REQUIRED',
+          meta: { topic, source: 'paywall' },
+        },
+        402
+      );
+    }
+    if (!openaiKey) {
+      return json(
+        {
+          error: 'Service IA indisponible.',
+          code: 'OPENAI_NOT_CONFIGURED',
+          meta: { topic, source: 'error' },
+        },
+        503
+      );
+    }
+
+    const ai = await openAiAnswer({
+      apiKey: openaiKey,
+      model,
+      message,
+      project,
+      topic,
+      official,
+    });
+
+    if (!ai.ok) {
+      return json(
+        {
+          error: 'Service IA indisponible.',
+          code: 'OPENAI_ERROR',
+          details: ai.error,
+          meta: { topic, source: 'error' },
+        },
+        502
+      );
+    }
+
+    const replyText = ai.replyText;
+    const replyHtml = toReplyHtmlFromText(replyText, official);
+    return json({ replyHtml, replyText, meta: { topic, source: 'openai' } });
+  }
 
   if (hasSession && openaiKey && isPaying) {
     const ai = await openAiAnswer({

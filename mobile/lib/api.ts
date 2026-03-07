@@ -155,19 +155,21 @@ type AgentProject = {
   langues?: string[];
 };
 
+type AgentContext = 'general' | 'autonomie';
+
 export const agentApi = {
-  answer: (message: string, project?: AgentProject | null, token?: string) =>
+  answer: (message: string, project?: AgentProject | null, token?: string, context: AgentContext = 'general') =>
     request<{
       replyText?: string;
       replyHtml?: string;
       meta?: {
         topic?: string;
-        source?: 'openai' | 'kb';
+        source?: 'openai' | 'kb' | 'paywall' | 'error' | 'local';
         openaiError?: string;
       };
     }>(
       '/api/capi/answer',
-      { method: 'POST', body: JSON.stringify({ message, project: project ?? null }) },
+      { method: 'POST', body: JSON.stringify({ message, project: project ?? null, context }) },
       token,
     ),
 };

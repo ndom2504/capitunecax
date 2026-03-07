@@ -38,6 +38,28 @@ const deepLink = sessionId
                   var url = ${JSON.stringify(deepLink)};
                   if (!url) return;
                   var sessionId = ${JSON.stringify(sessionId)};
+
+                  // Confirme côté serveur même si le deep link ne s'exécute pas.
+                  try {
+                    var statusEl = document.getElementById('status');
+                    if (statusEl) statusEl.textContent = 'Activation de votre accès…';
+                    fetch('/api/autonomie/stripe-confirm-public', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sessionId: sessionId })
+                    })
+                      .then(function(r){
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.json();
+                      })
+                      .then(function(){
+                        if (statusEl) statusEl.textContent = "Accès activé. Retour à l'application…";
+                      })
+                      .catch(function(){
+                        if (statusEl) statusEl.textContent = "Paiement confirmé. Retour à l'application…";
+                      });
+                  } catch (e) {}
+
                   var key = 'cap_pay_' + (sessionId || '');
                   try {
                     if (sessionId && window.sessionStorage && window.sessionStorage.getItem(key) === '1') {

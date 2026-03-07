@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -16,7 +17,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { agentApi } from '../../lib/api';
-import { generateCapiReplyText } from '../../lib/capi-agent-local';
 import { useAuth } from '../../context/AuthContext';
 
 type ChatMsg = {
@@ -45,7 +45,7 @@ export default function CapiAgentScreen() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [lastSource, setLastSource] = useState<'openai' | 'kb' | 'local' | 'error' | null>(null);
+  const [lastSource, setLastSource] = useState<'openai' | 'kb' | 'local' | 'paywall' | 'error' | null>(null);
 
   const contextLine = (() => {
     const parts: string[] = [];
@@ -93,18 +93,37 @@ export default function CapiAgentScreen() {
 
     try {
       const contentForApi = contextLine ? `Contexte: ${contextLine}\n\nQuestion: ${content}` : content;
-      const res = await agentApi.answer(contentForApi, null, token ?? undefined);
+      const res = await agentApi.answer(contentForApi, null, token ?? undefined, 'autonomie');
       const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
 
       if (res.status >= 200 && res.status < 300) {
-        setLastSource((res.data as any)?.meta?.source ?? 'kb');
+        setLastSource((res.data as any)?.meta?.source ?? 'openai');
+      }
+
+      if (res.status === 402) {
+        setLastSource('paywall');
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `pay-${Date.now()}`,
+            sender: 'bot',
+            createdAt: new Date().toISOString(),
+            content: "Accès payant requis : l’agent intelligent (OpenAI) est disponible uniquement après déblocage de l’Autonomie guidée.",
+          },
+        ]);
+        Alert.alert(
+          'Autonomie guidée — accès payant',
+          "Pour activer l’agent intelligent, débloquez l’Autonomie guidée.",
+          [
+            { text: 'Débloquer', onPress: () => router.replace('/capi/autonomie' as any) },
+            { text: 'OK', style: 'cancel' },
+          ]
+        );
+        return;
       }
 
       if (res.status === 404 || res.error || !reply) {
-        const local = generateCapiReplyText(content, null);
-        const msg = res.status === 404
-          ? local
-          : (reply ? reply : local);
+        const msg = reply || "Service temporairement indisponible. Réessayez dans quelques instants.";
         const errBot: ChatMsg = {
           id: `e-${Date.now()}`,
           sender: 'bot',
@@ -112,7 +131,7 @@ export default function CapiAgentScreen() {
           content: msg,
         };
         setMessages(prev => [...prev, errBot]);
-        setLastSource(res.status === 404 ? 'local' : 'error');
+        setLastSource('error');
         return;
       }
 
@@ -153,7 +172,7 @@ export default function CapiAgentScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>CAPI</Text>
           <Text style={styles.subtitle}>
-            Agent d’orientation{lastSource ? ` · ${lastSource === 'openai' ? 'API (OpenAI)' : lastSource === 'kb' ? 'API (KB)' : lastSource === 'local' ? 'Local (fallback)' : 'Erreur API'}` : ''}
+            Agent d’orientation{lastSource ? ` · ${lastSource === 'openai' ? 'API (OpenAI)' : lastSource === 'kb' ? 'API (KB)' : lastSource === 'local' ? 'Local (fallback)' : lastSource === 'paywall' ? 'Accès payant' : 'Erreur API'}` : ''}
           </Text>
         </View>
       </View>
