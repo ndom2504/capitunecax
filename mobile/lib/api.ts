@@ -149,6 +149,12 @@ export const dashboardApi = {
 // -- Paiement Autonomie (Stripe Checkout) -----------------------------------
 
 export const autonomiePaymentApi = {
+  getPrice: (motif: CapiMotif) =>
+    request<{ motif?: CapiMotif; unit_amount?: number; currency?: string; error?: string }>(
+      `/api/autonomie/price?motif=${encodeURIComponent(String(motif))}`,
+      {},
+    ),
+
   stripeCheckout: (token: string, motif: CapiMotif) =>
     request<{ url?: string; error?: string }>('/api/autonomie/stripe-checkout', {
       method: 'POST',

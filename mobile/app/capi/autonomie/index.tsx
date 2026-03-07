@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking,
 } from 'react-native';
@@ -54,15 +54,57 @@ const MOTIF_EMOJI: Record<string, string> = {
 export default function AutonomieIndexScreen() {
   const router = useRouter();
   const { session } = useCapiSession();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [paying, setPaying] = useState(false);
+  const [priceCents, setPriceCents] = useState<number | null>(null);
+  const [priceCurrency, setPriceCurrency] = useState<string>('CAD');
   const project = session.autonomie;
   const motif: CapiMotif = (project?.motif ?? 'visiter') as CapiMotif;
   const motifLabel = MOTIF_LABELS[motif] ?? 'Projet';
 
-  const hasPaidAutonomie = Boolean(project?.hasPaidAutonomie);
+  const hasPaidAutonomie = Boolean(project?.hasPaidAutonomie) || user?.role === 'admin';
 
   const budget = useMemo(() => buildMotifBudget(motif), [motif]);
+
+  const payAmountLabel = useMemo(() => {
+    if (!priceCents || priceCents <= 0) return null;
+    const amount = priceCents / 100;
+    const currency = String(priceCurrency || 'CAD').toUpperCase();
+
+    try {
+      return amount.toLocaleString('fr-CA', { style: 'currency', currency });
+    } catch {
+      // Fallback si Intl n'est pas dispo.
+      return `${amount.toFixed(2)} ${currency}`;
+    }
+  }, [priceCents, priceCurrency]);
+
+  useEffect(() => {
+    let alive = true;
+    autonomiePaymentApi
+      .getPrice(motif)
+      .then((res) => {
+        if (!alive) return;
+        const unit = res.data?.unit_amount;
+        const cur = res.data?.currency;
+
+        if (res.status >= 200 && res.status < 300 && typeof unit === 'number' && unit > 0) {
+          setPriceCents(Math.round(unit));
+          if (cur) setPriceCurrency(String(cur));
+          return;
+        }
+
+        // Ne bloque pas l'UI: on laisse le bouton sans montant.
+        setPriceCents(null);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setPriceCents(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [motif]);
 
   if (!project) {
     return (
@@ -117,11 +159,14 @@ export default function AutonomieIndexScreen() {
   const onLockedStepPress = () => {
     if (paying) return;
     Alert.alert(
-      'Paiement requis',
-      "Pour accéder aux 5 étapes guidées, merci d'effectuer le paiement Autonomie.",
+      'Service requis',
+      'Activer le service pour debloquer les étapes',
       [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Payer', onPress: startCheckout },
+        {
+          text: payAmountLabel ? `Activer le service (${payAmountLabel})` : 'Activer le service',
+          onPress: startCheckout,
+        },
       ]
     );
   };
@@ -210,6 +255,7 @@ export default function AutonomieIndexScreen() {
                   <Text style={styles.paywallTitle}>Paiement requis</Text>
                   <Text style={styles.paywallText}>
                     Débloquez l'accès aux 5 étapes guidées pour votre projet.
+                    {payAmountLabel ? `\nPaiement unique : ${payAmountLabel}` : ''}
                   </Text>
                 </View>
               </View>
@@ -222,7 +268,9 @@ export default function AutonomieIndexScreen() {
                 {paying ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.paywallBtnText}>Payer avec Stripe</Text>
+                  <Text style={styles.paywallBtnText}>
+                    {payAmountLabel ? `Payer ${payAmountLabel} avec Stripe` : 'Payer avec Stripe'}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
