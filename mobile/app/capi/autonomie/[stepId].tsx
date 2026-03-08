@@ -385,7 +385,7 @@ export default function AutonomieStepScreen() {
               <Text style={styles.specialEmoji}>🎓</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.specialTitle}>Recherche d'établissement</Text>
-                <Text style={styles.specialSub}>Base de données DLI interactive — 60+ institutions</Text>
+                <Text style={styles.specialSub}>Alternative rapide à la liste officielle IRCC (EED/DLI)</Text>
               </View>
             </View>
             <TouchableOpacity
@@ -394,12 +394,22 @@ export default function AutonomieStepScreen() {
               activeOpacity={0.85}
             >
               <Ionicons name="search-outline" size={18} color="#fff" />
-              <Text style={styles.dliBtnText}>Rechercher un établissement désigné</Text>
+              <Text style={styles.dliBtnText}>Rechercher un établissement (interne)</Text>
               <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.7)" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.dliBtn, styles.dliBtnOutline]}
+              onPress={() => openUrl('https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/preparer/liste-etablissements-enseignement-designes.html')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="open-outline" size={18} color={Colors.primary} />
+              <Text style={styles.dliBtnOutlineText}>Ouvrir la liste officielle IRCC</Text>
+              <Ionicons name="chevron-forward" size={16} color={Colors.primary + 'AA'} />
             </TouchableOpacity>
             <View style={styles.dliInfo}>
               <Ionicons name="checkmark-circle-outline" size={14} color={Colors.success} />
-              <Text style={styles.dliInfoText}>Filtre par province, type, domaine — bouton "Demande d'admission" directement vers le site officiel</Text>
+              <Text style={styles.dliInfoText}>Filtre par province, type, domaine — la liste officielle IRCC fait foi</Text>
             </View>
           </View>
         )}
@@ -885,6 +895,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dliBtnText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#fff' },
+  dliBtnOutline: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.primary,
+  },
+  dliBtnOutlineText: { flex: 1, fontSize: 14, fontWeight: '700', color: Colors.primary },
   dliInfo: { flexDirection: 'row', alignItems: 'flex-start', gap: 7 },
   dliInfoText: { flex: 1, fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
 
