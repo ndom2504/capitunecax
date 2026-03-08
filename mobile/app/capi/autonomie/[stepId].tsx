@@ -703,12 +703,12 @@ export default function AutonomieStepScreen() {
           </View>
         )}
 
-        {/* Ressources officielles */}
+        {/* Ressources */}
         {step.ressources.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="link-outline" size={16} color={Colors.primary} />
-              <Text style={styles.sectionTitle}>Ressources officielles</Text>
+              <Text style={styles.sectionTitle}>{isEtablissement ? 'Ressources & outils' : 'Ressources officielles'}</Text>
             </View>
             <View style={styles.ressourcesList}>
               {step.ressources.map((r, i) => {

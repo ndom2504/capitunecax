@@ -45,6 +45,11 @@ const stepsEtudier: AutonomieStep[] = [
     ],
     [
       {
+        titre: 'Moteur de recherche Capitune (DLI) — interne',
+        description: 'Recherche interactive (province, type, domaine) et accès rapide aux pages d’admission.',
+        url: '/capi/autonomie/dli-search',
+      },
+      {
         titre: 'Liste des DLI (établissements désignés)',
         description: 'Liste officielle d\'IRCC des établissements d\'enseignement désignés.',
         url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada/permis-etudes/preparer/liste-etablissements-enseignement-designes.html',
