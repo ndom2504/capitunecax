@@ -157,8 +157,19 @@ type AgentProject = {
 
 type AgentContext = 'general' | 'autonomie';
 
+type AgentHistoryMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
 export const agentApi = {
-  answer: (message: string, project?: AgentProject | null, token?: string, context: AgentContext = 'general') =>
+  answer: (
+    message: string,
+    project?: AgentProject | null,
+    token?: string,
+    context: AgentContext = 'general',
+    history?: AgentHistoryMessage[] | null,
+  ) =>
     request<{
       replyText?: string;
       replyHtml?: string;
@@ -169,7 +180,7 @@ export const agentApi = {
       };
     }>(
       '/api/capi/answer',
-      { method: 'POST', body: JSON.stringify({ message, project: project ?? null, context }) },
+      { method: 'POST', body: JSON.stringify({ message, project: project ?? null, context, history: history ?? null }) },
       token,
     ),
 };

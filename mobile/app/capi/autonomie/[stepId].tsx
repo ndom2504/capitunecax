@@ -80,6 +80,24 @@ export default function AutonomieStepScreen() {
   const { stepId } = useLocalSearchParams<{ stepId: string }>();
   const { session, updateSession } = useCapiSession();
 
+  // Cette route historique (un écran par étape) est remplacée par le nouveau
+  // flow par swipe : /capi/autonomie/flow. On conserve ce fichier pour
+  // compatibilité (deep-links / anciennes navigations) et on redirige.
+  useEffect(() => {
+    if (typeof stepId !== 'string' || !stepId) return;
+    router.replace({ pathname: '/capi/autonomie/flow', params: { start: stepId } } as any);
+  }, [router, stepId]);
+
+  if (typeof stepId === 'string' && stepId) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>Ouverture du plan d’action…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const [selectedDli, setSelectedDli] = useState<Array<{ id: string; nom: string; ville?: string; province?: string; type?: string; admissionsUrl?: string }> | null>(null);
   const videoRef = useRef<Video>(null);
   const [videoFinished, setVideoFinished] = useState(false);

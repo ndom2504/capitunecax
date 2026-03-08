@@ -145,7 +145,15 @@ export default function CapiAgentScreen() {
 
     try {
       const contentForApi = contextLine ? `Contexte: ${contextLine}\n\nQuestion: ${content}` : content;
-      const res = await agentApi.answer(contentForApi, null, token ?? undefined, 'autonomie');
+      const history = messages
+        .slice(-16)
+        .map((m) => ({
+          role: m.sender === 'user' ? ('user' as const) : ('assistant' as const),
+          content: String(m.content || '').trim(),
+        }))
+        .filter((m) => m.content);
+
+      const res = await agentApi.answer(contentForApi, null, token ?? undefined, 'autonomie', history);
       const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
 
       if (res.status >= 200 && res.status < 300) {

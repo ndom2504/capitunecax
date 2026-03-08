@@ -23,6 +23,7 @@ type Body = {
   message?: string;
   project?: Project | null;
   context?: 'general' | 'autonomie';
+  history?: Array<{ role?: string; content?: string }> | null;
 };
 
 type EnvLike = {
@@ -166,10 +167,12 @@ function toReplyHtmlFromText(text: string, official: { label: string; url: strin
 async function openAiAnswer(args: {
   apiKey: string;
   model: string;
+  context: 'general' | 'autonomie';
   message: string;
   project?: Project | null;
   topic: string;
   official: { label: string; url: string };
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12000);
@@ -186,19 +189,32 @@ async function openAiAnswer(args: {
     const system = [
       'Tu es CAPI, un agent d’orientation pour des démarches liées au Canada.',
       'Réponds toujours en français.',
-      'Ne donne jamais de garantie, et ne fournis pas d’avis juridique.',
-      'Structure obligatoire de la réponse :',
-      '1) Résumé rapide',
-      '2) Étapes',
-      '3) Documents probables',
-      '4) Coûts estimatifs (si pertinent, sinon mentionner que ça varie)',
-      '5) Prochaine action recommandée',
+      'Tu dois créer une vraie interaction :',
+      '- Si des infos manquent, pose 1 à 3 questions courtes et pertinentes avant de proposer une checklist.',
+      '- Si l’utilisateur a déjà répondu dans l’historique, ne redemande pas; réutilise ces infos.',
+      '- Évite les réponses "copier-coller" : adapte ton plan au contexte et au message.',
       '',
-      'Utilise des listes à puces pour Étapes et Documents.',
-      'Reste concis (≈ 10-18 lignes).',
+      'Contraintes de sécurité :',
+      '- Pas de garantie, pas d’avis juridique, pas d’instructions pour contourner des règles.',
+      '- Référence le lien officiel IRCC à la fin (sans le sur-répéter).',
+      '',
+      'Style :',
+      '- Ton calme, empathique, orienté confiance.',
+      '- 6 à 16 lignes max (sauf si l’utilisateur demande du détail).',
+      '- Utilise des puces seulement si ça aide; sinon écris en court paragraphe + questions.',
+      '',
+      args.context === 'autonomie'
+        ? 'Mode Autonomie guidée : tu joues le rôle de coach, tu avances étape par étape et tu proposes une prochaine action très concrète.'
+        : 'Mode général : reste utile mais concise, et propose une prochaine action.',
     ].join('\n');
 
-    const user = `Question utilisateur:\n${args.message}${projectContext}\n\nLien officiel à rappeler: ${args.official.label} — ${args.official.url}`;
+    const user = `Message utilisateur:\n${args.message}${projectContext}\n\nLien officiel (référence): ${args.official.label} — ${args.official.url}`;
+
+    const history = Array.isArray(args.history) ? args.history : [];
+    const safeHistory = history
+      .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && String(m.content || '').trim())
+      .slice(-12)
+      .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1200) }));
 
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -210,10 +226,11 @@ async function openAiAnswer(args: {
         model: args.model,
         messages: [
           { role: 'system', content: system },
+          ...safeHistory,
           { role: 'user', content: user },
         ],
         max_tokens: 600,
-        temperature: 0.5,
+        temperature: 0.7,
       }),
       signal: controller.signal,
     });
@@ -247,6 +264,15 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   if (!message) return json({ error: 'Message vide' }, 400);
 
   const context: Body['context'] = body.context === 'autonomie' ? 'autonomie' : 'general';
+
+  const history = Array.isArray(body.history)
+    ? body.history
+      .filter((m) => m && (m as any).role && (m as any).content)
+      .map((m) => ({
+        role: String((m as any).role) === 'assistant' ? ('assistant' as const) : ('user' as const),
+        content: String((m as any).content || ''),
+      }))
+    : [];
 
   const project = (body.project ?? {}) || {};
   const topic = detectTopic(message, String(project.type || '').trim() || undefined);
@@ -413,10 +439,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     const ai = await openAiAnswer({
       apiKey: openaiKey,
       model,
+      context,
       message,
       project,
       topic,
       official,
+      history,
     });
 
     if (!ai.ok) {
@@ -441,10 +469,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     const ai = await openAiAnswer({
       apiKey: openaiKey,
       model,
+      context,
       message,
       project,
       topic,
       official,
+      history,
     });
     if (ai.ok) {
       const replyText = ai.replyText;

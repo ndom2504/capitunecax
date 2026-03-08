@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   navBtnDisabled: { opacity: 0.5 },
-  page: { padding: 16, paddingBottom: 28 },
+  page: { padding: 16, paddingBottom: 110 },
   card: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
