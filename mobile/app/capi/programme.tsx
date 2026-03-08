@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
@@ -51,9 +51,53 @@ const PROGRAMMES_BY_MOTIF: Record<CapiMotif, Programme[]> = {
     { id: 'pnp_entrepreneur', titre: 'PNP Voie Entrepreneuriale', description: 'Investissement dans une province (ex: MPNP Entrepreneurs).', delai: '18-36 mois', complexite: 'elevee', conditions: ['Capital d\'investissement', 'Expérience entrepreneuriale'] },
   ],
   regularisation: [
+    { id: 'asile_en_ligne', titre: 'Demande d’asile au Canada — depuis le Canada', description: 'Démarche de protection internationale si vous êtes déjà au Canada (selon admissibilité).', delai: '18-36 mois', complexite: 'elevee', conditions: ['Présence au Canada', 'Conditions et délais variables (à vérifier)'] },
+    { id: 'asile_frontiere', titre: 'Demande d’asile au Canada — à l’arrivée (point d’entrée)', description: 'Démarche à un point d’entrée (aéroport, port maritime ou frontière terrestre) lorsque vous arrivez au Canada (selon admissibilité).', delai: 'Variable', complexite: 'elevee', conditions: ['Demande à l’arrivée au Canada', 'Conditions et exceptions possibles (à vérifier)'] },
+    { id: 'retablissement_statut', titre: 'Rétablissement de statut', description: 'Si votre statut a expiré récemment, certaines démarches peuvent exister pour le rétablir (selon délais et admissibilité).', delai: '4-12 semaines', complexite: 'moyenne', conditions: ['Statut expiré récemment', 'Délai et conditions variables (à vérifier)'] },
     { id: 'ch', titre: 'Motifs d\'ordre humanitaire (CH)', description: 'Demande basée sur l\'intérêt supérieur des enfants ou situation exceptionnelle.', delai: '24-48 mois', complexite: 'elevee', conditions: ['Établissement au Canada', 'Appel fondé en droit'] },
     { id: 'appel_spr', titre: 'Appel — Section d\'appel des réfugiés (SAR)', description: 'Appel d\'une décision de refus de statut de réfugié.', delai: '12-24 mois', complexite: 'elevee', conditions: ['Décision SPR défavorable', 'Délai 15 jours (intérieur)'] },
-    { id: 'prorogation', titre: 'Prorogation de statut', description: 'Extension d\'un visa, permis ou autorisation.', delai: '4-12 semaines', complexite: 'faible', conditions: ['Statut légal valide', 'Dépôt avant expiration'] },
+  ],
+};
+
+// Programmes spécifiques lorsque l'utilisateur est déjà au Canada (Inland)
+const INLAND_PROGRAMMES_BY_MOTIF: Partial<Record<CapiMotif, Programme[]>> = {
+  etudier: [
+    {
+      id: 'imm5709',
+      titre: 'Prorogation du permis d’études (IMM 5709)',
+      description: 'Prolonger/renouveler un permis d’études depuis le Canada (preuve de progression, fonds, etc.).',
+      delai: '4–12 semaines',
+      complexite: 'moyenne',
+      conditions: ['Être au Canada', 'Déposer avant expiration (statut maintenu)'],
+    },
+  ],
+  travailler: [
+    {
+      id: 'ptpd',
+      titre: 'Permis de travail post‑diplôme (PTPD) — IMM 5710',
+      description: 'Transition étudiant → travailleur après la fin des études (délai 180 jours).',
+      delai: '2–5 mois',
+      complexite: 'moyenne',
+      conditions: ['Fin d’études', 'Déposer dans les 180 jours', 'Statut valide ou rétabli'],
+    },
+    {
+      id: 'changement_employeur',
+      titre: 'Changement d’employeur (permis fermé) — IMM 5710',
+      description: 'Modifier les conditions du permis pour un nouvel employeur (souvent avec EIMT ou dispense).',
+      delai: '1–4 mois',
+      complexite: 'elevee',
+      conditions: ['Nouveau contrat', 'EIMT/dispense au besoin', 'Ne pas commencer avant approbation (sauf exception)'],
+    },
+  ],
+  visiter: [
+    {
+      id: 'imm5708',
+      titre: 'Fiche visiteur (Visitor Record) — IMM 5708',
+      description: 'Prolonger un séjour visiteur au‑delà de 6 mois depuis le Canada.',
+      delai: '4–12 semaines',
+      complexite: 'faible',
+      conditions: ['Être au Canada', 'Fonds et justification', 'Déposer avant expiration'],
+    },
   ],
 };
 
@@ -66,10 +110,17 @@ const COMPLEXITE_CFG = {
 export default function CapiProgrammeScreen() {
   const router = useRouter();
   const { session, updateSession } = useCapiSession();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(session.programme ?? null);
 
   const motif = session.motif ?? 'visiter';
-  const programmes = PROGRAMMES_BY_MOTIF[motif] ?? [];
+  const where = session.where ?? 'outside';
+  const programmes = useMemo(() => {
+    if (where === 'inside') {
+      const inland = INLAND_PROGRAMMES_BY_MOTIF[motif];
+      if (inland && inland.length) return inland;
+    }
+    return PROGRAMMES_BY_MOTIF[motif] ?? [];
+  }, [motif, where]);
 
   const next = () => {
     if (!selected) return;

@@ -277,6 +277,7 @@ export type CapiMotif =
 export interface CapiSession {
   id?: string;
   step: number;
+  where?: 'inside' | 'outside';
   motif?: CapiMotif;
   programme?: string;
   profile?: CapiProfileData;

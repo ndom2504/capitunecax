@@ -8,23 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { useCapiSession } from '../../context/CapiContext';
-import type { CapiMotif } from '../../lib/api';
 import { CapiAvatar } from '../../components/CapiAvatar';
-
-const MOTIFS: {
-  id: CapiMotif;
-  emoji: string;
-  label: string;
-  desc: string;
-}[] = [
-  { id: 'visiter', emoji: '✈️', label: 'Visiter', desc: 'Voyage touristique, visite famille' },
-  { id: 'travailler', emoji: '💼', label: 'Travailler', desc: 'Permis de travail, transfert intra-entreprise' },
-  { id: 'etudier', emoji: '🎓', label: 'Étudier', desc: 'Permis d\'étudiant, programme universitaire' },
-  { id: 'residence_permanente', emoji: '🏡', label: 'Résidence permanente', desc: 'Entrée Express, PNP, RNIP…' },
-  { id: 'famille', emoji: '👨‍👩‍👧', label: 'Regroupement familial', desc: 'Parrainage conjoint ou enfant' },
-  { id: 'entreprendre', emoji: '🚀', label: 'Entreprendre', desc: 'Visa entrepreneur, démarrer une entreprise' },
-  { id: 'regularisation', emoji: '⚖️', label: 'Régularisation / Recours', desc: 'Demande humanitaire, appel, prolongation' },
-];
 
 const STEP_PROGRESS = 1 / 8;
 
@@ -32,9 +16,19 @@ export default function CapiMotifScreen() {
   const router = useRouter();
   const { updateSession } = useCapiSession();
 
-  const select = (motif: CapiMotif) => {
-    updateSession({ motif, step: 2, profile: undefined, evaluation: undefined, services: undefined, timeline: undefined });
-    router.push('/capi/programme');
+  const selectWhere = (where: 'inside' | 'outside') => {
+    updateSession({
+      where,
+      step: 1,
+      motif: undefined,
+      programme: undefined,
+      profile: undefined,
+      evaluation: undefined,
+      services: undefined,
+      timeline: undefined,
+      advisor: undefined,
+    });
+    router.push('/capi/objectif' as any);
   };
 
   return (
@@ -57,28 +51,38 @@ export default function CapiMotifScreen() {
         <View style={styles.capiHeader}>
           <CapiAvatar size={44} state="idle" />
           <View style={styles.bubble}>
-            <Text style={styles.bubbleText}>Bonjour ! Je suis CAPI, votre agent d'orientation immigration.{'\n\n'}Commençons par le plus important :</Text>
+            <Text style={styles.bubbleText}>Bonjour ! Je suis CAPI, votre agent d'orientation immigration.{"\n\n"}Pour mieux vous orienter, j'ai d'abord une question :</Text>
           </View>
         </View>
 
-        <Text style={styles.question}>Quel est votre projet au Canada ?</Text>
+        <Text style={styles.question}>Où vous trouvez-vous actuellement ?</Text>
 
         <View style={styles.options}>
-          {MOTIFS.map(m => (
-            <TouchableOpacity
-              key={m.id}
-              style={styles.optionCard}
-              onPress={() => select(m.id)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.optionEmoji}>{m.emoji}</Text>
-              <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>{m.label}</Text>
-                <Text style={styles.optionDesc}>{m.desc}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            style={styles.optionCard}
+            onPress={() => selectWhere('outside')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.optionEmoji}>🌍</Text>
+            <View style={styles.optionText}>
+              <Text style={styles.optionLabel}>À l'extérieur du Canada</Text>
+              <Text style={styles.optionDesc}>Je vis actuellement dans un autre pays et je souhaite venir au Canada.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionCard}
+            onPress={() => selectWhere('inside')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.optionEmoji}>📍</Text>
+            <View style={styles.optionText}>
+              <Text style={styles.optionLabel}>À l'intérieur du Canada</Text>
+              <Text style={styles.optionDesc}>Je suis déjà au Canada (visiteur, étudiant, travailleur) et je veux changer mon statut.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 32 }} />

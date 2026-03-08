@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { agentApi } from '../../lib/api';
@@ -32,7 +33,7 @@ function formatTime(iso: string): string {
 }
 
 export default function CapiAgentScreen() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const router = useRouter();
   const { stepId, stepTitle, itemLabel } = useLocalSearchParams<{
     stepId?: string;
@@ -45,7 +46,17 @@ export default function CapiAgentScreen() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [lastSource, setLastSource] = useState<'openai' | 'kb' | 'local' | 'paywall' | 'error' | null>(null);
+  const [, setLastSource] = useState<'openai' | 'kb' | 'local' | 'paywall' | 'error' | null>(null);
+
+  const didHydrateRef = useRef(false);
+
+  const storageKey = useMemo(() => `capi_agent_chat_autonomie:${String(user?.id ?? 'anon')}`, [user?.id]);
+
+  const trimMessages = useCallback((arr: ChatMsg[]) => {
+    // Évite d'accumuler une taille infinie dans le stockage local.
+    const MAX = 60;
+    return arr.length > MAX ? arr.slice(arr.length - MAX) : arr;
+  }, []);
 
   const contextLine = (() => {
     const parts: string[] = [];
@@ -57,17 +68,58 @@ export default function CapiAgentScreen() {
   })();
 
   useEffect(() => {
-    const now = new Date().toISOString();
-    setMessages([
-      {
-        id: `welcome-${Date.now()}`,
-        sender: 'bot',
-        createdAt: now,
-        content:
-          `Bonjour, je suis CAPI. Posez-moi votre question (je réponds de façon générale, sans garantie ni avis juridique).${contextLine ? `\n\nContexte : ${contextLine}` : ''}`,
-      },
-    ]);
-  }, [contextLine]);
+    // Hydrate la conversation depuis le stockage local pour conserver la mémoire
+    // quand l'utilisateur quitte/revient sur l'écran.
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(storageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw) as unknown;
+          if (Array.isArray(parsed) && parsed.length) {
+            const safe = parsed
+              .filter((m: any) => m && typeof m.id === 'string' && (m.sender === 'user' || m.sender === 'bot'))
+              .map((m: any) => ({
+                id: String(m.id),
+                sender: m.sender as 'user' | 'bot',
+                createdAt: String(m.createdAt || new Date().toISOString()),
+                content: String(m.content || ''),
+              })) as ChatMsg[];
+            if (safe.length) {
+              setMessages(trimMessages(safe));
+              didHydrateRef.current = true;
+              return;
+            }
+          }
+        }
+      } catch {
+        // ignore
+      }
+
+      const now = new Date().toISOString();
+      setMessages([
+        {
+          id: `welcome-${Date.now()}`,
+          sender: 'bot',
+          createdAt: now,
+          content:
+            `Bonjour, je suis CAPI. Posez-moi votre question (je réponds de façon générale, sans garantie ni avis juridique).${contextLine ? `\n\nContexte : ${contextLine}` : ''}`,
+        },
+      ]);
+      didHydrateRef.current = true;
+    })();
+    // Re-hydrate si l'utilisateur change (logout/login)
+  }, [contextLine, storageKey, trimMessages]);
+
+  useEffect(() => {
+    if (!didHydrateRef.current) return;
+    (async () => {
+      try {
+        await AsyncStorage.setItem(storageKey, JSON.stringify(trimMessages(messages)));
+      } catch {
+        // ignore
+      }
+    })();
+  }, [messages, storageKey, trimMessages]);
 
   useEffect(() => {
     if (input.trim()) return;
@@ -173,9 +225,7 @@ export default function CapiAgentScreen() {
 
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>CAPI</Text>
-          <Text style={styles.subtitle}>
-            Agent d’orientation{lastSource ? ` · ${lastSource === 'openai' ? 'API (OpenAI)' : lastSource === 'kb' ? 'API (KB)' : lastSource === 'local' ? 'Local (fallback)' : lastSource === 'paywall' ? 'Accès payant' : 'Erreur API'}` : ''}
-          </Text>
+          <Text style={styles.subtitle}>Agent d’orientation virtuelle</Text>
         </View>
       </View>
 

@@ -13,112 +13,303 @@ import type { CapiMotif, CapiTimelineStep } from '../../lib/api';
 
 type Responsable = 'client' | 'conseiller' | 'gouvernement';
 
-function buildTimeline(motif: CapiMotif, programme?: string, examenMedical?: boolean): CapiTimelineStep[] {
+function buildTimeline(motif: CapiMotif, programme?: string, examenMedical?: boolean, where?: 'inside' | 'outside'): CapiTimelineStep[] {
+  const loc = where ?? 'outside';
+
+  // ── Scénarios INLAND (à l’intérieur du Canada) ───────────────────────────
+  if (loc === 'inside') {
+    if (motif === 'etudier') {
+      // Guide: Étudiant — Inland (4 étapes)
+      return [
+        {
+          id: 'si1',
+          titre: 'Vérification du statut',
+          description: 'Surveiller la date d’expiration du permis actuel et planifier la demande à l’avance pour éviter une perte de statut (viser 3–4 mois avant).',
+          responsable: 'client',
+          dureeEstimee: '1 jour',
+          documents: ['Permis d’études actuel', 'Date d’expiration', 'Passeport'],
+          statut: 'a_faire',
+        },
+        {
+          id: 'si2',
+          titre: 'Renouvellement CAQ (Québec) — si requis',
+          description: 'Requis si rallongement d’études, échec, ou changement de cycle (ex: DEC → Université).',
+          responsable: 'client',
+          dureeEstimee: '4–8 semaines',
+          documents: ['Lettre/attestation d’inscription', 'Preuves financières', 'Documents CAQ (si applicable)'],
+          statut: 'a_faire',
+        },
+        {
+          id: 'si3',
+          titre: 'Prorogation du permis d’études (IMM 5709)',
+          description: 'Déposer la demande AVANT l’expiration pour bénéficier du statut maintenu (si admissible).',
+          responsable: 'client',
+          dureeEstimee: '1–2 jours',
+          documents: ['IMM 5709', 'Passeport', 'Permis actuel', 'Preuves de progression', 'Preuve de fonds'],
+          statut: 'a_faire',
+        },
+        {
+          id: 'si4',
+          titre: 'Permis de travail post‑diplôme (PTPD)',
+          description: 'Si vous terminez vos études: déposer la demande de PTPD au plus tard 180 jours après la fin des cours (selon admissibilité).',
+          responsable: 'client',
+          dureeEstimee: '1–2 jours',
+          documents: ['Lettre de fin d’études', 'Relevé final', 'Compte IRCC'],
+          statut: 'a_faire',
+        },
+      ];
+    }
+
+    if (motif === 'travailler') {
+      // Transition PTPD (étudiant -> travailleur)
+      if (programme === 'ptpd') {
+        return [
+          { id: 'pw1', titre: 'Fin des études', description: 'Obtenir le relevé de notes final et la lettre de fin d’études.', responsable: 'client', dureeEstimee: '1–2 semaines', documents: ['Relevé final', 'Lettre de fin d’études'], statut: 'a_faire' },
+          { id: 'pw2', titre: 'Demande PTPD (IMM 5710)', description: 'Déposer la demande dans les 180 jours (avec un statut valide ou rétabli).', responsable: 'client', dureeEstimee: '1–2 jours', documents: ['IMM 5710', 'Passeport', 'Preuve de fin d’études'], statut: 'a_faire' },
+          { id: 'pw3', titre: 'Statut maintenu & droit de travailler', description: 'Selon admissibilité, vous pouvez travailler à temps plein après dépôt en attendant la décision.', responsable: 'client', dureeEstimee: '0', documents: ['Preuve de soumission'], statut: 'a_faire' },
+          { id: 'pw4', titre: 'Traitement IRCC', description: 'Suivi du traitement et demandes d’informations complémentaires si nécessaire.', responsable: 'gouvernement', dureeEstimee: '2–5 mois', documents: [], statut: 'a_faire' },
+          { id: 'pw5', titre: 'Décision & permis', description: 'Réception du permis de travail post‑diplôme et mise à jour des démarches (NAS, employeur).', responsable: 'client', dureeEstimee: '1 jour', documents: ['PTPD'], statut: 'a_faire' },
+        ];
+      }
+
+      // Changement d'employeur / modification conditions
+      if (programme === 'changement_employeur') {
+        // Guide: Travailleur — Inland (3 étapes)
+        return [
+          {
+            id: 'we1',
+            titre: 'Nouvelle offre d’emploi',
+            description: 'Trouver un nouvel employeur (si permis fermé) et obtenir une offre/contrat signé.',
+            responsable: 'client',
+            dureeEstimee: 'Variable',
+            documents: ['Offre/contrat signé', 'Détails du poste'],
+            statut: 'a_faire',
+          },
+          {
+            id: 'we2',
+            titre: 'Nouvelle EIMT — si requise',
+            description: 'Le nouvel employeur doit refaire les démarches EIMT (sauf si permis ouvert ou dispense).',
+            responsable: 'client',
+            dureeEstimee: '4–12 semaines',
+            documents: ['Numéro EIMT (si applicable)', 'Preuve de dispense (si applicable)'],
+            statut: 'a_faire',
+          },
+          {
+            id: 'we3',
+            titre: 'Modification du permis (IMM 5710)',
+            description: 'Déposer la demande de changement de conditions (employeur/poste). Règle générale: ne pas commencer le nouveau travail avant approbation (sauf exceptions).',
+            responsable: 'client',
+            dureeEstimee: '1–2 jours',
+            documents: ['IMM 5710', 'Passeport', 'Offre/contrat', 'EIMT/dispense'],
+            statut: 'a_faire',
+          },
+        ];
+      }
+
+      // Guide: Travailleur — Inland (fallback si aucun programme précis)
+      return [
+        { id: 'wi1', titre: 'Nouvelle offre d’emploi', description: 'Obtenir une nouvelle offre/contrat (si vous devez changer d’employeur).', responsable: 'client', dureeEstimee: 'Variable', documents: ['Offre/contrat'], statut: 'a_faire' },
+        { id: 'wi2', titre: 'Nouvelle EIMT — si requise', description: 'L’employeur refait les démarches EIMT si aucune exemption ne s’applique.', responsable: 'client', dureeEstimee: '4–12 semaines', documents: ['EIMT (si applicable)'], statut: 'a_faire' },
+        { id: 'wi3', titre: 'Modification du permis (IMM 5710)', description: 'Demande de changement de conditions (IMM 5710).', responsable: 'client', dureeEstimee: '1–2 jours', documents: ['IMM 5710'], statut: 'a_faire' },
+      ];
+    }
+
+    if (motif === 'visiter') {
+      // Guide: Visiteur — Inland
+      return [
+        {
+          id: 'vi1',
+          titre: 'Prorogation de séjour (Fiche visiteur) — IMM 5708',
+          description: 'Déposer la demande pour étendre le statut de visiteur. Condition: justifier le besoin de rester et démontrer les fonds disponibles.',
+          responsable: 'client',
+          dureeEstimee: '1–2 jours',
+          documents: ['IMM 5708', 'Passeport', 'Lettre explicative', 'Preuves de fonds'],
+          statut: 'a_faire',
+        },
+        {
+          id: 'vi2',
+          titre: 'Changement de statut (optionnel)',
+          description: 'Optionnel: passer de visiteur à étudiant/travailleur. C’est souvent complexe depuis l’intérieur et peut dépendre de règles/politiques publiques spécifiques.',
+          responsable: 'conseiller',
+          dureeEstimee: 'Variable',
+          documents: ['Selon le statut visé (LOA, offre d’emploi, etc.)'],
+          statut: 'a_faire',
+        },
+      ];
+    }
+  }
+
   // ── Feuille de route VISA VISITEUR ───────────────────────────────────────
   if (motif === 'visiter') {
-    const steps: CapiTimelineStep[] = [
+    // Guide: Visiteur — Outland (3 étapes)
+    return [
       {
         id: 'v1',
-        titre: 'Analyse d\'admissibilité',
-        description: 'Votre conseiller CAPI étudie votre profil, vérifie les critères IRCC et établit une stratégie personnalisée.',
-        responsable: 'conseiller',
-        dureeEstimee: '2–3 jours',
-        documents: [],
+        titre: 'Planification du voyage',
+        description: 'Définir l’itinéraire, les dates et le motif (tourisme, famille, affaires). Préparer une lettre d’invitation si applicable.',
+        responsable: 'client',
+        dureeEstimee: '1–7 jours',
+        documents: ['Itinéraire', 'Dates de voyage', 'Lettre d’invitation (si applicable)'],
         statut: 'a_faire',
       },
       {
         id: 'v2',
-        titre: 'Collecte des documents',
-        description: 'Rassemblez tous les documents requis : passeport, photos, relevés bancaires, preuves d\'emploi, lettre d\'invitation si applicable.',
+        titre: 'Demande de Visa (VRT)',
+        description: 'Montrer des attaches au pays d’origine (travail, famille, biens) et une preuve financière suffisante pour garantir le retour.',
         responsable: 'client',
-        dureeEstimee: '1–2 semaines',
-        documents: ['Passeport valide (+ 6 mois)', 'Photos format immigration', 'Relevés bancaires 6 mois', 'Preuve d\'emploi / revenus', 'Preuve de logement au Canada'],
+        dureeEstimee: '3–14 jours',
+        documents: ['Passeport', 'Preuves d’attaches', 'Preuves de fonds', 'Lettre explicative'],
         statut: 'a_faire',
       },
       {
         id: 'v3',
-        titre: 'Biométrie (CRDV)',
-        description: 'Rendez-vous au Centre de réception des demandes de visa pour vos empreintes digitales et photo biométrique.',
+        titre: 'Biométrie',
+        description: 'Rendez‑vous au centre VFS/CRDV pour empreintes et photo biométrique.',
         responsable: 'client',
-        dureeEstimee: '1 journée',
-        documents: ['Lettre de convocation biométrie', 'Pièce d\'identité valide'],
-        statut: 'a_faire',
-      },
-      ...(examenMedical ? [{
-        id: 'v4',
-        titre: 'Examen médical',
-        description: 'Rendez-vous chez un médecin agréé par l\'IRCC. Obligatoire pour les séjours de plus de 6 mois.',
-        responsable: 'client' as const,
-        dureeEstimee: '3–5 jours',
-        documents: ['Liste des médecins agréés IRCC'],
-        statut: 'a_faire' as const,
-      }] : []),
-      {
-        id: 'v5',
-        titre: 'Soumission de la demande',
-        description: 'Votre conseiller CAPI dépose officiellement votre demande de visa visiteur (IMM5257) auprès de l\'IRCC.',
-        responsable: 'conseiller',
         dureeEstimee: '1 jour',
-        documents: ['Formulaire IMM5257 complété', 'Lettre d\'explication', 'Tous documents collectés'],
-        statut: 'a_faire',
-      },
-      {
-        id: 'v6',
-        titre: 'Traitement par l\'IRCC',
-        description: 'Le gouvernement canadien analyse votre demande. Des informations complémentaires peuvent être demandées.',
-        responsable: 'gouvernement',
-        dureeEstimee: '2–8 semaines',
-        documents: [],
-        statut: 'a_faire',
-      },
-      {
-        id: 'v7',
-        titre: 'Envoi du passeport',
-        description: 'En cas d\'approbation, vous envoyez votre passeport au CRDV pour apposition du visa.',
-        responsable: 'client',
-        dureeEstimee: '3–5 jours',
-        documents: ['Passeport original'],
-        statut: 'a_faire',
-      },
-      {
-        id: 'v8',
-        titre: 'Réception visa & préparation voyage',
-        description: 'Votre passeport avec le visa vous est retourné. CAPI vous accompagne dans la préparation du voyage.',
-        responsable: 'conseiller',
-        dureeEstimee: '1 semaine',
-        documents: ['Visa apposé sur passeport', 'Assurance voyage', 'Billet aller-retour confirmé'],
+        documents: ['Lettre de convocation biométrie', 'Pièce d’identité'],
         statut: 'a_faire',
       },
     ];
-    return steps;
   }
 
   // ── Feuille de route TRAVAILLER ──────────────────────────────────────────
   if (motif === 'travailler') {
+    // Guide: Travailleur — Outland (5 étapes)
     return [
-      { id: 'w1', titre: 'Analyse d\'admissibilité', description: 'Vérification de l\'offre d\'emploi, du NOC, des exemptions EIMT et choix du type de permis.', responsable: 'conseiller', dureeEstimee: '2–3 jours', documents: [], statut: 'a_faire' },
-      { id: 'w2', titre: 'Collecte des documents', description: 'Passeport, offre d\'emploi signée, diplômes, lettres de référence et relevés bancaires.', responsable: 'client', dureeEstimee: '1–2 semaines', documents: ['Passeport valide', 'Offre d\'emploi signée', 'Diplômes / attestations'], statut: 'a_faire' },
-      { id: 'w3', titre: 'Vérification de l\'offre d\'emploi', description: 'Contrôle de la conformité de l\'offre (NOC, salaire, conditions de travail) avant soumission.', responsable: 'conseiller', dureeEstimee: '2–3 jours', documents: [], statut: 'a_faire' },
-      { id: 'w4', titre: 'EIMT — si requis', description: 'L\'employeur dépose une demande EIMT auprès d\'ESDC si aucune exemption ne s\'applique.', responsable: 'gouvernement', dureeEstimee: '30–45 jours', documents: ['Formulaire EIMT', 'Preuve de recrutement'], statut: 'a_faire' },
-      { id: 'w5', titre: 'Rendez-vous biométrie (CRDV)', description: 'Collecte des données biométriques au centre désigné le plus proche.', responsable: 'client', dureeEstimee: '1 jour', documents: ['Convocation biométrie', 'Pièce d\'identité'], statut: 'a_faire' },
-      { id: 'w6', titre: 'Soumission de la demande', description: 'Dépôt officiel du permis de travail auprès de l\'IRCC.', responsable: 'conseiller', dureeEstimee: '1 jour', documents: [], statut: 'a_faire' },
-      { id: 'w7', titre: 'Traitement IRCC', description: 'L\'IRCC étudie votre demande. Des informations complémentaires peuvent être demandées.', responsable: 'gouvernement', dureeEstimee: '4–12 semaines', documents: [], statut: 'a_faire' },
-      { id: 'w8', titre: 'Réception du permis & arrivée', description: 'Réception du permis de travail et préparation de l\'arrivée au Canada.', responsable: 'client', dureeEstimee: '1 semaine', documents: ['Permis de travail', 'Billet d\'avion'], statut: 'a_faire' },
+      {
+        id: 'w1',
+        titre: 'Offre d’emploi',
+        description: 'Trouver un employeur canadien prêt à embaucher à l’étranger (CV canadien, réseautage).',
+        responsable: 'client',
+        dureeEstimee: 'Variable',
+        documents: ['Offre d’emploi / contrat'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'w2',
+        titre: 'EIMT (si requise)',
+        description: 'Démarche portée par l’employeur pour prouver qu’aucun Canadien n’est disponible (souvent payée par l’employeur).',
+        responsable: 'gouvernement',
+        dureeEstimee: '4–8 semaines',
+        documents: ['Numéro EIMT (si applicable)', 'Preuve de dispense (si applicable)'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'w3',
+        titre: 'Demande de permis de travail (IMM 1295)',
+        description: 'Demande fédérale avec contrat, EIMT/dispense et preuves d’expérience.',
+        responsable: 'client',
+        dureeEstimee: '1–3 jours',
+        documents: ['IMM 1295', 'Passeport', 'Contrat', 'EIMT/dispense', 'Preuves d’expérience'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'w4',
+        titre: 'Biométrie & médical',
+        description: 'Biométrie au centre VFS/CRDV. Examen médical si requis selon votre situation.',
+        responsable: 'client',
+        dureeEstimee: '1–7 jours',
+        documents: ['Convocation biométrie', ...(examenMedical ? ['Rendez‑vous médecin désigné (si requis)'] : [])],
+        statut: 'a_faire',
+      },
+      {
+        id: 'w5',
+        titre: 'Arrivée au Canada (point d’entrée)',
+        description: 'À l’arrivée, l’agent frontalier délivre le permis papier et confirme les conditions.',
+        responsable: 'gouvernement',
+        dureeEstimee: 'Le jour J',
+        documents: ['Lettre d’introduction (si applicable)', 'Passeport', 'Contrat'],
+        statut: 'a_faire',
+      },
     ];
   }
 
   // ── Feuille de route ÉTUDIER ─────────────────────────────────────────────
   if (motif === 'etudier') {
+    // Guide: Étudiant — Outland (9 étapes)
     return [
-      { id: 'e1', titre: 'Analyse d\'admissibilité', description: 'Vérification du DLI, éligibilité au permis d\'études, stratégie SDE ou dossier ordinaire.', responsable: 'conseiller', dureeEstimee: '2–3 jours', documents: [], statut: 'a_faire' },
-      { id: 'e2', titre: 'Lettre d\'acceptation', description: 'Obtention de la lettre d\'acceptation officielle de l\'établissement d\'enseignement désigné (DLI).', responsable: 'client', dureeEstimee: 'Variable', documents: ['Lettre d\'acceptation DLI'], statut: 'a_faire' },
-      { id: 'e3', titre: 'CAQ — si études au Québec', description: 'Demande du Certificat d\'acceptation du Québec (obligatoire avant le permis fédéral).', responsable: 'conseiller', dureeEstimee: '3–5 semaines', documents: ['Formulaire CAQ', 'Lettre d\'acceptation'], statut: 'a_faire' },
-      { id: 'e4', titre: 'Collecte des documents', description: 'Passeport, lettre d\'acceptation, relevés de notes, preuves financières et CAQ si applicable.', responsable: 'client', dureeEstimee: '1–2 semaines', documents: ['Passeport valide', 'Diplômes / relevés', 'Preuve de fonds'], statut: 'a_faire' },
-      { id: 'e5', titre: 'Rendez-vous biométrie (CRDV)', description: 'Collecte des données biométriques au centre désigné le plus proche.', responsable: 'client', dureeEstimee: '1 jour', documents: ['Convocation biométrie'], statut: 'a_faire' },
-      { id: 'e6', titre: 'Examen médical — si requis', description: 'Examen chez un médecin désigné IRCC (obligatoire si programme > 6 mois dans certains pays).', responsable: 'client', dureeEstimee: '1 semaine', documents: ['Résultats examen médical'], statut: 'a_faire' },
-      { id: 'e7', titre: 'Soumission de la demande', description: 'Dépôt officiel du permis d\'études via le SDE ou dossier papier.', responsable: 'conseiller', dureeEstimee: '1 jour', documents: [], statut: 'a_faire' },
-      { id: 'e8', titre: 'Traitement IRCC', description: 'L\'IRCC traite votre demande. Des informations complémentaires peuvent être demandées.', responsable: 'gouvernement', dureeEstimee: '3–8 sem. (SDE) / 8–12 sem. (ordinaire)', documents: [], statut: 'a_faire' },
-      { id: 'e9', titre: 'Préparation du départ', description: 'Réception du permis, billets, assurance santé et préparation logistique.', responsable: 'client', dureeEstimee: '2 semaines', documents: ['Permis d\'études', 'Billet d\'avion', 'Assurance santé'], statut: 'a_faire' },
+      {
+        id: 'e1',
+        titre: 'Définir le projet d’études',
+        description: 'Clarifier le projet professionnel et choisir un programme. Compléter le questionnaire de profil et estimer le budget.',
+        responsable: 'client',
+        dureeEstimee: '1–3 jours',
+        documents: ['Objectif d’études', 'Budget estimatif'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e2',
+        titre: 'Recherche d’un établissement (EED)',
+        description: 'Sélectionner un établissement d’enseignement désigné (EED/DLI) et vérifier l’éligibilité au PTPD si c’est un objectif.',
+        responsable: 'client',
+        dureeEstimee: '3–14 jours',
+        documents: ['Liste EED/DLI', 'Critères PTPD (si applicable)'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e3',
+        titre: 'Demande d’admission',
+        description: 'Envoyer le dossier scolaire (relevés, diplômes, CV, lettre). Frais d’analyse parfois requis (50–200$ selon école).',
+        responsable: 'client',
+        dureeEstimee: '1–7 jours',
+        documents: ['Relevés', 'Diplômes', 'CV', 'Lettre de motivation'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e4',
+        titre: 'Lettre d’admission (LOA)',
+        description: 'Recevoir la LOA. Souvent, un paiement partiel des frais de scolarité aide pour la preuve financière.',
+        responsable: 'client',
+        dureeEstimee: 'Variable',
+        documents: ['LOA', 'Reçu de paiement (si applicable)'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e5',
+        titre: 'Preuve financière',
+        description: 'Rassembler les fonds requis (scolarité + 20 635$ pour la vie + voyage) et préparer les justificatifs.',
+        responsable: 'client',
+        dureeEstimee: '3–10 jours',
+        documents: ['Relevés bancaires (4 mois)', 'Attestation de fonds', 'Lettre de garant (si applicable)'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e6',
+        titre: 'Demande de CAQ (Québec seulement)',
+        description: 'Si études au Québec: déposer la demande de CAQ avant la demande fédérale.',
+        responsable: 'client',
+        dureeEstimee: '4–8 semaines',
+        documents: ['Formulaires CAQ', 'LOA', 'Preuves financières'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e7',
+        titre: 'Compte IRCC & permis d’études (IMM 1294)',
+        description: 'Créer/accéder au compte IRCC et soumettre la demande fédérale en ligne avec une lettre explicative.',
+        responsable: 'client',
+        dureeEstimee: '1–3 jours',
+        documents: ['IMM 1294', 'Passeport', 'LOA', 'Lettre explicative', 'CAQ (si applicable)'],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e8',
+        titre: 'Biométrie & visite médicale',
+        description: 'Biométrie au centre VFS/CRDV. Examen médical chez un médecin désigné si requis selon votre situation.',
+        responsable: 'client',
+        dureeEstimee: '1–10 jours',
+        documents: ['Convocation biométrie', ...(examenMedical ? ['Rendez‑vous médecin désigné (si requis)'] : [])],
+        statut: 'a_faire',
+      },
+      {
+        id: 'e9',
+        titre: 'Décision & départ',
+        description: 'Réception de la lettre d’introduction (LI) et du visa/AVE, puis préparation du départ.',
+        responsable: 'gouvernement',
+        dureeEstimee: 'Variable',
+        documents: ['Lettre d’introduction (LI)', 'Visa/AVE'],
+        statut: 'a_faire',
+      },
     ];
   }
 
@@ -267,7 +458,7 @@ export default function CapiTimelineScreen() {
     session.evaluation?.visiteurPlan?.examenMedical ??
     session.evaluation?.motifPlan?.examenMedical ??
     false;
-  const steps = buildTimeline(motif, session.programme, examenMedical);
+  const steps = buildTimeline(motif, session.programme, examenMedical, session.where);
 
   const next = () => {
     const timeline = steps;
