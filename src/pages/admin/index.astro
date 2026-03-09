@@ -234,6 +234,27 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     }
     .status-select:focus { border-color: var(--accent); }
 
+    /* Inside publish */
+    .inside-card { padding: 16px; }
+    .inside-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .inside-field { display: flex; flex-direction: column; gap: 6px; }
+    .inside-field label { font-size: 12px; color: var(--muted); font-weight: 700; }
+    .inside-input, .inside-textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+    .inside-input:focus, .inside-textarea:focus { border-color: var(--accent); }
+    .inside-textarea { min-height: 160px; resize: vertical; }
+    .inside-span { font-size: 12px; color: var(--muted); }
+    .inside-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .inside-actions .btn-send { padding: 10px 18px; }
+    .inside-full { grid-column: 1 / -1; }
+
     /* Pagination */
     .pagination { display: flex; gap: 6px; align-items: center; margin-top: 16px; justify-content: flex-end; }
     .page-btn {
@@ -290,6 +311,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   <nav class="sidebar-nav">
     <a class="nav-item active" href="#dashboard" data-section="dashboard">
       <i class="fa fa-chart-pie"></i> Tableau de bord
+    </a>
+    <a class="nav-item" href="#inside" data-section="inside">
+      <i class="fa fa-bullhorn"></i> Inside
     </a>
     <a class="nav-item" href="#clients" data-section="clients">
       <i class="fa fa-users"></i> Clients
@@ -361,6 +385,54 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
             <tr><td colspan="4"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- SECTION INSIDE -->
+    <div id="section-inside" style="display:none">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Inside — Publication</div>
+          <span class="inside-span">Publie un post visible dans l’onglet Inside (mobile).</span>
+        </div>
+        <button class="btn-sm" id="btn-inside-clear" type="button"><i class="fa fa-eraser"></i> Vider</button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="inside-card">
+          <form id="inside-publish-form" class="inside-form">
+            <div class="inside-field inside-full">
+              <label for="inside-title">Titre</label>
+              <input class="inside-input" id="inside-title" name="title" maxlength="120" placeholder="Ex: Nouvelle mise à jour — mars 2026" required />
+            </div>
+
+            <div class="inside-field inside-full">
+              <label for="inside-content">Contenu</label>
+              <textarea class="inside-textarea" id="inside-content" name="content" maxlength="5000" placeholder="Écris le message à diffuser…" required></textarea>
+              <span class="inside-span">Minimum: 10 caractères. Le titre doit faire au moins 3 caractères.</span>
+            </div>
+
+            <div class="inside-field">
+              <label for="inside-media-type">Média (optionnel)</label>
+              <select class="status-select" id="inside-media-type" name="mediaType">
+                <option value="">Aucun</option>
+                <option value="image">Image</option>
+                <option value="video">Vidéo</option>
+                <option value="link">Lien</option>
+              </select>
+            </div>
+
+            <div class="inside-field">
+              <label for="inside-media-url">URL média (optionnel)</label>
+              <input class="inside-input" id="inside-media-url" name="mediaUrl" maxlength="500" placeholder="https://…" />
+            </div>
+
+            <div class="inside-actions inside-full">
+              <span class="inside-span" id="inside-publish-result"></span>
+              <button class="btn-send" id="inside-publish-submit" type="submit"><i class="fa fa-paper-plane"></i> Publier</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -490,13 +562,14 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   // ── Sections ────────────────────────────────────────────────────────────
   function showSection(name) {
     document.getElementById('section-dashboard').style.display = name === 'dashboard' ? '' : 'none';
+    document.getElementById('section-inside').style.display    = name === 'inside'    ? '' : 'none';
     document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
     document.getElementById('section-pros').style.display      = name === 'pros'      ? '' : 'none';
     document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
     document.querySelectorAll('.sidebar-nav .nav-item[data-section]').forEach(function(el) {
       if (el.getAttribute('data-section') === name) el.classList.add('active');
     });
-    var titles = { dashboard: 'Tableau de bord', clients: 'Clients', pros: 'Comptes Pro' };
+    var titles = { dashboard: 'Tableau de bord', inside: 'Inside', clients: 'Clients', pros: 'Comptes Pro' };
     document.getElementById('page-title').textContent = titles[name] || name;
     if (name === 'clients' && !document.getElementById('clients-body').dataset.loaded) {
       loadClients();
@@ -1169,6 +1242,66 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     t._timer = setTimeout(function(){ t.style.display = 'none'; }, 3000);
   }
 
+  // ── Inside publish ───────────────────────────────────────────────────────
+  function setInsideResult(text, isError) {
+    var el = document.getElementById('inside-publish-result');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? 'var(--red)' : 'var(--muted)';
+  }
+
+  function clearInsideForm() {
+    var t = document.getElementById('inside-title');
+    var c = document.getElementById('inside-content');
+    var mt = document.getElementById('inside-media-type');
+    var mu = document.getElementById('inside-media-url');
+    if (t) t.value = '';
+    if (c) c.value = '';
+    if (mt) mt.value = '';
+    if (mu) mu.value = '';
+    setInsideResult('', false);
+  }
+
+  async function publishInside(e) {
+    e.preventDefault();
+    setInsideResult('Publication en cours…', false);
+
+    var title = String((document.getElementById('inside-title') || {}).value || '').trim();
+    var content = String((document.getElementById('inside-content') || {}).value || '').trim();
+    var mediaType = String((document.getElementById('inside-media-type') || {}).value || '').trim();
+    var mediaUrl = String((document.getElementById('inside-media-url') || {}).value || '').trim();
+
+    try {
+      const r = await fetch('/api/inside', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, mediaType, mediaUrl }),
+      });
+
+      let d = null;
+      try { d = await r.json(); } catch { d = null; }
+
+      if (!r.ok) {
+        var msg = (d && d.error) ? String(d.error) : ('Erreur (' + r.status + ')');
+        setInsideResult(msg, true);
+        return;
+      }
+
+      if (d && d.ok) {
+        setInsideResult('Publié ✓', false);
+        clearInsideForm();
+        toast('Inside: publié ✓', false);
+        return;
+      }
+
+      setInsideResult('Publié ✓', false);
+      clearInsideForm();
+    } catch (err) {
+      console.warn('[Admin] inside publish failed', err);
+      setInsideResult('Erreur de connexion', true);
+    }
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────
   loadStats();
 
@@ -1214,6 +1347,12 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   // Recherche client (input)
   var searchEl = document.getElementById('client-search');
   if (searchEl) searchEl.addEventListener('input', function() { debounceSearch(); });
+
+  // Inside publish
+  var insideForm = document.getElementById('inside-publish-form');
+  if (insideForm) insideForm.addEventListener('submit', publishInside);
+  var insideClear = document.getElementById('btn-inside-clear');
+  if (insideClear) insideClear.addEventListener('click', function() { clearInsideForm(); });
 
   // Textarea reply : Enter pour envoyer
   var replyInput = document.getElementById('reply-input');
