@@ -12,6 +12,25 @@ const json = (data: unknown, status = 200) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
+function asErrorMessage(err: unknown): string {
+  if (!err) return '';
+  if (typeof err === 'string') return err;
+  if (typeof err === 'object' && 'message' in err) return String((err as any).message || '');
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
+function isMissingMediaTable(err: unknown): boolean {
+  const msg = asErrorMessage(err).toLowerCase();
+  return (
+    msg.includes('inside_media') &&
+    (msg.includes('no such table') || msg.includes('does not exist') || msg.includes('relation'))
+  );
+}
+
 function getToken(request: Request, cookies: any): string | null {
   const authHeader = request.headers.get('Authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -73,6 +92,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const filename = String(file.name || '').slice(0, 180);
 
   const data = await file.arrayBuffer();
+  const bytes = new Uint8Array(data);
 
   try {
     if (db) {
@@ -81,14 +101,12 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
           `INSERT INTO inside_media (id, mime_type, filename, size, data, created_at)
            VALUES (?, ?, ?, ?, ?, ?)`
         )
-        .bind(id, mimeType, filename, size, data, createdAt)
+        .bind(id, mimeType, filename, size, bytes, createdAt)
         .run();
     } else {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
 
-      // Neon accepte Uint8Array (nodejs_compat)
-      const bytes = new Uint8Array(data);
       await sql`
         INSERT INTO inside_media (id, mime_type, filename, size, data, created_at)
         VALUES (${id}, ${mimeType}, ${filename || null}, ${size}, ${bytes as any}, ${createdAt})
@@ -109,7 +127,17 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
       },
     });
   } catch (err) {
+    const msg = asErrorMessage(err);
     console.error('Inside upload error:', err);
-    return json({ error: 'Erreur serveur' }, 500);
+    if (isMissingMediaTable(err)) {
+      return json(
+        {
+          error: 'Upload indisponible: migration base de données manquante',
+          hint: 'Appliquer la migration 0010_inside_media (D1 ou Postgres) puis réessayer.',
+        },
+        503
+      );
+    }
+    return json({ error: 'Erreur serveur', detail: msg ? msg.slice(0, 200) : undefined }, 500);
   }
 };
