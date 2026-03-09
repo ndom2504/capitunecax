@@ -60,6 +60,16 @@ function asPost(row: any): InsidePostApi {
   };
 }
 
+function normalizeMediaUrl(mediaUrl: string): string {
+  const url = String(mediaUrl || '').trim();
+  if (!url) return '';
+  if (url.startsWith('/')) return url;
+  const marker = '/api/inside/media/';
+  const idx = url.indexOf(marker);
+  if (idx >= 0) return url.slice(idx);
+  return url;
+}
+
 export const GET: APIRoute = async ({ cookies, locals, request }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
   const useNeon = !db && hasNeonDatabase();
@@ -91,7 +101,15 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
         )
         .all<any>();
 
-      return json({ posts: (results ?? []).map(asPost) });
+      const origin = new URL(request.url).origin;
+      const posts = (results ?? [])
+        .map(asPost)
+        .map((p) => {
+          const normalized = normalizeMediaUrl(p.mediaUrl || '');
+          const absolute = normalized.startsWith('/') ? new URL(normalized, origin).toString() : normalized;
+          return { ...p, mediaUrl: absolute };
+        });
+      return json({ posts });
     }
 
     const sql = await getNeonSqlClient();
@@ -115,7 +133,15 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
           ORDER BY created_at DESC
           LIMIT 50
         `;
-    return json({ posts: (rows ?? []).map(asPost) });
+    const origin = new URL(request.url).origin;
+    const posts = (rows ?? [])
+      .map(asPost)
+      .map((p) => {
+        const normalized = normalizeMediaUrl(p.mediaUrl || '');
+        const absolute = normalized.startsWith('/') ? new URL(normalized, origin).toString() : normalized;
+        return { ...p, mediaUrl: absolute };
+      });
+    return json({ posts });
   } catch (err) {
     console.error('Inside GET error:', err);
     return json({ posts: [] }, 200);

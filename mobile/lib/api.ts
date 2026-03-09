@@ -95,6 +95,42 @@ export const userApi = {
     }, token),
 };
 
+// -- Officiel (actus gouvernementales) --------------------------------------
+
+export type OfficialNewsItem = {
+  title: string;
+  url: string;
+  summary?: string;
+  publishedAt?: string;
+  source: 'canada.ca';
+};
+
+export const officialApi = {
+  getNews: (lang: 'fr' | 'en' = 'fr', pick = 10) =>
+    request<{ items: OfficialNewsItem[] }>(
+      `/api/official/news?lang=${encodeURIComponent(lang)}&pick=${encodeURIComponent(String(pick))}`,
+      {},
+    ),
+};
+
+// -- Présence (Inside) ------------------------------------------------------
+
+export const presenceApi = {
+  heartbeat: (token: string) =>
+    request<{ ok?: boolean; online?: boolean; error?: string }>(
+      '/api/presence/heartbeat',
+      { method: 'POST', body: '{}' },
+      token,
+    ),
+
+  count: (token: string, windowSeconds = 60) =>
+    request<{ count?: number; windowSeconds?: number; error?: string }>(
+      `/api/presence/count?windowSeconds=${encodeURIComponent(String(windowSeconds))}`,
+      {},
+      token,
+    ),
+};
+
 // -- CAPI � Agent IA d'orientation --------------------------------------------
 
 export const capiApi = {
@@ -228,6 +264,31 @@ export const teamApi = {
   list: (token: string) => request<{ team: TeamMember[]; error?: string }>('/api/team', {}, token),
 };
 
+// -- Inside (publications officielles) ---------------------------------------
+
+export type InsidePost = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  authorName: string;
+  authorAvatarKey?: string;
+  mediaType?: string;
+  mediaUrl?: string;
+};
+
+export const insideApi = {
+  getPosts: (token: string) =>
+    request<{ posts: InsidePost[]; persisted?: boolean; error?: string }>('/api/inside', {}, token),
+
+  publish: (token: string, payload: { title: string; content: string }) =>
+    request<{ ok?: boolean; post?: InsidePost; persisted?: boolean; error?: string }>(
+      '/api/inside',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+};
+
 // -- Types Auth ----------------------------------------------------------------
 
 export interface UserInfo {
@@ -263,6 +324,7 @@ export interface UserProfile {
   notif_email: boolean;
   notif_rdv: boolean;
   notif_msg: boolean;
+  online_status_enabled: boolean;
   currency_code: string;
   premium_expires_at: string | null;
   premium_active: boolean;
@@ -271,7 +333,7 @@ export interface UserProfile {
 
 export type UserProfileUpdate = Partial<Pick<
   UserProfile,
-  'name' | 'phone' | 'location' | 'bio' | 'notif_email' | 'notif_rdv' | 'notif_msg' | 'currency_code' | 'avatar_key'
+  'name' | 'phone' | 'location' | 'bio' | 'notif_email' | 'notif_rdv' | 'notif_msg' | 'online_status_enabled' | 'currency_code' | 'avatar_key'
 >>;
 
 // -- Types CAPI ----------------------------------------------------------------
@@ -287,8 +349,14 @@ export type CapiMotif =
 
 export interface CapiSession {
   id?: string;
+  /** ID du projet créé côté serveur après activation */
+  projectId?: string;
   step: number;
   where?: 'inside' | 'outside';
+  /** Parcours 'Nouvel arrivant' (statut à l'arrivée) */
+  arrivalStage?: 'rp' | 'student' | 'worker' | 'asylum';
+  /** Checklist cochée par statut */
+  arrivalChecklist?: Partial<Record<'rp' | 'student' | 'worker' | 'asylum', string[]>>;
   motif?: CapiMotif;
   programme?: string;
   profile?: CapiProfileData;

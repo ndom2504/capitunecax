@@ -51,10 +51,14 @@ export default function CapiActivationScreen() {
       resetSession();
       router.replace('/(tabs)/projet');
     } catch (err: any) {
-      // Activation OK en mode hors-ligne (fallback)
-      console.log('Activation backend skipped:', err.message);
-      resetSession();
-      router.replace('/(tabs)/projet');
+      Alert.alert(
+        'Création du projet impossible',
+        err?.message ? String(err.message) : 'Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Réessayer', onPress: () => void activate() },
+        ],
+      );
     } finally {
       setCreating(false);
     }

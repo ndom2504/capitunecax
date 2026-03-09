@@ -19,6 +19,8 @@ export default function CapiMotifScreen() {
   const selectWhere = (where: 'inside' | 'outside') => {
     updateSession({
       where,
+      arrivalStage: undefined,
+      arrivalChecklist: undefined,
       step: 1,
       motif: undefined,
       programme: undefined,
@@ -29,6 +31,23 @@ export default function CapiMotifScreen() {
       advisor: undefined,
     });
     router.push('/capi/objectif' as any);
+  };
+
+  const selectNewcomer = () => {
+    updateSession({
+      where: undefined,
+      arrivalStage: undefined,
+      arrivalChecklist: undefined,
+      step: 1,
+      motif: undefined,
+      programme: undefined,
+      profile: undefined,
+      evaluation: undefined,
+      services: undefined,
+      timeline: undefined,
+      advisor: undefined,
+    });
+    router.push('/capi/nouvel-arrivant' as any);
   };
 
   return (
@@ -67,6 +86,19 @@ export default function CapiMotifScreen() {
             <View style={styles.optionText}>
               <Text style={styles.optionLabel}>À l'extérieur du Canada</Text>
               <Text style={styles.optionDesc}>Je vis actuellement dans un autre pays et je souhaite venir au Canada.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionCard}
+            onPress={selectNewcomer}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.optionEmoji}>🧳</Text>
+            <View style={styles.optionText}>
+              <Text style={styles.optionLabel}>Nouvel arrivant</Text>
+              <Text style={styles.optionDesc}>Je viens d’arriver au Canada (ou j’arrive bientôt) et je veux suivre les étapes d’intégration.</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>

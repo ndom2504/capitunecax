@@ -22,6 +22,7 @@ export default function ProfilScreen() {
   const [draft, setDraft] = useState<UserProfileUpdate>({
     name: user?.name ?? '',
     avatar_key: user?.avatar ?? '',
+    online_status_enabled: true,
   });
   const [loadingProfile, setLoadingProfile] = useState(false); // pas de spinner au démarrage
   const [saving, setSaving] = useState(false);
@@ -115,6 +116,7 @@ export default function ProfilScreen() {
           notif_email: res.data.notif_email,
           notif_rdv: res.data.notif_rdv,
           notif_msg: res.data.notif_msg,
+          online_status_enabled: res.data.online_status_enabled,
           currency_code: res.data.currency_code,
         });
         return;
@@ -289,6 +291,21 @@ export default function ProfilScreen() {
                 <Switch
                   value={!!draft.notif_msg}
                   onValueChange={(v) => setDraft(d => ({ ...d, notif_msg: v }))}
+                  trackColor={{ false: Colors.border, true: Colors.orange }}
+                  thumbColor="#fff"
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.switchRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.switchLabel}>Statut en ligne</Text>
+                  <Text style={styles.switchSub}>Afficher votre présence dans Inside</Text>
+                </View>
+                <Switch
+                  value={draft.online_status_enabled !== undefined ? !!draft.online_status_enabled : true}
+                  onValueChange={(v) => setDraft(d => ({ ...d, online_status_enabled: v }))}
                   trackColor={{ false: Colors.border, true: Colors.orange }}
                   thumbColor="#fff"
                 />

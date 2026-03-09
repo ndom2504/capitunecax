@@ -1,0 +1,75 @@
+---
+import MainLayout from '../../../layouts/main.astro';
+import { HeaderNav } from '../../../components/HeaderNav';
+import { FooterCustom } from '../../../components/FooterCustom';
+
+type Link = { name: string; url: string; note?: string };
+
+const links: Link[] = [
+  { name: 'Rogers — site officiel', url: 'https://www.rogers.com/' },
+  { name: 'Bell — site officiel', url: 'https://www.bell.ca/' },
+  { name: 'TELUS — site officiel', url: 'https://www.telus.com/fr' },
+  { name: 'Fido — site officiel', url: 'https://www.fido.ca/' },
+  { name: 'Koodo — site officiel', url: 'https://www.koodomobile.com/fr' },
+  { name: 'Virgin Plus — site officiel', url: 'https://www.virginplus.ca/fr' },
+  { name: 'Freedom Mobile — site officiel', url: 'https://www.freedommobile.ca/' },
+  { name: 'Public Mobile — site officiel', url: 'https://www.publicmobile.ca/' },
+  { name: 'Videotron — site officiel', url: 'https://www.videotron.com/' },
+  { name: 'Fizz — site officiel', url: 'https://fizz.ca/fr' },
+];
+
+const title = 'Téléphonie & Internet — Ressources nouvel arrivant';
+const desc = 'Liens officiels vers des opérateurs et marques au Canada.';
+---
+
+<MainLayout>
+  <HeaderNav client:only="react" />
+
+  <section class="relative bg-gradient-to-br from-primary/5 to-primary/10 py-14 md:py-20">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <a href="/ressources/nouvel-arrivant" class="text-primary hover:underline">← Retour aux ressources</a>
+        <h1 class="text-3xl md:text-5xl font-bold mt-4 mb-4 text-foreground">{title}</h1>
+        <p class="text-muted-foreground text-lg md:text-xl">{desc}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-14 bg-background">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-card border border-border rounded-lg p-6 mb-8">
+          <h2 class="text-lg font-bold text-foreground mb-2">À vérifier avant de choisir</h2>
+          <ul class="text-muted-foreground space-y-2">
+            <li>Couverture réseau dans votre ville/quartier.</li>
+            <li>Forfait mensuel, données, appels internationaux, eSIM.</li>
+            <li>Engagement, frais d’activation, téléphone subventionné ou non.</li>
+          </ul>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          {links.map((l) => (
+            <a href={l.url} target="_blank" rel="noopener noreferrer" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h3 class="font-bold text-foreground">{l.name}</h3>
+                  {l.note && <p class="text-sm text-muted-foreground mt-1">{l.note}</p>}
+                </div>
+                <span class="text-primary">↗</span>
+              </div>
+              <p class="text-xs text-muted-foreground mt-3 break-all">{l.url}</p>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-10 bg-muted/30 rounded-lg p-6">
+          <p class="text-sm text-muted-foreground">
+            Conseil: si vous avez un budget serré, comparez aussi les marques “sans contrat” et la couverture locale.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <FooterCustom client:only="react" />
+</MainLayout>

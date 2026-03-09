@@ -1,0 +1,74 @@
+---
+import MainLayout from '../../../layouts/main.astro';
+import { HeaderNav } from '../../../components/HeaderNav';
+import { FooterCustom } from '../../../components/FooterCustom';
+
+type Link = { name: string; url: string; note?: string };
+
+const links: Link[] = [
+  { name: 'RBC (Banque Royale du Canada) — site officiel', url: 'https://www.rbcroyalbank.com/fr/' },
+  { name: 'TD Canada Trust — site officiel', url: 'https://www.td.com/ca/fr/personal-banking' },
+  { name: 'Scotiabank (Banque Scotia) — site officiel', url: 'https://www.scotiabank.com/ca/fr.html' },
+  { name: 'BMO (Banque de Montréal) — site officiel', url: 'https://www.bmo.com/fr-ca/principal/' },
+  { name: 'CIBC — site officiel', url: 'https://www.cibc.com/fr.html' },
+  { name: 'Desjardins — site officiel', url: 'https://www.desjardins.com/' },
+  { name: 'National Bank of Canada (BNC) — site officiel', url: 'https://www.nbc.ca/' },
+  { name: 'Tangerine — site officiel', url: 'https://www.tangerine.ca/fr' },
+  { name: 'Simplii Financial — site officiel', url: 'https://www.simplii.com/fr/' },
+];
+
+const title = 'Banques — Ressources nouvel arrivant';
+const desc = 'Liens officiels vers des institutions bancaires au Canada.';
+---
+
+<MainLayout>
+  <HeaderNav client:only="react" />
+
+  <section class="relative bg-gradient-to-br from-primary/5 to-primary/10 py-14 md:py-20">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <a href="/ressources/nouvel-arrivant" class="text-primary hover:underline">← Retour aux ressources</a>
+        <h1 class="text-3xl md:text-5xl font-bold mt-4 mb-4 text-foreground">{title}</h1>
+        <p class="text-muted-foreground text-lg md:text-xl">{desc}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-14 bg-background">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-card border border-border rounded-lg p-6 mb-8">
+          <h2 class="text-lg font-bold text-foreground mb-2">À vérifier avant d’ouvrir un compte</h2>
+          <ul class="text-muted-foreground space-y-2">
+            <li>Pièces d’identité acceptées, preuve d’adresse, statut.</li>
+            <li>Frais mensuels, virements, cartes, limites.</li>
+            <li>Offres “étudiant” / “nouvel arrivant” et durée de validité.</li>
+          </ul>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          {links.map((l) => (
+            <a href={l.url} target="_blank" rel="noopener noreferrer" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <h3 class="font-bold text-foreground">{l.name}</h3>
+                  {l.note && <p class="text-sm text-muted-foreground mt-1">{l.note}</p>}
+                </div>
+                <span class="text-primary">↗</span>
+              </div>
+              <p class="text-xs text-muted-foreground mt-3 break-all">{l.url}</p>
+            </a>
+          ))}
+        </div>
+
+        <div class="mt-10 bg-muted/30 rounded-lg p-6">
+          <p class="text-sm text-muted-foreground">
+            Note: Cette page liste des institutions connues, sans recommandation ni partenariat.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <FooterCustom client:only="react" />
+</MainLayout>

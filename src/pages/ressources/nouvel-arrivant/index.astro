@@ -1,0 +1,68 @@
+---
+import MainLayout from '../../../layouts/main.astro';
+import { HeaderNav } from '../../../components/HeaderNav';
+import { FooterCustom } from '../../../components/FooterCustom';
+
+const title = 'Ressources utiles — Nouvel arrivant';
+const description = "Pages de redirection vers des institutions officielles (banques, téléphonie, logement, transports).";
+---
+
+<MainLayout>
+  <HeaderNav client:only="react" />
+
+  <section class="relative bg-gradient-to-br from-primary/5 to-primary/10 py-14 md:py-20">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 text-foreground">{title}</h1>
+        <p class="text-muted-foreground text-lg md:text-xl">{description}</p>
+        <div class="mt-6 bg-card border border-border rounded-lg p-4">
+          <p class="text-sm text-muted-foreground">
+            Ces liens vous redirigent vers des sites externes. CAPITUNE n’est affilié à aucune institution listée.
+            Vérifiez toujours les conditions, frais et votre admissibilité.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-14 bg-background">
+    <div class="container mx-auto px-4 md:px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-6">
+          <a href="/ressources/nouvel-arrivant/banques" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+            <div class="text-3xl mb-3">🏦</div>
+            <h2 class="text-xl font-bold text-foreground mb-1">Banques</h2>
+            <p class="text-muted-foreground">Ouvrir un compte, comparer les offres “nouvel arrivant / étudiant”.</p>
+          </a>
+
+          <a href="/ressources/nouvel-arrivant/telephonie-internet" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+            <div class="text-3xl mb-3">📱</div>
+            <h2 class="text-xl font-bold text-foreground mb-1">Téléphonie & Internet</h2>
+            <p class="text-muted-foreground">Forfaits mobiles, eSIM, Internet résidentiel.</p>
+          </a>
+
+          <a href="/ressources/nouvel-arrivant/logement" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+            <div class="text-3xl mb-3">🏠</div>
+            <h2 class="text-xl font-bold text-foreground mb-1">Logement</h2>
+            <p class="text-muted-foreground">Trouver un logement, comprendre bail, droits/recours.</p>
+          </a>
+
+          <a href="/ressources/nouvel-arrivant/transports" class="bg-card border border-border rounded-lg p-6 hover:shadow-lg transition block">
+            <div class="text-3xl mb-3">🚇</div>
+            <h2 class="text-xl font-bold text-foreground mb-1">Transports</h2>
+            <p class="text-muted-foreground">Transport en commun, abonnements, cartes et applis.</p>
+          </a>
+        </div>
+
+        <div class="mt-10 bg-muted/30 rounded-lg p-6">
+          <h3 class="text-lg font-bold text-foreground mb-2">Conseil</h3>
+          <p class="text-muted-foreground">
+            Si vous êtes étudiant, commencez par Téléphonie → Logement → Banque (pour faciliter les paiements et l’installation).
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <FooterCustom client:only="react" />
+</MainLayout>
