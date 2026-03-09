@@ -20,10 +20,12 @@ type InsidePostApi = {
   title: string;
   content: string;
   createdAt: string;
+  updatedAt?: string;
   authorName: string;
   authorAvatarKey?: string;
   mediaType?: string;
   mediaUrl?: string;
+  isHidden?: boolean;
 };
 
 const json = (data: unknown, status = 200) =>
@@ -45,10 +47,16 @@ function asPost(row: any): InsidePostApi {
     title: String(row.title ?? ''),
     content: String(row.content ?? ''),
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString()),
+    updatedAt: String(row.updated_at ?? row.updatedAt ?? ''),
     authorName: String(row.author_name ?? row.authorName ?? ''),
     authorAvatarKey: String(row.author_avatar_key ?? row.authorAvatarKey ?? ''),
     mediaType: String(row.media_type ?? row.mediaType ?? ''),
     mediaUrl: String(row.media_url ?? row.mediaUrl ?? ''),
+    isHidden: Boolean(
+      (row.is_hidden ?? row.isHidden ?? 0) === true ||
+        String(row.is_hidden ?? row.isHidden ?? '0') === '1' ||
+        String(row.is_hidden ?? row.isHidden ?? '').toLowerCase() === 'true'
+    ),
   };
 }
 
@@ -67,13 +75,17 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
 
   const user = await getUserFromSessionFullAny(db, token);
   if (!user) return json({ error: 'Session expirée' }, 401);
+  const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  const url = new URL(request.url);
+  const includeHidden = url.searchParams.get('includeHidden') === '1' && isAdmin;
 
   try {
     if (db) {
       const { results } = await db
         .prepare(
-          `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, created_at
+          `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, created_at, updated_at, is_hidden
            FROM inside_posts
+           ${includeHidden ? '' : 'WHERE (is_hidden IS NULL OR is_hidden = 0)'}
            ORDER BY created_at DESC
            LIMIT 50`
         )
@@ -85,13 +97,24 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
     const sql = await getNeonSqlClient();
     if (!sql) return json({ posts: [], persisted: false });
 
-    const rows = await sql<any>`
-      SELECT id, author_name, author_avatar_key, title, content, media_type, media_url,
-             (created_at::timestamptz) AS created_at
-      FROM inside_posts
-      ORDER BY created_at DESC
-      LIMIT 50
-    `;
+    const rows = includeHidden
+      ? await sql<any>`
+          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url,
+                 (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                 is_hidden
+          FROM inside_posts
+          ORDER BY created_at DESC
+          LIMIT 50
+        `
+      : await sql<any>`
+          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url,
+                 (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                 is_hidden
+          FROM inside_posts
+          WHERE is_hidden IS NOT TRUE
+          ORDER BY created_at DESC
+          LIMIT 50
+        `;
     return json({ posts: (rows ?? []).map(asPost) });
   } catch (err) {
     console.error('Inside GET error:', err);
@@ -143,17 +166,17 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
     if (db) {
       await db
         .prepare(
-          `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, created_at, updated_at, is_hidden)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
-        .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, nowIso)
+        .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, nowIso, nowIso, 0)
         .run();
     } else {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
       await sql`
-        INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, created_at)
-        VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${nowIso})
+        INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, created_at, updated_at, is_hidden)
+        VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${nowIso}, ${nowIso}, false)
       `;
     }
 

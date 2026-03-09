@@ -425,6 +425,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
             <div class="inside-actions inside-full">
               <span class="inside-span" id="inside-publish-result"></span>
+              <input type="hidden" id="inside-edit-id" value="" />
+              <button class="btn-sm" id="inside-edit-cancel" type="button" style="display:none"><i class="fa fa-ban"></i> Annuler édition</button>
               <button class="btn-send" id="inside-publish-submit" type="submit"><i class="fa fa-paper-plane"></i> Publier</button>
             </div>
           </form>
@@ -443,13 +445,15 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           <thead>
             <tr>
               <th>Date</th>
+              <th>Statut</th>
               <th>Titre</th>
               <th>Média</th>
               <th>Aperçu</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="inside-posts-body" data-loaded="0">
-            <tr><td colspan="4"><div class="spinner"></div></td></tr>
+            <tr><td colspan="6"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -577,6 +581,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   var _isSuper       = !!(window.__admIsSuperAdmin);
   var _meId          = String(window.__admAdminId || '');
   var _prosLoaded    = false;
+  var _insidePosts   = [];
 
   // ── Sections ────────────────────────────────────────────────────────────
   function showSection(name) {
@@ -1268,6 +1273,26 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   }
 
   // ── Inside publish ───────────────────────────────────────────────────────
+  function setInsideEditMode(on) {
+    var cancelBtn = document.getElementById('inside-edit-cancel');
+    var submitBtn = document.getElementById('inside-publish-submit');
+    if (cancelBtn) cancelBtn.style.display = on ? '' : 'none';
+    if (submitBtn) submitBtn.innerHTML = on
+      ? '<i class="fa fa-floppy-disk"></i> Mettre à jour'
+      : '<i class="fa fa-paper-plane"></i> Publier';
+  }
+
+  function setInsideEditId(id) {
+    var el = document.getElementById('inside-edit-id');
+    if (el) el.value = id || '';
+    setInsideEditMode(!!id);
+  }
+
+  function getInsideEditId() {
+    var el = document.getElementById('inside-edit-id');
+    return el ? String(el.value || '').trim() : '';
+  }
+
   function truncateText(s, n) {
     var t = String(s || '');
     if (t.length <= n) return t;
@@ -1279,23 +1304,24 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     if (!tbody) return;
     if (!force && tbody.dataset.loaded) return;
 
-    tbody.innerHTML = '<tr><td colspan="4"><div class="spinner"></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
 
     try {
-      const r = await fetch('/api/inside', { method: 'GET' });
+      const r = await fetch('/api/inside?includeHidden=1', { method: 'GET' });
       let d = null;
       try { d = await r.json(); } catch { d = null; }
 
       if (!r.ok) {
         var msg = (d && d.error) ? String(d.error) : ('Erreur (' + r.status + ')');
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">' + esc(msg) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">' + esc(msg) + '</td></tr>';
         toast('Inside: ' + msg, true);
         return;
       }
 
       var posts = (d && d.posts) ? d.posts : [];
+      _insidePosts = posts || [];
       if (!posts || !posts.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Aucune publication</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucune publication</td></tr>';
         tbody.dataset.loaded = '1';
         return;
       }
@@ -1309,6 +1335,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         var content = String(p.content || '');
         var mediaType = String(p.mediaType || p.media_type || '');
         var mediaUrl = String(p.mediaUrl || p.media_url || '');
+        var isHidden = !!(p.isHidden || p.is_hidden);
 
         var mediaCell = '—';
         if (mediaUrl) {
@@ -1318,18 +1345,29 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           mediaCell = esc(mediaType);
         }
 
+        var statusPill = isHidden
+          ? '<span class="status-pill pill-annule">Masqué</span>'
+          : '<span class="status-pill pill-termine">Visible</span>';
+
+        var actions = ''
+          + '<button class="btn-sm" data-inside-action="edit" data-id="' + esc(String(p.id || '')) + '"><i class="fa fa-pen"></i> Modifier</button> '
+          + '<button class="btn-sm" data-inside-action="toggleHidden" data-hidden="' + (isHidden ? '1' : '0') + '" data-id="' + esc(String(p.id || '')) + '">' + (isHidden ? '<i class="fa fa-eye"></i> Afficher' : '<i class="fa fa-eye-slash"></i> Masquer') + '</button> '
+          + '<button class="btn-sm" data-inside-action="delete" data-id="' + esc(String(p.id || '')) + '" style="background: rgba(231,76,60,.15); color: var(--red)"><i class="fa fa-trash"></i></button>';
+
         html += '<tr>'
           + '<td style="white-space:nowrap;color:var(--muted);font-size:12px">' + esc(date) + '</td>'
+          + '<td>' + statusPill + '</td>'
           + '<td><div style="font-weight:700">' + esc(truncateText(title, 70)) + '</div></td>'
           + '<td>' + mediaCell + '</td>'
           + '<td><div class="msg-preview">' + esc(truncateText(content, 140)) + '</div></td>'
+          + '<td style="white-space:nowrap">' + actions + '</td>'
           + '</tr>';
       }
       tbody.innerHTML = html;
       tbody.dataset.loaded = '1';
     } catch (err) {
       console.warn('[Admin] inside list failed', err);
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Erreur de connexion</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Erreur de connexion</td></tr>';
     }
   }
 
@@ -1348,6 +1386,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     if (c) c.value = '';
     if (mf) mf.value = '';
     setInsideResult('', false);
+    setInsideEditId('');
   }
 
   async function publishInside(e) {
@@ -1362,6 +1401,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     var file = (mf && mf.files && mf.files[0]) ? mf.files[0] : null;
 
     try {
+      var editId = getInsideEditId();
+
       if (file) {
         setInsideResult('Upload du média…', false);
         var fd = new FormData();
@@ -1382,10 +1423,19 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         mediaType = String(ud.media.mediaType || '');
       }
 
-      const r = await fetch('/api/inside', {
-        method: 'POST',
+      var payload = { title: title, content: content };
+      if (file) {
+        payload.mediaType = mediaType;
+        payload.mediaUrl = mediaUrl;
+      } else if (!editId) {
+        payload.mediaType = '';
+        payload.mediaUrl = '';
+      }
+
+      const r = await fetch(editId ? ('/api/inside/' + encodeURIComponent(editId)) : '/api/inside', {
+        method: editId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content, mediaType, mediaUrl }),
+        body: JSON.stringify(payload),
       });
 
       let d = null;
@@ -1398,9 +1448,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       }
 
       if (d && d.ok) {
-        setInsideResult('Publié ✓', false);
+        setInsideResult(editId ? 'Mis à jour ✓' : 'Publié ✓', false);
         clearInsideForm();
-        toast('Inside: publié ✓', false);
+        toast(editId ? 'Inside: mis à jour ✓' : 'Inside: publié ✓', false);
         loadInsidePosts(true);
         return;
       }
@@ -1443,6 +1493,63 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         if (action === 'suggestReply') { suggestReply(); return; }
         return;
       }
+
+      // Actions Inside (gestionnaire)
+      if (el.hasAttribute && el.hasAttribute('data-inside-action')) {
+        var ia = el.getAttribute('data-inside-action');
+        var pid = el.getAttribute('data-id') || '';
+        var hidden = el.getAttribute('data-hidden') === '1';
+        if (ia === 'edit') {
+          var p = (_insidePosts || []).find(function(x){ return String((x||{}).id||'') === String(pid); });
+          if (p) {
+            document.getElementById('inside-title').value = String(p.title || '');
+            document.getElementById('inside-content').value = String(p.content || '');
+            setInsideEditId(String(p.id || ''));
+            setInsideResult('Mode édition: ' + truncateText(String(p.title || ''), 40), false);
+          }
+          return;
+        }
+        if (ia === 'toggleHidden') {
+          (async function(){
+            try {
+              const rr = await fetch('/api/inside/' + encodeURIComponent(pid), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hidden: !hidden }),
+              });
+              const dd = await rr.json().catch(function(){ return null; });
+              if (!rr.ok) {
+                toast('Inside: ' + ((dd && dd.error) ? dd.error : 'Erreur'), true);
+                return;
+              }
+              toast(!hidden ? 'Inside: masqué' : 'Inside: affiché', false);
+              loadInsidePosts(true);
+            } catch {
+              toast('Inside: erreur réseau', true);
+            }
+          })();
+          return;
+        }
+        if (ia === 'delete') {
+          if (!confirm('Supprimer définitivement ce post Inside ?')) return;
+          (async function(){
+            try {
+              const rr = await fetch('/api/inside/' + encodeURIComponent(pid), { method: 'DELETE' });
+              const dd = await rr.json().catch(function(){ return null; });
+              if (!rr.ok) {
+                toast('Inside: ' + ((dd && dd.error) ? dd.error : 'Erreur'), true);
+                return;
+              }
+              toast('Inside: supprimé', false);
+              loadInsidePosts(true);
+            } catch {
+              toast('Inside: erreur réseau', true);
+            }
+          })();
+          return;
+        }
+        return;
+      }
       // Onglets drawer : data-tab
       if (el.hasAttribute && el.hasAttribute('data-tab')) {
         var tab = el.getAttribute('data-tab');
@@ -1464,6 +1571,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   if (insideForm) insideForm.addEventListener('submit', publishInside);
   var insideClear = document.getElementById('btn-inside-clear');
   if (insideClear) insideClear.addEventListener('click', function() { clearInsideForm(); });
+  var insideEditCancel = document.getElementById('inside-edit-cancel');
+  if (insideEditCancel) insideEditCancel.addEventListener('click', function() { clearInsideForm(); });
   var insideRefresh = document.getElementById('btn-inside-refresh');
   if (insideRefresh) insideRefresh.addEventListener('click', function() { loadInsidePosts(true); });
 

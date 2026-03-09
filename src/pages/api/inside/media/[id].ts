@@ -7,6 +7,8 @@ function asId(params: Record<string, string | undefined>): string {
 
 function toU8(data: unknown): Uint8Array | null {
   if (!data) return null;
+  // En environnement Node/Neon, bytea arrive souvent en Buffer (hérite de Uint8Array)
+  if (data instanceof Uint8Array) return data;
   if (data instanceof ArrayBuffer) return new Uint8Array(data);
   // D1 peut renvoyer Uint8Array directement
   if (typeof data === 'object' && (data as any).constructor?.name === 'Uint8Array') return data as Uint8Array;
