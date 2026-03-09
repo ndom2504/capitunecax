@@ -417,19 +417,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
               <span class="inside-span">Minimum: 10 caractères. Le titre doit faire au moins 3 caractères.</span>
             </div>
 
-            <div class="inside-field">
-              <label for="inside-media-type">Média (optionnel)</label>
-              <select class="status-select" id="inside-media-type" name="mediaType">
-                <option value="">Aucun</option>
-                <option value="image">Image</option>
-                <option value="video">Vidéo</option>
-                <option value="link">Lien</option>
-              </select>
-            </div>
-
-            <div class="inside-field">
-              <label for="inside-media-url">URL média (optionnel)</label>
-              <input class="inside-input" id="inside-media-url" name="mediaUrl" maxlength="500" placeholder="https://…" />
+            <div class="inside-field inside-full">
+              <label for="inside-media-file">Média (optionnel)</label>
+              <input class="inside-input" type="file" id="inside-media-file" name="mediaFile" accept="image/*,video/*" />
+              <span class="inside-span">Importe une image ou une vidéo (max 8 Mo). Pas de lien externe.</span>
             </div>
 
             <div class="inside-actions inside-full">
@@ -1352,12 +1343,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   function clearInsideForm() {
     var t = document.getElementById('inside-title');
     var c = document.getElementById('inside-content');
-    var mt = document.getElementById('inside-media-type');
-    var mu = document.getElementById('inside-media-url');
+    var mf = document.getElementById('inside-media-file');
     if (t) t.value = '';
     if (c) c.value = '';
-    if (mt) mt.value = '';
-    if (mu) mu.value = '';
+    if (mf) mf.value = '';
     setInsideResult('', false);
   }
 
@@ -1367,10 +1356,32 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
     var title = String((document.getElementById('inside-title') || {}).value || '').trim();
     var content = String((document.getElementById('inside-content') || {}).value || '').trim();
-    var mediaType = String((document.getElementById('inside-media-type') || {}).value || '').trim();
-    var mediaUrl = String((document.getElementById('inside-media-url') || {}).value || '').trim();
+    var mediaType = '';
+    var mediaUrl = '';
+    var mf = document.getElementById('inside-media-file');
+    var file = (mf && mf.files && mf.files[0]) ? mf.files[0] : null;
 
     try {
+      if (file) {
+        setInsideResult('Upload du média…', false);
+        var fd = new FormData();
+        fd.append('file', file);
+        const ur = await fetch('/api/inside/upload', { method: 'POST', body: fd });
+        let ud = null;
+        try { ud = await ur.json(); } catch { ud = null; }
+        if (!ur.ok) {
+          var umsg = (ud && ud.error) ? String(ud.error) : ('Erreur upload (' + ur.status + ')');
+          setInsideResult(umsg, true);
+          return;
+        }
+        if (!ud || !ud.ok || !ud.media || !ud.media.url) {
+          setInsideResult('Upload: réponse invalide', true);
+          return;
+        }
+        mediaUrl = String(ud.media.url || '');
+        mediaType = String(ud.media.mediaType || '');
+      }
+
       const r = await fetch('/api/inside', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
