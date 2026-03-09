@@ -113,8 +113,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
       `;
     }
 
-    const origin = new URL(request.url).origin;
-    const url = new URL(`/api/inside/media/${id}`, origin).toString();
+    const url = `/api/inside/media/${id}`;
 
     return json({
       ok: true,

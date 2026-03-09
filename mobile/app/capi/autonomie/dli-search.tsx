@@ -253,32 +253,37 @@ export default function DLISearchScreen() {
   }, []);
 
   const handleToggleSelect = useCallback(async (inst: DLIInstitution) => {
-    setSelectedIds(prev => {
-      if (prev.includes(inst.id)) return prev.filter(id => id !== inst.id);
-      if (prev.length >= 3) return prev;
-      return [...prev, inst.id];
-    });
+    const newIds = selectedIds.includes(inst.id)
+      ? selectedIds.filter(id => id !== inst.id)
+      : selectedIds.length < 3 ? [...selectedIds, inst.id] : selectedIds;
+
+    setSelectedIds(newIds);
+
     try {
-      const newIds = selectedIds.includes(inst.id)
-        ? selectedIds.filter(id => id !== inst.id)
-        : selectedIds.length < 3 ? [...selectedIds, inst.id] : selectedIds;
       const selectedInsts = allInstitutions.filter(i => newIds.includes(i.id));
       await AsyncStorage.setItem(DLI_SELECTED_KEY, JSON.stringify(selectedInsts));
     } catch { }
   }, [selectedIds, allInstitutions]);
 
   const handleContinue = useCallback(async () => {
+    if (selectedIds.length < 3) {
+      Alert.alert(
+        'Sélection requise',
+        'Choisissez 3 établissements (DLI) avant de continuer.'
+      );
+      return;
+    }
     setSaving(true);
     const nextStep = project?.steps.find((s: any) => s.id === 'demande-admission');
     setTimeout(() => {
       setSaving(false);
       if (nextStep) {
-        router.replace('/capi/autonomie/' + nextStep.id as never);
+          router.replace({ pathname: '/capi/autonomie/flow', params: { start: nextStep.id } } as any);
       } else {
         router.back();
       }
     }, 600);
-  }, [project, router]);
+  }, [project, router, selectedIds.length]);
 
   const hasSelection = selectedIds.length > 0;
 
@@ -324,12 +329,6 @@ export default function DLISearchScreen() {
           <View style={styles.webStyleHeader}>
             <View>
               <Text style={styles.webStyleTitle}>Trouver une formation</Text>
-
-          <CapiHelpFab
-            onPress={() =>
-              router.push('/capi/agent' as any)
-            }
-          />
               <Text style={styles.webStyleSub}>Recherchez parmi les EED au Canada.</Text>
             </View>
             {!loading && (
@@ -419,6 +418,8 @@ export default function DLISearchScreen() {
           }}
         />
       )}
+
+      <CapiHelpFab onPress={() => router.push('/capi/agent' as any)} />
     </SafeAreaView>
   );
 }

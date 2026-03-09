@@ -13,10 +13,13 @@ import {
 import { isAdminEmail } from '../../../lib/admin-emails';
 import { isTestEmail } from '../../../lib/test-access';
 
-export const GET: APIRoute = async ({ cookies, locals }) => {
+export const GET: APIRoute = async ({ cookies, locals, request }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
   const useNeon = !db && hasNeonDatabase();
-  const token = cookies.get('capitune_session')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const cookieToken = cookies.get('capitune_session')?.value;
+  const token = bearerToken ?? cookieToken;
   if (!token) return json({ error: 'Non connecté' }, 401);
 
   // Sans DB (ni D1 ni Neon): fallback sur session base64
@@ -36,6 +39,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
       notif_email: false,
       notif_rdv: false,
       notif_msg: false,
+      online_status_enabled: true,
       currency_code: 'CAD',
       premium_expires_at: null,
       premium_active: admin,
@@ -86,6 +90,7 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
     notif_email: !!user.notif_email,
     notif_rdv: !!user.notif_rdv,
     notif_msg: !!user.notif_msg,
+    online_status_enabled: (user as any).online_status_enabled === undefined ? true : !!(user as any).online_status_enabled,
     currency_code: currencyCode,
     premium_expires_at: premiumExpiresAt,
     premium_active: premiumActive,
@@ -96,7 +101,10 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
 export const PUT: APIRoute = async ({ cookies, locals, request }) => {
   const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
   const useNeon = !db && hasNeonDatabase();
-  const token = cookies.get('capitune_session')?.value;
+  const authHeader = request.headers.get('Authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const cookieToken = cookies.get('capitune_session')?.value;
+  const token = bearerToken ?? cookieToken;
   if (!token) return json({ error: 'Non connecté' }, 401);
 
   // Sans DB (ni D1 ni Neon) : accepter la requête mais sans persistance
@@ -118,6 +126,9 @@ export const PUT: APIRoute = async ({ cookies, locals, request }) => {
   const notif_email = body.notif_email !== undefined ? (body.notif_email ? 1 : 0) : user.notif_email;
   const notif_rdv   = body.notif_rdv   !== undefined ? (body.notif_rdv   ? 1 : 0) : user.notif_rdv;
   const notif_msg   = body.notif_msg   !== undefined ? (body.notif_msg   ? 1 : 0) : user.notif_msg;
+  const online_status_enabled = body.online_status_enabled !== undefined
+    ? (body.online_status_enabled ? 1 : 0)
+    : ((user as any).online_status_enabled === undefined ? 1 : ((user as any).online_status_enabled ? 1 : 0));
   const currency_code = normalizeCurrencyCode(body.currency_code ?? user.currency_code ?? 'CAD');
   // avatar_key : accepter https:// et data:image/ (base64 compressé ≤ 300 Ko), ou '' pour effacer
   const rawAvatar = typeof body.avatar_key === 'string' ? body.avatar_key.trim() : null;
@@ -130,28 +141,65 @@ export const PUT: APIRoute = async ({ cookies, locals, request }) => {
         : (user.avatar_key ?? null);       // format invalide → conserver
 
   if (db) {
-    await db.prepare(
-      `UPDATE users SET name=?, phone=?, location=?, bio=?, notif_email=?, notif_rdv=?, notif_msg=?, currency_code=?, avatar_key=?, updated_at=datetime('now')
-       WHERE id=?`
-    ).bind(name, phone, location, bio, notif_email, notif_rdv, notif_msg, currency_code, avatar_key, user.id).run();
+    try {
+      await db.prepare(
+        `UPDATE users SET name=?, phone=?, location=?, bio=?, notif_email=?, notif_rdv=?, notif_msg=?, online_status_enabled=?, currency_code=?, avatar_key=?, updated_at=datetime('now')
+         WHERE id=?`
+      ).bind(name, phone, location, bio, notif_email, notif_rdv, notif_msg, online_status_enabled, currency_code, avatar_key, user.id).run();
+    } catch (e) {
+      const msg = String(e ?? '').toLowerCase();
+      // migration pas encore appliquée → on sauvegarde quand même le reste du profil
+      if (msg.includes('online_status_enabled') && (msg.includes('no such column') || msg.includes('has no column') || msg.includes('does not exist'))) {
+        await db.prepare(
+          `UPDATE users SET name=?, phone=?, location=?, bio=?, notif_email=?, notif_rdv=?, notif_msg=?, currency_code=?, avatar_key=?, updated_at=datetime('now')
+           WHERE id=?`
+        ).bind(name, phone, location, bio, notif_email, notif_rdv, notif_msg, currency_code, avatar_key, user.id).run();
+      } else {
+        throw e;
+      }
+    }
   } else {
     const sql = await getNeonSqlClient();
     if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
-    await sql`
-      UPDATE users
-      SET
-        name = ${name},
-        phone = ${phone},
-        location = ${location},
-        bio = ${bio},
-        notif_email = ${!!notif_email},
-        notif_rdv = ${!!notif_rdv},
-        notif_msg = ${!!notif_msg},
-        currency_code = ${currency_code},
-        avatar_key = ${avatar_key},
-        updated_at = now()
-      WHERE id = ${user.id}
-    `;
+    try {
+      await sql`
+        UPDATE users
+        SET
+          name = ${name},
+          phone = ${phone},
+          location = ${location},
+          bio = ${bio},
+          notif_email = ${!!notif_email},
+          notif_rdv = ${!!notif_rdv},
+          notif_msg = ${!!notif_msg},
+          online_status_enabled = ${!!online_status_enabled},
+          currency_code = ${currency_code},
+          avatar_key = ${avatar_key},
+          updated_at = now()
+        WHERE id = ${user.id}
+      `;
+    } catch (e) {
+      const msg = String(e ?? '').toLowerCase();
+      if (msg.includes('online_status_enabled') && msg.includes('does not exist')) {
+        await sql`
+          UPDATE users
+          SET
+            name = ${name},
+            phone = ${phone},
+            location = ${location},
+            bio = ${bio},
+            notif_email = ${!!notif_email},
+            notif_rdv = ${!!notif_rdv},
+            notif_msg = ${!!notif_msg},
+            currency_code = ${currency_code},
+            avatar_key = ${avatar_key},
+            updated_at = now()
+          WHERE id = ${user.id}
+        `;
+      } else {
+        throw e;
+      }
+    }
   }
 
   return json({ ok: true });

@@ -11,6 +11,23 @@ import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, type ProjectData } from '../../lib/api';
 import { useRouter } from 'expo-router';
 import { getAvatarSource } from '../../lib/avatar';
+import { Audio, ResizeMode, Video } from 'expo-av';
+
+// ── Vidéos (mêmes fichiers que Inside, en boucle) ─────────────────────────────
+const DASH_VIDEOS = [
+  {
+    id: 'integration',
+    source: require('../../assets/videos/integration-canada.mp4'),
+    title: "Vidéo — Intégration au Canada",
+    subtitle: 'Logement, démarches, premiers jours.',
+  },
+  {
+    id: 'preparation',
+    source: require('../../assets/videos/preparation-depart.mp4'),
+    title: 'Vidéo — Préparation du départ',
+    subtitle: 'Documents, checklists, avant le départ.',
+  },
+] as const;
 
 const STEPS_LABELS = [
   'Analyse du profil',
@@ -107,6 +124,7 @@ export default function DashboardScreen() {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(false); // pas de spinner bloquant au démarrage
   const [refreshing, setRefreshing] = useState(false);
+  const [unmutedVideoId, setUnmutedVideoId] = useState<(typeof DASH_VIDEOS)[number]['id'] | null>(null);
 
   const load = async (showLoader = false) => {
     if (showLoader) setLoading(true);
@@ -118,6 +136,17 @@ export default function DashboardScreen() {
 
   // Chargement silencieux en arrière-plan (n'bloque pas l'affichage)
   useEffect(() => { load(); }, [token]);
+
+  // Assure que l'audio est audible sur iOS même en mode silencieux.
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: true,
+    }).catch(() => {
+      // no-op : on ne bloque pas l'écran si la config audio échoue
+    });
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -202,27 +231,46 @@ export default function DashboardScreen() {
                 </View>
               )}
 
-              {/* Raccourcis */}
-              <Text style={styles.sectionTitle}>Accès rapide</Text>
-              <View style={styles.shortcutsGrid}>
-                {[
-                  { icon: 'folder' as const, label: 'Documents', color: '#3b82f6', route: '/(tabs)/documents' },
-                  { icon: 'sparkles' as const, label: 'Inside', color: Colors.orange, route: '/(tabs)/inside' },
-                  { icon: 'folder-open' as const, label: 'Mon Projet', color: '#a855f7', route: '/(tabs)/projet' },
-                ].map(item => (
-                  <TouchableOpacity
-                    key={item.label}
-                    style={styles.shortcut}
-                    activeOpacity={0.75}
-                    onPress={() => router.push(item.route as any)}
-                  >
-                    <View style={[styles.shortcutIcon, { backgroundColor: `${item.color}22` }]}>
-                      <Ionicons name={item.icon} size={22} color={item.color} />
+              {/* Vidéos (loop) */}
+              <Text style={styles.sectionTitle}>Vidéos</Text>
+              {DASH_VIDEOS.map((v) => (
+                <View key={v.id} style={styles.videoCard}>
+                  <View style={styles.videoThumb}>
+                    <Video
+                      source={v.source}
+                      style={styles.videoThumbVideo}
+                      resizeMode={ResizeMode.COVER}
+                      shouldPlay
+                      isLooping
+                      isMuted={unmutedVideoId !== v.id}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.videoSoundBtn}
+                      activeOpacity={0.85}
+                      onPress={() => setUnmutedVideoId((current) => (current === v.id ? null : v.id))}
+                      accessibilityRole="button"
+                      accessibilityLabel={unmutedVideoId === v.id ? 'Couper le son' : 'Activer le son'}
+                    >
+                      <Ionicons
+                        name={unmutedVideoId === v.id ? 'volume-high' : 'volume-mute'}
+                        size={18}
+                        color={Colors.text}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.videoInfo}>
+                    <Text style={styles.videoTitle}>{v.title}</Text>
+                    <Text style={styles.videoSub}>{v.subtitle}</Text>
+                    <View style={styles.videoMeta}>
+                      <Ionicons name="videocam" size={14} color={Colors.orange} />
+                      <Text style={styles.videoMetaText}>
+                        Lecture en boucle {unmutedVideoId === v.id ? '• Son activé' : '• Muet'}
+                      </Text>
                     </View>
-                    <Text style={styles.shortcutLabel}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                  </View>
+                </View>
+              ))}
 
               <TouchableOpacity
                 style={styles.findAdvisorBtn}
@@ -284,16 +332,41 @@ const styles = StyleSheet.create({
   stepActive: { color: Colors.orangeLight, fontWeight: '700' },
   stepDate: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 14 },
-  shortcutsGrid: { flexDirection: 'row', gap: 12 },
-  shortcut: {
-    flex: 1,
+
+  // Vidéos (loop)
+  videoCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 14, padding: 16, alignItems: 'center', gap: 8,
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 22,
     ...UI.cardBorder,
     ...UI.cardShadow,
   },
-  shortcutIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  shortcutLabel: { fontSize: 13, fontWeight: '600', color: Colors.text, textAlign: 'center' },
+  videoThumb: {
+    width: '100%',
+    height: 190,
+    backgroundColor: '#111',
+  },
+  videoThumbVideo: {
+    width: '100%',
+    height: '100%',
+  },
+  videoSoundBtn: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoInfo: { padding: 14, gap: 4 },
+  videoTitle: { fontSize: 15, fontWeight: '800', color: Colors.text, lineHeight: 21 },
+  videoSub: { fontSize: 13, color: Colors.textMuted, lineHeight: 18 },
+  videoMeta: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  videoMetaText: { flex: 1, fontSize: 13, color: Colors.text, fontWeight: '600' },
 
   emptyProjectCard: {
     backgroundColor: Colors.surface,

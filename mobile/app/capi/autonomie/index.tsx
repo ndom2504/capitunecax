@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking,
 } from 'react-native';
@@ -9,7 +9,7 @@ import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import { buildMotifBudget } from '../../../lib/autonomie-steps';
-import { autonomiePaymentApi, userApi } from '../../../lib/api';
+import { autonomiePaymentApi, capiApi, userApi } from '../../../lib/api';
 import type { AutonomieStep, CapiMotif } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import { CapiOrientationBubble } from '../../../components/CapiOrientationBubble';
@@ -55,11 +55,13 @@ const MOTIF_EMOJI: Record<string, string> = {
 
 export default function AutonomieIndexScreen() {
   const router = useRouter();
-  const { session } = useCapiSession();
+  const { session, updateSession } = useCapiSession();
   const { token, user, setUser } = useAuth();
   const [paying, setPaying] = useState(false);
   const [priceCents, setPriceCents] = useState<number | null>(null);
   const [priceCurrency, setPriceCurrency] = useState<string>('CAD');
+  const activatingRef = useRef(false);
+  const activationAttemptedRef = useRef(false);
   const project = session.autonomie;
   const motif: CapiMotif = (project?.motif ?? 'visiter') as CapiMotif;
   const motifLabel = MOTIF_LABELS[motif] ?? 'Projet';
@@ -71,6 +73,39 @@ export default function AutonomieIndexScreen() {
     Boolean(user?.premium_active);
 
   const budget = useMemo(() => buildMotifBudget(motif), [motif]);
+
+  const selectedServiceIds = useMemo(
+    () => (session.services ?? []).filter((s) => s.selected).map((s) => s.id),
+    [session.services],
+  );
+
+  // Enregistre le projet côté serveur aussi en mode autonomie (après déblocage/paiement).
+  useEffect(() => {
+    if (!token) return;
+    if (!hasPaidAutonomie) return;
+    if (session.projectId) return;
+    if (activatingRef.current) return;
+    if (activationAttemptedRef.current) return;
+
+    activationAttemptedRef.current = true;
+    activatingRef.current = true;
+    (async () => {
+      const res = await capiApi.activateProject(token, {
+        session,
+        selectedServiceIds,
+      });
+      if (res.status >= 200 && res.status < 300 && res.data?.projectId) {
+        updateSession({ projectId: res.data.projectId });
+      }
+    })()
+      .catch(() => {
+        // On ne bloque pas l'UI en autonomie: l'utilisateur peut continuer.
+        // L'activation pourra se refaire plus tard (ex: retour au dashboard).
+      })
+      .finally(() => {
+        activatingRef.current = false;
+      });
+  }, [token, hasPaidAutonomie, session.projectId, selectedServiceIds]);
 
   // Rafraîchir silencieusement le profil : utile si l'admin a débloqué Autonomie.
   useEffect(() => {

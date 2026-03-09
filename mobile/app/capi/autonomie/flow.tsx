@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
   Linking,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,12 +13,24 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../../constants/Colors';
 import { UI } from '../../../constants/UI';
 import { useCapiSession } from '../../../context/CapiContext';
 import { CapiHelpFab } from '../../../components/CapiHelpFab';
 import { getBiometrieUrl, getMedecinDesigneUrl } from '../../../lib/dli-data';
 import type { AutonomieCheckItem, AutonomieProject, AutonomieStep } from '../../../lib/api';
+
+const DLI_SELECTED_KEY = 'capi_selected_dli';
+
+type SelectedDLI = {
+  id: string;
+  nom: string;
+  ville?: string;
+  province?: string;
+  type?: string;
+  admissionsUrl?: string;
+};
 
 type Page =
   | { key: string; stepId: string; stepIndex: number; kind: 'intro' }
@@ -98,6 +111,37 @@ export default function AutonomieFlowScreen() {
   const listRef = useRef<FlatList<Page>>(null);
   const [index, setIndex] = useState(initialIndex);
 
+  const [selectedDli, setSelectedDli] = useState<SelectedDLI[] | null>(null);
+
+  const refreshSelectedDli = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(DLI_SELECTED_KEY);
+      if (!raw) {
+        setSelectedDli([]);
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (!Array.isArray(parsed)) {
+        setSelectedDli([]);
+        return;
+      }
+      const safe = parsed
+        .filter((x: any) => x && typeof x.id === 'string' && typeof x.nom === 'string')
+        .slice(0, 3)
+        .map((x: any) => ({
+          id: String(x.id),
+          nom: String(x.nom),
+          ville: x.ville ? String(x.ville) : undefined,
+          province: x.province ? String(x.province) : undefined,
+          type: x.type ? String(x.type) : undefined,
+          admissionsUrl: x.admissionsUrl ? String(x.admissionsUrl) : undefined,
+        })) as SelectedDLI[];
+      setSelectedDli(safe);
+    } catch {
+      setSelectedDli([]);
+    }
+  }, []);
+
   useEffect(() => {
     setIndex(initialIndex);
     setTimeout(() => listRef.current?.scrollToIndex({ index: initialIndex, animated: false }), 50);
@@ -113,6 +157,13 @@ export default function AutonomieFlowScreen() {
     if (!currentStep || !currentPage || currentPage.kind !== 'item') return null;
     return currentStep.checkItems.find((ci) => ci.id === currentPage.itemId) ?? null;
   }, [currentStep, currentPage]);
+
+  useEffect(() => {
+    // Rafraîchit les 3 choix (utile après retour du moteur DLI)
+    if (!currentStep) return;
+    if (currentStep.id !== 'choisir-etablissement' && currentStep.id !== 'demande-admission') return;
+    void refreshSelectedDli();
+  }, [currentStep?.id, index, refreshSelectedDli]);
 
   const lockedAfterIndex = useMemo(() => {
     if (!project || !pages.length) return pages.length - 1;
@@ -162,8 +213,75 @@ export default function AutonomieFlowScreen() {
     updateSession({ autonomie: nextProject });
   };
 
-  const validateAndNext = () => {
+  const openAdmission = useCallback(async (inst: SelectedDLI) => {
+    try {
+      const name = String(inst.nom || '').trim() || 'Établissement';
+      const fallback = `https://www.cicic.ca/869/resultats.canada?search=${encodeURIComponent(name)}`;
+      const google = `https://www.google.com/search?q=${encodeURIComponent(`${name} admissions Canada`)}`;
+      const rawTarget = String(inst.admissionsUrl || '').trim();
+      const candidates: string[] = [];
+
+      if (rawTarget) {
+        if (rawTarget.startsWith('http://')) {
+          candidates.push(rawTarget.replace(/^http:\/\//, 'https://'));
+          candidates.push(rawTarget);
+        } else if (rawTarget.startsWith('https://')) {
+          candidates.push(rawTarget);
+          candidates.push(rawTarget.replace(/^https:\/\//, 'http://'));
+        } else {
+          candidates.push(rawTarget);
+        }
+      }
+      candidates.push(fallback);
+
+      let opened = false;
+      for (const u of Array.from(new Set(candidates.filter(Boolean)))) {
+        try {
+          await Linking.openURL(u);
+          opened = true;
+          break;
+        } catch {
+          // next
+        }
+      }
+
+      if (!opened) {
+        Alert.alert('Lien non ouvrable', 'Ouvrir une recherche web ?', [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Rechercher', onPress: () => { Linking.openURL(google).catch(() => {}); } },
+        ]);
+      }
+    } catch {
+      Alert.alert("Erreur", "Impossible d'ouvrir le lien d'admission.");
+    }
+  }, []);
+
+  const validateAndNext = async () => {
     if (!project || !currentStep) return;
+
+    // Règle métier Études : on exige 3 établissements sélectionnés à l'étape 1.
+    if (currentStep.id === 'choisir-etablissement') {
+      try {
+        const raw = await AsyncStorage.getItem(DLI_SELECTED_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        const count = Array.isArray(arr) ? arr.length : 0;
+        if (count < 3) {
+          Alert.alert(
+            'Sélection requise',
+            'Choisissez 3 établissements (DLI) avant de valider cette étape.',
+            [
+              { text: 'Ouvrir le moteur', onPress: () => { router.push('/capi/autonomie/dli-search' as any); } },
+              { text: 'OK', style: 'cancel' },
+            ]
+          );
+          return;
+        }
+      } catch {
+        Alert.alert('Sélection requise', 'Choisissez 3 établissements (DLI) avant de valider cette étape.');
+        return;
+      }
+    }
+
     const allDone = currentStep.checkItems.length === 0 || currentStep.checkItems.every((i) => i.done);
     if (!allDone) {
       Alert.alert('Validation requise', "Terminez tous les points avant de valider l'étape.");
@@ -277,7 +395,13 @@ export default function AutonomieFlowScreen() {
           if (item.kind === 'intro') {
             return (
               <View style={[styles.page, { width }]}> 
-                <View style={styles.card}>
+                <ScrollView
+                  style={styles.pageScroll}
+                  contentContainerStyle={styles.pageScrollContent}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                >
+                  <View style={styles.card}>
                   <View style={styles.cardTitleRow}>
                     <Text style={styles.stepIcon}>{step.icon}</Text>
                     <View style={{ flex: 1 }}>
@@ -303,11 +427,96 @@ export default function AutonomieFlowScreen() {
                     </View>
                   )}
 
+                  {/* Étape 1 (Étudier) : choix de 3 établissements DLI */}
+                  {step.id === 'choisir-etablissement' && (
+                    <View style={styles.choiceCard}>
+                      <View style={styles.choiceHeader}>
+                        <Ionicons name="school-outline" size={16} color={Colors.primary} />
+                        <Text style={styles.choiceTitle}>Vos 3 choix</Text>
+                        <Text style={styles.choiceCount}>{(selectedDli ?? []).length}/3</Text>
+                      </View>
+
+                      {(selectedDli ?? []).length > 0 ? (
+                        <View style={{ gap: 10, marginTop: 10 }}>
+                          {(selectedDli ?? []).slice(0, 3).map((inst) => (
+                            <View key={inst.id} style={styles.choiceRow}>
+                              <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                              <View style={{ flex: 1, minWidth: 0 }}>
+                                <Text style={styles.choiceInstName} numberOfLines={2}>{inst.nom}</Text>
+                                <Text style={styles.choiceInstMeta} numberOfLines={1}>
+                                  {(inst.ville ? inst.ville : '—')}{inst.province ? ` · ${inst.province}` : ''}
+                                </Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text style={styles.choiceHint}>Sélectionnez 3 établissements via le moteur de recherche.</Text>
+                      )}
+
+                      <TouchableOpacity
+                        style={[styles.linkBtn, { marginTop: 12 }]}
+                        onPress={() => openUrl('/capi/autonomie/dli-search')}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="search-outline" size={14} color={Colors.primary} />
+                        <Text style={styles.linkText}>Choisir mes 3 établissements</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {/* Étape 2 (Étudier) : afficher automatiquement les 3 choix + bouton Admission */}
+                  {step.id === 'demande-admission' && (
+                    <View style={styles.choiceCard}>
+                      <View style={styles.choiceHeader}>
+                        <Ionicons name="checkbox-outline" size={16} color={Colors.primary} />
+                        <Text style={styles.choiceTitle}>Vos 3 choix validés</Text>
+                      </View>
+
+                      {selectedDli === null ? (
+                        <Text style={styles.choiceHint}>Chargement…</Text>
+                      ) : selectedDli.length === 0 ? (
+                        <Text style={styles.choiceHint}>Aucun choix enregistré. Revenez à l’étape 1 pour sélectionner 3 établissements.</Text>
+                      ) : (
+                        <View style={{ gap: 10, marginTop: 10 }}>
+                          {selectedDli.slice(0, 3).map((inst) => (
+                            <View key={inst.id} style={styles.choiceRow}>
+                              <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                              <View style={{ flex: 1, minWidth: 0 }}>
+                                <Text style={styles.choiceInstName} numberOfLines={2}>{inst.nom}</Text>
+                                <Text style={styles.choiceInstMeta} numberOfLines={1}>
+                                  {(inst.ville ? inst.ville : '—')}{inst.province ? ` · ${inst.province}` : ''}
+                                </Text>
+                              </View>
+                              <TouchableOpacity
+                                style={styles.admissionBtn}
+                                onPress={() => { void openAdmission(inst); }}
+                                activeOpacity={0.85}
+                              >
+                                <Text style={styles.admissionBtnText}>Admission</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      <TouchableOpacity
+                        style={[styles.linkBtn, { marginTop: 12 }]}
+                        onPress={() => openUrl('/capi/autonomie/dli-search')}
+                        activeOpacity={0.85}
+                      >
+                        <Ionicons name="create-outline" size={14} color={Colors.primary} />
+                        <Text style={styles.linkText}>Modifier mes choix (étape 1)</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
                   <View style={styles.hintRow}>
                     <Ionicons name="swap-horizontal" size={14} color={Colors.textMuted} />
                     <Text style={styles.hintText}>Swipez pour avancer point par point.</Text>
                   </View>
-                </View>
+                  </View>
+                </ScrollView>
               </View>
             );
           }
@@ -321,7 +530,13 @@ export default function AutonomieFlowScreen() {
 
             return (
               <View style={[styles.page, { width }]}> 
-                <View style={styles.card}>
+                <ScrollView
+                  style={styles.pageScroll}
+                  contentContainerStyle={styles.pageScrollContent}
+                  showsVerticalScrollIndicator={false}
+                  nestedScrollEnabled
+                >
+                  <View style={styles.card}>
                   <Text style={styles.kicker}>Ce que vous devez faire</Text>
                   <Text style={styles.itemTitle}>{ci.label}</Text>
 
@@ -365,7 +580,8 @@ export default function AutonomieFlowScreen() {
                     <Ionicons name="chatbubble-ellipses-outline" size={14} color={Colors.textMuted} />
                     <Text style={styles.hintText}>Besoin d’aide ? Ouvrez le chat CAPI.</Text>
                   </View>
-                </View>
+                  </View>
+                </ScrollView>
               </View>
             );
           }
@@ -374,7 +590,13 @@ export default function AutonomieFlowScreen() {
           const allDone = step.checkItems.length === 0 || step.checkItems.every((x) => x.done);
           return (
             <View style={[styles.page, { width }]}> 
-              <View style={styles.card}>
+              <ScrollView
+                style={styles.pageScroll}
+                contentContainerStyle={styles.pageScrollContent}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
+              >
+                <View style={styles.card}>
                 <Text style={styles.kicker}>Validation</Text>
                 <Text style={styles.stepTitle}>{step.title}</Text>
                 <Text style={styles.stepDesc}>
@@ -387,7 +609,7 @@ export default function AutonomieFlowScreen() {
                   style={[styles.primaryBtn, !allDone && styles.primaryBtnDisabled]}
                   activeOpacity={0.85}
                   disabled={!allDone}
-                  onPress={validateAndNext}
+                  onPress={() => { void validateAndNext(); }}
                 >
                   <Text style={styles.primaryBtnText}>
                     {currentStepIndex >= totalSteps - 1 ? 'Terminer' : 'Valider et passer à la suivante'}
@@ -401,7 +623,8 @@ export default function AutonomieFlowScreen() {
                     <Text style={styles.noteText}>Terminez tous les points avant de passer à l’étape suivante.</Text>
                   </View>
                 )}
-              </View>
+                </View>
+              </ScrollView>
             </View>
           );
         }}
@@ -455,7 +678,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   navBtnDisabled: { opacity: 0.5 },
-  page: { padding: 16, paddingBottom: 110 },
+  page: { flex: 1 },
+  pageScroll: { flex: 1 },
+  pageScrollContent: { padding: 16, paddingBottom: 140 },
   card: {
     backgroundColor: Colors.surface,
     borderWidth: 1,
@@ -525,6 +750,40 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   noteText: { flex: 1, color: Colors.textMuted, fontSize: 12, lineHeight: 16 },
+
+  choiceCard: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  choiceHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  choiceTitle: { flex: 1, color: Colors.text, fontSize: 13, fontWeight: '900' },
+  choiceCount: { color: Colors.textMuted, fontSize: 12, fontWeight: '800' },
+  choiceHint: { marginTop: 10, color: Colors.textMuted, fontSize: 12, lineHeight: 16 },
+  choiceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  choiceInstName: { color: Colors.text, fontSize: 12, fontWeight: '900' },
+  choiceInstMeta: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
+  admissionBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.orange,
+  },
+  admissionBtnText: { color: '#fff', fontSize: 12, fontWeight: '900' },
+
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   emptyText: { color: Colors.textMuted, fontSize: 14, marginBottom: 12 },
   emptyBtn: {
