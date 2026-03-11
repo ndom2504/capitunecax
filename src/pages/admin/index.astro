@@ -700,7 +700,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
                 <div class="traffic-card-caption">Lecture visuelle des zones d’origine les plus actives.</div>
               </div>
             </div>
-            <div id="traffic-globe-card"><TrafficWorldMap client:load /></div>
+            <div id="traffic-globe-card"><TrafficWorldMap client:only="react" /></div>
           </div>
         </div>
         <div class="traffic-stack">
