@@ -2,6 +2,7 @@
 // Protection front supplémentaire (le middleware couvre déjà /admin)
 import { getUserFromSessionFullAny } from '../../lib/db';
 import { isSuperAdminEmail } from '../../lib/admin-emails';
+import TrafficWorldMap from '../../components/admin/TrafficWorldMap';
 const db = (Astro.locals.runtime?.env as Env | undefined)?.DB ?? null;
 const token = Astro.cookies.get('capitune_session')?.value ?? '';
 const adminUser = await getUserFromSessionFullAny(db, token);
@@ -136,7 +137,20 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         linear-gradient(180deg, #101827 0%, #0f1726 100%);
       border:1px solid rgba(255,255,255,.06);
     }
+    .traffic-map-react { position:relative; }
+    .traffic-map-shell {
+      position:relative; min-height:330px; border-radius:20px; overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(82,136,255,.16), transparent 30%),
+        radial-gradient(circle at 85% 18%, rgba(255,148,8,.12), transparent 28%),
+        linear-gradient(180deg, #101827 0%, #0f1726 100%);
+      border:1px solid rgba(255,255,255,.06);
+    }
     .traffic-map-svg { width:100%; height:100%; min-height:330px; display:block; }
+    .traffic-map-empty {
+      min-height:330px; display:flex; align-items:center; justify-content:center; padding:24px;
+      color:var(--muted); font-size:13px;
+    }
     .traffic-map-badges { position:absolute; top:14px; left:14px; display:flex; gap:8px; flex-wrap:wrap; z-index:2; }
     .traffic-badge {
       display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
@@ -149,6 +163,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       padding:10px 12px; border-radius:14px; background:rgba(12,18,32,.72); backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,.06);
       color:#d6def7; font-size:11px;
     }
+    .traffic-map-legend strong { display:block; font-size:13px; color:#fff; margin-bottom:4px; }
+    .traffic-map-legend span { color:#b9c4e5; }
     .traffic-legend-scale { display:flex; align-items:center; gap:10px; }
     .traffic-legend-bar { width:140px; height:8px; border-radius:999px; background:linear-gradient(90deg, rgba(82,136,255,.28), rgba(255,148,8,.95)); }
 
@@ -683,9 +699,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
                 <div class="traffic-card-caption">Lecture visuelle des zones d’origine les plus actives.</div>
               </div>
             </div>
-            <div id="traffic-globe-card">
-              <div class="traffic-map-stage"><div class="spinner"></div></div>
-            </div>
+            <div id="traffic-globe-card"><TrafficWorldMap client:load /></div>
           </div>
         </div>
         <div class="traffic-stack">
@@ -997,55 +1011,20 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   }
 
   function renderTrafficGlobe(countries, totals) {
-    var host = document.getElementById('traffic-globe-card');
     var listHost = document.getElementById('traffic-top-countries');
-    if (!host || !listHost) return;
+    if (!listHost) return;
 
     var items = Array.isArray(countries) ? countries.filter(function(c){ return c && c.code; }) : [];
+    var payload = { countries: items, totals: totals || {} };
+    window.__trafficMapLastPayload = payload;
+    try {
+      window.dispatchEvent(new CustomEvent('capitune:traffic-map-data', { detail: payload }));
+    } catch(_) {}
+
     if (!items.length) {
-      host.innerHTML = '<div class="traffic-map-stage"><div class="empty-state"><i class="fa fa-globe"></i>Aucune donnée géographique</div></div>';
       listHost.innerHTML = '<div class="empty-state"><i class="fa fa-globe"></i>Aucun pays détecté</div>';
       return;
     }
-
-    var maxVisitors = Math.max.apply(null, items.map(function(item){ return Number(item.visitors || 0); }).concat([1]));
-    var dots = items.map(function(item){
-      var code = String(item.code || '').toUpperCase();
-      var p = COUNTRY_POINTS[code];
-      if (!p) return '';
-      var visitors = Number(item.visitors || 0);
-      var intensity = visitors / maxVisitors;
-      var r = Math.max(4, Math.min(12, 4 + intensity * 8));
-      return '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (r * 2.2) + '" fill="rgba(255,148,8,.12)"></circle>'
-        + '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (r * 1.35) + '" fill="rgba(91,140,255,.18)"></circle>'
-        + '<circle cx="' + p.x + '" cy="' + p.y + '" r="' + r + '" fill="#ff9408" stroke="#fff" stroke-width="1.6"><title>' + code + ' — ' + visitors + ' visiteurs</title></circle>';
-    }).join('');
-
-    host.innerHTML = ''
-      + '<div class="traffic-map-stage">'
-      + '<div class="traffic-map-badges">'
-      +   '<span class="traffic-badge"><i class="fa fa-location-dot"></i>' + items.length + ' pays détectés</span>'
-      +   '<span class="traffic-badge"><i class="fa fa-users"></i>' + Number((totals||{}).visitors || 0).toLocaleString('fr-CA') + ' visiteurs</span>'
-      + '</div>'
-      + '<svg class="traffic-map-svg" viewBox="0 0 420 280" aria-label="Carte trafic mondial">'
-      + '<rect x="0" y="0" width="420" height="280" fill="transparent"></rect>'
-      + '<g stroke="rgba(255,255,255,.06)" stroke-width="1">'
-      +   '<path d="M0 46 H420 M0 92 H420 M0 138 H420 M0 184 H420 M0 230 H420"></path>'
-      +   '<path d="M52 0 V280 M105 0 V280 M158 0 V280 M210 0 V280 M263 0 V280 M316 0 V280 M368 0 V280"></path>'
-      + '</g>'
-      + '<path d="M66 86l28-14 48 7 17 18-8 22-28 8-9 19-30-2-18-19 4-22z" fill="#1a2a47" stroke="rgba(123,171,255,.22)" stroke-width="1.2"></path>'
-      + '<path d="M127 149l24 9 18 31-10 37-19 13-20-17-9-27 6-24z" fill="#162640" stroke="rgba(123,171,255,.16)" stroke-width="1.2"></path>'
-      + '<path d="M186 85l36-10 34 7 18 14-5 20-24 8-12 18-28 3-14-14-10-19 5-17z" fill="#1a2a47" stroke="rgba(123,171,255,.18)" stroke-width="1.2"></path>'
-      + '<path d="M195 135l19 9 16 20-8 26-19 19-24-13-12-26 7-21z" fill="#18283f" stroke="rgba(123,171,255,.16)" stroke-width="1.2"></path>'
-      + '<path d="M245 105l35-10 45 9 30 18-8 19-31 8-14 18-38 5-24-18-6-25z" fill="#1a2a47" stroke="rgba(123,171,255,.18)" stroke-width="1.2"></path>'
-      + '<path d="M302 208l25-5 31 10 12 17-16 13-30-2-22-14z" fill="#18283f" stroke="rgba(123,171,255,.16)" stroke-width="1.2"></path>'
-      + dots
-      + '</svg>'
-      + '<div class="traffic-map-legend">'
-      +   '<div>Lecture : plus le point est large et lumineux, plus le pays concentre de visiteurs.</div>'
-      +   '<div class="traffic-legend-scale"><span>Faible</span><div class="traffic-legend-bar"></div><span>Fort</span></div>'
-      + '</div>';
-      + '</div>';
 
     listHost.innerHTML = '<div class="country-list">' + items.map(function(item){
       var code = String(item.code || '').toUpperCase();
@@ -1071,11 +1050,14 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     var recentBody = document.getElementById('traffic-recent-body');
     if (!force && _trafficLoaded && recentBody && recentBody.dataset.loaded === '1') return;
 
+    try {
+      window.dispatchEvent(new CustomEvent('capitune:traffic-map-loading'));
+    } catch(_) {}
+
     if (topPagesEl) topPagesEl.innerHTML = '<div class="spinner"></div>';
     if (overviewEl) overviewEl.innerHTML = '<div class="spinner"></div>';
     if (topZonesEl) topZonesEl.innerHTML = '<div class="spinner"></div>';
     if (topCountriesEl) topCountriesEl.innerHTML = '<div class="spinner"></div>';
-    if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="spinner"></div></div><div><div class="spinner"></div></div>';
     if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3"><div class="spinner"></div></td></tr>';
     if (linksBody) linksBody.innerHTML = '<tr><td colspan="2"><div class="spinner"></div></td></tr>';
     if (recentBody) recentBody.innerHTML = '<tr><td colspan="4"><div class="spinner"></div></td></tr>';
@@ -1089,7 +1071,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         if (overviewEl) overviewEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
         if (topZonesEl) topZonesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
         if (topCountriesEl) topCountriesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
-        if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div></div>';
+        try {
+          window.dispatchEvent(new CustomEvent('capitune:traffic-map-error', { detail: { message: msg } }));
+        } catch(_) {}
         if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
         if (linksBody) linksBody.innerHTML = '<tr><td colspan="2" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
         if (recentBody) recentBody.innerHTML = '<tr><td colspan="4" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
@@ -1148,7 +1132,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       if (overviewEl) overviewEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
       if (topZonesEl) topZonesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
       if (topCountriesEl) topCountriesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
-      if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div></div>';
+      try {
+        window.dispatchEvent(new CustomEvent('capitune:traffic-map-error', { detail: { message: err } }));
+      } catch(_) {}
       if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
       if (linksBody) linksBody.innerHTML = '<tr><td colspan="2" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
       if (recentBody) recentBody.innerHTML = '<tr><td colspan="4" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
