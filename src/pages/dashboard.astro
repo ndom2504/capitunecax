@@ -509,6 +509,8 @@ const proSvcList = [
       .btn-settings-save:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(255,148,8,0.35);}
       .btn-settings-danger{background:transparent;border:1.5px solid #e74c3c;color:#e74c3c;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s;white-space:nowrap;flex-shrink:0;}
       .btn-settings-danger:hover{background:#fdf3f2;}
+      .btn-settings-logout{background:#f4f6fa;border:1.5px solid #cbd5e1;color:#475569;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s;white-space:nowrap;flex-shrink:0;}
+      .btn-settings-logout:hover{background:#e74c3c;border-color:#e74c3c;color:#fff;}
       /* TOGGLE SWITCH */
       .settings-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f5f5f5;gap:12px;}
       .settings-toggle-row:last-of-type{border-bottom:none;}
@@ -2075,6 +2077,22 @@ const proSvcList = [
                 </div>
                 <div style="display:flex;justify-content:flex-end;margin-top:12px;">
                   <button class="btn-settings-save" onclick="saveNotifPrefs()"><i class="fa fa-save"></i> Enregistrer</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- DÉCONNEXION -->
+            <div class="settings-card">
+              <div class="settings-card-header"><i class="fa fa-sign-out"></i> Session</div>
+              <div class="settings-card-body">
+                <div class="danger-action-row">
+                  <div>
+                    <p class="danger-action-label" style="color:#333;">Se déconnecter</p>
+                    <p class="danger-action-sub">Vous serez redirigé vers la page de connexion. Vos données sont sauvegardées.</p>
+                  </div>
+                  <a href="/api/oauth/signout" class="btn-settings-logout" style="text-decoration:none;">
+                    <i class="fa fa-sign-out"></i> Déconnexion
+                  </a>
                 </div>
               </div>
             </div>
