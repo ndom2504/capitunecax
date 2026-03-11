@@ -46,7 +46,11 @@ export default function CapiMotifScreen() {
         <Text style={styles.stepLabel}>1 / 8</Text>
       </View>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* CAPI Avatar */}
         <View style={styles.capiHeader}>
           <CapiAvatar size={44} state="idle" />
@@ -63,7 +67,9 @@ export default function CapiMotifScreen() {
             onPress={() => selectWhere('outside')}
             activeOpacity={0.8}
           >
-            <Text style={styles.optionEmoji}>🌍</Text>
+            <View style={[styles.optionEmojiWrap, { backgroundColor: Colors.primary + '12', borderColor: Colors.primary + '2A' }]}>
+              <Text style={styles.optionEmoji}>🌍</Text>
+            </View>
             <View style={styles.optionText}>
               <Text style={styles.optionLabel}>À l'extérieur du Canada</Text>
               <Text style={styles.optionDesc}>Je vis actuellement dans un autre pays et je souhaite venir au Canada.</Text>
@@ -76,7 +82,9 @@ export default function CapiMotifScreen() {
             onPress={() => selectWhere('inside')}
             activeOpacity={0.8}
           >
-            <Text style={styles.optionEmoji}>📍</Text>
+            <View style={[styles.optionEmojiWrap, { backgroundColor: Colors.orange + '14', borderColor: Colors.orange + '2A' }]}>
+              <Text style={styles.optionEmoji}>📍</Text>
+            </View>
             <View style={styles.optionText}>
               <Text style={styles.optionLabel}>À l'intérieur du Canada</Text>
               <Text style={styles.optionDesc}>Je suis déjà au Canada (visiteur, étudiant, travailleur) et je veux changer mon statut.</Text>
@@ -84,8 +92,6 @@ export default function CapiMotifScreen() {
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>
-
-        <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -94,6 +100,7 @@ export default function CapiMotifScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bgLight },
   scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 18, flexGrow: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, gap: 12 },
   progressBarOuter: { flex: 1, height: 4, backgroundColor: Colors.border, borderRadius: 2 },
   progressBarInner: { height: 4, backgroundColor: Colors.orange, borderRadius: 2 },
@@ -103,10 +110,30 @@ const styles = StyleSheet.create({
   bubble: { flex: 1, backgroundColor: Colors.surface, borderRadius: 16, borderTopLeftRadius: 4, padding: 14 },
   bubbleText: { fontSize: 14, color: Colors.text, lineHeight: 21 },
   question: { fontSize: 20, fontWeight: '700', color: Colors.text, paddingHorizontal: 20, marginBottom: 16 },
-  options: { paddingHorizontal: 20, gap: 10 },
-  optionCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 16, gap: 14, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
+  options: { paddingHorizontal: 20, gap: 12, paddingBottom: 8, flexGrow: 1, justifyContent: 'space-between' },
+  optionCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 18,
+    gap: 14,
+    minHeight: 112,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...UI.cardShadow,
+  },
+  optionEmojiWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
   optionEmoji: { fontSize: 26 },
   optionText: { flex: 1 },
-  optionLabel: { fontSize: 15, fontWeight: '600', color: Colors.text },
-  optionDesc: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  optionLabel: { fontSize: 15, fontWeight: '800', color: Colors.text },
+  optionDesc: { fontSize: 12, color: Colors.textMuted, marginTop: 4, lineHeight: 18 },
 });

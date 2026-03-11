@@ -55,6 +55,8 @@ export interface Session {
 export interface Project {
   id: string;
   user_id: string;
+  // Titre humain (utile pour les projets CAPI)
+  title?: string;
   type: string;
   province: string;
   pays: string;
@@ -68,7 +70,9 @@ export interface Project {
   nbpersonnes: string;
   notes: string;
   langues: string; // JSON
-  status: 'en_cours' | 'soumis' | 'annule' | 'termine';
+  status: 'en_cours' | 'soumis' | 'proposition' | 'demarre' | 'annule' | 'termine' | string;
+  // JSON stocké en TEXT (timeline/services/conseiller/proposition, etc.)
+  metadata?: string;
   created_at: string;
   updated_at: string;
 }
@@ -92,6 +96,17 @@ export interface Payment {
   currency: string;
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   reference: string;
+  // Extensions marketplace (commission / pro / devis)
+  kind?: string;
+  pro_id?: string;
+  quote_id?: string;
+  platform_fee?: number;
+  net_amount?: number;
+  verified?: number | boolean;
+  provider_event_id?: string;
+  provider_payment_intent_id?: string;
+  provider_session_id?: string;
+  metadata?: string;
   created_at: string;
   updated_at: string;
 }

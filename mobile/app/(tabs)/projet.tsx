@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  RefreshControl, ActivityIndicator, Alert, Linking,
+  RefreshControl, ActivityIndicator, Alert, Linking, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -9,7 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
-import { dashboardApi, type Payment } from '../../lib/api';
+import { dashboardApi, proApi, type Payment, type ProClientRow } from '../../lib/api';
+import { LOCAL_PROJECT_KEY } from '../../lib/local-project';
+import { useAuth } from '../../context/AuthContext';
 
 type TabKey = 'etapes' | 'documents' | 'services' | 'conseiller';
 
@@ -29,19 +31,65 @@ const STATUS_CFG: Record<string, { label: string; color: string; icon: keyof typ
 
 export default function ProjetScreen() {
   const router = useRouter();
+  const { user, token } = useAuth();
+  const isPro = user?.account_type === 'pro';
   const [project, setProject] = useState<any>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('etapes');
 
+  // Mode Pro: liste des dossiers assignés
+  const [q, setQ] = useState('');
+  const [clients, setClients] = useState<ProClientRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPro = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
+    setError(null);
+    try {
+      if (!token) {
+        setClients([]);
+        return;
+      }
+      const res = await proApi.listClients(token, { page: 1, q });
+      if (res.error) {
+        setError(res.error);
+        setClients([]);
+      } else {
+        setClients(res.data?.clients ?? []);
+      }
+    } catch (e) {
+      setError('Impossible de charger les dossiers.');
+      setClients([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [token, q]);
+
+  useEffect(() => {
+    if (!isPro) return;
+    const t = setTimeout(() => { loadPro(); }, 250);
+    return () => clearTimeout(t);
+  }, [isPro, q, loadPro]);
+
   const load = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
       const token = await AsyncStorage.getItem('auth_token');
-      if (!token) return;
+      const localRaw = await AsyncStorage.getItem(LOCAL_PROJECT_KEY);
+      const localProject = localRaw ? (() => { try { return JSON.parse(localRaw); } catch { return null; } })() : null;
+
+      if (!token) {
+        setProject(localProject);
+        setPayments([]);
+        return;
+      }
+
       const res = await dashboardApi.getProject(token);
-      setProject(res.data?.project ?? null);
+      const backendProject = res.data?.project ?? null;
+      setProject(backendProject ?? localProject);
 
       const payRes = await dashboardApi.getPayments(token);
       setPayments(payRes.data?.payments ?? []);
@@ -53,9 +101,114 @@ export default function ProjetScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    if (isPro) {
+      loadPro();
+    } else {
+      load();
+    }
+  }, [isPro, load, loadPro]));
 
-  const onRefresh = () => { setRefreshing(true); load(true); };
+  const onRefresh = () => {
+    setRefreshing(true);
+    if (isPro) loadPro(true);
+    else load(true);
+  };
+
+  if (isPro) {
+    const dossiers = clients.filter(c => {
+      const st = String(c.project_status ?? '').toLowerCase();
+      return Boolean(st) && st !== 'annule';
+    });
+
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 28 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
+        >
+          <View style={styles.proHeader}>
+            <Text style={styles.proTitle}>Projet</Text>
+            <Text style={styles.proSubtitle}>Dossiers assignés</Text>
+          </View>
+
+          <View style={styles.proSearchRow}>
+            <Ionicons name="search" size={16} color={Colors.textMuted} />
+            <TextInput
+              style={styles.proSearchInput}
+              value={q}
+              onChangeText={setQ}
+              placeholder="Rechercher un client…"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+          </View>
+
+          {loading ? (
+            <ActivityIndicator color={Colors.orange} style={{ marginTop: 24 }} />
+          ) : error ? (
+            <View style={styles.proEmptyBox}>
+              <Ionicons name="alert-circle" size={18} color={Colors.error} />
+              <Text style={styles.proEmptyText}>{error}</Text>
+              <TouchableOpacity style={styles.proRetryBtn} onPress={() => loadPro()} activeOpacity={0.85}>
+                <Text style={styles.proRetryText}>Réessayer</Text>
+              </TouchableOpacity>
+            </View>
+          ) : dossiers.length === 0 ? (
+            <View style={styles.proEmptyBox}>
+              <Ionicons name="folder-open" size={18} color={Colors.textMuted} />
+              <Text style={styles.proEmptyText}>Aucun dossier pour le moment.</Text>
+            </View>
+          ) : (
+            dossiers.map((c) => {
+              const displayName = (c.name || c.email || 'Client').trim();
+              const preview = (c.last_msg || 'Aucun message').slice(0, 80);
+              const status = String(c.project_status || '').toLowerCase();
+              const statusLabel = status === 'proposition'
+                ? 'Proposition'
+                : status === 'demarre'
+                  ? 'Démarré'
+                  : status === 'soumis'
+                    ? 'Soumis'
+                    : status ? status : '';
+
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={styles.proClientCard}
+                  activeOpacity={0.85}
+                  onPress={() => router.push({
+                    pathname: '/(tabs)/messagerie' as any,
+                    params: { mode: 'pro', clientId: c.id, clientName: displayName, clientEmail: c.email },
+                  })}
+                >
+                  <View style={styles.proClientRow}>
+                    <View style={styles.proClientAvatar}>
+                      <Text style={styles.proClientInitial}>{(displayName[0] || 'C').toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={styles.proClientName} numberOfLines={1}>{displayName}</Text>
+                        {statusLabel ? (
+                          <View style={styles.proStatusPill}>
+                            <Text style={styles.proStatusText}>{statusLabel}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text style={styles.proClientPreview} numberOfLines={2}>{preview}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   if (loading) {
     return (
@@ -330,7 +483,21 @@ export default function ProjetScreen() {
                   <Text style={styles.advisorName}>{advisor.name ?? advisor.nom}</Text>
                   <Text style={styles.advisorTitle}>{advisor.title ?? advisor.titre}</Text>
                 </View>
-                <TouchableOpacity style={styles.msgBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/inside' as any)}>
+                <TouchableOpacity
+                  style={styles.msgBtn}
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(tabs)/messagerie',
+                      params: {
+                        advisorName: String(advisor.name ?? advisor.nom ?? 'Conseiller'),
+                        advisorAvatarKey: String(advisor.avatar_key ?? advisor.avatarKey ?? ''),
+                        prefill: '1',
+                      },
+                    } as any)
+                  }
+                  accessibilityLabel="Contacter mon conseiller"
+                >
                   <Ionicons name="sparkles-outline" size={20} color={Colors.orange} />
                 </TouchableOpacity>
               </View>
@@ -346,6 +513,85 @@ export default function ProjetScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bgLight },
+  proHeader: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  proTitle: { fontSize: 22, fontWeight: '800', color: Colors.text },
+  proSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700', color: Colors.textMuted },
+  proSearchRow: {
+    marginTop: 6,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    ...UI.cardBorder,
+  },
+  proSearchInput: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  proEmptyBox: {
+    marginTop: 12,
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    ...UI.cardBorder,
+  },
+  proEmptyText: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontSize: 13,
+  },
+  proRetryBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.orange,
+  },
+  proRetryText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 12,
+  },
+  proClientCard: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 16,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
+  },
+  proClientRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  proClientAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  proClientInitial: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  proClientName: { fontSize: 14, fontWeight: '800', color: Colors.text, maxWidth: 220 },
+  proClientPreview: { marginTop: 2, fontSize: 12, color: Colors.textMuted },
+  proStatusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: Colors.orange + '14',
+    borderWidth: 1,
+    borderColor: Colors.orange + '35',
+  },
+  proStatusText: { fontSize: 11, fontWeight: '800', color: Colors.orange },
   loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 16 },
   emptyTitle: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },

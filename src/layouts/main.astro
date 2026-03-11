@@ -65,6 +65,128 @@ const { pageClass = '' } = Astro.props;
         document.addEventListener('astro:page-load', runRevealAnimations);
       })();
     </script>
+    <script is:inline>
+      (() => {
+        const TRACK_ENDPOINT = '/api/analytics/collect';
+        const SKIP_PREFIXES = ['/admin', '/api/', '/dashboard'];
+        const LS_KEY = 'capitune_analytics_sid';
+        let lastTrackedPage = '';
+
+        const shouldTrack = () => {
+          const path = window.location.pathname || '/';
+          return !SKIP_PREFIXES.some((prefix) => path.startsWith(prefix));
+        };
+
+        const getSessionId = () => {
+          try {
+            let sid = localStorage.getItem(LS_KEY);
+            if (!sid) {
+              sid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+              localStorage.setItem(LS_KEY, sid);
+            }
+            return sid;
+          } catch {
+            return 'anon';
+          }
+        };
+
+        const postEvent = (payload) => {
+          if (!shouldTrack()) return;
+          const body = JSON.stringify({
+            ...payload,
+            host: window.location.host,
+            lang: navigator.language || 'fr-CA',
+            screen: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
+            referrer: document.referrer || '',
+            sessionId: getSessionId(),
+            viewportW: window.innerWidth || 0,
+            viewportH: window.innerHeight || 0,
+          });
+
+          try {
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(TRACK_ENDPOINT, new Blob([body], { type: 'application/json' }));
+              return;
+            }
+          } catch {}
+
+          fetch(TRACK_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+            keepalive: true,
+          }).catch(() => {});
+        };
+
+        const cleanText = (value, max = 120) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+
+        const findZone = (node) => {
+          let el = node;
+          for (let i = 0; i < 6 && el; i += 1) {
+            if (el.dataset?.trackZone) return cleanText(el.dataset.trackZone, 80);
+            const tag = (el.tagName || '').toLowerCase();
+            if (['section', 'header', 'footer', 'nav', 'main', 'article'].includes(tag)) {
+              const heading = el.querySelector?.('h1, h2, h3');
+              return cleanText(heading?.textContent || el.id || el.getAttribute?.('aria-label') || tag, 80);
+            }
+            el = el.parentElement;
+          }
+          return cleanText(document.title || window.location.pathname, 80);
+        };
+
+        const findClickable = (node) => {
+          let el = node;
+          for (let i = 0; i < 5 && el; i += 1) {
+            const tag = (el.tagName || '').toLowerCase();
+            if (tag === 'a' || tag === 'button' || el.getAttribute?.('role') === 'button' || el.dataset?.trackClick !== undefined) return el;
+            el = el.parentElement;
+          }
+          return null;
+        };
+
+        const trackPageview = () => {
+          const path = `${window.location.pathname || '/'}${window.location.search || ''}`;
+          if (lastTrackedPage === path) return;
+          lastTrackedPage = path;
+          postEvent({
+            eventType: 'pageview',
+            path,
+            pageTitle: cleanText(document.title, 160),
+            zone: 'page',
+            label: cleanText(document.title, 160),
+            elementTag: 'document',
+          });
+        };
+
+        const onClick = (event) => {
+          const clickable = findClickable(event.target);
+          if (!clickable || !shouldTrack()) return;
+          const rect = clickable.getBoundingClientRect?.();
+          const clickX = rect?.width ? Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) : 0;
+          const clickY = rect?.height ? Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)) : 0;
+          postEvent({
+            eventType: 'click',
+            path: `${window.location.pathname || '/'}${window.location.search || ''}`,
+            pageTitle: cleanText(document.title, 160),
+            zone: findZone(clickable),
+            label: cleanText(clickable.getAttribute?.('aria-label') || clickable.getAttribute?.('title') || clickable.textContent || clickable.id || clickable.className, 160),
+            elementTag: (clickable.tagName || '').toLowerCase(),
+            href: clickable.getAttribute?.('href') || '',
+            clickX,
+            clickY,
+          });
+        };
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', trackPageview, { once: true });
+        } else {
+          trackPageview();
+        }
+
+        document.addEventListener('astro:page-load', trackPageview);
+        document.addEventListener('click', onClick, { capture: true });
+      })();
+    </script>
   </body>
 </html>
 

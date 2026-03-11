@@ -115,8 +115,7 @@ async function computeProStatsD1(db: D1Database, proId: string) {
         db,
         `SELECT COUNT(*) as n
          FROM payments pay
-         JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = ?
-         WHERE pay.status='paid'`,
+         WHERE pay.pro_id = ? AND pay.status='paid'`,
         [proId]
       ),
       safeCountD1(
@@ -159,10 +158,9 @@ async function computeProStatsD1(db: D1Database, proId: string) {
 
   const revenueRow = await safeFirstD1<{ total: number }>(
     db,
-    `SELECT COALESCE(SUM(pay.amount), 0) as total
+    `SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0) as total
      FROM payments pay
-     JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = ?
-     WHERE pay.status='paid'`,
+     WHERE pay.pro_id = ? AND pay.status='paid'`,
     [proId]
   );
 
@@ -268,9 +266,8 @@ async function computeProStatsNeon(
       ),
       safeCountNeon(
         sql`SELECT COUNT(*)::int as n
-            FROM payments pay
-            JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = ${proId}::uuid
-            WHERE pay.status='paid'`
+        FROM payments pay
+        WHERE pay.pro_id = ${proId}::uuid AND pay.status='paid'`
       ),
       safeCountNeon(
         sql`SELECT COUNT(*)::int as n
@@ -303,10 +300,9 @@ async function computeProStatsNeon(
 
   const revenue = await safeFirstNeon<{ total: number }>(
     sql,
-    sql`SELECT COALESCE(SUM(pay.amount), 0)::float8 as total
-        FROM payments pay
-        JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = ${proId}::uuid
-        WHERE pay.status='paid'`
+    sql`SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0)::float8 as total
+      FROM payments pay
+      WHERE pay.pro_id = ${proId}::uuid AND pay.status='paid'`
   );
 
   const servicesOffered = await inferServicesOfferedCountNeon(sql, proId);

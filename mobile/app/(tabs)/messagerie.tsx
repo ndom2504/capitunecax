@@ -17,7 +17,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 import { getAvatarSource } from '../../lib/avatar';
-import { agentApi, dashboardApi, type Message } from '../../lib/api';
+import { agentApi, dashboardApi, proApi, type Message } from '../../lib/api';
 
 const DEMO_MESSAGES: Message[] = [
   {
@@ -57,12 +57,21 @@ export default function MessagerieScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
+  const isPro = user?.account_type === 'pro';
+  const isProMode = isPro && String(params.mode ?? '') === 'pro';
+  const clientId = typeof params.clientId === 'string' ? params.clientId : '';
+
+  const clientNameFromParams = typeof params.clientName === 'string' ? params.clientName : '';
+  const clientEmailFromParams = typeof params.clientEmail === 'string' ? params.clientEmail : '';
+
   const isCapiAgent = String(params.agent ?? '') === 'capi';
 
-  const advisorName = isCapiAgent
+  const advisorName = isProMode
+    ? (clientNameFromParams || clientEmailFromParams || 'Client')
+    : isCapiAgent
     ? 'CAPI'
     : (typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPI');
-  const advisorAvatarKey = isCapiAgent
+  const advisorAvatarKey = (isProMode || isCapiAgent)
     ? ''
     : (typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '');
   const shouldPrefill = String(params.prefill ?? '') === '1';
@@ -72,12 +81,46 @@ export default function MessagerieScreen() {
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [proClient, setProClient] = useState<any>(null);
+  const [proProjects, setProProjects] = useState<any[]>([]);
   const didPrefillRef = useRef(false);
   const listRef = useRef<FlatList<Message>>(null);
 
   const load = async () => {
     setLoading(true);
     try {
+      if (isProMode) {
+        if (!token || !clientId) {
+          setMessages([]);
+          setProClient(null);
+          setProProjects([]);
+          return;
+        }
+        const res = await proApi.getClient(token, clientId);
+        if (res.error) {
+          setMessages([]);
+          setProClient({ name: clientNameFromParams || 'Client', email: clientEmailFromParams || '' });
+          setProProjects([]);
+          return;
+        }
+        const u = (res.data as any)?.user ?? null;
+        const msgs = ((res.data as any)?.messages ?? []) as any[];
+        const projs = ((res.data as any)?.projects ?? []) as any[];
+        setProClient(u);
+        setProProjects(projs);
+        setMessages(
+          msgs.map((m) => ({
+            id: String(m.id ?? Math.random()),
+            content: String(m.content ?? ''),
+            sender: String(m.sender ?? 'bot') as any,
+            senderName: String(m.sender === 'admin' ? (user?.name ?? 'Vous') : (u?.name ?? 'Client')),
+            createdAt: String(m.created_at ?? new Date().toISOString()),
+            read: true,
+          }))
+        );
+        return;
+      }
+
       if (isCapiAgent) {
         setMessages([]);
         return;
@@ -96,9 +139,10 @@ export default function MessagerieScreen() {
 
   useEffect(() => {
     load();
-  }, [token, isCapiAgent]);
+  }, [token, isCapiAgent, isProMode, clientId]);
 
   useEffect(() => {
+    if (isProMode) return;
     if (isCapiAgent) return;
     if (!shouldPrefill) return;
     if (didPrefillRef.current) return;
@@ -118,7 +162,7 @@ export default function MessagerieScreen() {
     const optimistic: Message = {
       id: String(Date.now()),
       content,
-      sender: 'client',
+      sender: isProMode ? 'admin' : 'client',
       senderName: user?.name ?? 'Vous',
       createdAt: new Date().toISOString(),
       read: false,
@@ -129,6 +173,13 @@ export default function MessagerieScreen() {
     setSending(true);
 
     try {
+      if (isProMode) {
+        if (token && clientId) {
+          await proApi.reply(token, { user_id: clientId, content });
+        }
+        return;
+      }
+
       if (isCapiAgent) {
         const res = await agentApi.answer(content, null, token ?? undefined, 'general');
         const reply = res.data?.replyText?.trim() || res.data?.replyHtml?.trim() || '';
@@ -179,14 +230,22 @@ export default function MessagerieScreen() {
 
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{advisorName}</Text>
-          <Text style={styles.headerSub}>{isCapiAgent ? 'Agent d’orientation' : 'Point de contact'}</Text>
+          <Text style={styles.headerSub}>
+            {isProMode ? (clientEmailFromParams || proClient?.email || '') : (isCapiAgent ? 'Agent d’orientation' : 'Point de contact')}
+          </Text>
         </View>
 
         <TouchableOpacity
           style={styles.headerAction}
-          onPress={() => router.push('/(tabs)/documents' as any)}
+            onPress={() => {
+              if (isProMode) {
+                router.push('/(tabs)/projet' as any);
+                return;
+              }
+              router.push('/(tabs)/documents' as any);
+            }}
           activeOpacity={0.85}
-          accessibilityLabel="Aller aux documents"
+            accessibilityLabel={isProMode ? 'Aller au dossier' : 'Aller aux documents'}
         >
           <Ionicons name="folder-open-outline" size={18} color={Colors.text} />
         </TouchableOpacity>
@@ -202,7 +261,9 @@ export default function MessagerieScreen() {
           contentContainerStyle={styles.messagesList}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           renderItem={({ item }) => {
-            const isMe = item.sender === 'client' || item.sender === 'user';
+            const isMe = isProMode
+              ? (item.sender === 'admin')
+              : (item.sender === 'client' || item.sender === 'user');
             return (
               <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
                 <Text style={[styles.bubbleText, isMe ? styles.bubbleTextMe : styles.bubbleTextThem]}>
@@ -221,7 +282,7 @@ export default function MessagerieScreen() {
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder={isCapiAgent ? 'Écrire à CAPI…' : 'Écrire au conseiller…'}
+            placeholder={isProMode ? 'Répondre au client…' : (isCapiAgent ? 'Écrire à CAPI…' : 'Écrire au conseiller…')}
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={1000}

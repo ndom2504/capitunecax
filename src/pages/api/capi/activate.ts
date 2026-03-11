@@ -67,7 +67,8 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
     const now = new Date().toISOString();
     const title = generateProjectTitle(session);
-    const status = 'actif';
+    // Statut aligné avec l'écosystème dashboard (badge "soumis" + suivi côté pro)
+    const status = 'soumis';
 
     // Construire les métadonnées du projet
     const metadata = {
@@ -81,6 +82,8 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
       advisor: session.advisor ?? null,
       activated_at: now,
     };
+
+    const advisorToAssign = String(metadata.advisor_id ?? '').trim() || null;
 
     let projectId: string;
 
@@ -111,6 +114,30 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
         .bind(user.id)
         .run().catch(() => {});
 
+      // Assigner le client au conseiller (inbox pro)
+      if (advisorToAssign) {
+        await db
+          .prepare(
+            `INSERT INTO client_assignments (client_id, pro_id)
+             VALUES (?, ?)
+             ON CONFLICT(client_id) DO UPDATE
+             SET pro_id=excluded.pro_id, updated_at=datetime('now')`
+          )
+          .bind(user.id, advisorToAssign)
+          .run();
+
+        // Message système pour matérialiser l'arrivée du dossier
+        const sysMsg = `✅ Projet soumis. Votre conseiller a été confirmé et peut maintenant consulter votre dossier.`;
+        await db
+          .prepare(
+            `INSERT INTO messages (id, project_id, user_id, sender, content)
+             VALUES (?, ?, ?, 'bot', ?)`
+          )
+          .bind(crypto.randomUUID(), projectId, user.id, sysMsg)
+          .run()
+          .catch(() => {});
+      }
+
     } else {
       // Neon PostgreSQL
       const sql = await getNeonSqlClient();
@@ -139,6 +166,22 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
       // Vider la session CAPI
       await sql`DELETE FROM capi_sessions WHERE user_id = ${user.id}`.catch(() => {});
+
+      // Assigner le client au conseiller (inbox pro)
+      if (advisorToAssign) {
+        await sql`
+          INSERT INTO client_assignments (client_id, pro_id)
+          VALUES (${user.id}::uuid, ${advisorToAssign}::uuid)
+          ON CONFLICT (client_id)
+          DO UPDATE SET pro_id = EXCLUDED.pro_id, updated_at = now()
+        `;
+
+        const sysMsg = `✅ Projet soumis. Votre conseiller a été confirmé et peut maintenant consulter votre dossier.`;
+        await sql`
+          INSERT INTO messages (id, project_id, user_id, sender, content)
+          VALUES (${crypto.randomUUID()}::uuid, ${projectId}::uuid, ${user.id}::uuid, 'bot', ${sysMsg})
+        `.catch(() => {});
+      }
     }
 
     return json({

@@ -12,6 +12,7 @@ import { UI } from '../../constants/UI';
 import { useCapiSession } from '../../context/CapiContext';
 import { capiApi } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
+import { buildLocalProjectFromCapiSession, LOCAL_PROJECT_KEY } from '../../lib/local-project';
 
 const MOTIF_LABEL: Record<string, string> = {
   visiter: 'Visiter le Canada',
@@ -29,30 +30,48 @@ export default function CapiActivationScreen() {
   const { token } = useAuth();
   const [creating, setCreating] = useState(false);
 
-  const selectedServices = (session.services ?? []).filter(s => s.selected);
-  const totalServices = selectedServices.reduce((sum, s) => sum + (s.prixEstime ?? 0), 0);
+  const recommendedServices = (session.services ?? []).filter(
+    s => s.priorite === 'obligatoire' || s.priorite === 'recommande',
+  );
   const score = session.evaluation?.faisabilite ?? 0;
 
   const activate = async () => {
     setCreating(true);
     try {
       const sessionToken = token ?? await AsyncStorage.getItem('auth_token');
-      if (!sessionToken) throw new Error('Non authentifié');
+      if (!sessionToken) {
+        const localProject = buildLocalProjectFromCapiSession(session);
+        await AsyncStorage.setItem(LOCAL_PROJECT_KEY, JSON.stringify(localProject));
+        resetSession();
+        router.replace('/(tabs)/projet');
+        return;
+      }
 
       const payload = {
         session,
         advisorId: session.advisor?.id,
-        selectedServiceIds: selectedServices.map(s => s.id),
+        selectedServiceIds: recommendedServices.map(s => s.id),
       };
       const res = await capiApi.activateProject(sessionToken, payload);
       if (res.status < 200 || res.status >= 300) {
         throw new Error(res.error ?? 'Activation échouée');
       }
+
+      // UX: afficher immédiatement un projet même si la sync backend prend du temps.
+      const localProject = buildLocalProjectFromCapiSession(session);
+      await AsyncStorage.setItem(LOCAL_PROJECT_KEY, JSON.stringify(localProject));
+
       resetSession();
       router.replace('/(tabs)/projet');
     } catch (err: any) {
       // Activation OK en mode hors-ligne (fallback)
       console.log('Activation backend skipped:', err.message);
+
+      try {
+        const localProject = buildLocalProjectFromCapiSession(session);
+        await AsyncStorage.setItem(LOCAL_PROJECT_KEY, JSON.stringify(localProject));
+      } catch {}
+
       resetSession();
       router.replace('/(tabs)/projet');
     } finally {
@@ -92,7 +111,7 @@ export default function CapiActivationScreen() {
           <CapiAvatar size={44} state="idle" />
           <View style={styles.bubble}>
             <Text style={styles.bubbleText}>
-              Votre projet est prêt ! Voici le <Text style={{ fontWeight: '700', color: Colors.orange }}>récapitulatif complet</Text>. Une fois activé, votre dossier sera créé et votre conseiller notifié.
+              Votre projet est prêt ! Voici le <Text style={{ fontWeight: '700', color: Colors.orange }}>récapitulatif complet</Text> (à titre indicatif). Une fois activé, votre dossier sera créé et votre conseiller notifié.
             </Text>
           </View>
         </View>
@@ -151,21 +170,16 @@ export default function CapiActivationScreen() {
         )}
 
         {/* Services */}
-        {selectedServices.length > 0 && (
+        {recommendedServices.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Services sélectionnés ({selectedServices.length})</Text>
+            <Text style={styles.sectionTitle}>Services recommandés ({recommendedServices.length})</Text>
             <View style={styles.servicesList}>
-              {selectedServices.map((s) => (
+              {recommendedServices.map((s) => (
                 <View key={s.id} style={styles.serviceRow}>
                   <View style={styles.serviceDot} />
                   <Text style={styles.serviceName} numberOfLines={1}>{s.nom}</Text>
-                  <Text style={styles.servicePrice}>{(s.prixEstime ?? 0) === 0 ? 'Gratuit' : `${s.prixEstime} $`}</Text>
                 </View>
               ))}
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total estimé</Text>
-                <Text style={styles.totalAmount}>{totalServices.toLocaleString()} $ CAD</Text>
-              </View>
             </View>
           </View>
         )}

@@ -14,8 +14,11 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   const token = cookies.get('capitune_session')?.value ?? '';
   if (!token) return json({ error: 'Non connecté' }, 401);
   const me = await getUserFromSessionAny(db, token);
-  if (!me || me.role !== 'admin') return json({ error: 'Accès refusé' }, 403);
-  const isSuper = isSuperAdminEmail(me.email);
+  if (!me) return json({ error: 'Session expirée' }, 401);
+  const isPro = String((me as any)?.account_type ?? '') === 'pro';
+  const isAdmin = me.role === 'admin';
+  if (!isAdmin && !isPro) return json({ error: 'Accès refusé' }, 403);
+  const isSuper = isAdmin ? isSuperAdminEmail(me.email) : false;
 
   const body = await request.json() as { user_id?: string; content?: string };
   const userId  = String(body.user_id  ?? '').trim();

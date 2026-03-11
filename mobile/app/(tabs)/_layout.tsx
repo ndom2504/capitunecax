@@ -23,7 +23,7 @@ export default function TabsLayout() {
           height: 62,
           paddingBottom: 8,
         },
-        tabBarActiveTintColor: isPro ? '#3b9eff' : Colors.orange,
+        tabBarActiveTintColor: isPro ? Colors.primary : Colors.orange,
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
@@ -32,33 +32,27 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarLabel: isPro ? 'Tableau' : 'Accueil',
-          tabBarIcon: ({ color, size }) => <Ionicons name={isPro ? 'grid' : 'home'} size={size} color={color} />,
+          tabBarLabel: 'Accueil',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
 
-      {/* ── Mon Projet (client seulement) ── */}
+      {/* ── Projet (tous) ── */}
       <Tabs.Screen
         name="projet"
-        options={isPro
-          ? { href: null }  // masqué pour les pros
-          : {
-              tabBarLabel: 'Mon Projet',
-              tabBarIcon: ({ color, size }) => <Ionicons name="folder-open" size={size} color={color} />,
-            }
-        }
+        options={{
+          tabBarLabel: isPro ? 'Projet' : 'Mon Projet',
+          tabBarIcon: ({ color, size }) => <Ionicons name="folder-open" size={size} color={color} />,
+        }}
       />
 
       {/* ── Inside (communauté) (tous) ── */}
       <Tabs.Screen
         name="inside"
-        options={isPro
-          ? { href: null }
-          : {
-              tabBarLabel: 'Inside',
-              tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
-            }
-        }
+        options={{
+          tabBarLabel: 'Inside',
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
+        }}
       />
 
       {/* ── Anciennes routes masquées (compat deep-link) ── */}

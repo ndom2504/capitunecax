@@ -4,6 +4,8 @@ const BASE_URL: string =
   (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ??
   'https://www.capitune.com';
 
+export const API_BASE_URL: string = BASE_URL;
+
 export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
@@ -144,6 +146,145 @@ export const dashboardApi = {
 
   getPayments: (token: string) =>
     request<{ payments: Payment[] }>('/api/payments', {}, token),
+};
+
+// -- Pro (inbox + gestion dossier) -------------------------------------------
+
+export type ProClientRow = {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  avatar_key?: string | null;
+  suspended?: number | boolean | null;
+  project_id?: string | null;
+  project_type?: string | null;
+  project_status?: string | null;
+  project_updated?: string | null;
+  last_msg?: string | null;
+  last_msg_at?: string | null;
+  msg_count?: number | null;
+  paid_count?: number | null;
+  total_paid?: number | null;
+};
+
+export type ProClientDetails = {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    avatar_key?: string | null;
+  };
+  projects: Array<Record<string, any>>;
+  messages: Array<Record<string, any>>;
+  payments: Array<Record<string, any>>;
+};
+
+export const proApi = {
+  listClients: (token: string, opts?: { page?: number; q?: string }) => {
+    const page = Math.max(1, Number(opts?.page ?? 1));
+    const q = (opts?.q ?? '').trim();
+    const qs = new URLSearchParams({ scope: 'me', page: String(page) });
+    if (q) qs.set('q', q);
+    return request<{ clients: ProClientRow[]; page: number; pages: number; total: number }>(
+      `/api/admin/clients?${qs.toString()}`,
+      {},
+      token,
+    );
+  },
+
+  getClient: (token: string, clientId: string) =>
+    request<ProClientDetails>(`/api/admin/client/${encodeURIComponent(clientId)}`, {}, token),
+
+  reply: (token: string, payload: { user_id: string; content: string }) =>
+    request<{ ok?: boolean; error?: string }>(
+      '/api/admin/reply',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+
+  addStep: (token: string, payload: { client_id: string; titre: string; description?: string }) =>
+    request<{ ok?: boolean; error?: string }>(
+      '/api/pro/add-step',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+
+  addService: (token: string, payload: { client_id: string; nom: string; priorite?: 'obligatoire' | 'recommande' | 'optionnel' }) =>
+    request<{ ok?: boolean; error?: string }>(
+      '/api/pro/add-service',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+
+  sendQuote: (
+    token: string,
+    payload: {
+      client_id: string;
+      total: number;
+      currency?: string;
+      estimated_delay?: string;
+      note?: string;
+    },
+  ) =>
+    request<{ ok?: boolean; error?: string; quote?: any }>(
+      '/api/pro/quote',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+};
+
+// -- Inside ------------------------------------------------------------------
+
+export type InsidePostDto = {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  authorName: string;
+  authorAvatarKey?: string;
+  mediaType?: string;
+  mediaUrl?: string;
+  linkUrl?: string;
+  isHidden?: boolean;
+};
+
+export const insideApi = {
+  list: (token: string, opts?: { includeHidden?: boolean }) => {
+    const q = opts?.includeHidden ? '?includeHidden=1' : '';
+    return request<{ posts: InsidePostDto[] }>(`/api/inside${q}`, {}, token);
+  },
+
+  publish: (
+    token: string,
+    payload: { title: string; content: string; mediaType?: string; mediaUrl?: string; linkUrl?: string },
+  ) =>
+    request<{ ok?: boolean; post?: InsidePostDto; persisted?: boolean; error?: string }>(
+      '/api/inside',
+      { method: 'POST', body: JSON.stringify(payload) },
+      token,
+    ),
+};
+
+// -- Presence / En ligne -----------------------------------------------------
+
+export type PresenceStatus = {
+  connected: number;
+  meOnline: boolean;
+  persisted?: boolean;
+};
+
+export const presenceApi = {
+  ping: (token: string) =>
+    request<{ ok?: boolean; persisted?: boolean; ttl?: number; error?: string }>(
+      '/api/presence',
+      { method: 'POST' },
+      token,
+    ),
+
+  status: (token: string) => request<PresenceStatus>('/api/presence', {}, token),
 };
 
 // -- Agent KB (sans auth, compatible mobile) ---------------------------------

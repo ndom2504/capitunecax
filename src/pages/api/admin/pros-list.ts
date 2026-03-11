@@ -38,12 +38,10 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
              (SELECT COUNT(*) FROM client_assignments WHERE pro_id = u.id) AS clients_count,
              (SELECT COUNT(*)
               FROM payments pay
-              JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = u.id
-              WHERE pay.status = 'paid') AS paid_count,
-             (SELECT COALESCE(SUM(pay.amount), 0)
+              WHERE pay.pro_id = u.id AND pay.status = 'paid') AS paid_count,
+             (SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0)
               FROM payments pay
-              JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = u.id
-              WHERE pay.status = 'paid') AS total_revenue
+              WHERE pay.pro_id = u.id AND pay.status = 'paid') AS total_revenue
            FROM users u
            WHERE u.role = 'admin' OR u.account_type = 'pro'
            ORDER BY u.created_at ASC`
@@ -69,12 +67,10 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
         (SELECT COUNT(*)::int FROM client_assignments WHERE pro_id = u.id) AS clients_count,
         (SELECT COUNT(*)::int
          FROM payments pay
-         JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = u.id
-         WHERE pay.status = 'paid') AS paid_count,
-        (SELECT COALESCE(SUM(pay.amount), 0)::float8
+         WHERE pay.pro_id = u.id AND pay.status = 'paid') AS paid_count,
+        (SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0)::float8
          FROM payments pay
-         JOIN client_assignments ca ON ca.client_id = pay.user_id AND ca.pro_id = u.id
-         WHERE pay.status = 'paid') AS total_revenue
+         WHERE pay.pro_id = u.id AND pay.status = 'paid') AS total_revenue
       FROM users u
       WHERE u.role = 'admin' OR u.account_type = 'pro'
       ORDER BY u.created_at ASC

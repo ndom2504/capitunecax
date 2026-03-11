@@ -96,6 +96,35 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .search-box:focus { border-color: var(--accent); }
     .search-box::placeholder { color: var(--muted); }
     .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .mini-stats-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; margin-bottom:22px; }
+    .traffic-grid { display:grid; grid-template-columns:1.2fr 1fr; gap:18px; margin-bottom:18px; }
+    .traffic-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .traffic-card-body { padding: 16px 18px; }
+    .traffic-kpi-label { font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .traffic-kpi-value { font-size:28px; font-weight:700; line-height:1; }
+    .traffic-sub { font-size:12px; color:var(--muted); margin-top:6px; }
+    .traffic-bars { display:flex; flex-direction:column; gap:10px; }
+    .traffic-bar-row { display:grid; grid-template-columns:minmax(120px,1.3fr) 80px 1fr; gap:10px; align-items:center; }
+    .traffic-bar-label { font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+    .traffic-bar-value { font-size:12px; color:var(--muted); text-align:right; }
+    .traffic-bar-track { height:8px; border-radius:999px; background:rgba(255,255,255,.06); overflow:hidden; }
+    .traffic-bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg, var(--accent), #ffbd66); }
+    .traffic-note { color:var(--muted); font-size:12px; margin-bottom:16px; }
+    .muted-cell { color: var(--muted); font-size: 12px; }
+    .globe-shell { display:grid; grid-template-columns: 1.1fr .9fr; gap:18px; align-items:center; }
+    .globe-wrap { display:flex; align-items:center; justify-content:center; min-height:280px; }
+    .globe-svg { width:100%; max-width:360px; height:auto; display:block; }
+    .globe-water { fill:url(#globeGrad); stroke:rgba(255,255,255,.12); stroke-width:1.5; }
+    .globe-grid { fill:none; stroke:rgba(255,255,255,.12); stroke-width:1; opacity:.75; }
+    .globe-continent { fill:rgba(255,255,255,.08); stroke:rgba(255,255,255,.06); stroke-width:1; }
+    .globe-dot { fill:#ff9408; opacity:.92; filter: drop-shadow(0 0 8px rgba(255,148,8,.45)); }
+    .globe-dot-ring { fill:none; stroke:rgba(255,148,8,.35); stroke-width:2; }
+    .country-list { display:flex; flex-direction:column; gap:10px; }
+    .country-item { display:grid; grid-template-columns: 42px 1fr 64px; gap:10px; align-items:center; }
+    .country-code { display:inline-flex; align-items:center; justify-content:center; width:42px; height:28px; border-radius:8px; background:rgba(255,148,8,.12); color:var(--accent); font-weight:700; font-size:12px; }
+    .country-name { font-size:13px; font-weight:600; }
+    .country-sub { font-size:11px; color:var(--muted); }
+    .country-val { text-align:right; font-size:12px; color:var(--muted); font-weight:700; }
     table { width: 100%; border-collapse: collapse; }
     thead { background: var(--surface); }
     th { padding: 12px 16px; text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
@@ -218,6 +247,12 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       transition: opacity .2s, transform .1s; title: 'Suggérer avec l\'IA';
     }
     .btn-ai:hover { opacity: .85; }
+    @media (max-width: 1100px) {
+      .mini-stats-grid, .traffic-grid, .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .mini-stats-grid, .traffic-grid, .stats-grid { grid-template-columns: 1fr; }
+    }
     .btn-ai:active { transform: scale(.95); }
     .btn-ai:disabled { opacity: .45; cursor: not-allowed; }
     .btn-ai .ai-spin {
@@ -325,6 +360,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     </a>
     <a class="nav-item" href="#pros" data-section="pros">
       <i class="fa fa-user-tie"></i> Comptes Pro
+    </a>
+    <a class="nav-item" href="#traffic" data-section="traffic">
+      <i class="fa fa-chart-line"></i> Trafic web
     </a>
     <a class="nav-item" href="/admin/stripe-configuration">
       <i class="fa fa-credit-card"></i> Stripe
@@ -528,6 +566,87 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       </div>
     </div>
 
+    <!-- SECTION TRAFIC WEB -->
+    <div id="section-traffic" style="display:none">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Indicateurs de trafic web</div>
+          <div class="traffic-note">Vues, clics et zones les plus actives sur le site public. Les zones sont calculées à partir des sections cliquées.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <select class="status-select" id="traffic-days" style="width:140px">
+            <option value="7">7 jours</option>
+            <option value="14">14 jours</option>
+            <option value="30">30 jours</option>
+            <option value="90">90 jours</option>
+          </select>
+          <button class="btn-sm" id="btn-traffic-refresh" type="button"><i class="fa fa-rotate"></i> Rafraîchir</button>
+        </div>
+      </div>
+
+      <div class="mini-stats-grid">
+        <div class="traffic-card"><div class="traffic-card-body"><div class="traffic-kpi-label">Pages vues</div><div class="traffic-kpi-value" id="traffic-pageviews">—</div><div class="traffic-sub" id="traffic-pageviews-sub">sur la période</div></div></div>
+        <div class="traffic-card"><div class="traffic-card-body"><div class="traffic-kpi-label">Clics</div><div class="traffic-kpi-value" id="traffic-clicks">—</div><div class="traffic-sub">liens et boutons</div></div></div>
+        <div class="traffic-card"><div class="traffic-card-body"><div class="traffic-kpi-label">Visiteurs estimés</div><div class="traffic-kpi-value" id="traffic-visitors">—</div><div class="traffic-sub">sessions distinctes</div></div></div>
+        <div class="traffic-card"><div class="traffic-card-body"><div class="traffic-kpi-label">Zones suivies</div><div class="traffic-kpi-value" id="traffic-zones">—</div><div class="traffic-sub" id="traffic-pages-sub">pages trackées : —</div></div></div>
+      </div>
+
+      <div class="traffic-grid">
+        <div class="traffic-card">
+          <div class="traffic-card-body">
+            <div class="section-title" style="font-size:15px;margin-bottom:14px;">Globe trafic</div>
+            <div id="traffic-globe-card" class="globe-shell">
+              <div class="globe-wrap"><div class="spinner"></div></div>
+              <div><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="traffic-card">
+          <div class="traffic-card-body">
+            <div class="section-title" style="font-size:15px;margin-bottom:14px;">Pages les plus actives</div>
+            <div id="traffic-top-pages"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="traffic-grid">
+        <div class="traffic-card">
+          <div class="traffic-card-body">
+            <div class="section-title" style="font-size:15px;margin-bottom:14px;">Zones les plus cliquées</div>
+            <div id="traffic-top-zones"><div class="spinner"></div></div>
+          </div>
+        </div>
+        <div class="traffic-card">
+          <div class="traffic-card-body">
+            <div class="section-title" style="font-size:15px;margin-bottom:14px;">Pays les plus présents</div>
+            <div id="traffic-top-countries"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="traffic-grid">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Jour</th><th>Pages vues</th><th>Clics</th></tr></thead>
+            <tbody id="traffic-daily-body"><tr><td colspan="3"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Libellé / lien</th><th>Clics</th></tr></thead>
+            <tbody id="traffic-links-body"><tr><td colspan="2"><div class="spinner"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Page</th><th>Zone</th><th>Élément cliqué</th></tr></thead>
+          <tbody id="traffic-recent-body"><tr><td colspan="4"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </main>
 
@@ -582,6 +701,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   var _meId          = String(window.__admAdminId || '');
   var _prosLoaded    = false;
   var _insidePosts   = [];
+  var _trafficLoaded = false;
 
   // ── Sections ────────────────────────────────────────────────────────────
   function showSection(name) {
@@ -589,11 +709,12 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     document.getElementById('section-inside').style.display    = name === 'inside'    ? '' : 'none';
     document.getElementById('section-clients').style.display   = name === 'clients'   ? '' : 'none';
     document.getElementById('section-pros').style.display      = name === 'pros'      ? '' : 'none';
+    document.getElementById('section-traffic').style.display   = name === 'traffic'   ? '' : 'none';
     document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
     document.querySelectorAll('.sidebar-nav .nav-item[data-section]').forEach(function(el) {
       if (el.getAttribute('data-section') === name) el.classList.add('active');
     });
-    var titles = { dashboard: 'Tableau de bord', inside: 'Inside', clients: 'Clients', pros: 'Comptes Pro' };
+    var titles = { dashboard: 'Tableau de bord', inside: 'Inside', clients: 'Clients', pros: 'Comptes Pro', traffic: 'Trafic web' };
     document.getElementById('page-title').textContent = titles[name] || name;
     if (name === 'clients' && !document.getElementById('clients-body').dataset.loaded) {
       loadClients();
@@ -606,6 +727,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       if (insideBody && !insideBody.dataset.loaded) {
         loadInsidePosts(false);
       }
+    }
+    if (name === 'traffic' && !_trafficLoaded) {
+      loadWebTraffic(false);
     }
   }
 
@@ -652,6 +776,184 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         + '<td><button class="btn-sm" onclick="event.stopPropagation();openClient(\''+u.id+'\')">Voir</button></td>'
         + '</tr>';
     }).join('');
+  }
+
+  function trafficBarsHtml(items, labelKey, valueKey) {
+    if (!items || !items.length) return '<div class="empty-state"><i class="fa fa-chart-line"></i>Aucune donnée</div>';
+    var max = Math.max.apply(null, items.map(function(item){ return Number(item[valueKey] || 0); }).concat([1]));
+    return '<div class="traffic-bars">' + items.map(function(item) {
+      var label = esc(String(item[labelKey] || '—'));
+      var value = Number(item[valueKey] || 0);
+      var pct = Math.max(4, Math.round((value / max) * 100));
+      return '<div class="traffic-bar-row">'
+        + '<div class="traffic-bar-label" title="' + label + '">' + label + '</div>'
+        + '<div class="traffic-bar-value">' + value + '</div>'
+        + '<div class="traffic-bar-track"><div class="traffic-bar-fill" style="width:' + pct + '%"></div></div>'
+        + '</div>';
+    }).join('') + '</div>';
+  }
+
+  var COUNTRY_NAMES = {
+    CA:'Canada', US:'États-Unis', FR:'France', BE:'Belgique', CH:'Suisse', GB:'Royaume-Uni', CM:'Cameroun', SN:'Sénégal', CI:'Côte d’Ivoire', MA:'Maroc', DZ:'Algérie', TN:'Tunisie', NG:'Nigeria', GH:'Ghana', AE:'Émirats arabes unis', DE:'Allemagne', ES:'Espagne', IT:'Italie', PT:'Portugal', IN:'Inde', CN:'Chine', BR:'Brésil', MX:'Mexique', AU:'Australie'
+  };
+  var COUNTRY_POINTS = {
+    CA:{x:108,y:84}, US:{x:98,y:104}, MX:{x:94,y:132}, BR:{x:145,y:188}, GB:{x:190,y:82}, FR:{x:198,y:96}, BE:{x:201,y:92}, CH:{x:204,y:100}, ES:{x:191,y:109}, PT:{x:183,y:111}, DE:{x:210,y:88}, IT:{x:214,y:109}, MA:{x:186,y:128}, DZ:{x:205,y:131}, TN:{x:222,y:133}, SN:{x:170,y:140}, CI:{x:186,y:151}, GH:{x:193,y:154}, NG:{x:206,y:154}, CM:{x:214,y:164}, AE:{x:258,y:145}, IN:{x:286,y:152}, CN:{x:320,y:118}, AU:{x:336,y:220}
+  };
+
+  function renderTrafficGlobe(countries) {
+    var host = document.getElementById('traffic-globe-card');
+    var listHost = document.getElementById('traffic-top-countries');
+    if (!host || !listHost) return;
+
+    var items = Array.isArray(countries) ? countries.filter(function(c){ return c && c.code; }) : [];
+    if (!items.length) {
+      host.innerHTML = '<div class="globe-wrap"><div class="empty-state"><i class="fa fa-globe"></i>Aucune donnée géographique</div></div><div class="traffic-note">Le globe s’affiche dès que des visites avec pays détecté arrivent.</div>';
+      listHost.innerHTML = '<div class="empty-state"><i class="fa fa-globe"></i>Aucun pays détecté</div>';
+      return;
+    }
+
+    var maxVisitors = Math.max.apply(null, items.map(function(item){ return Number(item.visitors || 0); }).concat([1]));
+    var dots = items.map(function(item){
+      var code = String(item.code || '').toUpperCase();
+      var p = COUNTRY_POINTS[code];
+      if (!p) return '';
+      var visitors = Number(item.visitors || 0);
+      var r = Math.max(3, Math.min(10, 2 + (visitors / maxVisitors) * 8));
+      return '<circle class="globe-dot-ring" cx="' + p.x + '" cy="' + p.y + '" r="' + (r + 4) + '"></circle>'
+        + '<circle class="globe-dot" cx="' + p.x + '" cy="' + p.y + '" r="' + r + '"><title>' + code + ' — ' + visitors + ' visiteurs</title></circle>';
+    }).join('');
+
+    host.innerHTML = ''
+      + '<div class="globe-wrap">'
+      + '<svg class="globe-svg" viewBox="0 0 420 280" aria-label="Globe trafic">'
+      + '<defs><radialGradient id="globeGrad" cx="35%" cy="30%"><stop offset="0%" stop-color="#30456e"></stop><stop offset="65%" stop-color="#18253f"></stop><stop offset="100%" stop-color="#101827"></stop></radialGradient></defs>'
+      + '<ellipse class="globe-water" cx="210" cy="140" rx="175" ry="118"></ellipse>'
+      + '<path class="globe-grid" d="M35 140H385 M55 95C145 120 275 120 365 95 M55 185C145 160 275 160 365 185 M120 30C95 75 95 205 120 250 M210 22C205 70 205 210 210 258 M300 30C325 75 325 205 300 250"></path>'
+      + '<path class="globe-continent" d="M72 86l26-12 44 8 16 18-8 18-29 5-12 24-26-2-16-20 5-22z"></path>'
+      + '<path class="globe-continent" d="M136 152l26 10 16 31-12 34-24 13-22-17-7-28 8-24z"></path>'
+      + '<path class="globe-continent" d="M188 86l36-9 31 9 17 13-4 17-24 9-12 20-28 2-13-14-11-19 7-18z"></path>'
+      + '<path class="globe-continent" d="M195 136l18 8 16 19-10 27-20 20-25-16-10-23 7-22z"></path>'
+      + '<path class="globe-continent" d="M248 106l34-10 43 8 29 20-8 17-30 7-14 20-39 5-23-18-6-26z"></path>'
+      + '<path class="globe-continent" d="M301 208l27-6 32 11 9 17-16 12-29-3-22-12z"></path>'
+      + dots
+      + '</svg>'
+      + '</div>'
+      + '<div class="country-list">'
+      + items.slice(0, 6).map(function(item){
+          var code = String(item.code || '').toUpperCase();
+          var visitors = Number(item.visitors || 0);
+          var clicks = Number(item.clicks || 0);
+          return '<div class="country-item">'
+            + '<div class="country-code">' + esc(code) + '</div>'
+            + '<div><div class="country-name">' + esc(COUNTRY_NAMES[code] || code) + '</div><div class="country-sub">' + clicks + ' clics · ' + Number(item.pageviews || 0) + ' vues</div></div>'
+            + '<div class="country-val">' + visitors + ' vis.</div>'
+            + '</div>';
+        }).join('')
+      + '</div>';
+
+    listHost.innerHTML = '<div class="country-list">' + items.map(function(item){
+      var code = String(item.code || '').toUpperCase();
+      return '<div class="country-item">'
+        + '<div class="country-code">' + esc(code) + '</div>'
+        + '<div><div class="country-name">' + esc(COUNTRY_NAMES[code] || code) + '</div><div class="country-sub">' + Number(item.pageviews || 0) + ' vues · ' + Number(item.clicks || 0) + ' clics</div></div>'
+        + '<div class="country-val">' + Number(item.visitors || 0) + '</div>'
+        + '</div>';
+    }).join('') + '</div>';
+  }
+
+  async function loadWebTraffic(force) {
+    var daysEl = document.getElementById('traffic-days');
+    var days = Number(daysEl && daysEl.value ? daysEl.value : 7) || 7;
+    var topPagesEl = document.getElementById('traffic-top-pages');
+    var topZonesEl = document.getElementById('traffic-top-zones');
+    var topCountriesEl = document.getElementById('traffic-top-countries');
+    var globeCardEl = document.getElementById('traffic-globe-card');
+    var dailyBody = document.getElementById('traffic-daily-body');
+    var linksBody = document.getElementById('traffic-links-body');
+    var recentBody = document.getElementById('traffic-recent-body');
+    if (!force && _trafficLoaded && recentBody && recentBody.dataset.loaded === '1') return;
+
+    if (topPagesEl) topPagesEl.innerHTML = '<div class="spinner"></div>';
+    if (topZonesEl) topZonesEl.innerHTML = '<div class="spinner"></div>';
+    if (topCountriesEl) topCountriesEl.innerHTML = '<div class="spinner"></div>';
+    if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="spinner"></div></div><div><div class="spinner"></div></div>';
+    if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3"><div class="spinner"></div></td></tr>';
+    if (linksBody) linksBody.innerHTML = '<tr><td colspan="2"><div class="spinner"></div></td></tr>';
+    if (recentBody) recentBody.innerHTML = '<tr><td colspan="4"><div class="spinner"></div></td></tr>';
+
+    try {
+      var r = await fetch('/api/admin/web-traffic?days=' + encodeURIComponent(days));
+      var d = await r.json().catch(function(){ return null; });
+      if (!r.ok || !d || d.error) {
+        var msg = (d && d.error) ? d.error : ('Erreur ' + r.status);
+        if (topPagesEl) topPagesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
+        if (topZonesEl) topZonesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
+        if (topCountriesEl) topCountriesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div>';
+        if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(msg) + '</div></div>';
+        if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
+        if (linksBody) linksBody.innerHTML = '<tr><td colspan="2" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
+        if (recentBody) recentBody.innerHTML = '<tr><td colspan="4" style="color:var(--red);padding:20px">' + esc(msg) + '</td></tr>';
+        return;
+      }
+
+      document.getElementById('traffic-pageviews').textContent = Number((d.totals||{}).pageviews || 0).toLocaleString('fr-CA');
+      document.getElementById('traffic-clicks').textContent = Number((d.totals||{}).clicks || 0).toLocaleString('fr-CA');
+      document.getElementById('traffic-visitors').textContent = Number((d.totals||{}).visitors || 0).toLocaleString('fr-CA');
+      document.getElementById('traffic-zones').textContent = Number((d.totals||{}).tracked_zones || 0).toLocaleString('fr-CA');
+      document.getElementById('traffic-pageviews-sub').textContent = 'sur ' + Number(d.days || days) + ' jours';
+      document.getElementById('traffic-pages-sub').textContent = 'pages trackées : ' + Number((d.totals||{}).tracked_pages || 0).toLocaleString('fr-CA');
+
+      if (topPagesEl) topPagesEl.innerHTML = trafficBarsHtml((d.topPages || []).map(function(item){
+        return { path: String(item.path || '/').slice(0, 50) + ' · CTR ' + Number(item.ctr || 0).toFixed(1) + '%', clicks: Number(item.clicks || 0) };
+      }), 'path', 'clicks');
+
+      if (topZonesEl) topZonesEl.innerHTML = trafficBarsHtml(d.topZones || [], 'zone', 'clicks');
+      renderTrafficGlobe(d.topCountries || []);
+
+      if (dailyBody) {
+        var daily = d.daily || [];
+        dailyBody.innerHTML = daily.length ? daily.map(function(item){
+          return '<tr><td>' + esc(String(item.day || '—')) + '</td><td>' + Number(item.pageviews || 0).toLocaleString('fr-CA') + '</td><td>' + Number(item.clicks || 0).toLocaleString('fr-CA') + '</td></tr>';
+        }).join('') : '<tr><td colspan="3"><div class="empty-state"><i class="fa fa-calendar"></i>Aucune activité</div></td></tr>';
+      }
+
+      if (linksBody) {
+        var links = d.topLinks || [];
+        linksBody.innerHTML = links.length ? links.map(function(item){
+          var label = String(item.label || item.href || '—');
+          var href = String(item.href || '');
+          return '<tr><td><div class="client-name">' + esc(label) + '</div>'
+            + (href ? '<div class="muted-cell">' + esc(href) + '</div>' : '')
+            + '</td><td>' + Number(item.clicks || 0).toLocaleString('fr-CA') + '</td></tr>';
+        }).join('') : '<tr><td colspan="2"><div class="empty-state"><i class="fa fa-link"></i>Aucun clic enregistré</div></td></tr>';
+      }
+
+      if (recentBody) {
+        var recent = d.recentClicks || [];
+        recentBody.innerHTML = recent.length ? recent.map(function(item){
+          var date = item.created_at ? new Date(item.created_at).toLocaleString('fr-CA') : '—';
+          return '<tr>'
+            + '<td class="muted-cell">' + esc(date) + '</td>'
+            + '<td>' + esc(String(item.path || '/')) + '</td>'
+            + '<td>' + esc(String(item.zone || '—')) + '</td>'
+            + '<td><div class="client-name">' + esc(String(item.label || '—')) + '</div>'
+            + (item.href ? '<div class="muted-cell">' + esc(String(item.href)) + '</div>' : '')
+            + '</td></tr>';
+        }).join('') : '<tr><td colspan="4"><div class="empty-state"><i class="fa fa-mouse-pointer"></i>Aucun clic récent</div></td></tr>';
+        recentBody.dataset.loaded = '1';
+      }
+
+      _trafficLoaded = true;
+    } catch (e) {
+      var err = (e && e.message) ? e.message : 'Erreur réseau';
+      if (topPagesEl) topPagesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
+      if (topZonesEl) topZonesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
+      if (topCountriesEl) topCountriesEl.innerHTML = '<div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div>';
+      if (globeCardEl) globeCardEl.innerHTML = '<div class="globe-wrap"><div class="empty-state"><i class="fa fa-triangle-exclamation"></i>' + esc(err) + '</div></div>';
+      if (dailyBody) dailyBody.innerHTML = '<tr><td colspan="3" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
+      if (linksBody) linksBody.innerHTML = '<tr><td colspan="2" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
+      if (recentBody) recentBody.innerHTML = '<tr><td colspan="4" style="color:var(--red);padding:20px">' + esc(err) + '</td></tr>';
+    }
   }
 
   function setScope(scope) {
@@ -1575,6 +1877,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   if (insideEditCancel) insideEditCancel.addEventListener('click', function() { clearInsideForm(); });
   var insideRefresh = document.getElementById('btn-inside-refresh');
   if (insideRefresh) insideRefresh.addEventListener('click', function() { loadInsidePosts(true); });
+  var trafficRefresh = document.getElementById('btn-traffic-refresh');
+  if (trafficRefresh) trafficRefresh.addEventListener('click', function() { _trafficLoaded = false; loadWebTraffic(true); });
+  var trafficDays = document.getElementById('traffic-days');
+  if (trafficDays) trafficDays.addEventListener('change', function() { _trafficLoaded = false; loadWebTraffic(true); });
 
   // Textarea reply : Enter pour envoyer
   var replyInput = document.getElementById('reply-input');

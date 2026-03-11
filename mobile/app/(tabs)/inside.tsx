@@ -5,24 +5,34 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  Linking,
+  Modal,
+  Platform,
   TouchableOpacity,
   RefreshControl,
   TextInput,
   ActivityIndicator,
   Alert,
   type ViewToken,
+  type ImageSourcePropType,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { ResizeMode, Video } from 'expo-av';
+import { Audio, ResizeMode, Video } from 'expo-av';
 import type { AVPlaybackSource } from 'expo-av';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
 import { getAvatarSource } from '../../lib/avatar';
+import { API_BASE_URL, dashboardApi, insideApi, presenceApi, type InsidePostDto } from '../../lib/api';
 
 type ReactionKey = 'like' | 'fire' | 'clap';
+
+type InsideMedia =
+  | { kind: 'video'; source: AVPlaybackSource }
+  | { kind: 'image'; source: ImageSourcePropType };
 
 type InsidePost = {
   id: string;
@@ -31,7 +41,8 @@ type InsidePost = {
   createdAt: string;
   authorName: string;
   authorAvatarKey?: string;
-  media?: { type: 'video'; source: AVPlaybackSource };
+  linkUrl?: string;
+  media?: InsideMedia;
   reactions: Record<ReactionKey, number>;
 };
 
@@ -43,7 +54,7 @@ const DEMO_POSTS: InsidePost[] = [
       "Cette publication annonce notre vidéo de préparation. Dans Inside, vous retrouverez des posts officiels avec des images, des vidéos, des sondages et des articles pédagogiques (contenus officiels, simples et actionnables).",
     createdAt: '2026-03-03T10:00:00Z',
     authorName: 'Admin CAPI',
-    media: { type: 'video', source: require('../../assets/videos/preparation-depart.mp4') },
+    media: { kind: 'video', source: require('../../assets/videos/preparation-depart.mp4') },
     reactions: { like: 12, fire: 4, clap: 7 },
   },
   {
@@ -53,10 +64,19 @@ const DEMO_POSTS: InsidePost[] = [
       "Cette publication annonce notre vidéo d'intégration (logement, démarches, premiers jours). Les contenus Inside seront des posts officiels : images, vidéos, sondages, et articles pédagogiques validés.",
     createdAt: '2026-03-01T14:30:00Z',
     authorName: 'Admin CAPI',
-    media: { type: 'video', source: require('../../assets/videos/integration-canada.mp4') },
+    media: { kind: 'video', source: require('../../assets/videos/integration-canada.mp4') },
     reactions: { like: 9, fire: 2, clap: 5 },
   },
 ];
+
+const OFFICIAL_LINKS: Array<{ label: string; url: string }> = [
+  { label: 'Entrée Express (IRCC)', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express.html' },
+  { label: 'Permis de travail (IRCC)', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/travailler-canada.html' },
+  { label: 'Étudier au Canada (IRCC)', url: 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada.html' },
+  { label: 'Immigration Canada (IRCC)', url: 'https://www.canada.ca/fr/services/immigration-citoyennete.html' },
+];
+
+const MESSAGES_LAST_SEEN_KEY = 'messages:lastSeenAt';
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -64,21 +84,27 @@ function formatDate(iso: string): string {
 }
 
 export default function InsideScreen() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const router = useRouter();
-  const isAdmin = user?.role === 'admin';
+  const isPro = user?.account_type === 'pro';
+  const isAdmin = user?.role === 'admin' && !isPro;
+  const insets = useSafeAreaInsets();
 
   const [posts, setPosts] = useState<InsidePost[]>(DEMO_POSTS);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activePostId, setActivePostId] = useState<string | null>(DEMO_POSTS[0]?.id ?? null);
   const [unmuted, setUnmuted] = useState<Record<string, boolean>>({});
+  const [officialOpen, setOfficialOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [connectedCount, setConnectedCount] = useState<number | null>(null);
+  const [meOnline, setMeOnline] = useState<boolean | null>(null);
 
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 70 });
   const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
     const first = viewableItems.find(v => v.isViewable);
     const item = first?.item as InsidePost | undefined;
-    if (item?.media?.type === 'video') {
+    if (item?.media?.kind === 'video') {
       setActivePostId(item.id);
     } else {
       setActivePostId(null);
@@ -88,15 +114,107 @@ export default function InsideScreen() {
   // Composer (admin)
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
   const [publishing, setPublishing] = useState(false);
 
   const canPublish = useMemo(() => title.trim().length >= 3 && content.trim().length >= 10, [title, content]);
 
+  const normalizeMediaUrl = (raw?: string | null): string | null => {
+    const url = String(raw ?? '').trim();
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `${API_BASE_URL}${url}`;
+    return `${API_BASE_URL}/${url}`;
+  };
+
+  const toMedia = (p: InsidePostDto): InsideMedia | undefined => {
+    const mediaUrl = normalizeMediaUrl(p.mediaUrl);
+    if (!mediaUrl) return undefined;
+    const t = String(p.mediaType ?? '').toLowerCase().trim();
+    if (t.startsWith('video') || t.includes('mp4') || mediaUrl.endsWith('.mp4')) {
+      return { kind: 'video', source: { uri: mediaUrl } };
+    }
+    if (t.startsWith('image') || t.includes('png') || t.includes('jpg') || t.includes('jpeg')) {
+      return { kind: 'image', source: { uri: mediaUrl } };
+    }
+    return { kind: 'image', source: { uri: mediaUrl } };
+  };
+
+  const mapApiPost = (p: InsidePostDto): InsidePost => ({
+    id: String(p.id),
+    title: String(p.title ?? ''),
+    content: String(p.content ?? ''),
+    createdAt: String(p.createdAt ?? new Date().toISOString()),
+    authorName: String(p.authorName ?? 'Admin'),
+    authorAvatarKey: p.authorAvatarKey ? String(p.authorAvatarKey) : undefined,
+    linkUrl: String((p as any)?.linkUrl ?? ''),
+    media: toMedia(p),
+    reactions: { like: 0, fire: 0, clap: 0 },
+  });
+
+  const normalizeLink = (raw?: string | null): string | null => {
+    const v = String(raw ?? '').trim();
+    if (!v) return null;
+    if (v.startsWith('http://') || v.startsWith('https://')) return v;
+    if (v.startsWith('www.')) return `https://${v}`;
+    // Si l'utilisateur colle un domaine nu, on tente https
+    if (v.includes('.') && !v.includes(' ')) return `https://${v}`;
+    return null;
+  };
+
+  const refreshUnread = async () => {
+    if (!token) {
+      setUnreadCount(0);
+      return;
+    }
+    const [messagesRes, lastSeenRaw] = await Promise.all([
+      dashboardApi.getMessages(token),
+      AsyncStorage.getItem(MESSAGES_LAST_SEEN_KEY),
+    ]);
+
+    const lastSeenAt = lastSeenRaw ? new Date(lastSeenRaw).getTime() : 0;
+    const messages = messagesRes.data?.messages ?? [];
+    const unread = Array.isArray(messages)
+      ? messages.filter((m: any) => {
+          const created = new Date(m?.created_at ?? m?.createdAt ?? 0).getTime();
+          return Number.isFinite(created) && created > lastSeenAt;
+        }).length
+      : 0;
+    setUnreadCount(unread);
+  };
+
   const load = async () => {
     setLoading(true);
     try {
-      // MVP: feed local (sera branché à une API ensuite)
-      setPosts(DEMO_POSTS);
+      if (!token) {
+        setPosts(DEMO_POSTS);
+        setActivePostId(DEMO_POSTS[0]?.id ?? null);
+        setUnreadCount(0);
+        setConnectedCount(null);
+        setMeOnline(null);
+        return;
+      }
+
+      if (Platform.OS === 'ios') {
+        Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
+      }
+
+      const res = await insideApi.list(token, { includeHidden: isAdmin });
+      const apiPosts = res.data?.posts ?? [];
+      const mapped = Array.isArray(apiPosts) ? apiPosts.map(mapApiPost) : [];
+
+      setPosts(mapped.length ? mapped : DEMO_POSTS);
+      const firstVideo = mapped.find(p => p.media?.kind === 'video')?.id ?? DEMO_POSTS[0]?.id ?? null;
+      setActivePostId(firstVideo);
+      await refreshUnread();
+
+      // Presence (best-effort)
+      await presenceApi.ping(token);
+      const pres = await presenceApi.status(token);
+      if (!pres.error && pres.data) {
+        setConnectedCount(Number.isFinite(pres.data.connected) ? pres.data.connected : 0);
+        setMeOnline(!!pres.data.meOnline);
+      }
     } finally {
       setLoading(false);
     }
@@ -104,7 +222,34 @@ export default function InsideScreen() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        await presenceApi.ping(token);
+        const res = await presenceApi.status(token);
+        if (cancelled) return;
+        if (!res.error && res.data) {
+          setConnectedCount(Number.isFinite(res.data.connected) ? res.data.connected : 0);
+          setMeOnline(!!res.data.meOnline);
+        }
+      } catch {
+        // best-effort
+      }
+    };
+
+    // ping immédiat + polling léger
+    tick();
+    const id = setInterval(tick, 25_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [token]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -128,21 +273,56 @@ export default function InsideScreen() {
 
     setPublishing(true);
     try {
-      const newPost: InsidePost = {
-        id: String(Date.now()),
+      if (!token) {
+        Alert.alert('Non connecté', 'Connectez-vous pour publier.');
+        return;
+      }
+
+      const payload = {
         title: title.trim(),
         content: content.trim(),
-        createdAt: new Date().toISOString(),
-        authorName: user?.name ?? 'Admin',
-        reactions: { like: 0, fire: 0, clap: 0 },
+        linkUrl: normalizeLink(linkUrl) ?? '',
       };
-      setPosts(prev => [newPost, ...prev]);
+      const res = await insideApi.publish(token, payload);
+      if (res.error) {
+        Alert.alert('Erreur', res.error);
+        return;
+      }
+
+      if (res.data?.post) {
+        const mapped = mapApiPost(res.data.post);
+        setPosts(prev => [mapped, ...prev]);
+      } else {
+        const newPost: InsidePost = {
+          id: String(Date.now()),
+          title: payload.title,
+          content: payload.content,
+          linkUrl: payload.linkUrl || undefined,
+          createdAt: new Date().toISOString(),
+          authorName: user?.name ?? 'Admin',
+          reactions: { like: 0, fire: 0, clap: 0 },
+        };
+        setPosts(prev => [newPost, ...prev]);
+      }
+
       setTitle('');
       setContent('');
+      setLinkUrl('');
       Alert.alert('Publié', 'Votre publication est visible dans Inside.');
     } finally {
       setPublishing(false);
     }
+  };
+
+  const openMessages = async () => {
+    const now = new Date().toISOString();
+    AsyncStorage.setItem(MESSAGES_LAST_SEEN_KEY, now).catch(() => {});
+    setUnreadCount(0);
+    if (isPro) {
+      router.push('/(tabs)/dashboard' as any);
+      return;
+    }
+    router.push({ pathname: '/(tabs)/messagerie', params: { prefill: '1' } } as any);
   };
 
   return (
@@ -150,33 +330,92 @@ export default function InsideScreen() {
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Inside</Text>
-          <Text style={styles.subtitle}>Communauté & mises à jour</Text>
+          <Text style={styles.subtitle}>Communauté Capitune</Text>
+          <View style={styles.presenceRow}>
+            <View style={[styles.presenceDot, { backgroundColor: (meOnline ?? !!token) ? Colors.success : Colors.textMuted }]} />
+            <Text style={styles.presenceText}>
+              {(meOnline ?? !!token) ? 'En ligne' : 'Hors ligne'}
+              {typeof connectedCount === 'number' ? ` • ${connectedCount} connectés` : ''}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.headerActions}>
           <TouchableOpacity
-            style={styles.contactBtn}
+            style={styles.badge}
             activeOpacity={0.85}
-            onPress={() => router.push('/(tabs)/messagerie' as any)}
-            accessibilityLabel="Ouvrir la messagerie conseiller"
+            onPress={() => setOfficialOpen(true)}
+            accessibilityLabel="Ouvrir les liens officiels"
           >
-            <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.text} />
+            <Ionicons name="newspaper-outline" size={14} color={Colors.orange} />
+            <Text style={styles.badgeText}>Officiel</Text>
           </TouchableOpacity>
 
-          <View style={styles.meAvatar}>
+          <TouchableOpacity
+            style={styles.contactBtn}
+            activeOpacity={0.85}
+            onPress={openMessages}
+            accessibilityLabel="Ouvrir la messagerie"
+          >
+            <Ionicons name="notifications-outline" size={18} color={Colors.text} />
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.meAvatar}
+            activeOpacity={0.85}
+            onPress={() => router.push('/(tabs)/profil' as any)}
+            accessibilityLabel="Ouvrir mon profil"
+          >
             {getAvatarSource(user?.avatar) ? (
               <Image source={getAvatarSource(user?.avatar) as any} style={styles.meAvatarImg} />
             ) : (
               <Text style={styles.meAvatarInitial}>{(user?.name ?? 'U')[0].toUpperCase()}</Text>
             )}
-          </View>
-        </View>
-
-        <View style={styles.badge}>
-          <Ionicons name="newspaper-outline" size={14} color={Colors.orange} />
-          <Text style={styles.badgeText}>Officiel</Text>
+          </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        visible={officialOpen}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setOfficialOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Officiel — IRCC</Text>
+              <TouchableOpacity
+                style={styles.modalClose}
+                activeOpacity={0.85}
+                onPress={() => setOfficialOpen(false)}
+                accessibilityLabel="Fermer"
+              >
+                <Ionicons name="close" size={18} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {OFFICIAL_LINKS.map((l) => (
+              <TouchableOpacity
+                key={l.url}
+                style={styles.linkRow}
+                activeOpacity={0.85}
+                onPress={() => Linking.openURL(l.url)}
+              >
+                <Ionicons name="link-outline" size={16} color={Colors.orange} />
+                <Text style={styles.linkText}>{l.label}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <Text style={styles.modalHint}>Toujours vérifier sur le site officiel.</Text>
+          </View>
+        </View>
+      </Modal>
 
       {isAdmin && (
         <View style={styles.composerCard}>
@@ -197,6 +436,17 @@ export default function InsideScreen() {
             placeholderTextColor={Colors.textMuted}
             multiline
             maxLength={2000}
+          />
+          <TextInput
+            style={styles.input}
+            value={linkUrl}
+            onChangeText={setLinkUrl}
+            placeholder="Lien (optionnel) — ex: https://..."
+            placeholderTextColor={Colors.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            maxLength={500}
           />
           <TouchableOpacity
             style={[styles.publishBtn, (!canPublish || publishing) && styles.publishBtnDisabled]}
@@ -224,28 +474,45 @@ export default function InsideScreen() {
           keyExtractor={(p) => p.id}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
-          ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
           viewabilityConfig={viewabilityConfig.current}
           onViewableItemsChanged={onViewableItemsChanged.current}
           renderItem={({ item }) => (
             <View style={styles.postCard}>
-              <View style={styles.postTop}>
-                <View style={styles.avatar}>
-                  {getAvatarSource(item.authorAvatarKey) ? (
-                    <Image source={getAvatarSource(item.authorAvatarKey) as any} style={styles.avatarImg} />
-                  ) : (
-                    <Text style={styles.avatarInitial}>{(item.authorName?.[0] ?? 'A').toUpperCase()}</Text>
-                  )}
+              <View style={styles.postInner}>
+                <View style={styles.postTop}>
+                  <View style={styles.avatar}>
+                    {getAvatarSource(item.authorAvatarKey) ? (
+                      <Image source={getAvatarSource(item.authorAvatarKey) as any} style={styles.avatarImg} />
+                    ) : (
+                      <Text style={styles.avatarInitial}>{(item.authorName?.[0] ?? 'A').toUpperCase()}</Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.author}>{item.authorName}</Text>
+                    <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.author}>{item.authorName}</Text>
-                  <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
-                </View>
+
+                <Text style={styles.postTitle}>{item.title}</Text>
               </View>
 
-              <Text style={styles.postTitle}>{item.title}</Text>
+              <View style={styles.postInnerContent}>
+                <Text style={styles.postContent}>{item.content}</Text>
 
-              {item.media?.type === 'video' && (
+                {normalizeLink(item.linkUrl) && (
+                  <TouchableOpacity
+                    style={styles.linkBtn}
+                    activeOpacity={0.85}
+                    onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
+                    accessibilityLabel="Ouvrir le lien de la publication"
+                  >
+                    <Ionicons name="link" size={16} color={Colors.orange} />
+                    <Text style={styles.linkBtnText}>Ouvrir le lien</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {item.media?.kind === 'video' && (
                 <View style={styles.videoWrap}>
                   <Video
                     source={item.media.source}
@@ -271,27 +538,26 @@ export default function InsideScreen() {
                 </View>
               )}
 
-              <Text style={styles.postContent}>{item.content}</Text>
+              {item.media?.kind === 'image' && (
+                <Image source={item.media.source} style={styles.image} resizeMode="cover" />
+              )}
 
-              <View style={styles.reactionsRow}>
-                <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'like')}>
-                  <Text style={styles.reactEmoji}>👍</Text>
-                  <Text style={styles.reactCount}>{item.reactions.like ?? 0}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'fire')}>
-                  <Text style={styles.reactEmoji}>🔥</Text>
-                  <Text style={styles.reactCount}>{item.reactions.fire ?? 0}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'clap')}>
-                  <Text style={styles.reactEmoji}>👏</Text>
-                  <Text style={styles.reactCount}>{item.reactions.clap ?? 0}</Text>
-                </TouchableOpacity>
+              <View style={styles.postInnerActions}>
+                <View style={styles.reactionsRow}>
+                  <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'like')}>
+                    <Text style={styles.reactEmoji}>👍</Text>
+                    <Text style={styles.reactCount}>{item.reactions.like ?? 0}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'fire')}>
+                    <Text style={styles.reactEmoji}>🔥</Text>
+                    <Text style={styles.reactCount}>{item.reactions.fire ?? 0}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.reactBtn} activeOpacity={0.85} onPress={() => reactToPost(item.id, 'clap')}>
+                    <Text style={styles.reactEmoji}>👏</Text>
+                    <Text style={styles.reactCount}>{item.reactions.clap ?? 0}</Text>
+                  </TouchableOpacity>
 
-                <View style={{ flex: 1 }} />
-
-                <View style={styles.noChatHint}>
-                  <Ionicons name="lock-closed-outline" size={14} color={Colors.textMuted} />
-                  <Text style={styles.noChatText}>Réactions seulement</Text>
+                  <View style={{ flex: 1 }} />
                 </View>
               </View>
             </View>
@@ -305,6 +571,21 @@ export default function InsideScreen() {
           }
         />
       )}
+
+      {/* Bulle messagerie (conversation Pro) */}
+      <TouchableOpacity
+        style={[styles.msgFab, { bottom: Math.max(6, insets.bottom + 36) }]}
+        activeOpacity={0.9}
+        onPress={openMessages}
+        accessibilityLabel="Ouvrir la messagerie avec mon conseiller"
+      >
+        <Ionicons name="chatbubble-ellipses" size={22} color={Colors.surface} />
+        {unreadCount > 0 && (
+          <View style={styles.msgFabBadge}>
+            <Text style={styles.msgFabBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -313,8 +594,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: Colors.bgLight },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
+    alignItems: 'center',
+    paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 10,
     gap: 12,
@@ -322,19 +603,22 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   title: { fontSize: 24, fontWeight: '800', color: Colors.text },
   subtitle: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
+  presenceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  presenceDot: { width: 8, height: 8, borderRadius: 4 },
+  presenceText: { fontSize: 12, color: Colors.textMuted, fontWeight: '700' },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.orange + '18',
+    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.orange + '35',
+    borderColor: Colors.border,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
     marginTop: 4,
   },
-  badgeText: { fontSize: 12, fontWeight: '700', color: Colors.orange },
+  badgeText: { fontSize: 12, fontWeight: '800', color: Colors.text },
 
   meAvatar: {
     width: 36,
@@ -360,6 +644,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  unreadBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.bgLight,
+  },
+  unreadBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900' },
 
   composerCard: {
     marginHorizontal: 20,
@@ -396,15 +695,16 @@ const styles = StyleSheet.create({
   publishBtnDisabled: { opacity: 0.45 },
   publishBtnText: { color: Colors.white, fontSize: 14, fontWeight: '800' },
 
-  list: { padding: 16, paddingBottom: 24 },
+  list: { paddingTop: 0, paddingBottom: 30 },
   postCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...UI.cardShadow,
+    paddingVertical: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
+  postInner: { paddingHorizontal: 16, paddingTop: 14 },
+  postInnerContent: { paddingHorizontal: 16, paddingBottom: 12 },
+  postInnerActions: { paddingHorizontal: 16, paddingBottom: 14 },
   postTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   avatar: {
     width: 40,
@@ -420,14 +720,15 @@ const styles = StyleSheet.create({
   date: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   postTitle: { fontSize: 15, fontWeight: '800', color: Colors.text, marginBottom: 8 },
   videoWrap: {
-    backgroundColor: Colors.offWhite,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
+    backgroundColor: '#000',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    borderRadius: 0,
     overflow: 'hidden',
     marginBottom: 10,
   },
-  video: { width: '100%', height: 220 },
+  video: { width: '100%', height: 240 },
+  image: { width: '100%', height: 240, marginBottom: 10, backgroundColor: '#000' },
   videoMuteBtn: {
     position: 'absolute',
     right: 10,
@@ -442,6 +743,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   postContent: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
+
+  linkBtn: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.offWhite,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  linkBtnText: { fontSize: 12, fontWeight: '800', color: Colors.text },
 
   reactionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
   reactBtn: {
@@ -458,10 +774,66 @@ const styles = StyleSheet.create({
   reactEmoji: { fontSize: 14 },
   reactCount: { fontSize: 12, fontWeight: '800', color: Colors.text },
 
-  noChatHint: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  noChatText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
+  msgFab: {
+    position: 'absolute',
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...UI.cardShadow,
+  },
+  msgFabBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: Colors.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.orange,
+  },
+  msgFabBadgeText: { color: Colors.surface, fontSize: 10, fontWeight: '900' },
 
   emptyBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 10 },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
   emptySub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalCard: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  modalTitle: { fontSize: 16, fontWeight: '900', color: Colors.text },
+  modalClose: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: Colors.bgLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  linkText: { flex: 1, fontSize: 13, color: Colors.text, fontWeight: '700' },
+  modalHint: { marginTop: 10, fontSize: 11, color: Colors.textMuted },
 });

@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +30,9 @@ const DEMO_DOCS: Document[] = [
 ];
 
 export default function DocumentsScreen() {
-  const { token } = useAuth();
+  const router = useRouter();
+  const { user, token } = useAuth();
+  const isPro = user?.account_type === 'pro';
   const [docs, setDocs] = useState<Document[]>(DEMO_DOCS); // affiché immédiatement
   const [loading, setLoading] = useState(false); // pas de spinner bloquant
   const [refreshing, setRefreshing] = useState(false);
@@ -66,6 +69,35 @@ export default function DocumentsScreen() {
     rejected: docs.filter(d => d.status === 'rejected').length,
     missing: docs.filter(d => d.status === 'missing').length,
   };
+
+  if (isPro) {
+    return (
+      <SafeAreaView style={styles.root} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Documents</Text>
+        </View>
+
+        <View style={styles.proInfoBox}>
+          <View style={styles.proInfoIcon}>
+            <Ionicons name="information-circle" size={18} color={Colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.proInfoTitle}>Espace Pro</Text>
+            <Text style={styles.proInfoText}>
+              Pour consulter les documents, ouvrez un client depuis l’inbox.
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.proInfoBtn}
+            onPress={() => router.push('/(tabs)/dashboard' as any)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.proInfoBtnText}>Inbox</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -181,4 +213,35 @@ const styles = StyleSheet.create({
   docStatus: { alignItems: 'center', gap: 2 },
   docStatusText: { fontSize: 10, fontWeight: '700' },
   empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 60, fontSize: 14 },
+  proInfoBox: {
+    marginTop: 12,
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
+  },
+  proInfoIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary + '14',
+    borderWidth: 1,
+    borderColor: Colors.primary + '35',
+  },
+  proInfoTitle: { fontSize: 13, fontWeight: '900', color: Colors.text },
+  proInfoText: { marginTop: 2, fontSize: 12, color: Colors.textMuted },
+  proInfoBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: Colors.primary,
+  },
+  proInfoBtnText: { color: '#fff', fontWeight: '800', fontSize: 12 },
 });

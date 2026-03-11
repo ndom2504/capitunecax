@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, FlatList, Dimensions, Image,
 } from 'react-native';
@@ -12,7 +12,7 @@ import { useCapiSession } from '../../context/CapiContext';
 import type { CapiAdvisor, CapiMotif } from '../../lib/api';
 import { buildAutonomieProject } from '../../lib/autonomie-steps';
 import { useAuth } from '../../context/AuthContext';
-import { teamApi, type TeamMember } from '../../lib/api';
+import { autonomiePaymentApi, teamApi, type TeamMember } from '../../lib/api';
 import { getAvatarSource } from '../../lib/avatar';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -122,6 +122,11 @@ export default function CapiConseillerScreen() {
   const { session, updateSession } = useCapiSession();
   const { token, user } = useAuth();
   const motif = session.motif ?? 'visiter';
+
+  const [autonomiePriceLabel, setAutonomiePriceLabel] = useState<string | null>(null);
+
+  const listRef = useRef<FlatList<CapiAdvisor> | null>(null);
+
   const [mode, setMode] = useState<Mode>('choix');
   const [loading, setLoading] = useState(false);
   const [advisors, setAdvisors] = useState<CapiAdvisor[]>([]);
@@ -130,8 +135,6 @@ export default function CapiConseillerScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const swipeData = filterMode === 'recommandes' ? advisors.slice(0, 5) : advisors;
-  const cardW = Math.min(SCREEN_W - 40, 440);
-  const cardGap = 12;
 
   const loadAdvisors = async () => {
     setLoading(true);
@@ -171,10 +174,40 @@ export default function CapiConseillerScreen() {
   };
 
   useEffect(() => {
+    let alive = true;
+    setAutonomiePriceLabel(null);
+    autonomiePaymentApi
+      .getPrice(motif)
+      .then((res) => {
+        if (!alive) return;
+        const unit = res.data?.unit_amount;
+        const cur = String(res.data?.currency ?? 'CAD').toUpperCase();
+        if (res.status >= 200 && res.status < 300 && typeof unit === 'number' && unit > 0) {
+          const amount = unit / 100;
+          try {
+            setAutonomiePriceLabel(amount.toLocaleString('fr-CA', { style: 'currency', currency: cur }));
+          } catch {
+            setAutonomiePriceLabel(`${amount.toFixed(2)} ${cur}`);
+          }
+          return;
+        }
+        setAutonomiePriceLabel(null);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setAutonomiePriceLabel(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [motif]);
+
+  useEffect(() => {
     if (!swipeData.length) return;
     if (!selected || !swipeData.some((a) => a.id === selected)) {
       setActiveIndex(0);
       setSelected(swipeData[0].id);
+      listRef.current?.scrollToOffset?.({ offset: 0, animated: false });
     }
   }, [filterMode, advisors]);
 
@@ -250,6 +283,11 @@ export default function CapiConseillerScreen() {
           <Text style={styles.choixDesc}>
             Gérez votre demande vous-même grâce à un plan d'action personnalisé, des ressources officielles et un suivi de progression.
           </Text>
+          {autonomiePriceLabel && (
+            <Text style={styles.autonomiePriceText}>
+              Paiement unique : {autonomiePriceLabel}
+            </Text>
+          )}
           <View style={styles.choixPills}>
             <View style={[styles.pill, { backgroundColor: Colors.primary + '18' }]}>
               <Text style={[styles.pillText, { color: Colors.primary }]}>✓ Plan étape par étape</Text>
@@ -312,124 +350,165 @@ export default function CapiConseillerScreen() {
           </View>
         ) : (
           <FlatList
+            ref={(r) => {
+              listRef.current = r;
+            }}
+            style={{ flex: 1 }}
             data={swipeData}
             keyExtractor={(a) => a.id}
             horizontal
             showsHorizontalScrollIndicator={false}
+            pagingEnabled
             decelerationRate="fast"
-            snapToInterval={cardW + cardGap}
+            snapToInterval={SCREEN_W}
             snapToAlignment="start"
             disableIntervalMomentum
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            ItemSeparatorComponent={() => <View style={{ width: cardGap }} />}
             onMomentumScrollEnd={(e) => {
               const x = e.nativeEvent.contentOffset.x;
-              const idx = Math.round(x / (cardW + cardGap));
+              const idx = Math.round(x / SCREEN_W);
               const nextIndex = Math.max(0, Math.min(swipeData.length - 1, idx));
               setActiveIndex(nextIndex);
               setSelected(swipeData[nextIndex]?.id ?? null);
             }}
             renderItem={({ item: adv }) => {
-              const isSelected = selected === adv.id;
               const tags = adv.specialites ?? [];
               const shownTags = tags.slice(0, 3);
               const extraTags = Math.max(0, tags.length - shownTags.length);
               const src = getAvatarSource(adv.avatar);
 
+              const initials = String(adv.nom ?? 'C')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join('')
+                .toUpperCase();
+
+              const handlePrev = () => {
+                if (activeIndex <= 0) return;
+                const nextIndex = activeIndex - 1;
+                setActiveIndex(nextIndex);
+                setSelected(swipeData[nextIndex]?.id ?? null);
+                (listRef.current as any)?.scrollToIndex?.({ index: nextIndex, animated: true });
+              };
+
+              const handleNext = () => {
+                if (activeIndex >= swipeData.length - 1) return;
+                const nextIndex = activeIndex + 1;
+                setActiveIndex(nextIndex);
+                setSelected(swipeData[nextIndex]?.id ?? null);
+                (listRef.current as any)?.scrollToIndex?.({ index: nextIndex, animated: true });
+              };
+
               return (
-                <TouchableOpacity
-                  style={[styles.card, { width: cardW }, isSelected && styles.cardSelected]}
-                  onPress={() => setSelected(adv.id)}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.scoreCorner}>
-                    <Text style={styles.scoreNum}>{adv.score}%</Text>
-                    <Text style={styles.scoreLabel}>match</Text>
-                  </View>
-
-                  <View style={styles.advisorTop}>
-                    <View style={styles.avatarCircle}>
-                      {src ? (
-                        <Image source={src} style={styles.avatarImg} />
-                      ) : (
-                        <Text style={styles.avatarInitial}>{adv.nom[0]}</Text>
-                      )}
+                <View style={[styles.story, { width: SCREEN_W }]}>
+                  {src ? (
+                    <Image source={src} style={styles.storyBg} />
+                  ) : (
+                    <View style={styles.storyBgFallback}>
+                      <Text style={styles.storyBgInitial}>{initials}</Text>
                     </View>
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={styles.advisorName} numberOfLines={1}>{adv.nom}</Text>
-                      <Text style={styles.advisorTitle} numberOfLines={1}>{adv.titre}</Text>
-                    </View>
-                    {isSelected && (
-                      <View style={styles.checkCircle}>
-                        <Ionicons name="checkmark" size={14} color="#fff" />
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.matchBar}>
-                    <View style={[styles.matchFill, { width: `${adv.score}%` }]} />
-                  </View>
-
-                  {!!adv.bio && (
-                    <Text style={styles.bio} numberOfLines={3} ellipsizeMode="tail">{adv.bio}</Text>
                   )}
 
-                  <View style={styles.metaGrid}>
-                    {!!adv.province && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
-                        <Text style={styles.metaText}>{adv.province}</Text>
-                      </View>
-                    )}
-                    {!!adv.experience && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="time-outline" size={13} color={Colors.textMuted} />
-                        <Text style={styles.metaText}>{adv.experience}</Text>
-                      </View>
-                    )}
-                    {typeof adv.nbClients === 'number' && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="people-outline" size={13} color={Colors.textMuted} />
-                        <Text style={styles.metaText}>{adv.nbClients} clients</Text>
-                      </View>
-                    )}
-                    {typeof adv.tarifConsultation === 'number' && (
-                      <View style={styles.metaItem}>
-                        <Ionicons name="cash-outline" size={13} color={Colors.textMuted} />
-                        <Text style={styles.metaText}>{adv.tarifConsultation} {adv.deviseConsultation}/h</Text>
-                      </View>
-                    )}
-                  </View>
+                  <View style={styles.storyShade} pointerEvents="none" />
 
-                  {(shownTags.length > 0 || extraTags > 0) && (
-                    <View style={styles.tags}>
-                      {shownTags.map((s, i) => (
-                        <View key={`${adv.id}-tag-${i}`} style={styles.tag}>
-                          <Text style={styles.tagText} numberOfLines={1}>{s}</Text>
-                        </View>
+                  <View style={styles.storyTop}>
+                    <View style={styles.storyProgress}>
+                      {swipeData.map((a, i) => (
+                        <View
+                          key={a.id}
+                          style={[styles.storyBar, i === activeIndex && styles.storyBarActive]}
+                        />
                       ))}
-                      {extraTags > 0 && (
-                        <View style={styles.tag}>
-                          <Text style={styles.tagText}>+{extraTags}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.storyContent}>
+                    <View style={styles.storyHeaderRow}>
+                      <View style={styles.storyAvatar}>
+                        {src ? (
+                          <Image source={src} style={styles.storyAvatarImg} />
+                        ) : (
+                          <View style={styles.storyAvatarFallback}>
+                            <Text style={styles.storyAvatarInitial}>{initials}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.storyName} numberOfLines={1}>{adv.nom}</Text>
+                        <Text style={styles.storyTitle} numberOfLines={1}>{adv.titre}</Text>
+                      </View>
+                      <View style={styles.storyMatchBadge}>
+                        <Text style={styles.storyMatchNum}>{adv.score}%</Text>
+                        <Text style={styles.storyMatchLabel}>match</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.storyMetaRow}>
+                      {!!adv.province && (
+                        <View style={styles.storyMetaItem}>
+                          <Ionicons name="location-outline" size={13} color={Colors.surface} />
+                          <Text style={styles.storyMetaText} numberOfLines={1}>{adv.province}</Text>
+                        </View>
+                      )}
+                      {!!adv.experience && (
+                        <View style={styles.storyMetaItem}>
+                          <Ionicons name="time-outline" size={13} color={Colors.surface} />
+                          <Text style={styles.storyMetaText}>{adv.experience}</Text>
                         </View>
                       )}
                     </View>
-                  )}
 
-                  {!!adv.langues?.length && (
-                    <View style={styles.langues}>
-                      <Ionicons name="chatbubble-outline" size={12} color={Colors.textMuted} />
-                      <Text style={styles.languesText} numberOfLines={1}>{adv.langues.join(' · ')}</Text>
-                    </View>
-                  )}
+                    {!!adv.bio && (
+                      <Text style={styles.storyBio} numberOfLines={4}>{adv.bio}</Text>
+                    )}
 
-                  {!!adv.disponibilite && (
-                    <View style={styles.dispo}>
-                      <View style={styles.dispoDot} />
-                      <Text style={styles.dispoText} numberOfLines={1}>{adv.disponibilite}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                    {(shownTags.length > 0 || extraTags > 0) && (
+                      <View style={styles.storyTags}>
+                        {shownTags.map((s, i) => (
+                          <View key={`${adv.id}-tag-${i}`} style={styles.storyTag}>
+                            <Text style={styles.storyTagText} numberOfLines={1}>{s}</Text>
+                          </View>
+                        ))}
+                        {extraTags > 0 && (
+                          <View style={styles.storyTag}>
+                            <Text style={styles.storyTagText}>+{extraTags}</Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+
+                    {!!adv.langues?.length && (
+                      <View style={styles.storyLangues}>
+                        <Ionicons name="chatbubble-outline" size={12} color={Colors.surface} />
+                        <Text style={styles.storyLanguesText} numberOfLines={1}>{adv.langues.join(' · ')}</Text>
+                      </View>
+                    )}
+
+                    {!!adv.disponibilite && (
+                      <View style={styles.storyDispo}>
+                        <View style={styles.storyDispoDot} />
+                        <Text style={styles.storyDispoText} numberOfLines={1}>{adv.disponibilite}</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.storyNav} pointerEvents="box-none">
+                    <TouchableOpacity
+                      style={styles.storyNavLeft}
+                      activeOpacity={1}
+                      onPress={handlePrev}
+                      accessibilityLabel="Profil précédent"
+                    />
+                    <TouchableOpacity
+                      style={styles.storyNavRight}
+                      activeOpacity={1}
+                      onPress={handleNext}
+                      accessibilityLabel="Profil suivant"
+                    />
+                  </View>
+                </View>
               );
             }}
           />
@@ -524,6 +603,7 @@ const styles = StyleSheet.create({
   choixIcon: { fontSize: 26 },
   choixTitle: { fontSize: 17, fontWeight: '800', color: Colors.orange, marginBottom: 8 },
   choixDesc: { fontSize: 14, color: Colors.textMuted, lineHeight: 21, marginBottom: 14 },
+  autonomiePriceText: { fontSize: 13, fontWeight: '800', color: Colors.primary, marginTop: -6, marginBottom: 12 },
   choixPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
   pill: { borderRadius: 20, paddingVertical: 4, paddingHorizontal: 10 },
   pillText: { fontSize: 12, fontWeight: '600' },
@@ -538,4 +618,59 @@ const styles = StyleSheet.create({
   filterBtnActive: { borderColor: Colors.orange },
   filterText: { fontSize: 13, fontWeight: '800', color: Colors.textMuted },
   filterTextActive: { color: Colors.orange },
+
+  // Mode story (même UI que "Trouver mon conseiller")
+  story: { flex: 1, backgroundColor: Colors.primaryDark },
+  storyBg: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, resizeMode: 'cover' },
+  storyBgFallback: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: Colors.primary },
+  storyBgInitial: { color: Colors.surface, fontSize: 64, fontWeight: '900', alignSelf: 'center', marginTop: 120 },
+  storyShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: Colors.primaryDark + 'B3' },
+
+  storyTop: { paddingTop: 8, paddingHorizontal: 10 },
+  storyProgress: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  storyBar: { flex: 1, height: 3, borderRadius: 3, backgroundColor: Colors.surface + '33' },
+  storyBarActive: { backgroundColor: Colors.orange },
+
+  storyContent: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 18,
+    paddingTop: 14,
+    gap: 10,
+  },
+  storyHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  storyAvatar: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: Colors.offWhite },
+  storyAvatarImg: { width: '100%', height: '100%' },
+  storyAvatarFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primary },
+  storyAvatarInitial: { fontSize: 15, fontWeight: '900', color: Colors.white },
+
+  storyName: { fontSize: 16, fontWeight: '900', color: Colors.surface },
+  storyTitle: { fontSize: 12, color: Colors.surface + 'CC', marginTop: 2, fontWeight: '700' },
+
+  storyMatchBadge: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 6, backgroundColor: Colors.orange, borderRadius: 14, ...UI.cardShadow },
+  storyMatchNum: { fontSize: 12, fontWeight: '900', color: Colors.surface },
+  storyMatchLabel: { fontSize: 9, fontWeight: '900', color: Colors.surface + 'E6', marginTop: 1 },
+
+  storyMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+  storyMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '75%' },
+  storyMetaText: { fontSize: 12, color: Colors.surface + 'CC', fontWeight: '700' },
+  storyBio: { fontSize: 13, color: Colors.surface, lineHeight: 19, fontWeight: '600' },
+
+  storyTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  storyTag: { backgroundColor: Colors.surface + '22', borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 },
+  storyTagText: { fontSize: 11, color: Colors.surface, fontWeight: '700', maxWidth: 220 },
+
+  storyLangues: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  storyLanguesText: { fontSize: 12, color: Colors.surface + 'CC', fontWeight: '700' },
+
+  storyDispo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  storyDispoDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: Colors.success },
+  storyDispoText: { fontSize: 12, color: Colors.success, fontWeight: '800' },
+
+  storyNav: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 220, flexDirection: 'row' },
+  storyNavLeft: { flex: 1 },
+  storyNavRight: { flex: 1 },
 });

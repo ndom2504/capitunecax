@@ -83,7 +83,19 @@ export const GET: APIRoute = async ({ locals, params, request }) => {
     // HEAD support (pratique pour certains clients)
     if (request.method === 'HEAD') return new Response(null, { status: 200, headers });
 
-    return new Response(bytes, { status: 200, headers });
+    // BodyInit TS n'accepte pas Uint8Array, ni SharedArrayBuffer : renvoyer un ArrayBuffer concret.
+    let body: ArrayBuffer;
+    if (bytes.buffer instanceof ArrayBuffer) {
+      body =
+        bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+          ? bytes.buffer
+          : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    } else {
+      // Copie dans un nouveau buffer (non-shared)
+      body = bytes.slice().buffer;
+    }
+
+    return new Response(body, { status: 200, headers });
   } catch (err) {
     console.error('Inside media GET error:', err);
     return new Response('Not found', { status: 404 });

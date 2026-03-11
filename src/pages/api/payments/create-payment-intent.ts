@@ -1,9 +1,13 @@
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
+import { getActiveProjectAny, getUserFromSessionAny, hasNeonDatabase } from '../../../lib/db';
 import { isTestEmail } from '../../../lib/test-access';
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request, locals, cookies }) => {
   try {
+    const db = ((locals.runtime?.env as Env | undefined)?.DB ?? null);
+    const useNeon = !db && hasNeonDatabase();
+
     const stripeKey = locals?.runtime?.env?.STRIPE_SECRET_KEY || import.meta.env.STRIPE_SECRET_KEY;
     const configuredCurrency =
       locals?.runtime?.env?.PAYMENT_CURRENCY ||
@@ -24,6 +28,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     });
     
     const { amount, invoiceId, services, customerEmail, customerName } = await request.json();
+
+    const token = cookies.get('capitune_session')?.value ?? '';
+    const me = token ? await getUserFromSessionAny(db, token) : null;
+    const project = me && (db || useNeon) ? await getActiveProjectAny(db, String(me.id)) : null;
 
     // Compte test : aucun paiement ne doit être créé.
     if (isTestEmail(customerEmail, locals)) {
@@ -50,7 +58,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
         invoiceId: invoiceId || '',
         services: JSON.stringify(services || []),
         customerEmail: customerEmail || '',
-        customerName: customerName || ''
+        customerName: customerName || '',
+        kind: 'services',
+        userId: me ? String(me.id) : '',
+        projectId: project?.id ? String(project.id) : '',
       },
       description: `CAPITUNE - ${invoiceId || 'Service'}`
     });

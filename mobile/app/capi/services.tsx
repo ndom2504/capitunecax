@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
 } from 'react-native';
@@ -168,7 +168,6 @@ function buildServices(motif: CapiMotif, complexite?: string): CapiService[] {
 const PRIORITE_CFG = {
   obligatoire: { label: 'Obligatoire', color: Colors.error, bg: '#fee2e2' },
   recommande:  { label: 'Recommandé', color: Colors.warning, bg: '#fef3c7' },
-  optionnel:   { label: 'Optionnel', color: Colors.textMuted, bg: Colors.border },
 };
 
 export default function CapiServicesScreen() {
@@ -176,18 +175,8 @@ export default function CapiServicesScreen() {
   const { session, updateSession } = useCapiSession();
   const motif = session.motif ?? 'visiter';
 
-  const [services, setServices] = useState<CapiService[]>(() =>
-    buildServices(motif, session.evaluation?.complexite),
-  );
-
-  const toggle = (id: string) => {
-    setServices(prev => prev.map(s =>
-      s.id === id && s.priorite !== 'obligatoire' ? { ...s, selected: !s.selected } : s,
-    ));
-  };
-
-  const selected = services.filter(s => s.selected);
-  const total = selected.reduce((sum, s) => sum + (s.prixEstime ?? 0), 0);
+  const services = buildServices(motif, session.evaluation?.complexite)
+    .filter(s => s.priorite === 'obligatoire' || s.priorite === 'recommande');
 
   const immigrationServices = services.filter(s => s.categorie === 'immigration');
   const installationServices = services.filter(s => s.categorie === 'installation');
@@ -198,21 +187,16 @@ export default function CapiServicesScreen() {
   };
 
   const renderService = (service: CapiService) => {
+    if (service.priorite !== 'obligatoire' && service.priorite !== 'recommande') return null;
     const cfg = PRIORITE_CFG[service.priorite];
-    const isObl = service.priorite === 'obligatoire';
     return (
-      <TouchableOpacity
+      <View
         key={service.id}
-        style={[styles.serviceCard, service.selected && styles.serviceCardSelected]}
-        onPress={() => toggle(service.id)}
-        activeOpacity={isObl ? 1 : 0.85}
+        style={styles.serviceCard}
       >
         <View style={styles.serviceTop}>
           <View style={styles.serviceTitleRow}>
             <Text style={styles.serviceName} numberOfLines={2}>{service.nom}</Text>
-            <View style={[styles.checkbox, service.selected && styles.checkboxSelected]}>
-              {service.selected && <Ionicons name="checkmark" size={14} color="#fff" />}
-            </View>
           </View>
           <Text style={styles.serviceDesc}>{service.description}</Text>
         </View>
@@ -220,11 +204,8 @@ export default function CapiServicesScreen() {
           <View style={[styles.prioriteBadge, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.prioriteText, { color: cfg.color }]}>{cfg.label}</Text>
           </View>
-          <Text style={styles.servicePrice}>
-            {(service.prixEstime ?? 0) === 0 ? 'Gratuit' : `${service.prixEstime} ${service.devise}`}
-          </Text>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -246,10 +227,15 @@ export default function CapiServicesScreen() {
           <View style={styles.bubble}>
           <Text style={styles.bubbleText}>
             {motif === 'visiter'
-              ? 'Voici les services adaptés à votre visa visiteur. Les services '
-              : 'Voici les services adaptés à votre projet. Les services '}
-            <Text style={{ color: Colors.error, fontWeight: '600' }}>obligatoires</Text>
-            {' sont présélectionnés. Ajoutez ce dont vous avez besoin.'}</Text>
+              ? 'Voici les services adaptés à votre visa visiteur. '
+              : 'Voici les services adaptés à votre projet. '}
+            <Text style={{ fontWeight: '700' }}>Informations à titre indicatif</Text>
+            {'. Les services marqués '}
+            <Text style={{ color: Colors.error, fontWeight: '700' }}>Obligatoire</Text>
+            {' sont requis, les services '}
+            <Text style={{ color: Colors.warning, fontWeight: '700' }}>Recommandé</Text>
+            {' sont conseillés.'}
+          </Text>
           </View>
         </View>
 
@@ -262,12 +248,8 @@ export default function CapiServicesScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Footer avec total */}
+      {/* Footer */}
       <View style={styles.footer}>
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Estimation totale</Text>
-          <Text style={styles.totalAmount}>{total.toLocaleString()} $ CAD</Text>
-        </View>
         <TouchableOpacity style={styles.nextBtn} onPress={next} activeOpacity={0.85}>
           <Text style={styles.nextBtnText}>Voir ma timeline</Text>
           <Ionicons name="arrow-forward" size={18} color="#fff" />
@@ -291,21 +273,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, paddingHorizontal: 20, marginBottom: 10, marginTop: 4 },
   list: { paddingHorizontal: 20, gap: 10, marginBottom: 8 },
   serviceCard: { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1.5, borderColor: Colors.border, ...UI.cardShadow },
-  serviceCardSelected: { borderColor: Colors.orange, backgroundColor: Colors.orange + '06' },
   serviceTop: { marginBottom: 10 },
   serviceTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
   serviceName: { fontSize: 14, fontWeight: '600', color: Colors.text, flex: 1 },
   serviceDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 18 },
-  serviceMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  serviceMeta: { flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' },
   prioriteBadge: { borderRadius: 20, paddingVertical: 3, paddingHorizontal: 10 },
   prioriteText: { fontSize: 11, fontWeight: '600' },
-  servicePrice: { fontSize: 13, fontWeight: '700', color: Colors.text },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
-  checkboxSelected: { backgroundColor: Colors.orange, borderColor: Colors.orange },
   footer: { padding: 20, paddingBottom: 28, gap: 12 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontSize: 13, color: Colors.textMuted },
-  totalAmount: { fontSize: 18, fontWeight: '800', color: Colors.orange },
   nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.orange, borderRadius: 14, paddingVertical: 16, gap: 8 },
   nextBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });

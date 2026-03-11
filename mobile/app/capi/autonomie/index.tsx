@@ -60,6 +60,7 @@ export default function AutonomieIndexScreen() {
   const [paying, setPaying] = useState(false);
   const [priceCents, setPriceCents] = useState<number | null>(null);
   const [priceCurrency, setPriceCurrency] = useState<string>('CAD');
+  const [priceGrid, setPriceGrid] = useState<Record<string, { cents: number; currency: string }> | null>(null);
   const project = session.autonomie;
   const motif: CapiMotif = (project?.motif ?? 'visiter') as CapiMotif;
   const motifLabel = MOTIF_LABELS[motif] ?? 'Projet';
@@ -102,6 +103,38 @@ export default function AutonomieIndexScreen() {
     }
   }, [priceCents, priceCurrency]);
 
+  const priceGridRows = useMemo(() => {
+    if (!priceGrid) return [] as Array<{ motif: string; label: string; amountLabel: string }>;
+
+    const motifs: CapiMotif[] = [
+      'visiter',
+      'etudier',
+      'travailler',
+      'famille',
+      'entreprendre',
+      'residence_permanente',
+      'regularisation',
+    ];
+
+    return motifs
+      .map((m) => {
+        const entry = priceGrid[String(m)];
+        if (!entry?.cents || entry.cents <= 0) return null;
+        const amount = entry.cents / 100;
+        const currency = String(entry.currency || 'CAD').toUpperCase();
+        let amountLabel = `${amount.toFixed(2)} ${currency}`;
+        try {
+          amountLabel = amount.toLocaleString('fr-CA', { style: 'currency', currency });
+        } catch {}
+        return {
+          motif: String(m),
+          label: MOTIF_LABELS[String(m)] ?? String(m),
+          amountLabel,
+        };
+      })
+      .filter(Boolean) as Array<{ motif: string; label: string; amountLabel: string }>;
+  }, [priceGrid]);
+
   useEffect(() => {
     let alive = true;
     autonomiePaymentApi
@@ -128,6 +161,48 @@ export default function AutonomieIndexScreen() {
       alive = false;
     };
   }, [motif]);
+
+  useEffect(() => {
+    let alive = true;
+    const motifs: CapiMotif[] = [
+      'visiter',
+      'etudier',
+      'travailler',
+      'famille',
+      'entreprendre',
+      'residence_permanente',
+      'regularisation',
+    ];
+
+    setPriceGrid(null);
+    Promise.allSettled(motifs.map((m) => autonomiePaymentApi.getPrice(m)))
+      .then((results) => {
+        if (!alive) return;
+        const next: Record<string, { cents: number; currency: string }> = {};
+
+        for (let i = 0; i < results.length; i++) {
+          const motifKey = String(motifs[i]);
+          const r = results[i];
+          if (r.status !== 'fulfilled') continue;
+          const res = r.value;
+          const unit = res.data?.unit_amount;
+          const cur = String(res.data?.currency ?? 'CAD');
+          if (res.status >= 200 && res.status < 300 && typeof unit === 'number' && unit > 0) {
+            next[motifKey] = { cents: Math.round(unit), currency: cur };
+          }
+        }
+
+        setPriceGrid(Object.keys(next).length ? next : null);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setPriceGrid(null);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   if (!project) {
     return (
@@ -286,6 +361,22 @@ export default function AutonomieIndexScreen() {
                   </Text>
                 </View>
               </View>
+
+              {priceGridRows.length > 0 && (
+                <View style={styles.priceGridCard}>
+                  <Text style={styles.priceGridTitle}>Grille tarifaire (paiement unique)</Text>
+                  {priceGridRows.map((row, idx) => (
+                    <View
+                      key={row.motif}
+                      style={[styles.priceGridRow, idx < priceGridRows.length - 1 && styles.priceGridRowBorder]}
+                    >
+                      <Text style={styles.priceGridLabel}>{row.label}</Text>
+                      <Text style={styles.priceGridAmount}>{row.amountLabel}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               <TouchableOpacity
                 style={[styles.paywallBtn, paying && styles.paywallBtnDisabled]}
                 onPress={startCheckout}
@@ -467,6 +558,26 @@ const styles = StyleSheet.create({
   },
   paywallBtnDisabled: { opacity: 0.7 },
   paywallBtnText: { color: '#fff', fontWeight: '800' },
+  priceGridCard: {
+    marginTop: 12,
+    backgroundColor: Colors.bgLight,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    overflow: 'hidden',
+  },
+  priceGridTitle: { fontSize: 11, fontWeight: '800', color: Colors.text, padding: 12, paddingBottom: 10 },
+  priceGridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 12,
+  },
+  priceGridRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
+  priceGridLabel: { flex: 1, fontSize: 12, color: Colors.textMuted },
+  priceGridAmount: { fontSize: 12, fontWeight: '800', color: Colors.text },
   budgetCard: {
     backgroundColor: Colors.surface, borderRadius: 18, borderWidth: 1,
     borderColor: Colors.border, overflow: 'hidden', ...UI.cardShadow,

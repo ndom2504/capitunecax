@@ -572,6 +572,29 @@ const proSvcList = [
       .pro-chat-av{width:38px;height:38px;border-radius:50%;background:var(--cap-orange);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}
       .pro-chat-name-lbl{font-weight:700;font-size:14px;color:var(--cap-dark);}
       .pro-chat-email-lbl{font-size:11px;color:#aaa;}
+      .pro-project-panel{padding:12px 18px;border-bottom:1px solid #ededed;background:#fff;display:none;flex-direction:column;gap:10px;}
+      .pro-project-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+      .pro-project-title{font-size:13px;font-weight:800;color:var(--cap-dark);display:flex;align-items:center;gap:8px;}
+      .pro-project-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;background:#f5f5f5;color:#888;white-space:nowrap;}
+      .pro-project-pill.orange{background:rgba(255,148,8,.12);color:#b06000;}
+      .pro-project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      .pro-project-box{border:1px solid #eee;border-radius:12px;background:#fafafa;padding:10px 12px;min-height:70px;}
+      .pro-project-box h4{margin:0 0 8px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;}
+      .pro-project-list{margin:0;padding-left:18px;font-size:12px;color:#555;max-height:140px;overflow:auto;}
+      .pro-project-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      .pro-mini-input{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:9px 10px;font-size:12px;outline:none;background:#fff;}
+      .pro-mini-input:focus{border-color:var(--cap-orange);}
+      .pro-mini-row{display:flex;gap:8px;}
+      .pro-mini-row .pro-mini-input{flex:1;}
+      .pro-mini-btn{background:var(--cap-orange);color:#fff;border:none;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+      .pro-mini-btn.secondary{background:#f5f5f5;color:#777;}
+      .pro-mini-btn:hover{filter:brightness(.98);}
+      .pro-quote-box{border:1px solid #eee;border-radius:12px;background:#fff;padding:10px 12px;}
+      .pro-quote-box h4{margin:0 0 10px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;}
+      .pro-quote-grid{display:grid;grid-template-columns:1fr 120px;gap:8px;}
+      .pro-quote-grid .pro-mini-input{height:38px;}
+      .pro-quote-foot{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;}
+      .pro-project-hint{font-size:11px;color:#aaa;}
       .pro-chat-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:9px;background:#f9f9fb;}
       .pro-mi{max-width:78%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;}
       .pro-mi.user{background:#fff;border:1px solid #ededed;align-self:flex-start;border-bottom-left-radius:4px;}
@@ -671,7 +694,7 @@ const proSvcList = [
           </ul>
         </nav>
         <div class="dash-profile-wrap" id="profileWrap" style="position:relative;">
-          <button class="dash-profile-btn" onclick="toggleProfileMenu()">
+          <button class="dash-profile-btn" onclick="onProfileHeaderClick(event)">
             <div class="avatar-ring">
               <div class="avatar-placeholder" id="avatarDisplay"><i class="fa fa-user"></i></div>
             </div>
@@ -1302,6 +1325,72 @@ const proSvcList = [
                       <div class="pro-chat-email-lbl" id="pro-chat-email"></div>
                     </div>
                   </div>
+
+                  <div class="pro-project-panel" id="pro-project-panel">
+                    <div class="pro-project-top">
+                      <div class="pro-project-title"><i class="fa fa-folder-open"></i> <span id="pro-project-title">Projet</span></div>
+                      <span class="pro-project-pill orange" id="pro-project-status">—</span>
+                    </div>
+
+                    <div class="pro-project-grid">
+                      <div class="pro-project-box">
+                        <h4>Étapes</h4>
+                        <ol class="pro-project-list" id="pro-project-timeline"></ol>
+                      </div>
+                      <div class="pro-project-box">
+                        <h4>Services</h4>
+                        <ul class="pro-project-list" id="pro-project-services"></ul>
+                      </div>
+                    </div>
+
+                    <div class="pro-project-actions">
+                      <div class="pro-quote-box">
+                        <h4>Ajouter une étape</h4>
+                        <input class="pro-mini-input" id="pro-add-step-title" placeholder="Titre de l’étape" />
+                        <div style="height:8px"></div>
+                        <input class="pro-mini-input" id="pro-add-step-desc" placeholder="Description (optionnel)" />
+                        <div class="pro-quote-foot">
+                          <button class="pro-mini-btn secondary" type="button" onclick="proRefreshProject()"><i class="fa fa-refresh"></i></button>
+                          <button class="pro-mini-btn" type="button" onclick="proAddStep()"><i class="fa fa-plus"></i> Ajouter</button>
+                        </div>
+                      </div>
+
+                      <div class="pro-quote-box">
+                        <h4>Ajouter un service</h4>
+                        <input class="pro-mini-input" id="pro-add-service-name" placeholder="Nom du service" />
+                        <div style="height:8px"></div>
+                        <div class="pro-mini-row">
+                          <select class="pro-mini-input" id="pro-add-service-priority">
+                            <option value="obligatoire">Obligatoire</option>
+                            <option value="recommande" selected>Recommandé</option>
+                            <option value="optionnel">Optionnel</option>
+                          </select>
+                          <button class="pro-mini-btn" type="button" onclick="proAddService()"><i class="fa fa-plus"></i> Ajouter</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pro-quote-box">
+                      <h4>Proposition tarifaire</h4>
+                      <div class="pro-quote-grid">
+                        <input class="pro-mini-input" id="pro-quote-total" inputmode="decimal" placeholder="Total" />
+                        <select class="pro-mini-input" id="pro-quote-currency">
+                          <option value="CAD" selected>CAD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="USD">USD</option>
+                        </select>
+                      </div>
+                      <div style="height:8px"></div>
+                      <input class="pro-mini-input" id="pro-quote-delay" placeholder="Délai estimé (ex: 2–4 semaines)" />
+                      <div style="height:8px"></div>
+                      <input class="pro-mini-input" id="pro-quote-note" placeholder="Note au client (optionnel)" />
+                      <div class="pro-quote-foot">
+                        <span class="pro-project-hint" id="pro-quote-hint"></span>
+                        <button class="pro-mini-btn" type="button" onclick="proSendQuote()"><i class="fa fa-paper-plane"></i> Envoyer</button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="pro-chat-msgs" id="pro-chat-msgs"></div>
                   <div class="pro-chat-input">
                     <textarea class="pro-reply-ta" id="pro-reply-ta" rows="1" placeholder="Répondre au client…"></textarea>
@@ -1320,6 +1409,16 @@ const proSvcList = [
               <h4>Prochaine etape : convenir d une rencontre</h4>
               <p>Votre projet a ete transmis. Votre conseiller vous contactera sous 24-48h pour fixer un rendez-vous.</p>
             </div>
+          </div>
+          <div id="quote-notice" style="display:none;justify-content:space-between;" class="rdv-notice">
+            <i class="fa fa-file-text-o"></i>
+            <div style="flex:1;">
+              <h4 id="quote-notice-title">Proposition tarifaire reçue</h4>
+              <p id="quote-notice-desc"></p>
+            </div>
+            <button class="btn-submit-projet" id="btnAcceptQuote" type="button" onclick="acceptLatestQuote()" style="padding:10px 14px;font-size:12px;white-space:nowrap;">
+              <i class="fa fa-check"></i> Accepter
+            </button>
           </div>
           <div class="messaging-layout">
             <div class="msg-sidebar">
@@ -1797,6 +1896,11 @@ const proSvcList = [
 
           <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()">
             <div class="modal-box" style="max-width:min(1140px,96vw);width:95%;text-align:left;position:relative;" onclick="event.stopPropagation()">
+              <!-- Mode Story (Facebook-like) : progress + navigation -->
+              <div class="team-story-progress" id="tpStoryProgress" aria-hidden="true"></div>
+              <button class="team-story-nav team-story-prev" type="button" onclick="teamProfilePrev(); event.stopPropagation();" aria-label="Profil précédent">‹</button>
+              <button class="team-story-nav team-story-next" type="button" onclick="teamProfileNext(); event.stopPropagation();" aria-label="Profil suivant">›</button>
+
               <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
                 <div class="team-avatar" id="tpAvatar" style="width:64px;height:64px;margin:0;"></div>
                 <div style="flex:1;">
@@ -2641,6 +2745,19 @@ const proSvcList = [
 
     window.toggleProfileMenu = function() {
       document.getElementById('profileDropdown').classList.toggle('open');
+    };
+
+    window.onProfileHeaderClick = function(ev) {
+      try {
+        if (ev && ev.target && ev.target.closest && ev.target.closest('.caret')) {
+          window.toggleProfileMenu();
+          return;
+        }
+      } catch (e) {}
+      // Click sur avatar/nom → Paramètres
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('parametres');
+      }
     };
 
     // ============================================================
@@ -3791,10 +3908,91 @@ const proSvcList = [
       if (tabId === 'messagerie' && document.getElementById('pro-mode-messages') && document.getElementById('pro-mode-messages').style.display !== 'none') {
         if (!window.__proClientsLoaded) loadProClients();
       }
+      // Client mode : afficher une proposition tarifaire si dispo
+      if (tabId === 'messagerie' && document.getElementById('client-mode-messages') && document.getElementById('client-mode-messages').style.display !== 'none') {
+        if (typeof loadClientQuote === 'function') loadClientQuote();
+      }
       if (tabId === 'paiements' && document.getElementById('pro-mode-payments') && document.getElementById('pro-mode-payments').style.display !== 'none') {
         if (!window.__proPayLoaded) loadProPayments();
       }
     };
+
+    // ============================================================
+    //  CLIENT MODE — PROPOSITION TARIFAIRE
+    // ============================================================
+    var _latestQuote = null;
+
+    function renderClientQuoteNotice(quote) {
+      var box = document.getElementById('quote-notice');
+      if (!box) return;
+      if (!quote || String(quote.status || '') !== 'sent') {
+        box.style.display = 'none';
+        _latestQuote = null;
+        return;
+      }
+
+      _latestQuote = quote;
+
+      var titleEl = document.getElementById('quote-notice-title');
+      var descEl = document.getElementById('quote-notice-desc');
+      var btn = document.getElementById('btnAcceptQuote');
+
+      var total = Number(quote.total || 0);
+      var currency = String(quote.currency || 'CAD');
+      var delay = String(quote.estimated_delay || '').trim();
+      var note = String(quote.note || '').trim();
+
+      if (titleEl) titleEl.textContent = 'Proposition tarifaire reçue';
+
+      var desc = 'Total: ' + (Number.isFinite(total) ? total.toLocaleString('fr-CA') : String(quote.total || '')) + ' ' + currency;
+      if (delay) desc += ' • Délai estimé: ' + delay;
+      if (note) desc += ' • ' + note;
+      if (descEl) descEl.textContent = desc;
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+
+      box.style.display = 'flex';
+    }
+
+    async function loadClientQuote() {
+      if (typeof isProModeUI === 'function' && isProModeUI()) return;
+      try {
+        var r = await fetch('/api/quote');
+        var d = await r.json().catch(function(){ return {}; });
+        if (!r.ok) {
+          renderClientQuoteNotice(null);
+          return;
+        }
+        renderClientQuoteNotice(d && d.quote ? d.quote : null);
+      } catch(_) {
+        renderClientQuoteNotice(null);
+      }
+    }
+
+    async function acceptLatestQuote() {
+      if (!_latestQuote || !_latestQuote.id) return;
+      var btn = document.getElementById('btnAcceptQuote');
+      if (btn) { btn.disabled = true; btn.style.opacity = '.7'; }
+      try {
+        var r = await fetch('/api/quote/accept', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quote_id: _latestQuote.id })
+        });
+        var d = await r.json().catch(function(){ return {}; });
+        if (!r.ok || (d && d.error)) throw new Error((d && d.error) || ('Erreur ' + r.status));
+        renderClientQuoteNotice(null);
+        showToast('Proposition acceptée ✓', 'success');
+        // Afficher un feedback dans le chat (sans bloquer si ça échoue)
+        try {
+          if (typeof appendBotMessage === 'function') {
+            appendBotMessage('<div class="msg-bot-section"><strong>✅ Proposition acceptée</strong><br>Votre dossier est maintenant démarré.</div>');
+          }
+        } catch(_) {}
+      } catch(e) {
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+        showToast(e.message || 'Erreur', 'error');
+      }
+    }
 
     // ============================================================
     //  PRO MODE — MESSAGERIE
@@ -3875,6 +4073,7 @@ const proSvcList = [
         if (!r.ok) throw new Error('Erreur ' + r.status);
         _proClientData = await r.json();
         renderProMessages();
+        renderProProject();
       } catch(e) {
         if (msgsEl) msgsEl.innerHTML = '<div style="padding:20px;color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> ' + escP(e.message) + '</div>';
       }
@@ -3895,6 +4094,180 @@ const proSvcList = [
         return '<div class="pro-mi '+cls+'">'+lbl+escP(m.content)+'<span class="pro-mi-time">'+time+'</span></div>';
       }).join('');
       msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    function getProActiveProject() {
+      var projs = (_proClientData && _proClientData.projects) ? _proClientData.projects : [];
+      if (!projs || !projs.length) return null;
+      return projs[0];
+    }
+
+    function parseProjectMetadata(p) {
+      if (!p) return {};
+      var mdStr = p.metadata || p.METADATA || '';
+      if (!mdStr) return {};
+      try { return JSON.parse(String(mdStr)); } catch { return {}; }
+    }
+
+    function renderProProject() {
+      var panel = document.getElementById('pro-project-panel');
+      if (!panel) return;
+      var p = getProActiveProject();
+      if (!p) { panel.style.display = 'none'; return; }
+
+      var titleEl = document.getElementById('pro-project-title');
+      var statusEl = document.getElementById('pro-project-status');
+      var tlEl = document.getElementById('pro-project-timeline');
+      var svcEl = document.getElementById('pro-project-services');
+      var hintEl = document.getElementById('pro-quote-hint');
+
+      var title = String(p.title || '').trim();
+      if (!title) {
+        title = String(p.type || 'Projet').replace(/_/g, ' ');
+      }
+
+      var status = String(p.status || p.project_status || '—');
+      var statusLabels = {
+        soumis: 'Soumis',
+        en_cours: 'En cours',
+        proposition: 'Proposition envoyée',
+        demarre: 'Démarré',
+        termine: 'Terminé',
+        annule: 'Annulé'
+      };
+
+      if (titleEl) titleEl.textContent = title;
+      if (statusEl) statusEl.textContent = statusLabels[status] || status || '—';
+
+      var md = parseProjectMetadata(p);
+      var timeline = Array.isArray(md.timeline) ? md.timeline : [];
+      var services = Array.isArray(md.services) ? md.services : [];
+
+      if (tlEl) {
+        if (!timeline.length) {
+          tlEl.innerHTML = '<li style="color:#bbb">Aucune étape</li>';
+        } else {
+          tlEl.innerHTML = timeline.map(function(s, idx) {
+            var t = (s && s.titre) ? String(s.titre) : ('Étape ' + (idx + 1));
+            var dur = (s && s.dureeEstimee) ? String(s.dureeEstimee) : '';
+            return '<li>' + escP(t) + (dur ? ' <span style="color:#aaa">(' + escP(dur) + ')</span>' : '') + '</li>';
+          }).join('');
+        }
+      }
+
+      if (svcEl) {
+        if (!services.length) {
+          svcEl.innerHTML = '<li style="color:#bbb">Aucun service</li>';
+        } else {
+          svcEl.innerHTML = services.map(function(s) {
+            var nm = s && s.nom ? String(s.nom) : 'Service';
+            var pr = s && s.priorite ? String(s.priorite) : '';
+            var prLbl = pr === 'obligatoire' ? 'Obligatoire' : pr === 'recommande' ? 'Recommandé' : pr === 'optionnel' ? 'Optionnel' : '';
+            return '<li>' + escP(nm) + (prLbl ? ' <span style="color:#aaa">— ' + escP(prLbl) + '</span>' : '') + '</li>';
+          }).join('');
+        }
+      }
+
+      if (hintEl) {
+        hintEl.textContent = (timeline.length || services.length)
+          ? 'Base: étapes & services du dossier'
+          : '';
+      }
+
+      panel.style.display = 'flex';
+    }
+
+    async function proRefreshProject() {
+      if (!_proCurrentClient) return;
+      try {
+        var r = await fetch('/api/admin/client/' + _proCurrentClient);
+        if (!r.ok) throw new Error('Erreur ' + r.status);
+        _proClientData = await r.json();
+        renderProMessages();
+        renderProProject();
+      } catch {
+        // silent
+      }
+    }
+
+    async function proAddStep() {
+      if (!_proCurrentClient) return;
+      var t = document.getElementById('pro-add-step-title');
+      var d = document.getElementById('pro-add-step-desc');
+      var titre = (t ? t.value : '').trim();
+      var desc = (d ? d.value : '').trim();
+      if (!titre) return;
+      try {
+        var r = await fetch('/api/pro/add-step', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: _proCurrentClient, titre: titre, description: desc })
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if (!r.ok || j.error) throw new Error(j.error || ('Erreur ' + r.status));
+        if (t) t.value = '';
+        if (d) d.value = '';
+        await proRefreshProject();
+        showToast('Étape ajoutée ✓', 'success');
+      } catch(e) {
+        showToast(e.message || 'Erreur', 'error');
+      }
+    }
+
+    async function proAddService() {
+      if (!_proCurrentClient) return;
+      var n = document.getElementById('pro-add-service-name');
+      var p = document.getElementById('pro-add-service-priority');
+      var nom = (n ? n.value : '').trim();
+      var pr = (p ? p.value : 'recommande');
+      if (!nom) return;
+      try {
+        var r = await fetch('/api/pro/add-service', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: _proCurrentClient, nom: nom, priorite: pr })
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if (!r.ok || j.error) throw new Error(j.error || ('Erreur ' + r.status));
+        if (n) n.value = '';
+        await proRefreshProject();
+        showToast('Service ajouté ✓', 'success');
+      } catch(e) {
+        showToast(e.message || 'Erreur', 'error');
+      }
+    }
+
+    async function proSendQuote() {
+      if (!_proCurrentClient) return;
+      var totalEl = document.getElementById('pro-quote-total');
+      var curEl = document.getElementById('pro-quote-currency');
+      var delayEl = document.getElementById('pro-quote-delay');
+      var noteEl = document.getElementById('pro-quote-note');
+      var totalRaw = (totalEl ? totalEl.value : '').trim().replace(',', '.');
+      var total = Number(totalRaw);
+      var currency = (curEl ? curEl.value : 'CAD');
+      var estimated_delay = (delayEl ? delayEl.value : '').trim();
+      var note = (noteEl ? noteEl.value : '').trim();
+      if (!Number.isFinite(total) || total <= 0) {
+        showToast('Total invalide', 'error');
+        return;
+      }
+      try {
+        var r = await fetch('/api/pro/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: _proCurrentClient, total: total, currency: currency, estimated_delay: estimated_delay, note: note })
+        });
+        var j = await r.json().catch(function(){ return {}; });
+        if (!r.ok || j.error) throw new Error(j.error || ('Erreur ' + r.status));
+        if (totalEl) totalEl.value = '';
+        if (delayEl) delayEl.value = '';
+        if (noteEl) noteEl.value = '';
+        await proRefreshProject();
+        showToast('Proposition envoyée ✓', 'success');
+      } catch(e) {
+        showToast(e.message || 'Erreur', 'error');
+      }
     }
 
     async function proSendMsg() {
@@ -4535,6 +4908,50 @@ const proSvcList = [
     }
     window.loadTeam = loadTeam;
 
+    // ============================================================
+    //  TEAM PROFILE — mode story (progress + prev/next)
+    // ============================================================
+    window.__teamStoryIndex = 0;
+
+    window.renderTeamStoryProgress = function() {
+      try {
+        var members = window.__teamMembers || [];
+        var wrap = document.getElementById('tpStoryProgress');
+        if (!wrap) return;
+        if (!members.length) { wrap.innerHTML = ''; return; }
+
+        var idx = Number(window.__teamStoryIndex || 0);
+        if (!Number.isFinite(idx)) idx = 0;
+        idx = Math.max(0, Math.min(members.length - 1, idx));
+        window.__teamStoryIndex = idx;
+
+        wrap.innerHTML = members.map(function(_m, i) {
+          var cls = (i < idx) ? 'done' : (i === idx ? 'active' : '');
+          return '<div class="team-story-bar ' + cls + '"><span></span></div>';
+        }).join('');
+      } catch(_e) {}
+    };
+
+    window.teamProfilePrev = function() {
+      try {
+        var members = window.__teamMembers || [];
+        if (!members.length) return;
+        var idx = Number(window.__teamStoryIndex || 0) - 1;
+        if (idx < 0) idx = 0;
+        window.openTeamProfile(idx);
+      } catch(_e) {}
+    };
+
+    window.teamProfileNext = function() {
+      try {
+        var members = window.__teamMembers || [];
+        if (!members.length) return;
+        var idx = Number(window.__teamStoryIndex || 0) + 1;
+        if (idx > members.length - 1) idx = members.length - 1;
+        window.openTeamProfile(idx);
+      } catch(_e) {}
+    };
+
     window.closeTeamProfile = function(){
       if (window.closeModal) window.closeModal();
       var modal = document.getElementById('teamProfileModal');
@@ -4681,6 +5098,9 @@ const proSvcList = [
           tarifsWrap.innerHTML = cardsHtml;
           if (noOffersEl) noOffersEl.style.display = pkgCatalog.length ? 'none' : '';
         }
+
+        window.__teamStoryIndex = idx;
+        if (typeof window.renderTeamStoryProgress === 'function') window.renderTeamStoryProgress();
 
         modal.classList.add('open');
 

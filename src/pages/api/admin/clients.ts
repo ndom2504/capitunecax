@@ -41,9 +41,12 @@ export const GET: APIRoute = async ({ request, locals, cookies }) => {
     if (!token) return json({ error: 'Non connecté' }, 401);
 
     const me = await getUserFromSessionAny(db, token);
-    if (!me || me.role !== 'admin') return json({ error: 'Accès refusé' }, 403);
+    if (!me) return json({ error: 'Session expirée' }, 401);
+    const isPro = String((me as any)?.account_type ?? '') === 'pro';
+    const isAdmin = me.role === 'admin';
+    if (!isAdmin && !isPro) return json({ error: 'Accès refusé' }, 403);
 
-    const isSuper = isSuperAdminEmail(me.email);
+    const isSuper = isAdmin ? isSuperAdminEmail(me.email) : false;
 
     const url   = new URL(request.url);
     const page  = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
@@ -51,8 +54,11 @@ export const GET: APIRoute = async ({ request, locals, cookies }) => {
     const offset = (page - 1) * limit;
     const search = (url.searchParams.get('q') ?? '').trim();
     const scopeRaw = (url.searchParams.get('scope') ?? 'all').toLowerCase();
-    const scope = (scopeRaw === 'unassigned' || scopeRaw === 'me' || scopeRaw === 'all') ? scopeRaw : 'all';
-    // Tous les admins peuvent voir tous les clients ; isSuper conserve des privilèges d'assignation
+    // Les comptes pro ne peuvent voir que leurs clients (scope=me)
+    const scope = !isAdmin
+      ? 'me'
+      : ((scopeRaw === 'unassigned' || scopeRaw === 'me' || scopeRaw === 'all') ? scopeRaw : 'all');
+    // Admin: tous les clients ; isSuper conserve des privilèges d'assignation
 
     if (db) {
       const baseParams: unknown[] = [];

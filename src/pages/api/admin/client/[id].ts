@@ -40,14 +40,24 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
     const token = cookies.get('capitune_session')?.value ?? '';
     if (!token) return json({ error: 'Non connecté' }, 401);
     const me = await getUserFromSessionAny(db, token);
-    if (!me || me.role !== 'admin') return json({ error: 'Accès refusé' }, 403);
-    // Tous les admins peuvent consulter la fiche de n'importe quel client
-    void isSuperAdminEmail(me.email);
+    if (!me) return json({ error: 'Session expirée' }, 401);
+    const isPro = String((me as any)?.account_type ?? '') === 'pro';
+    const isAdmin = me.role === 'admin';
+    if (!isAdmin && !isPro) return json({ error: 'Accès refusé' }, 403);
+    // Admin: accès global ; Pro: accès uniquement aux clients assignés
+    void (isAdmin ? isSuperAdminEmail(me.email) : null);
 
     const { id } = params;
     if (!id) return json({ error: 'ID manquant' }, 400);
 
     if (db) {
+      if (!isAdmin) {
+        const allowed = await db
+          .prepare(`SELECT 1 as ok FROM client_assignments WHERE client_id=? AND pro_id=? LIMIT 1`)
+          .bind(id, me.id)
+          .first<{ ok: number }>();
+        if (!allowed) return json({ error: 'Client non assigné à votre compte' }, 403);
+      }
       const user = await db
         .prepare(`SELECT id, name, email, phone, location, bio, avatar_key, role, created_at FROM users WHERE id=?`)
         .bind(id)
@@ -101,6 +111,12 @@ export const GET: APIRoute = async ({ params, locals, cookies }) => {
 
     const sql = await getNeonSqlClient();
     if (!sql) return json({ error: 'DB non disponible' }, 503);
+
+    if (!isAdmin) {
+      const allowedRows = await sql<{ ok: number }>
+        `SELECT 1 as ok FROM client_assignments WHERE client_id = ${id}::uuid AND pro_id = ${me.id}::uuid LIMIT 1`;
+      if (!allowedRows[0]) return json({ error: 'Client non assigné à votre compte' }, 403);
+    }
 
     const userRows = await sql<Record<string, unknown>>`
       SELECT id::text as id, name, email, phone, location, bio, avatar_key, role, created_at::text as created_at
