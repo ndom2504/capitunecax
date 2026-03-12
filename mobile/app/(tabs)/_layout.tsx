@@ -55,10 +55,10 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── Inside (communauté) (tous) ── */}
+      {/* ── Inside (communauté) — client seulement, absent du web pro ── */}
       <Tabs.Screen
         name="inside"
-        options={{
+        options={isPro ? { href: null } : {
           tabBarLabel: 'Inside',
           tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
         }}
@@ -67,8 +67,14 @@ export default function TabsLayout() {
       {/* ── Route masquée (compat deep-link) ── */}
       <Tabs.Screen name="paiements" options={{ href: null }} />
 
-      {/* ── Route cachée : Trouver un conseiller ── */}
-      <Tabs.Screen name="conseillers" options={{ href: null }} />
+      {/* ── Notre Équipe (pro) / Conseillers (client) — aligné sur le web ── */}
+      <Tabs.Screen
+        name="conseillers"
+        options={{
+          tabBarLabel: isPro ? 'Équipe' : 'Conseillers',
+          tabBarIcon: ({ color, size }) => <Ionicons name={isPro ? 'people' : 'person-add'} size={size} color={color} />,
+        }}
+      />
 
       {/* ── Documents (tous) ── */}
       <Tabs.Screen
