@@ -46,6 +46,15 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* ── Messagerie ── */}
+      <Tabs.Screen
+        name="messagerie"
+        options={{
+          tabBarLabel: 'Messagerie',
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses" size={size} color={color} />,
+        }}
+      />
+
       {/* ── Inside (communauté) (tous) ── */}
       <Tabs.Screen
         name="inside"
@@ -55,9 +64,8 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── Anciennes routes masquées (compat deep-link) ── */}
+      {/* ── Route masquée (compat deep-link) ── */}
       <Tabs.Screen name="paiements" options={{ href: null }} />
-      <Tabs.Screen name="messagerie" options={{ href: null }} />
 
       {/* ── Route cachée : Trouver un conseiller ── */}
       <Tabs.Screen name="conseillers" options={{ href: null }} />

@@ -387,7 +387,7 @@ export default function ProfilScreen() {
           <View style={styles.divider} />
           <MenuItem
             icon="globe"
-            label="Site web CAPI"
+            label="Site web CAPITUNE"
             onPress={() => Linking.openURL('https://capitune.com')}
           />
           <View style={styles.divider} />
@@ -408,7 +408,7 @@ export default function ProfilScreen() {
           />
         </View>
 
-        <Text style={styles.version}>CAPI Mobile v1.0.0</Text>
+        <Text style={styles.version}>CAPITUNE Mobile v1.0.0</Text>
 
       </ScrollView>
     </SafeAreaView>

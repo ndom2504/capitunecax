@@ -24,7 +24,7 @@ const DEMO_MESSAGES: Message[] = [
     id: '1',
     content: 'Bonjour 👋 Je suis votre conseiller. Dites-moi où vous en êtes, je vous guide.',
     sender: 'pro',
-    senderName: 'Conseiller CAPI',
+    senderName: 'Conseiller CAPITUNE',
     createdAt: '2026-03-02T09:00:00Z',
     read: true,
   },
@@ -40,7 +40,7 @@ const DEMO_MESSAGES: Message[] = [
     id: '3',
     content: "On commence par passeport + photo d'identité. Ensuite, on valide l'étape 1 dans Mon Projet.",
     sender: 'pro',
-    senderName: 'Conseiller CAPI',
+    senderName: 'Conseiller CAPITUNE',
     createdAt: '2026-03-02T09:05:00Z',
     read: true,
   },
@@ -70,7 +70,7 @@ export default function MessagerieScreen() {
     ? (clientNameFromParams || clientEmailFromParams || 'Client')
     : isCapiAgent
     ? 'CAPI'
-    : (typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPI');
+    : (typeof params.advisorName === 'string' ? params.advisorName : 'Conseiller CAPITUNE');
   const advisorAvatarKey = (isProMode || isCapiAgent)
     ? ''
     : (typeof params.advisorAvatarKey === 'string' ? params.advisorAvatarKey : '');
@@ -190,7 +190,7 @@ export default function MessagerieScreen() {
             id: `${Date.now()}-err`,
             content: errMsg,
             sender: 'bot',
-            senderName: 'CAPI',
+            senderName: 'CAPITUNE',
             createdAt: new Date().toISOString(),
             read: true,
           };
@@ -202,7 +202,7 @@ export default function MessagerieScreen() {
           id: `${Date.now()}-bot`,
           content: reply,
           sender: 'bot',
-          senderName: 'CAPI',
+          senderName: 'CAPITUNE',
           createdAt: new Date().toISOString(),
           read: true,
         };

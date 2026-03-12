@@ -117,7 +117,7 @@ function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | 
     >
       {/* En-tête Pro */}
       <View style={styles.header}>
-        <Text style={styles.welcome}>Bienvenue sur CAPI</Text>
+        <Text style={styles.welcome}>Bienvenue sur CAPITUNE</Text>
 
         <View style={styles.avatarRow}>
           <View style={styles.walletPillInline}>
@@ -387,7 +387,7 @@ export default function DashboardScreen() {
         >
           {/* En-tête */}
           <View style={styles.header}>
-            <Text style={styles.welcome}>Bienvenue sur CAPI</Text>
+            <Text style={styles.welcome}>Bienvenue sur CAPITUNE</Text>
 
             <TouchableOpacity
               style={styles.avatarCircle}
