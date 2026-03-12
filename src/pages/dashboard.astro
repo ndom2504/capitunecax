@@ -820,8 +820,8 @@ const proSvcList = [
           <ul>
             {isProMode ? (
               <>
-                <li class="dash-nav-item active" data-tab="dashboard">
-                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-home"></i> Accueil</a>
+                <li class="dash-nav-item active" data-tab="inside">
+                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
                 </li>
                 <li class="dash-nav-item" data-tab="projet">
                   <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
@@ -829,20 +829,20 @@ const proSvcList = [
                 <li class="dash-nav-item" data-tab="messagerie">
                   <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
                 </li>
-                <li class="dash-nav-item" data-tab="inside">
-                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
-                </li>
                 <li class="dash-nav-item" data-tab="equipe">
                   <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
                 </li>
                 <li class="dash-nav-item" data-tab="documents">
                   <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
                 </li>
+                <li class="dash-nav-item" data-tab="dashboard">
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-th-large"></i> Dashboard</a>
+                </li>
               </>
             ) : (
               <>
-                <li class="dash-nav-item active" data-tab="dashboard">
-                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-home"></i> Accueil</a>
+                <li class="dash-nav-item active" data-tab="inside">
+                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
                 </li>
                 <li class="dash-nav-item" data-tab="projet">
                   <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a>
@@ -850,14 +850,14 @@ const proSvcList = [
                 <li class="dash-nav-item" data-tab="messagerie">
                   <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
                 </li>
-                <li class="dash-nav-item" data-tab="inside">
-                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
-                </li>
                 <li class="dash-nav-item" data-tab="documents">
                   <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
                 </li>
                 <li class="dash-nav-item" data-tab="equipe">
                   <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
+                </li>
+                <li class="dash-nav-item" data-tab="dashboard">
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-th-large"></i> Dashboard</a>
                 </li>
               </>
             )}
@@ -887,22 +887,22 @@ const proSvcList = [
             <ul class="dropdown-menu-list">
               {isProMode ? (
                 <>
-                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-home"></i> Accueil</a></li>
+                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
-                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
                   <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
                   <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-th-large"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
                 </>
               ) : (
                 <>
-                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-home"></i> Accueil</a></li>
+                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
-                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
                   <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
                   <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-th-large"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
                 </>
               )}
@@ -916,11 +916,11 @@ const proSvcList = [
 
     <main id="dashMain">
 
-      <!-- ===== ONGLET 0 : DASHBOARD (ACCUEIL) ===== -->
-      <section class="tab-section active" id="tab-dashboard">
+      <!-- ===== ONGLET 2b : DASHBOARD (STATS) ===== -->>
+      <section class="tab-section" id="tab-dashboard">
         <div class="tab-hero">
           <div class="tab-hero-inner">
-            <h1><i class="fa fa-line-chart"></i> {isProMode ? 'Accueil Pro' : 'Votre Dashboard'}</h1>
+            <h1><i class="fa fa-line-chart"></i> {isProMode ? 'Dashboard Pro' : 'Dashboard'}</h1>
             <p>{isProMode ? 'Vue d\'ensemble: services, clients, transactions et performance.' : 'Indicateurs et tendances sur vos demandes.'}</p>
           </div>
         </div>
@@ -2199,7 +2199,7 @@ const proSvcList = [
 
       <!-- ===== ONGLET : INSIDE ===== -->
             <!-- ===== ONGLET : INSIDE (layout Facebook) ===== -->
-      <section class="tab-section" id="tab-inside">
+      <section class="tab-section active" id="tab-inside">
         <div class="fb-layout">
 
           <!-- ══ SIDEBAR GAUCHE ══ -->
@@ -3883,12 +3883,12 @@ const proSvcList = [
         // En mode PRO, l'onglet "projet" est caché : on démarre sur le dashboard.
         var isProUI = document.body && document.body.classList.contains('is-pro-mode');
         if (isProUI) {
-          switchTab('dashboard');
+          switchTab('inside');
           return;
         }
-        switchTab('dashboard');
+        switchTab('inside');
       } catch(e) {
-        switchTab('dashboard');
+        switchTab('inside');
       }
     }
 
