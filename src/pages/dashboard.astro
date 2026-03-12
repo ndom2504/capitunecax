@@ -828,6 +828,18 @@ const proSvcList = [
       .proj-empty-state i{font-size:40px;color:#ddd;margin-bottom:12px;display:block;}
       .proj-empty-state strong{display:block;font-size:15px;color:#555;margin-bottom:6px;}
       .proj-cta-btn{background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;}
+      /* ── PROJET EMPTY SCREEN ────────────────────── */
+      .proj-empty-screen{display:flex;flex-direction:column;align-items:center;padding:40px 24px 60px;text-align:center;}
+      .proj-empty-screen-icon{font-size:64px;margin-bottom:20px;line-height:1;}
+      .proj-empty-screen-title{font-size:22px;font-weight:700;color:#1a1a2e;margin:0 0 12px;}
+      .proj-empty-screen-desc{font-size:14px;color:#666;max-width:400px;margin:0 auto 28px;line-height:1.7;}
+      .proj-qs-steps{display:flex;flex-direction:column;gap:11px;width:100%;max-width:400px;margin-bottom:34px;text-align:left;}
+      .proj-qs-step{display:flex;align-items:center;gap:14px;background:#fff;border-radius:12px;padding:12px 18px;box-shadow:0 1px 8px rgba(0,0,0,.07);font-size:14px;color:#333;font-weight:500;}
+      .proj-qs-num{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--cap-orange),#fb923c);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+      .proj-start-btn{font-size:15px;padding:14px 36px;background:linear-gradient(135deg,var(--cap-orange),#fb923c);color:#fff;border:none;border-radius:14px;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(249,115,22,.35);transition:opacity .2s;}
+      .proj-start-btn:hover{opacity:.88;}
+      .proj-form-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #f0f0f0;flex-wrap:wrap;gap:10px;}
+      .proj-form-header h2{font-size:20px;font-weight:700;color:#1a1a2e;margin:0;display:flex;align-items:center;gap:10px;}
       /* ── DOCUMENTS ─────────────────────────────────────────── */
       .doc-filter-btn{background:#f8f9fa;border:1px solid #dee2e6;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:#555;transition:all .2s;}
       .doc-filter-btn.active,.doc-filter-btn:hover{background:var(--cap-orange);border-color:var(--cap-orange);color:#fff;}
@@ -1135,6 +1147,22 @@ const proSvcList = [
             <p>Décrivez votre projet d immigration  votre conseiller CAPITUNE s occupe du reste.</p>
           </div>
         </div>
+        <div id="projEmptyMode">
+          <div class="proj-empty-screen">
+            <div class="proj-empty-screen-icon">📋</div>
+            <h2 class="proj-empty-screen-title">Aucun projet actif</h2>
+            <p class="proj-empty-screen-desc">Décrivez votre projet d'immigration en quelques minutes. Votre conseiller CAPITUNE s'occupe du reste.</p>
+            <div class="proj-qs-steps">
+              <div class="proj-qs-step"><span class="proj-qs-num">1</span><span>Remplissez votre profil projet</span></div>
+              <div class="proj-qs-step"><span class="proj-qs-num">2</span><span>Choisissez votre forfait de service</span></div>
+              <div class="proj-qs-step"><span class="proj-qs-num">3</span><span>Rencontrez votre conseiller CAPITUNE</span></div>
+              <div class="proj-qs-step"><span class="proj-qs-num">4</span><span>Suivez l'avancement de votre dossier</span></div>
+            </div>
+            <button class="proj-start-btn" onclick="showProjFormMode()">
+              <i class="fa fa-rocket"></i> Créer mon profil projet
+            </button>
+          </div>
+        </div>
         <div id="projViewMode" style="display:none">
           <div class="dash-container">
             <div class="proj-view-header">
@@ -1170,8 +1198,12 @@ const proSvcList = [
             <div id="projSubtabContent"></div>
           </div>
         </div>
-        <div id="projFormMode" style="display:block">
+        <div id="projFormMode" style="display:none">
         <div class="dash-container">
+          <div class="proj-form-header">
+            <h2><i class="fa fa-folder-open" style="color:var(--cap-orange);"></i> <span id="projFormTitle">Mon profil projet</span></h2>
+            <button id="btnBackToView" style="display:none;background:transparent;border:1.5px solid #ddd;border-radius:8px;padding:7px 14px;font-size:13px;color:#666;cursor:pointer;" onclick="loadProjetTab(true)"><i class="fa fa-arrow-left"></i> Retour</button>
+          </div>
           <div class="projet-steps">
             <div class="projet-step active" id="step-projet">
               <div class="step-num"><i class="fa fa-folder-open"></i></div>
@@ -4101,6 +4133,8 @@ const proSvcList = [
       // Afficher le bouton annulation
       var btnC = document.getElementById('btnCancelProjet');
       if (btnC) btnC.style.display = '';
+      // Reset du flag pour que le retour sur Projet charge bien la vue
+      _projetViewLoaded = false;
       switchTab('services');
       // Déclencher l'analyse automatique en arrière-plan
       setTimeout(function(){ triggerAutoReponse(type); }, 1500);
@@ -5454,37 +5488,64 @@ const proSvcList = [
         window.loadProjetTab = async function(force) {
       if (_projetViewLoaded && !force) return;
       _projetViewLoaded = true;
-      showProjFormMode(); // toujours visible en premier
       try {
         var res = await fetch('/api/projet', { headers: { Accept: 'application/json' } });
-        if (!res.ok) return;
+        if (!res.ok) { showProjEmptyMode(); return; }
         var data = await res.json().catch(function(){ return {}; });
         var project = data && data.project ? data.project : null;
-        if (!project || !project.type) return;
+        if (!project || !project.type) {
+          // Pas de projet → étatvide
+          showProjEmptyMode();
+          return;
+        }
         ST.projet = project;
         restoreProjetForm(project);
         renderProjetView(project);
+        // Projet existe : montrer la vue de suivi
         showProjViewMode();
-      } catch(e) { /* formulaire deja visible */ }
+      } catch(e) { showProjEmptyMode(); }
     };
 
     function showProjViewMode() {
       var vm = document.getElementById('projViewMode');
       var fm = document.getElementById('projFormMode');
+      var em = document.getElementById('projEmptyMode');
       if (vm) vm.style.display = '';
       if (fm) fm.style.display = 'none';
+      if (em) em.style.display = 'none';
     }
 
-    function showProjFormMode() {
+    window.showProjFormMode = function(isEdit) {
       var vm = document.getElementById('projViewMode');
       var fm = document.getElementById('projFormMode');
+      var em = document.getElementById('projEmptyMode');
       if (vm) vm.style.display = 'none';
       if (fm) fm.style.display = '';
+      if (em) em.style.display = 'none';
+      // Titre dynamique + bouton retour
+      var title = document.getElementById('projFormTitle');
+      var btnBack = document.getElementById('btnBackToView');
+      if (isEdit && ST.projet && ST.projet.type) {
+        if (title) title.textContent = 'Modifier mon projet';
+        if (btnBack) btnBack.style.display = '';
+      } else {
+        if (title) title.textContent = 'Mon profil projet';
+        if (btnBack) btnBack.style.display = 'none';
+      }
+    };
+
+    function showProjEmptyMode() {
+      var vm = document.getElementById('projViewMode');
+      var fm = document.getElementById('projFormMode');
+      var em = document.getElementById('projEmptyMode');
+      if (vm) vm.style.display = 'none';
+      if (fm) fm.style.display = 'none';
+      if (em) em.style.display = '';
     }
 
     window.editProjet = function() {
       _projetViewLoaded = false;
-      showProjFormMode();
+      showProjFormMode(true);
     };
 
     window.switchProjetSubtab = function(key) {
@@ -5643,6 +5704,7 @@ const proSvcList = [
       // Retirer badge soumis si affiché
       var badge = document.getElementById('badge-projet-soumis'); if (badge) badge.style.display = 'none';
       closeModal();
+      _projetViewLoaded = false; // forcer rechargement → état vide
       switchTab('projet');
       showToast('Demande annulée. Vous pouvez démarrer un nouveau projet.', 'info');
     };
