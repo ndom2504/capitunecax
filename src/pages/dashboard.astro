@@ -667,9 +667,40 @@ const proSvcList = [
         .pro-msg-sidebar{height:200px;}
         .pro-pay-stats{grid-template-columns:1fr;}
       }
+      /* ── INSIDE ────────────────────────────────────────────── */
+      .inside-post-card{background:#fff;border:1px solid #ededed;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+      .inside-post-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+      .inside-post-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--cap-orange),#ff6b35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0;}
+      .inside-post-meta{flex:1;}
+      .inside-post-author{font-weight:700;font-size:14px;color:var(--cap-dark);}
+      .inside-post-date{font-size:12px;color:#999;}
+      .inside-post-title{font-size:16px;font-weight:800;color:var(--cap-dark);margin:0 0 8px;}
+      .inside-post-content{font-size:14px;color:#555;line-height:1.6;margin:0 0 12px;}
+      .inside-post-media img{width:100%;border-radius:10px;max-height:280px;object-fit:cover;margin-bottom:10px;}
+      .inside-post-footer{display:flex;align-items:center;gap:16px;padding-top:10px;border-top:1px solid #f0f0f0;}
+      .inside-react-btn{background:none;border:1px solid #ececec;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:13px;color:#666;transition:background .2s;}
+      .inside-react-btn:hover{background:#fff3e8;border-color:var(--cap-orange);color:var(--cap-orange);}
+      .inside-admin-del{margin-left:auto;background:none;border:none;color:#dc3545;cursor:pointer;font-size:13px;}
+      /* ── DOCUMENTS ─────────────────────────────────────────── */
+      .doc-filter-btn{background:#f8f9fa;border:1px solid #dee2e6;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:#555;transition:all .2s;}
+      .doc-filter-btn.active,.doc-filter-btn:hover{background:var(--cap-orange);border-color:var(--cap-orange);color:#fff;}
+      .doc-item{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #ededed;border-radius:12px;padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+      .doc-item-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+      .doc-item.validated .doc-item-icon{background:rgba(40,167,69,.1);color:#28a745;}
+      .doc-item.pending .doc-item-icon{background:rgba(255,193,7,.1);color:#ffc107;}
+      .doc-item.rejected .doc-item-icon{background:rgba(220,53,69,.1);color:#dc3545;}
+      .doc-item.missing .doc-item-icon{background:rgba(253,126,20,.1);color:#fd7e14;}
+      .doc-item-info{flex:1;}
+      .doc-item-name{font-weight:700;font-size:14px;color:var(--cap-dark);}
+      .doc-item-status{font-size:12px;margin-top:2px;}
+      .doc-item.validated .doc-item-status{color:#28a745;}
+      .doc-item.pending .doc-item-status{color:#ffc107;}
+      .doc-item.rejected .doc-item-status{color:#dc3545;}
+      .doc-item.missing .doc-item-status{color:#fd7e14;}
+      .doc-item-action button{background:var(--cap-orange);color:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px;}
     </style>
   </head>
-  <body class={"dashboard-body" + (isProMode ? " is-pro-mode" : "") }>
+  <body class={"dashboard-body" + (isProMode ? " is-pro-mode" : "") } data-is-admin={sessionUser.role === 'admin' ? 'true' : 'false'}>
 
     <!-- HEADER -->
     <header class="dash-header" id="dashHeader">
@@ -685,43 +716,40 @@ const proSvcList = [
             {isProMode ? (
               <>
                 <li class="dash-nav-item active" data-tab="dashboard">
-                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-line-chart"></i> Dashboard</a>
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-home"></i> Accueil</a>
                 </li>
-                <li class="dash-nav-item" data-tab="services">
-                  <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
+                <li class="dash-nav-item" data-tab="projet">
+                  <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
                 </li>
                 <li class="dash-nav-item" data-tab="messagerie">
                   <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
                 </li>
-                <li class="dash-nav-item" data-tab="paiements">
-                  <a href="#" onclick="switchTab('paiements'); return false;"><i class="fa fa-credit-card"></i> Paiements</a>
-                </li>
                 <li class="dash-nav-item" data-tab="equipe">
-                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
+                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
                 </li>
-                <li class="dash-nav-item" data-tab="tarifs">
-                  <a href="#" onclick="switchTab('tarifs'); return false;"><i class="fa fa-tag"></i> Tarifs</a>
+                <li class="dash-nav-item" data-tab="documents">
+                  <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
                 </li>
               </>
             ) : (
               <>
                 <li class="dash-nav-item active" data-tab="dashboard">
-                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-line-chart"></i> Dashboard</a>
+                  <a href="#" onclick="switchTab('dashboard'); return false;"><i class="fa fa-home"></i> Accueil</a>
                 </li>
                 <li class="dash-nav-item" data-tab="projet">
-                  <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
-                </li>
-                <li class="dash-nav-item" data-tab="services">
-                  <a href="#" onclick="switchTab('services'); return false;"><i class="fa fa-briefcase"></i> Services</a>
+                  <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a>
                 </li>
                 <li class="dash-nav-item" data-tab="messagerie">
                   <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
                 </li>
-                <li class="dash-nav-item" data-tab="paiements">
-                  <a href="#" onclick="switchTab('paiements'); return false;"><i class="fa fa-credit-card"></i> Paiements</a>
+                <li class="dash-nav-item" data-tab="inside">
+                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
+                </li>
+                <li class="dash-nav-item" data-tab="documents">
+                  <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
                 </li>
                 <li class="dash-nav-item" data-tab="equipe">
-                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Notre Équipe</a>
+                  <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
                 </li>
               </>
             )}
@@ -751,20 +779,22 @@ const proSvcList = [
             <ul class="dropdown-menu-list">
               {isProMode ? (
                 <>
-                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-line-chart"></i> Dashboard</a></li>
-                  <li><a href="#" onclick="switchTab('services'); toggleProfileMenu(); return false;"><i class="fa fa-briefcase"></i> Services</a></li>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-home"></i> Accueil</a></li>
+                  <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
-                  <li><a href="#" onclick="switchTab('paiements'); toggleProfileMenu(); return false;"><i class="fa fa-credit-card"></i> Paiements</a></li>
-                  <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Notre Équipe</a></li>
-                  <li><a href="#" onclick="switchTab('tarifs'); toggleProfileMenu(); return false;"><i class="fa fa-tag"></i> Tarifs</a></li>
-                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
+                  <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
+                  <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
+                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
                 </>
               ) : (
                 <>
-                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-line-chart"></i> Dashboard</a></li>
+                  <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-home"></i> Accueil</a></li>
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
-                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Paramètres</a></li>
-                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-life-ring"></i> Support</a></li>
+                  <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
+                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
+                  <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
+                  <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
+                  <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
                 </>
               )}
             </ul>
@@ -2058,6 +2088,61 @@ const proSvcList = [
         </div>
       </section>
 
+      <!-- ===== ONGLET : INSIDE ===== -->
+      <section class="tab-section" id="tab-inside">
+        <div class="tab-hero">
+          <div class="tab-hero-inner">
+            <h1><i class="fa fa-newspaper-o"></i> Inside CAPITUNE</h1>
+            <p>Actualités, conseils exclusifs et informations officielles pour votre projet d'immigration.</p>
+          </div>
+        </div>
+        <div class="tab-content-body">
+          <!-- Bouton nouveau post (admin seulement) -->
+          <div id="insideAdminBar" style="display:none;margin-bottom:16px;">
+            <button class="btn-primary" onclick="openInsideCompose()"><i class="fa fa-plus"></i> Nouvelle publication</button>
+          </div>
+          <!-- Formulaire de composition (admin) -->
+          <div id="insideComposeForm" style="display:none;background:#f8f9fa;border:1px solid #dee2e6;border-radius:12px;padding:20px;margin-bottom:20px;">
+            <h3 style="margin:0 0 12px;font-size:15px;">Nouvelle publication Inside</h3>
+            <input id="insideComposeTitle" type="text" placeholder="Titre de la publication..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:10px;box-sizing:border-box;font-size:14px;">
+            <textarea id="insideComposeContent" placeholder="Contenu de la publication..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;min-height:100px;margin-bottom:10px;box-sizing:border-box;font-size:14px;resize:vertical;"></textarea>
+            <input id="insideComposeMedia" type="url" placeholder="URL média (image/vidéo, optionnel)..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:14px;box-sizing:border-box;font-size:14px;">
+            <div style="display:flex;gap:10px;">
+              <button class="btn-primary" onclick="submitInsidePost()" style="flex:1;">Publier</button>
+              <button class="btn-secondary" onclick="document.getElementById('insideComposeForm').style.display='none';" style="flex:1;">Annuler</button>
+            </div>
+          </div>
+          <!-- Feed des posts -->
+          <div id="insideFeedList">
+            <div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ONGLET : DOCUMENTS ===== -->
+      <section class="tab-section" id="tab-documents">
+        <div class="tab-hero">
+          <div class="tab-hero-inner">
+            <h1><i class="fa fa-file-text-o"></i> Mes Documents</h1>
+            <p>Suivez l'état de vos documents et déposez les pièces requises pour votre dossier.</p>
+          </div>
+        </div>
+        <div class="tab-content-body">
+          <!-- Filtres -->
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+            <button class="doc-filter-btn active" data-filter="all" onclick="filterDocs('all',this)"><i class="fa fa-list"></i> Tous</button>
+            <button class="doc-filter-btn" data-filter="validated" onclick="filterDocs('validated',this)"><i class="fa fa-check-circle" style="color:#28a745"></i> Validés</button>
+            <button class="doc-filter-btn" data-filter="pending" onclick="filterDocs('pending',this)"><i class="fa fa-clock-o" style="color:#ffc107"></i> En attente</button>
+            <button class="doc-filter-btn" data-filter="rejected" onclick="filterDocs('rejected',this)"><i class="fa fa-times-circle" style="color:#dc3545"></i> Refusés</button>
+            <button class="doc-filter-btn" data-filter="missing" onclick="filterDocs('missing',this)"><i class="fa fa-exclamation-triangle" style="color:#fd7e14"></i> Manquants</button>
+          </div>
+          <!-- Liste documents -->
+          <div id="documentsChecklist">
+            <div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>
+          </div>
+        </div>
+      </section>
+
       <!-- ===== ONGLET 7 : PARAMÈTRES ===== -->
       <section class="tab-section" id="tab-parametres">
         <div class="tab-hero">
@@ -2782,6 +2867,8 @@ const proSvcList = [
       if (tabId==='services') refreshServicesView();
       if (tabId==='paiements') refreshPaiementsView();
       if (tabId==='equipe') loadTeam();
+      if (tabId==='inside') loadInsideTab();
+      if (tabId==='documents') loadDocumentsTab();
     };
 
     async function refreshDashboardView(){
@@ -5121,7 +5208,171 @@ const proSvcList = [
     window.loadTeam = loadTeam;
 
     // ============================================================
-    //  TEAM PROFILE — mode story (progress + prev/next)
+    //  INSIDE — flux de publications
+    // ============================================================
+    var _insideLoaded = false;
+    var _insidePosts = [];
+
+    function loadInsideTab() {
+      if (_insideLoaded) return;
+      var feed = document.getElementById('insideFeedList');
+      if (!feed) return;
+      feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
+      fetch('/api/inside')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          _insideLoaded = true;
+          _insidePosts = data.posts || [];
+          // Afficher bar admin si admin
+          var adminBar = document.getElementById('insideAdminBar');
+          if (adminBar) {
+            var isAdmin = document.body.dataset.isAdmin === 'true';
+            if (isAdmin) adminBar.style.display = 'block';
+          }
+          renderInsideFeed(_insidePosts);
+        })
+        .catch(function(){
+          feed.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> Impossible de charger les publications.</div>';
+        });
+    }
+
+    function renderInsideFeed(posts) {
+      var feed = document.getElementById('insideFeedList');
+      if (!feed) return;
+      if (!posts.length) {
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-newspaper-o fa-2x"></i><br><br>Aucune publication pour le moment.</div>';
+        return;
+      }
+      var isAdmin = document.body.dataset.isAdmin === 'true';
+      feed.innerHTML = posts.map(function(p) {
+        var initial = (p.authorName||'C')[0].toUpperCase();
+        var date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-CA',{day:'2-digit',month:'short',year:'numeric'}) : '';
+        var mediaHtml = '';
+        if (p.mediaUrl) {
+          if ((p.mediaType||'').startsWith('video')) {
+            mediaHtml = '<div class="inside-post-media"><video src="'+_escHtml(p.mediaUrl)+'" controls style="width:100%;border-radius:10px;max-height:280px;"></video></div>';
+          } else {
+            mediaHtml = '<div class="inside-post-media"><img src="'+_escHtml(p.mediaUrl)+'" alt="media" loading="lazy"></div>';
+          }
+        }
+        var reactions = p.reactions || {};
+        var thumbsUp = (reactions.thumbsUp||0);
+        var heart = (reactions.heart||0);
+        var adminDel = isAdmin ? '<button class="inside-admin-del" onclick="deleteInsidePost(\''+p.id+'\')"><i class="fa fa-trash"></i></button>' : '';
+        return '<div class="inside-post-card" id="inside-post-'+p.id+'">'
+          +'<div class="inside-post-header">'
+          +'<div class="inside-post-avatar">'+_escHtml(initial)+'</div>'
+          +'<div class="inside-post-meta"><div class="inside-post-author">'+_escHtml(p.authorName||'Équipe CAPITUNE')+'</div><div class="inside-post-date">'+date+'</div></div>'
+          +'</div>'
+          +(p.title ? '<div class="inside-post-title">'+_escHtml(p.title)+'</div>' : '')
+          +mediaHtml
+          +'<div class="inside-post-content">'+_escHtml(p.content||'')+'</div>'
+          +'<div class="inside-post-footer">'
+          +'<button class="inside-react-btn" onclick="reactInside(\''+p.id+'\',\'thumbsUp\',this)"><i class="fa fa-thumbs-up"></i> '+thumbsUp+'</button>'
+          +'<button class="inside-react-btn" onclick="reactInside(\''+p.id+'\',\'heart\',this)"><i class="fa fa-heart"></i> '+heart+'</button>'
+          +adminDel
+          +'</div>'
+          +'</div>';
+      }).join('');
+    }
+
+    function _escHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;';}); }
+
+    window.openInsideCompose = function() {
+      document.getElementById('insideComposeForm').style.display = 'block';
+    };
+
+    window.submitInsidePost = function() {
+      var title = (document.getElementById('insideComposeTitle').value||'').trim();
+      var content = (document.getElementById('insideComposeContent').value||'').trim();
+      var mediaUrl = (document.getElementById('insideComposeMedia').value||'').trim();
+      if (!title || !content) { alert('Titre et contenu requis.'); return; }
+      fetch('/api/inside', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({title, content, mediaUrl: mediaUrl||null})
+      })
+        .then(function(r){ return r.json(); })
+        .then(function(){ _insideLoaded=false; loadInsideTab(); document.getElementById('insideComposeForm').style.display='none'; document.getElementById('insideComposeTitle').value=''; document.getElementById('insideComposeContent').value=''; document.getElementById('insideComposeMedia').value=''; })
+        .catch(function(){ alert('Erreur lors de la publication.'); });
+    };
+
+    window.reactInside = function(postId, reaction, btn) {
+      fetch('/api/inside/'+postId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reaction}) })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (data.reactions && btn) {
+            var count = data.reactions[reaction]||0;
+            var icon = reaction==='thumbsUp' ? '<i class="fa fa-thumbs-up"></i> ' : '<i class="fa fa-heart"></i> ';
+            btn.innerHTML = icon + count;
+          }
+        }).catch(function(){});
+    };
+
+    window.deleteInsidePost = function(postId) {
+      if (!confirm('Supprimer cette publication ?')) return;
+      fetch('/api/inside/'+postId, {method:'DELETE'})
+        .then(function(){ _insideLoaded=false; loadInsideTab(); })
+        .catch(function(){ alert('Erreur lors de la suppression.'); });
+    };
+
+    window.loadInsideTab = loadInsideTab;
+
+    // ============================================================
+    //  DOCUMENTS — checklist dossier
+    // ============================================================
+    var _docsLoaded = false;
+    var _allDocs = [];
+
+    function loadDocumentsTab() {
+      if (_docsLoaded) return;
+      var container = document.getElementById('documentsChecklist');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
+      fetch('/api/documents')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          _docsLoaded = true;
+          _allDocs = data.documents || [];
+          renderDocs(_allDocs, 'all');
+        })
+        .catch(function(){
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> Impossible de charger la liste des documents.</div>';
+        });
+    }
+
+    function renderDocs(docs, filter) {
+      var container = document.getElementById('documentsChecklist');
+      if (!container) return;
+      var filtered = filter === 'all' ? docs : docs.filter(function(d){ return d.status === filter; });
+      if (!filtered.length) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-check-circle fa-2x" style="color:#28a745"></i><br><br>' + (filter==='all' ? 'Aucun document requis.' : 'Aucun document dans cette catégorie.') + '</div>';
+        return;
+      }
+      var statusMeta = {
+        validated: {label:'Validé',icon:'fa-check-circle'},
+        pending:   {label:'En attente',icon:'fa-clock-o'},
+        rejected:  {label:'Refusé',icon:'fa-times-circle'},
+        missing:   {label:'Manquant',icon:'fa-exclamation-triangle'}
+      };
+      container.innerHTML = filtered.map(function(d){
+        var meta = statusMeta[d.status] || {label:d.status||'Inconnu',icon:'fa-file'};
+        var actionHtml = (d.status==='missing'||d.status==='rejected') ? '<div class="doc-item-action"><button onclick="alert(\'Fonctionnalité d\\\'upload à venir.\')"><i class="fa fa-upload"></i> Déposer</button></div>' : '';
+        return '<div class="doc-item '+_escHtml(d.status)+'">'
+          +'<div class="doc-item-icon"><i class="fa '+meta.icon+'"></i></div>'
+          +'<div class="doc-item-info"><div class="doc-item-name">'+_escHtml(d.name||d.type||'Document')+'</div><div class="doc-item-status">'+meta.label+(d.note?' — '+_escHtml(d.note):'')+'</div></div>'
+          +actionHtml
+          +'</div>';
+      }).join('');
+    }
+
+    window.filterDocs = function(filter, btn) {
+      document.querySelectorAll('.doc-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderDocs(_allDocs, filter);
+    };
+
+    window.loadDocumentsTab = loadDocumentsTab;
     // ============================================================
     window.__teamStoryIndex = 0;
 
