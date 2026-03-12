@@ -190,31 +190,40 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     }
     .sparkline-pill strong { color:var(--text); font-size:12px; }
 
-    .rank-list { display:flex; flex-direction:column; gap:10px; }
+    .rank-list { display:flex; flex-direction:column; gap:8px; }
     .rank-item {
-      display:grid; grid-template-columns:40px minmax(0, 1fr) auto; gap:12px; align-items:center;
-      padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.055);
+      display:grid; grid-template-columns:32px minmax(0,1fr) 64px; gap:10px; align-items:center;
+      padding:10px 12px; border-radius:10px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+      transition:background .15s;
     }
+    .rank-item:hover { background:rgba(255,255,255,.09); }
     .rank-index {
-      width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-      background:linear-gradient(135deg, rgba(255,148,8,.22), rgba(82,136,255,.16)); color:var(--text); font-weight:800;
-      border:1px solid rgba(255,255,255,.06);
+      width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+      background:rgba(255,148,8,.18); color:var(--accent); font-weight:800; font-size:13px;
+      border:1px solid rgba(255,148,8,.25); flex-shrink:0;
     }
     .rank-main { min-width:0; }
-    .rank-title { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .rank-sub { font-size:11px; color:var(--muted); margin-top:4px; }
-    .rank-value { text-align:right; min-width:90px; }
-    .rank-value strong { display:block; font-size:18px; line-height:1; }
-    .rank-progress { margin-top:8px; width:100%; height:7px; border-radius:999px; background:rgba(255,255,255,.05); overflow:hidden; }
-    .rank-progress > span { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg, #5b8cff, #ff9408); }
+    .rank-title { font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .rank-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .rank-value { text-align:right; }
+    .rank-value strong { display:block; font-size:16px; font-weight:800; line-height:1; color:var(--text); }
+    .rank-value span { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+    .rank-progress { margin-top:6px; width:100%; height:4px; border-radius:999px; background:rgba(255,255,255,.08); overflow:hidden; grid-column:2; }
+    .rank-progress > span { display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#5b8cff,#ff9408); }
 
-    .country-list { display:flex; flex-direction:column; gap:10px; }
-    .country-item { display:grid; grid-template-columns: 46px minmax(0, 1fr) 72px; gap:12px; align-items:center; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.055); }
-    .country-code { display:inline-flex; align-items:center; justify-content:center; width:46px; height:32px; border-radius:10px; background:linear-gradient(135deg, rgba(255,148,8,.2), rgba(82,136,255,.14)); color:var(--text); font-weight:800; font-size:12px; border:1px solid rgba(255,255,255,.06); }
-    .country-name { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .country-sub { font-size:11px; color:var(--muted); margin-top:4px; }
-    .country-val { text-align:right; font-size:12px; color:var(--muted); font-weight:700; }
-    .country-val strong { display:block; color:var(--text); font-size:18px; line-height:1; margin-bottom:4px; }
+    .country-list { display:flex; flex-direction:column; gap:8px; }
+    .country-item {
+      display:grid; grid-template-columns:40px minmax(0,1fr) 72px; gap:10px; align-items:center;
+      padding:10px 12px; border-radius:10px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09);
+    }
+    .country-flag { display:inline-flex; align-items:center; justify-content:center; width:40px; height:28px; border-radius:8px; background:rgba(82,140,255,.18); color:var(--text); font-weight:800; font-size:11px; border:1px solid rgba(82,140,255,.28); flex-shrink:0; }
+    .country-name { font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+    .country-sub { font-size:10px; color:var(--muted); margin-top:2px; }
+    .country-val { text-align:right; }
+    .country-val strong { display:block; color:var(--text); font-size:16px; font-weight:800; line-height:1; }
+    .country-val span { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
 
     .traffic-table { border-radius:18px; }
     .traffic-table table thead { background:rgba(255,255,255,.03); }
@@ -773,7 +782,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
       <div class="table-wrap traffic-table">
         <table>
-          <thead><tr><th>Date</th><th>Page</th><th>Zone</th><th>Élément cliqué</th></tr></thead>
+          <thead><tr><th>Date</th><th>Page (chemin)</th><th>Zone</th><th>Élément cliqué</th></tr></thead>
           <tbody id="traffic-recent-body"><tr><td colspan="4"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
@@ -971,22 +980,33 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       + '</div>';
   }
 
+  function cleanPath(raw) {
+    try {
+      var p = String(raw || '/');
+      // supprimer les paramètres de tracking (fbclid, utm_*, etc.)
+      var idx = p.indexOf('?');
+      if (idx > 0) p = p.substring(0, idx);
+      return p || '/';
+    } catch(_) { return '/'; }
+  }
+
   function renderTopPages(pages) {
     var host = document.getElementById('traffic-top-pages');
     if (!host) return;
+    var maxClicks = Math.max.apply(null, (pages || []).map(function(p){ return Number(p.clicks || 0); }).concat([1]));
     host.innerHTML = trafficRankListHtml((pages || []).slice(0, 6), function(item, index) {
       var clicks = Number(item.clicks || 0);
       var pageviews = Number(item.pageviews || 0);
-      var max = Math.max.apply(null, (pages || []).map(function(p){ return Number(p.clicks || 0); }).concat([1]));
-      var pct = Math.max(6, Math.round((clicks / max) * 100));
+      var pct = Math.max(6, Math.round((clicks / maxClicks) * 100));
+      var label = cleanPath(item.path);
       return '<div class="rank-item">'
         + '<div class="rank-index">' + (index + 1) + '</div>'
         + '<div class="rank-main">'
-        +   '<div class="rank-title" title="' + esc(String(item.path || '/')) + '">' + esc(String(item.path || '/')) + '</div>'
-        +   '<div class="rank-sub">' + pageviews.toLocaleString('fr-CA') + ' vues · CTR ' + Number(item.ctr || 0).toFixed(1) + '%</div>'
+        +   '<div class="rank-title" title="' + esc(label) + '">' + esc(label) + '</div>'
+        +   '<div class="rank-sub">' + pageviews.toLocaleString('fr-CA') + ' vues &nbsp;·&nbsp; CTR ' + Number(item.ctr || 0).toFixed(1) + '%</div>'
         +   '<div class="rank-progress"><span style="width:' + pct + '%"></span></div>'
         + '</div>'
-        + '<div class="rank-value"><strong>' + clicks.toLocaleString('fr-CA') + '</strong><span class="rank-sub">clics</span></div>'
+        + '<div class="rank-value"><strong>' + clicks.toLocaleString('fr-CA') + '</strong><span>clics</span></div>'
         + '</div>';
     });
   }
@@ -994,19 +1014,19 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   function renderTopZones(zones) {
     var host = document.getElementById('traffic-top-zones');
     if (!host) return;
+    var maxClicks = Math.max.apply(null, (zones || []).map(function(z){ return Number(z.clicks || 0); }).concat([1]));
     host.innerHTML = trafficRankListHtml((zones || []).slice(0, 6), function(item, index) {
       var clicks = Number(item.clicks || 0);
       var events = Number(item.events || 0);
-      var max = Math.max.apply(null, (zones || []).map(function(z){ return Number(z.clicks || 0); }).concat([1]));
-      var pct = Math.max(6, Math.round((clicks / max) * 100));
+      var pct = Math.max(6, Math.round((clicks / maxClicks) * 100));
       return '<div class="rank-item">'
         + '<div class="rank-index">' + (index + 1) + '</div>'
         + '<div class="rank-main">'
         +   '<div class="rank-title" title="' + esc(String(item.zone || '—')) + '">' + esc(String(item.zone || '—')) + '</div>'
-        +   '<div class="rank-sub">' + events.toLocaleString('fr-CA') + ' interactions enregistrées</div>'
+        +   '<div class="rank-sub">' + events.toLocaleString('fr-CA') + ' interactions</div>'
         +   '<div class="rank-progress"><span style="width:' + pct + '%"></span></div>'
         + '</div>'
-        + '<div class="rank-value"><strong>' + clicks.toLocaleString('fr-CA') + '</strong><span class="rank-sub">clics</span></div>'
+        + '<div class="rank-value"><strong>' + clicks.toLocaleString('fr-CA') + '</strong><span>clics</span></div>'
         + '</div>';
     });
   }
@@ -1031,9 +1051,9 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       var code = String(item.code || '').toUpperCase();
       var visitors = Number(item.visitors || 0);
       return '<div class="country-item">'
-        + '<div class="country-code">' + esc(code) + '</div>'
-        + '<div><div class="country-name">' + esc(COUNTRY_NAMES[code] || code) + '</div><div class="country-sub">' + Number(item.pageviews || 0) + ' vues · ' + Number(item.clicks || 0) + ' clics</div></div>'
-        + '<div class="country-val"><strong>' + visitors.toLocaleString('fr-CA') + '</strong>visiteurs</div>'
+        + '<div class="country-flag">' + esc(code) + '</div>'
+        + '<div><div class="country-name">' + esc(COUNTRY_NAMES[code] || code) + '</div><div class="country-sub">' + Number(item.pageviews || 0).toLocaleString('fr-CA') + ' vues &nbsp;·&nbsp; ' + Number(item.clicks || 0).toLocaleString('fr-CA') + ' clics</div></div>'
+        + '<div class="country-val"><strong>' + visitors.toLocaleString('fr-CA') + '</strong><span>visiteurs</span></div>'
         + '</div>';
     }).join('') + '</div>';
   }
@@ -1117,10 +1137,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           var date = item.created_at ? new Date(item.created_at).toLocaleString('fr-CA') : '—';
           return '<tr>'
             + '<td class="muted-cell">' + esc(date) + '</td>'
-            + '<td>' + esc(String(item.path || '/')) + '</td>'
+            + '<td>' + esc(cleanPath(item.path || '/')) + '</td>'
             + '<td>' + esc(String(item.zone || '—')) + '</td>'
             + '<td><div class="client-name">' + esc(String(item.label || '—')) + '</div>'
-            + (item.href ? '<div class="muted-cell">' + esc(String(item.href)) + '</div>' : '')
+            + (item.href ? '<div class="muted-cell">' + esc(cleanPath(String(item.href))) + '</div>' : '')
             + '</td></tr>';
         }).join('') : '<tr><td colspan="4"><div class="empty-state"><i class="fa fa-mouse-pointer"></i>Aucun clic récent</div></td></tr>';
         recentBody.dataset.loaded = '1';
