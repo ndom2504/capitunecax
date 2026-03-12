@@ -1170,7 +1170,7 @@ const proSvcList = [
             <div id="projSubtabContent"></div>
           </div>
         </div>
-        <div id="projFormMode">
+        <div id="projFormMode" style="display:block">
         <div class="dash-container">
           <div class="projet-steps">
             <div class="projet-step active" id="step-projet">
@@ -3213,7 +3213,7 @@ const proSvcList = [
       document.querySelectorAll('.tab-section').forEach(function(s){s.classList.remove('active');});
       document.querySelectorAll('.dash-nav-item').forEach(function(n){n.classList.remove('active');});
       var sec = document.getElementById('tab-'+tabId);
-      if (sec) sec.classList.add('active');
+      if (sec) { sec.style.display = ''; sec.classList.add('active'); }
       document.querySelectorAll('.dash-nav-item[data-tab="'+tabId+'"]').forEach(function(n){n.classList.add('active');});
       window.scrollTo({top:0,behavior:'smooth'});
       if (tabId==='dashboard') refreshDashboardView();
@@ -5451,24 +5451,21 @@ const proSvcList = [
     // ============================================================
     var _projetViewLoaded = false;
 
-    window.loadProjetTab = async function(force) {
+        window.loadProjetTab = async function(force) {
       if (_projetViewLoaded && !force) return;
       _projetViewLoaded = true;
+      showProjFormMode(); // toujours visible en premier
       try {
         var res = await fetch('/api/projet', { headers: { Accept: 'application/json' } });
-        if (!res.ok) { showProjFormMode(); return; }
+        if (!res.ok) return;
         var data = await res.json().catch(function(){ return {}; });
         var project = data && data.project ? data.project : null;
-        if (!project || !project.type) { showProjFormMode(); return; }
-        // Mettre Ã  jour le formulaire local
+        if (!project || !project.type) return;
         ST.projet = project;
         restoreProjetForm(project);
         renderProjetView(project);
         showProjViewMode();
-      } catch(e) {
-        // Fallback : afficher le formulaire
-        showProjFormMode();
-      }
+      } catch(e) { /* formulaire deja visible */ }
     };
 
     function showProjViewMode() {
@@ -5785,7 +5782,8 @@ const proSvcList = [
       var feed = document.getElementById('insideFeedList');
       if (!feed) return;
       feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
-      _startInsidePresence();      // Remplir les noms Facebook
+      _startInsidePresence();
+      // Remplir les noms Facebook
       var _uName = window.CAP_USER_NAME || 'Capitune';
       var _elN = document.getElementById('fbNavName'); if(_elN) _elN.textContent = _uName;
       var _elCN = document.getElementById('fbComposerName'); if(_elCN) _elCN.textContent = _uName;
