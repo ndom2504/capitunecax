@@ -678,9 +678,26 @@ const proSvcList = [
       .inside-post-content{font-size:14px;color:#555;line-height:1.6;margin:0 0 12px;}
       .inside-post-media img{width:100%;border-radius:10px;max-height:280px;object-fit:cover;margin-bottom:10px;}
       .inside-post-footer{display:flex;align-items:center;gap:16px;padding-top:10px;border-top:1px solid #f0f0f0;}
-      .inside-react-btn{background:none;border:1px solid #ececec;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:13px;color:#666;transition:background .2s;}
-      .inside-react-btn:hover{background:#fff3e8;border-color:var(--cap-orange);color:var(--cap-orange);}
+      .inside-react-btn{background:none;border:1px solid #ececec;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:14px;color:#555;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
+      .inside-react-btn:hover,.inside-react-btn.reacted{background:#fff3e8;border-color:var(--cap-orange);color:var(--cap-orange);}
       .inside-admin-del{margin-left:auto;background:none;border:none;color:#dc3545;cursor:pointer;font-size:13px;}
+      .inside-link-btn{display:inline-flex;align-items:center;gap:6px;background:#fff3e8;color:var(--cap-orange);border:1px solid rgba(255,148,8,.25);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:600;margin-bottom:10px;}
+      .inside-link-btn:hover{background:var(--cap-orange);color:#fff;}
+      .inside-official-panel{background:#fff;border:1px solid #ededed;border-radius:12px;padding:14px 18px;margin-bottom:18px;display:none;}
+      .inside-official-panel.open{display:block;}
+      .inside-official-link{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f5f5f5;text-decoration:none;color:var(--cap-dark);font-size:14px;}
+      .inside-official-link:last-child{border-bottom:none;}
+      .inside-official-link:hover{color:var(--cap-orange);}
+      .inside-presence-row{display:flex;align-items:center;gap:7px;margin-top:4px;}
+      .inside-presence-dot{width:8px;height:8px;border-radius:50%;background:#28a745;flex-shrink:0;}
+      .inside-presence-dot.offline{background:#bbb;}
+      .inside-presence-text{font-size:12px;color:#888;}
+      .inside-top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;}
+      .inside-top-bar-left h2{margin:0;font-size:20px;font-weight:800;color:var(--cap-dark);}
+      .inside-top-bar-left p{margin:2px 0 0;font-size:13px;color:#888;}
+      .inside-top-bar-actions{display:flex;gap:8px;}
+      .inside-official-btn{background:#fff;border:1px solid #ededed;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--cap-dark);display:inline-flex;align-items:center;gap:6px;font-weight:600;}
+      .inside-official-btn:hover{border-color:var(--cap-orange);color:var(--cap-orange);}
       /* ── DOCUMENTS ─────────────────────────────────────────── */
       .doc-filter-btn{background:#f8f9fa;border:1px solid #dee2e6;border-radius:20px;padding:6px 14px;cursor:pointer;font-size:13px;color:#555;transition:all .2s;}
       .doc-filter-btn.active,.doc-filter-btn:hover{background:var(--cap-orange);border-color:var(--cap-orange);color:#fff;}
@@ -723,6 +740,9 @@ const proSvcList = [
                 </li>
                 <li class="dash-nav-item" data-tab="messagerie">
                   <a href="#" onclick="switchTab('messagerie'); return false;"><i class="fa fa-envelope"></i> Messagerie</a>
+                </li>
+                <li class="dash-nav-item" data-tab="inside">
+                  <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
                 </li>
                 <li class="dash-nav-item" data-tab="equipe">
                   <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
@@ -782,6 +802,7 @@ const proSvcList = [
                   <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-home"></i> Accueil</a></li>
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
+                  <li><a href="#" onclick="switchTab('inside'); toggleProfileMenu(); return false;"><i class="fa fa-newspaper-o"></i> Inside</a></li>
                   <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
                   <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
@@ -2092,30 +2113,67 @@ const proSvcList = [
       <section class="tab-section" id="tab-inside">
         <div class="tab-hero">
           <div class="tab-hero-inner">
-            <h1><i class="fa fa-newspaper-o"></i> Inside CAPITUNE</h1>
-            <p>Actualités, conseils exclusifs et informations officielles pour votre projet d'immigration.</p>
+            <h1><i class="fa fa-newspaper-o"></i> Inside</h1>
+            <p>Communauté CAPITUNE — actualités, mises à jour officielles et conseils exclusifs.</p>
           </div>
         </div>
         <div class="tab-content-body">
-          <!-- Bouton nouveau post (admin seulement) -->
-          <div id="insideAdminBar" style="display:none;margin-bottom:16px;">
-            <button class="btn-primary" onclick="openInsideCompose()"><i class="fa fa-plus"></i> Nouvelle publication</button>
+
+          <!-- Barre supérieure : titre + présence + boutons -->
+          <div class="inside-top-bar">
+            <div class="inside-top-bar-left">
+              <h2>Inside</h2>
+              <p>Communauté CAPITUNE</p>
+              <div class="inside-presence-row">
+                <div class="inside-presence-dot" id="insidePresenceDot"></div>
+                <span class="inside-presence-text" id="insidePresenceText">Connexion...</span>
+              </div>
+            </div>
+            <div class="inside-top-bar-actions">
+              <button class="inside-official-btn" onclick="toggleInsideOfficial()">
+                <i class="fa fa-link"></i> Officiel — IRCC
+              </button>
+              <div id="insideAdminBar" style="display:none;">
+                <button class="btn-primary" onclick="openInsideCompose()" style="padding:6px 14px;font-size:13px;"><i class="fa fa-plus"></i> Publier</button>
+              </div>
+            </div>
           </div>
+
+          <!-- Panel liens officiels IRCC -->
+          <div class="inside-official-panel" id="insideOfficialPanel">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:#555;">Liens officiels — IRCC</p>
+            <a class="inside-official-link" href="https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express.html" target="_blank" rel="noopener">
+              <i class="fa fa-external-link" style="color:var(--cap-orange);"></i> Entrée Express (IRCC)
+            </a>
+            <a class="inside-official-link" href="https://www.canada.ca/fr/immigration-refugies-citoyennete/services/travailler-canada.html" target="_blank" rel="noopener">
+              <i class="fa fa-external-link" style="color:var(--cap-orange);"></i> Permis de travail (IRCC)
+            </a>
+            <a class="inside-official-link" href="https://www.canada.ca/fr/immigration-refugies-citoyennete/services/etudier-canada.html" target="_blank" rel="noopener">
+              <i class="fa fa-external-link" style="color:var(--cap-orange);"></i> Étudier au Canada (IRCC)
+            </a>
+            <a class="inside-official-link" href="https://www.canada.ca/fr/services/immigration-citoyennete.html" target="_blank" rel="noopener">
+              <i class="fa fa-external-link" style="color:var(--cap-orange);"></i> Immigration Canada (IRCC)
+            </a>
+            <p style="margin:10px 0 0;font-size:11px;color:#aaa;">Toujours vérifier sur le site officiel.</p>
+          </div>
+
           <!-- Formulaire de composition (admin) -->
           <div id="insideComposeForm" style="display:none;background:#f8f9fa;border:1px solid #dee2e6;border-radius:12px;padding:20px;margin-bottom:20px;">
-            <h3 style="margin:0 0 12px;font-size:15px;">Nouvelle publication Inside</h3>
-            <input id="insideComposeTitle" type="text" placeholder="Titre de la publication..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:10px;box-sizing:border-box;font-size:14px;">
-            <textarea id="insideComposeContent" placeholder="Contenu de la publication..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;min-height:100px;margin-bottom:10px;box-sizing:border-box;font-size:14px;resize:vertical;"></textarea>
-            <input id="insideComposeMedia" type="url" placeholder="URL média (image/vidéo, optionnel)..." style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:14px;box-sizing:border-box;font-size:14px;">
+            <h3 style="margin:0 0 12px;font-size:15px;font-weight:800;">Publier une mise à jour</h3>
+            <input id="insideComposeTitle" type="text" placeholder="Titre (ex : Mise à jour programmes...)" maxlength="120" style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:10px;box-sizing:border-box;font-size:14px;">
+            <textarea id="insideComposeContent" placeholder="Texte de la publication..." maxlength="2000" style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;min-height:90px;margin-bottom:10px;box-sizing:border-box;font-size:14px;resize:vertical;"></textarea>
+            <input id="insideComposeLinkUrl" type="url" placeholder="Lien (optionnel) — ex : https://..." maxlength="500" style="width:100%;padding:10px;border:1px solid #ced4da;border-radius:8px;margin-bottom:14px;box-sizing:border-box;font-size:14px;">
             <div style="display:flex;gap:10px;">
-              <button class="btn-primary" onclick="submitInsidePost()" style="flex:1;">Publier</button>
+              <button class="btn-primary" onclick="submitInsidePost()" style="flex:1;"><i class="fa fa-send"></i> Publier</button>
               <button class="btn-secondary" onclick="document.getElementById('insideComposeForm').style.display='none';" style="flex:1;">Annuler</button>
             </div>
           </div>
+
           <!-- Feed des posts -->
           <div id="insideFeedList">
             <div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>
           </div>
+
         </div>
       </section>
 
@@ -5240,13 +5298,13 @@ const proSvcList = [
       var feed = document.getElementById('insideFeedList');
       if (!feed) return;
       if (!posts.length) {
-        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-newspaper-o fa-2x"></i><br><br>Aucune publication pour le moment.</div>';
+        feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-star fa-2x" style="color:#ddd"></i><br><br><strong>Aucune publication</strong><br><span style="font-size:13px;">Les mises à jour apparaîtront ici.</span></div>';
         return;
       }
-      var isAdmin = document.body.dataset.isAdmin === 'true';
+      var isAdm = document.body.dataset.isAdmin === 'true';
       feed.innerHTML = posts.map(function(p) {
         var initial = (p.authorName||'C')[0].toUpperCase();
-        var date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-CA',{day:'2-digit',month:'short',year:'numeric'}) : '';
+        var date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-CA',{day:'numeric',month:'short',year:'numeric'}) : '';
         var mediaHtml = '';
         if (p.mediaUrl) {
           if ((p.mediaType||'').startsWith('video')) {
@@ -5255,10 +5313,11 @@ const proSvcList = [
             mediaHtml = '<div class="inside-post-media"><img src="'+_escHtml(p.mediaUrl)+'" alt="media" loading="lazy"></div>';
           }
         }
-        var reactions = p.reactions || {};
-        var thumbsUp = (reactions.thumbsUp||0);
-        var heart = (reactions.heart||0);
-        var adminDel = isAdmin ? '<button class="inside-admin-del" onclick="deleteInsidePost(\''+p.id+'\')"><i class="fa fa-trash"></i></button>' : '';
+        var r = _insideReactions[p.id] || { like:0, fire:0, clap:0 };
+        var linkHtml = (p.linkUrl && p.linkUrl.startsWith('http'))
+          ? '<a class="inside-link-btn" href="'+_escHtml(p.linkUrl)+'" target="_blank" rel="noopener"><i class="fa fa-link"></i> Ouvrir le lien</a>'
+          : '';
+        var adminDel = isAdm ? '<button class="inside-admin-del" onclick="deleteInsidePost(\''+p.id+'\')" title="Supprimer"><i class="fa fa-trash"></i></button>' : '';
         return '<div class="inside-post-card" id="inside-post-'+p.id+'">'
           +'<div class="inside-post-header">'
           +'<div class="inside-post-avatar">'+_escHtml(initial)+'</div>'
@@ -5267,9 +5326,11 @@ const proSvcList = [
           +(p.title ? '<div class="inside-post-title">'+_escHtml(p.title)+'</div>' : '')
           +mediaHtml
           +'<div class="inside-post-content">'+_escHtml(p.content||'')+'</div>'
+          +linkHtml
           +'<div class="inside-post-footer">'
-          +'<button class="inside-react-btn" onclick="reactInside(\''+p.id+'\',\'thumbsUp\',this)"><i class="fa fa-thumbs-up"></i> '+thumbsUp+'</button>'
-          +'<button class="inside-react-btn" onclick="reactInside(\''+p.id+'\',\'heart\',this)"><i class="fa fa-heart"></i> '+heart+'</button>'
+          +'<button class="inside-react-btn" id="ir-like-'+p.id+'" onclick="reactInside(\''+p.id+'\',\'like\')">&#x1F44D; '+r.like+'</button>'
+          +'<button class="inside-react-btn" id="ir-fire-'+p.id+'" onclick="reactInside(\''+p.id+'\',\'fire\')">&#x1F525; '+r.fire+'</button>'
+          +'<button class="inside-react-btn" id="ir-clap-'+p.id+'" onclick="reactInside(\''+p.id+'\',\'clap\')">&#x1F44F; '+r.clap+'</button>'
           +adminDel
           +'</div>'
           +'</div>';
@@ -5278,40 +5339,57 @@ const proSvcList = [
 
     function _escHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;';}); }
 
+    window.toggleInsideOfficial = function() {
+      var p = document.getElementById('insideOfficialPanel');
+      if (p) p.classList.toggle('open');
+    };
+
     window.openInsideCompose = function() {
       document.getElementById('insideComposeForm').style.display = 'block';
+      document.getElementById('insideComposeTitle').focus();
     };
 
     window.submitInsidePost = function() {
-      var title = (document.getElementById('insideComposeTitle').value||'').trim();
+      var title   = (document.getElementById('insideComposeTitle').value||'').trim();
       var content = (document.getElementById('insideComposeContent').value||'').trim();
-      var mediaUrl = (document.getElementById('insideComposeMedia').value||'').trim();
-      if (!title || !content) { alert('Titre et contenu requis.'); return; }
+      var linkUrl = (document.getElementById('insideComposeLinkUrl').value||'').trim();
+      if (title.length < 3)  { alert('Titre trop court (min. 3 caractères).'); return; }
+      if (content.length < 10){ alert('Contenu trop court (min. 10 caractères).'); return; }
+      var btn = document.querySelector('#insideComposeForm .btn-primary');
+      if (btn) { btn.disabled=true; btn.textContent='Publication...'; }
       fetch('/api/inside', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({title, content, mediaUrl: mediaUrl||null})
+        body: JSON.stringify({ title: title, content: content, linkUrl: linkUrl||'' })
       })
         .then(function(r){ return r.json(); })
-        .then(function(){ _insideLoaded=false; loadInsideTab(); document.getElementById('insideComposeForm').style.display='none'; document.getElementById('insideComposeTitle').value=''; document.getElementById('insideComposeContent').value=''; document.getElementById('insideComposeMedia').value=''; })
-        .catch(function(){ alert('Erreur lors de la publication.'); });
+        .then(function(data){
+          if (data.error) { alert(data.error); return; }
+          _insideLoaded = false;
+          document.getElementById('insideComposeForm').style.display = 'none';
+          document.getElementById('insideComposeTitle').value = '';
+          document.getElementById('insideComposeContent').value = '';
+          document.getElementById('insideComposeLinkUrl').value = '';
+          loadInsideTab();
+        })
+        .catch(function(){ alert('Erreur lors de la publication.'); })
+        .finally(function(){ if(btn){ btn.disabled=false; btn.innerHTML='<i class="fa fa-send"></i> Publier'; } });
     };
 
-    window.reactInside = function(postId, reaction, btn) {
-      fetch('/api/inside/'+postId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reaction}) })
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-          if (data.reactions && btn) {
-            var count = data.reactions[reaction]||0;
-            var icon = reaction==='thumbsUp' ? '<i class="fa fa-thumbs-up"></i> ' : '<i class="fa fa-heart"></i> ';
-            btn.innerHTML = icon + count;
-          }
-        }).catch(function(){});
+    window.reactInside = function(postId, reaction) {
+      if (!_insideReactions[postId]) _insideReactions[postId] = { like:0, fire:0, clap:0 };
+      _insideReactions[postId][reaction] = (_insideReactions[postId][reaction]||0) + 1;
+      var emojiMap = { like:'&#x1F44D;', fire:'&#x1F525;', clap:'&#x1F44F;' };
+      var el = document.getElementById('ir-'+reaction+'-'+postId);
+      if (el) {
+        el.innerHTML = emojiMap[reaction]+' '+_insideReactions[postId][reaction];
+        el.classList.add('reacted');
+      }
     };
 
     window.deleteInsidePost = function(postId) {
       if (!confirm('Supprimer cette publication ?')) return;
-      fetch('/api/inside/'+postId, {method:'DELETE'})
+      fetch('/api/inside/'+postId, { method:'DELETE' })
         .then(function(){ _insideLoaded=false; loadInsideTab(); })
         .catch(function(){ alert('Erreur lors de la suppression.'); });
     };
