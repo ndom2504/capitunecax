@@ -131,7 +131,7 @@ const proSvcList = [
       .tab-hero-inner{max-width:1100px;margin:0 auto;padding:0 30px;}
       .tab-hero h1{color:#fff;font-size:2rem;margin:0 0 8px;}
       .tab-hero p{color:rgba(255,255,255,0.7);margin:0;}
-      .dash-container{max-width:1100px;margin:0 auto;padding:40px 30px;}
+      .dash-container,.tab-content-body{max-width:1100px;margin:0 auto;padding:40px 30px;}
 
       html, body{height:100%;}
       body.dashboard-body{min-height:100vh;display:flex;flex-direction:column;}
@@ -5270,27 +5270,79 @@ const proSvcList = [
     // ============================================================
     var _insideLoaded = false;
     var _insidePosts = [];
+    var _insideReactions = {};
+
+    var _insideDemoPosts = [
+      {
+        id: 'demo-1',
+        title: 'Bienvenue dans Inside — Communauté CAPITUNE',
+        content: 'Retrouvez ici les actualités officielles, conseils exclusifs et mises à jour de CAPITUNE pour votre projet d\'immigration au Canada. Cette section est réservée aux membres de la communauté.',
+        createdAt: new Date().toISOString(),
+        authorName: 'Équipe CAPITUNE',
+        linkUrl: '',
+        mediaUrl: '', mediaType: ''
+      },
+      {
+        id: 'demo-2',
+        title: 'Ressources officielles IRCC',
+        content: 'Consultez les liens officiels IRCC disponibles en cliquant sur le bouton "Officiel — IRCC" ci-dessus. Accédez aux programmes d\'Entrée Express, aux permis de travail et aux voies d\'immigration canadiennes.',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        authorName: 'Équipe CAPITUNE',
+        linkUrl: 'https://www.canada.ca/fr/services/immigration-citoyennete.html',
+        mediaUrl: '', mediaType: ''
+      }
+    ];
+
+    function _startInsidePresence() {
+      var dot = document.getElementById('insidePresenceDot');
+      var txt = document.getElementById('insidePresenceText');
+      function updatePresence() {
+        fetch('/api/presence', { method: 'POST' })
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(d){
+            if (!d) return;
+            var count = (d.online || d.count || 1);
+            if (dot) { dot.classList.remove('offline'); }
+            if (txt) txt.textContent = count + ' membre' + (count > 1 ? 's' : '') + ' en ligne';
+          })
+          .catch(function(){
+            if (dot) dot.classList.add('offline');
+            if (txt) txt.textContent = 'Hors ligne';
+          });
+      }
+      updatePresence();
+      if (!window._insidePresenceTimer) {
+        window._insidePresenceTimer = setInterval(updatePresence, 25000);
+      }
+    }
 
     function loadInsideTab() {
       if (_insideLoaded) return;
       var feed = document.getElementById('insideFeedList');
       if (!feed) return;
       feed.innerHTML = '<div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
+      _startInsidePresence();
       fetch('/api/inside')
-        .then(function(r){ return r.json(); })
+        .then(function(r){
+          if (!r.ok) return { posts: [], _err: r.status };
+          return r.json();
+        })
         .then(function(data){
           _insideLoaded = true;
-          _insidePosts = data.posts || [];
-          // Afficher bar admin si admin
+          var apiPosts = data.posts || [];
+          _insidePosts = apiPosts.length ? apiPosts : _insideDemoPosts;
+          _insidePosts.forEach(function(p){ _insideReactions[p.id] = { like:0, fire:0, clap:0 }; });
           var adminBar = document.getElementById('insideAdminBar');
-          if (adminBar) {
-            var isAdmin = document.body.dataset.isAdmin === 'true';
-            if (isAdmin) adminBar.style.display = 'block';
-          }
+          if (adminBar && document.body.dataset.isAdmin === 'true') adminBar.style.display = 'block';
           renderInsideFeed(_insidePosts);
         })
         .catch(function(){
-          feed.innerHTML = '<div style="text-align:center;padding:40px;color:#e74c3c;"><i class="fa fa-exclamation-circle"></i> Impossible de charger les publications.</div>';
+          _insideLoaded = true;
+          _insidePosts = _insideDemoPosts;
+          _insidePosts.forEach(function(p){ _insideReactions[p.id] = { like:0, fire:0, clap:0 }; });
+          var adminBar = document.getElementById('insideAdminBar');
+          if (adminBar && document.body.dataset.isAdmin === 'true') adminBar.style.display = 'block';
+          renderInsideFeed(_insidePosts);
         });
     }
 
