@@ -614,6 +614,38 @@ const proSvcList = [
       .pro-empty-conv{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;gap:10px;padding:40px;}
       .pro-empty-conv i{font-size:44px;}
       .pro-empty-conv p{margin:0;font-size:14px;}
+      /* ── PRO INBOX ────────────────────────────────────────── */
+      .pro-inbox{margin-top:28px;}
+      .pro-inbox-tabs{display:flex;gap:8px;margin-bottom:18px;}
+      .pro-inbox-tab{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;border-radius:10px;border:1.5px solid #e4e4e4;background:#fff;font-size:13px;font-weight:700;color:#aaa;cursor:pointer;transition:.15s;}
+      .pro-inbox-tab.active{background:var(--cap-dark);color:#fff;border-color:var(--cap-dark);}
+      .pro-inbox-tab:hover:not(.active){border-color:var(--cap-orange);color:var(--cap-orange);}
+      .pro-mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+      .pro-mini-stat{background:#fff;border:1px solid #ededed;border-radius:12px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;}
+      .pro-mini-stat i{font-size:17px;color:var(--cap-blue);}
+      .pro-mini-stat span{font-size:22px;font-weight:800;color:var(--cap-dark);}
+      .pro-mini-stat small{font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+      .pro-inbox-search-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #e4e4e4;border-radius:10px;padding:8px 14px;margin-bottom:14px;}
+      .pro-inbox-search-row i{color:#aaa;font-size:14px;}
+      .pro-inbox-search-input{flex:1;border:none;outline:none;font-size:13px;color:#2c2f33;background:transparent;}
+      .pro-inbox-card{background:#fff;border:1px solid #ededed;border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s;margin-bottom:8px;text-decoration:none;color:inherit;}
+      .pro-inbox-card:hover{border-color:var(--cap-orange);box-shadow:0 2px 12px rgba(255,148,8,.1);}
+      .pro-inbox-avatar{width:40px;height:40px;border-radius:50%;background:var(--cap-blue);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;}
+      .pro-inbox-info{flex:1;min-width:0;}
+      .pro-inbox-name{font-size:14px;font-weight:700;color:var(--cap-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .pro-inbox-preview{font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+      .pro-inbox-status{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;flex-shrink:0;}
+      .pro-inbox-status.soumis{background:rgba(255,148,8,.12);color:var(--cap-orange);}
+      .pro-inbox-status.proposition{background:rgba(41,128,185,.12);color:var(--cap-blue);}
+      .pro-inbox-status.demarre,.pro-inbox-status.en_cours{background:rgba(39,174,96,.12);color:var(--cap-green);}
+      .pro-inbox-empty{text-align:center;padding:40px 20px;color:#ccc;}
+      .pro-inbox-empty i{font-size:36px;display:block;margin-bottom:10px;}
+      .pro-politique-card{background:#fff;border:1px solid #ededed;border-radius:13px;padding:18px;margin-bottom:12px;}
+      .pro-politique-title{font-size:14px;font-weight:800;color:var(--cap-dark);margin-bottom:6px;}
+      .pro-politique-text{font-size:13px;color:#555;line-height:1.6;margin:0;}
+      @media(max-width:768px){
+        .pro-mini-stats{grid-template-columns:repeat(2,1fr);}
+      }
       /* ── PRO PAIEMENTS ────────────────────────────────────── */
       .pro-pay-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
       .pro-pay-stat-card{background:#fff;border:1px solid #ededed;border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;}
@@ -780,7 +812,72 @@ const proSvcList = [
                 <div class="stat-sub">Messages en attente: <strong id="dashProPending">0</strong></div>
               </div>
             </div>
+
+          <!-- ── Inbox Pro ──────────────────────────────────────── -->
+          <div class="pro-inbox">
+            <div class="pro-inbox-tabs">
+              <button class="pro-inbox-tab active" data-inbox-tab="inbox" onclick="switchProInboxTab('inbox'); return false;">
+                <i class="fa fa-inbox"></i> Inbox
+              </button>
+              <button class="pro-inbox-tab" data-inbox-tab="politique" onclick="switchProInboxTab('politique'); return false;">
+                <i class="fa fa-book"></i> Politique
+              </button>
+            </div>
+
+            <!-- Pane Inbox -->
+            <div id="proInboxPane" class="pro-inbox-pane">
+              <div class="pro-mini-stats" id="proMiniStats">
+                <div class="pro-mini-stat"><i class="fa fa-users"></i><span id="pmsClients">0</span><small>Clients</small></div>
+                <div class="pro-mini-stat"><i class="fa fa-folder-open"></i><span id="pmsDossiers">0</span><small>Dossiers</small></div>
+                <div class="pro-mini-stat"><i class="fa fa-file-text-o"></i><span id="pmsPropositions">0</span><small>Propositions</small></div>
+                <div class="pro-mini-stat"><i class="fa fa-check-circle"></i><span id="pmsActifs">0</span><small>Actifs</small></div>
+              </div>
+              <div class="pro-inbox-search-row">
+                <i class="fa fa-search"></i>
+                <input type="text" id="proInboxSearch" class="pro-inbox-search-input" placeholder="Rechercher un client…" oninput="filterProInbox(this.value)" />
+              </div>
+              <div id="proInboxLoading" style="text-align:center;padding:24px;color:#aaa;"><i class="fa fa-spinner fa-spin"></i> Chargement…</div>
+              <div id="proInboxList"></div>
+              <div id="proInboxEmpty" class="pro-inbox-empty" style="display:none;">
+                <i class="fa fa-inbox"></i>
+                <p>Aucun client assigné pour le moment.</p>
+              </div>
+            </div>
+
+            <!-- Pane Politique -->
+            <div id="proPolitiquePane" style="display:none;">
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">Objectif</div>
+                <p class="pro-politique-text">Garantir un suivi clair, rapide et traçable&nbsp;: chaque échange doit mener à une prochaine action.</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">1) Assignation &amp; périmètre</div>
+                <p class="pro-politique-text">Vous ne voyez que les clients qui vous sont assignés. Toute action (message, proposition, mise à jour) se fait dans ce périmètre.</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">2) Messagerie</div>
+                <p class="pro-politique-text">Réponses courtes et concrètes. Structure recommandée&nbsp;: (a) contexte, (b) décision, (c) prochaine étape. Évitez les promesses&nbsp;: annoncez un délai si vous devez vérifier.</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">3) Proposition tarifaire</div>
+                <p class="pro-politique-text">Envoyez une proposition claire (inclus / non inclus). Une fois acceptée, le dossier passe à l'état «&nbsp;Démarré&nbsp;».</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">4) Statuts &amp; suivi</div>
+                <p class="pro-politique-text">Statuts clés&nbsp;: Soumis → Proposition → Démarré. Gardez les informations à jour et ajoutez des étapes uniquement quand cela aide la compréhension du client.</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">5) Confidentialité</div>
+                <p class="pro-politique-text">Ne partagez jamais de données sensibles en clair dans la messagerie. Utilisez les documents pour les pièces justificatives et restez factuel.</p>
+              </div>
+              <div class="pro-politique-card">
+                <div class="pro-politique-title">Bonnes pratiques</div>
+                <p class="pro-politique-text">• Une action par message (max 3 points)<br>• Toujours une prochaine étape<br>• Ton professionnel, empathique, sans jargon</p>
+              </div>
+            </div>
           </div>
+
+          </div><!-- /dashboardProBlock -->
 
           <div id="dashboardClientBlock" style={isProMode ? 'display:none' : ''}>
             <div class="stats-grid">
@@ -2725,6 +2822,7 @@ const proSvcList = [
           setTxt('dashProScore', s.operational_score ?? 0);
           setTxt('dashProProcessingRate', fmtPct(s.processing_rate ?? 0));
           setTxt('dashProReactivityRate', fmtPct(s.reactivity_rate ?? 0));
+          loadProInbox();
           return;
         }
 
@@ -2760,6 +2858,102 @@ const proSvcList = [
         showHint((e && e.message) ? e.message : 'Erreur lors du chargement du dashboard');
       }
     }
+
+    // ============================================================
+    //  PRO INBOX — liste clients avec search + onglets
+    // ============================================================
+    var _proInboxAll = [];
+
+    async function loadProInbox() {
+      var loading = document.getElementById('proInboxLoading');
+      var list    = document.getElementById('proInboxList');
+      var empty   = document.getElementById('proInboxEmpty');
+      if (!list) return;
+      if (loading) loading.style.display = '';
+      if (list)   list.innerHTML = '';
+      if (empty)  empty.style.display = 'none';
+      try {
+        var res = await fetch('/api/admin/clients?scope=me&page=1&limit=50', { headers: { Accept: 'application/json' } });
+        var data = await res.json().catch(function(){ return {}; });
+        var clients = (data && Array.isArray(data.clients)) ? data.clients : [];
+        _proInboxAll = clients;
+        var withProject = clients.filter(function(c){ var s=String(c.project_status||'').toLowerCase(); return s && s !== 'annule'; }).length;
+        var propositions= clients.filter(function(c){ return String(c.project_status||'').toLowerCase()==='proposition'; }).length;
+        var actifs      = clients.filter(function(c){ var s=String(c.project_status||'').toLowerCase(); return s==='demarre'||s==='en_cours'; }).length;
+        var setT = function(id, v){ var el=document.getElementById(id); if(el) el.textContent=String(v); };
+        setT('pmsClients', clients.length);
+        setT('pmsDossiers', withProject);
+        setT('pmsPropositions', propositions);
+        setT('pmsActifs', actifs);
+        renderProInbox(clients);
+      } catch(e) {
+        renderProInbox([]);
+      } finally {
+        if (loading) loading.style.display = 'none';
+      }
+    }
+
+    function renderProInbox(clients) {
+      var list  = document.getElementById('proInboxList');
+      var empty = document.getElementById('proInboxEmpty');
+      if (!list) return;
+      if (!clients.length) {
+        list.innerHTML = '';
+        if (empty) empty.style.display = '';
+        return;
+      }
+      if (empty) empty.style.display = 'none';
+      var statusLabel = function(s) {
+        if (!s) return '';
+        var map = { proposition: 'Proposition', demarre: 'Démarré', en_cours: 'En cours', soumis: 'Soumis', termine: 'Terminé' };
+        return map[s.toLowerCase()] || s;
+      };
+      list.innerHTML = clients.map(function(c) {
+        var name = String(c.name || c.email || 'Client').trim();
+        var initial = (name[0] || 'C').toUpperCase();
+        var preview = String(c.last_msg || 'Aucun message').slice(0, 75);
+        var status = String(c.project_status || '').toLowerCase();
+        var slabel = statusLabel(status);
+        var statusHtml = slabel ? '<span class="pro-inbox-status '+status+'">'+slabel+'</span>' : '';
+        var href = '#';
+        return '<a class="pro-inbox-card" href="'+href+'" onclick="switchTab(\'messagerie\'); window._openProConv(\''+c.id+'\',\''+encodeURIComponent(name)+'\',\''+encodeURIComponent(c.email||'')+'\'); return false;">'
+          + '<div class="pro-inbox-avatar">'+initial+'</div>'
+          + '<div class="pro-inbox-info">'
+          +   '<div class="pro-inbox-name">'+name+'</div>'
+          +   '<div class="pro-inbox-preview">'+preview+'</div>'
+          + '</div>'
+          + statusHtml
+          + '<i class="fa fa-chevron-right" style="color:#ccc;font-size:13px;flex-shrink:0;margin-left:6px;"></i>'
+          + '</a>';
+      }).join('');
+    }
+
+    window.filterProInbox = function(q) {
+      var filtered = !q ? _proInboxAll : _proInboxAll.filter(function(c) {
+        var s = (String(c.name||'')+' '+String(c.email||'')).toLowerCase();
+        return s.indexOf(q.toLowerCase()) !== -1;
+      });
+      renderProInbox(filtered);
+    };
+
+    window.switchProInboxTab = function(tab) {
+      document.querySelectorAll('.pro-inbox-tab').forEach(function(b){ b.classList.remove('active'); });
+      var btn = document.querySelector('.pro-inbox-tab[data-inbox-tab="'+tab+'"]');
+      if (btn) btn.classList.add('active');
+      var inbox    = document.getElementById('proInboxPane');
+      var politique= document.getElementById('proPolitiquePane');
+      if (inbox)     inbox.style.display     = tab === 'inbox' ? '' : 'none';
+      if (politique) politique.style.display = tab === 'politique' ? '' : 'none';
+    };
+
+    // Ouvre la conv messagerie pro depuis l'inbox
+    window._openProConv = function(clientId, clientName, clientEmail) {
+      try {
+        var decodedName  = decodeURIComponent(clientName);
+        var decodedEmail = decodeURIComponent(clientEmail);
+        if (window._proSelectClientById) window._proSelectClientById(clientId, decodedName, decodedEmail);
+      } catch(e) {}
+    };
 
     window.toggleProfileMenu = function() {
       document.getElementById('profileDropdown').classList.toggle('open');
