@@ -216,13 +216,13 @@ export default function Jobs() {
       </div>
 
       {globalProfile ? (
-        <div className="bg-primary/10 border border-primary/20 p-6 rounded-3xl mb-12 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-[#e87722]/10 border border-[#e87722]/20 p-6 rounded-3xl mb-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/20 text-primary rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#e87722]/20 text-[#e87722] rounded-full flex items-center justify-center">
               <UserCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-primary">Profil Actif : {globalProfile.analysis?.name || "Candidat"}</h3>
+              <h3 className="text-lg font-bold text-[#e87722]">Profil Actif : {globalProfile.analysis?.name || "Candidat"}</h3>
               <p className="text-sm text-slate-600">Vos offres sont automatiquement filtrées selon vos compétences.</p>
             </div>
           </div>
@@ -243,14 +243,14 @@ export default function Jobs() {
         <div className="bg-white border border-slate-200 p-4 md:p-8 rounded-3xl shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+              <div className="p-2 bg-[#e87722]/10 rounded-lg text-[#e87722]">
                 <Upload className="w-5 h-5" />
               </div>
               <h2 className="text-xl font-bold">Analyse de CV par IA</h2>
             </div>
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-[#0a1628] transition-colors"
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#e87722] hover:text-[#0a1628] transition-colors"
             >
               <FileUp className="w-4 h-4" />
               Importer PDF/Word
@@ -265,17 +265,17 @@ export default function Jobs() {
           </div>
           
           {fileName ? (
-            <div className="w-full h-64 bg-black/50 border border-primary/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center mb-6 relative group">
+            <div className="w-full h-64 bg-slate-100 border border-[#e87722]/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center mb-6 relative group">
               <button 
                 onClick={clearFile}
                 className="absolute top-4 right-4 p-2 bg-slate-50 rounded-full hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100"
               >
                 <X className="w-4 h-4" />
               </button>
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                <FileText className="w-8 h-8 text-primary" />
+              <div className="w-16 h-16 bg-[#e87722]/10 rounded-2xl flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-[#e87722]" />
               </div>
-              <p className="font-bold text-primary mb-1">{fileName}</p>
+              <p className="font-bold text-[#e87722] mb-1">{fileName}</p>
               <p className="text-xs text-slate-500 uppercase tracking-widest font-black">Fichier prêt pour l'analyse</p>
             </div>
           ) : (
@@ -283,14 +283,14 @@ export default function Jobs() {
               value={cvText}
               onChange={(e) => setCvText(e.target.value)}
               placeholder="Collez le texte de votre CV ici ou importez un fichier..."
-              className="w-full h-64 bg-black/50 border border-slate-200 rounded-2xl p-6 text-sm focus:border-primary outline-none resize-none mb-6"
+              className="w-full h-64 bg-slate-100 border border-slate-200 rounded-2xl p-6 text-sm focus:border-[#e87722] outline-none resize-none mb-6"
             />
           )}
 
           <button 
             onClick={handleAnalyze}
             disabled={loadingAnalysis || (!cvText.trim() && !fileName)}
-            className="w-full bg-primary text-black py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full bg-[#e87722] text-white py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loadingAnalysis ? <Loader2 className="w-4 h-4 animate-spin" /> : "Analyser mon profil"}
             <Sparkles className="w-4 h-4" />
@@ -319,8 +319,8 @@ export default function Jobs() {
                   <div className="text-2xl font-black">{analysis.name}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Compatibilité</div>
-                  <div className="text-3xl font-black text-primary">{analysis.compatibility_score}%</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#e87722] mb-1">Compatibilité</div>
+                  <div className="text-3xl font-black text-[#e87722]">{analysis.compatibility_score}%</div>
                 </div>
               </div>
 
@@ -333,7 +333,7 @@ export default function Jobs() {
                   <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Programmes suggérés</div>
                   <div className="flex flex-wrap gap-1">
                     {analysis.recommended_programs.map((p: string) => (
-                      <span key={p} className="text-[8px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded uppercase">{p}</span>
+                      <span key={p} className="text-[8px] font-black bg-[#e87722]/10 text-[#e87722] px-1.5 py-0.5 rounded uppercase">{p}</span>
                     ))}
                   </div>
                 </div>
@@ -348,10 +348,10 @@ export default function Jobs() {
                 </div>
               </div>
 
-              <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl">
+              <div className="p-4 bg-[#e87722]/5 border border-[#e87722]/20 rounded-2xl">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">Suggestions IA</span>
+                  <CheckCircle2 className="w-4 h-4 text-[#e87722]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#e87722]">Suggestions IA</span>
                 </div>
                 <p className="text-sm text-slate-700 leading-relaxed">{analysis.suggestions}</p>
               </div>
@@ -363,7 +363,7 @@ export default function Jobs() {
       {/* CV MAGIC Section */}
       <div className="mb-16" ref={cvMagicRef}>
         <div className="flex items-center gap-4 mb-8">
-          <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+          <div className="p-3 bg-[#e87722]/10 rounded-2xl text-[#e87722]">
             <Wand2 className="w-8 h-8" />
           </div>
           <div>
@@ -376,7 +376,7 @@ export default function Jobs() {
           {/* Templates Selection */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
-              <Layout className="w-4 h-4 text-primary" />
+              <Layout className="w-4 h-4 text-[#e87722]" />
               <span className="text-xs font-black uppercase tracking-widest text-slate-500">1. Choisissez un Template</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -384,14 +384,14 @@ export default function Jobs() {
                 <button 
                   key={t.id}
                   onClick={() => setSelectedTemplate(t)}
-                  className={`relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${selectedTemplate.id === t.id ? 'border-primary scale-[1.02]' : 'border-slate-100 hover:border-slate-300'}`}
+                  className={`relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${selectedTemplate.id === t.id ? 'border-[#e87722] scale-[1.02]' : 'border-slate-100 hover:border-slate-300'}`}
                 >
                   <img src={t.preview} alt={t.name} className="w-full h-full object-cover opacity-50" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
                     <span className="text-xs font-bold uppercase tracking-widest">{t.name}</span>
                   </div>
                   {selectedTemplate.id === t.id && (
-                    <div className="absolute top-2 right-2 bg-primary p-1 rounded-full">
+                    <div className="absolute top-2 right-2 bg-[#e87722] p-1 rounded-full">
                       <Check className="w-3 h-3 text-[#0a1628]" />
                     </div>
                   )}
@@ -405,18 +405,18 @@ export default function Jobs() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="w-4 h-4 text-[#e87722]" />
                   <span className="text-xs font-black uppercase tracking-widest text-slate-500">2. Optimisation IA</span>
                 </div>
                 {analysis?.suggestions && (
-                  <span className="text-[10px] text-primary font-bold uppercase tracking-tighter">Suggestions IA liées</span>
+                  <span className="text-[10px] text-[#e87722] font-bold uppercase tracking-tighter">Suggestions IA liées</span>
                 )}
               </div>
               <div className="flex items-center gap-4">
                 <select 
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="bg-black/50 border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-primary"
+                  className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:border-[#e87722]"
                 >
                   <option value="gemini-3-flash-preview">Gemini Flash (Rapide)</option>
                   <option value="gemini-3.1-pro-preview">Gemini Pro (Qualité)</option>
@@ -426,7 +426,7 @@ export default function Jobs() {
                     onClick={copyToClipboard}
                     className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-[#0a1628] transition-colors"
                   >
-                    {copied ? <Check className="w-3 h-3 text-primary" /> : <Copy className="w-3 h-3" />}
+                    {copied ? <Check className="w-3 h-3 text-[#e87722]" /> : <Copy className="w-3 h-3" />}
                     {copied ? "Copié !" : "Copier"}
                   </button>
                 )}
@@ -436,7 +436,7 @@ export default function Jobs() {
             <div className="flex-1 bg-black/30 border border-slate-100 rounded-2xl p-6 overflow-y-auto max-h-[800px] mb-6 custom-scrollbar">
               {loadingMagic ? (
                 <div className="h-full flex flex-col items-center justify-center text-slate-500">
-                  <Loader2 className="w-8 h-8 animate-spin mb-4 text-primary" />
+                  <Loader2 className="w-8 h-8 animate-spin mb-4 text-[#e87722]" />
                   <p className="text-xs font-black uppercase tracking-widest">Magie en cours...</p>
                 </div>
               ) : optimizedCv ? (
@@ -451,7 +451,7 @@ export default function Jobs() {
                     </button>
                     <button 
                       onClick={handleDownloadPDF}
-                      className="p-2 bg-primary rounded-lg hover:bg-primary/90 transition-all text-[#0a1628]"
+                      className="p-2 bg-[#e87722] rounded-lg hover:bg-[#e87722]/90 transition-all text-[#0a1628]"
                       title="Télécharger PDF"
                     >
                       <Download className="w-4 h-4" />
@@ -459,7 +459,7 @@ export default function Jobs() {
                   </div>
                   
                   {showRawText ? (
-                    <pre className="text-[10px] text-slate-600 font-mono whitespace-pre-wrap bg-black/50 p-4 rounded-xl">
+                    <pre className="text-[10px] text-slate-600 font-mono whitespace-pre-wrap bg-slate-100 p-4 rounded-xl">
                       {JSON.stringify(optimizedCv, null, 2)}
                     </pre>
                   ) : (
@@ -486,7 +486,7 @@ export default function Jobs() {
             <button 
               onClick={handleMagicOptimize}
               disabled={loadingMagic || (!cvText.trim() && !analysis)}
-              className="w-full bg-primary text-black py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-primary/90"
+              className="w-full bg-[#e87722] text-white py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-[#e87722]/90"
             >
               {loadingMagic ? "Optimisation..." : "Générer mon CV Magic"}
               <Wand2 className="w-4 h-4" />
@@ -512,7 +512,7 @@ export default function Jobs() {
                 placeholder="Poste (ex: Développeur...)"
                 value={jobQuery}
                 onChange={(e) => setJobQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-primary outline-none text-[#0a1628]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-[#e87722] outline-none text-[#0a1628]"
               />
             </div>
             <div className="relative flex-1 md:w-48">
@@ -522,13 +522,13 @@ export default function Jobs() {
                 placeholder="Lieu (ex: Montréal...)"
                 value={jobLocation}
                 onChange={(e) => setJobLocation(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-primary outline-none text-[#0a1628]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 text-sm focus:border-[#e87722] outline-none text-[#0a1628]"
               />
             </div>
             <button 
               onClick={() => handleJobSearch()}
               disabled={loadingJobs || !jobQuery.trim()}
-              className="bg-primary text-black px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform disabled:opacity-50"
+              className="bg-[#e87722] text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform disabled:opacity-50"
             >
               {loadingJobs ? <Loader2 className="w-4 h-4 animate-spin" /> : "Chercher"}
             </button>
@@ -537,16 +537,16 @@ export default function Jobs() {
 
         {loadingJobs && jobs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-slate-500">
-            <Loader2 className="w-12 h-12 animate-spin mb-4 text-primary" />
+            <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#e87722]" />
             <p className="font-bold uppercase tracking-widest text-xs">Recherche des meilleures opportunités...</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {jobs.map(job => (
-              <div key={job.id} className="bg-white border border-slate-100 p-6 rounded-3xl hover:border-primary/30 transition-all group">
+              <div key={job.id} className="bg-white border border-slate-100 p-6 rounded-3xl hover:border-[#e87722]/30 transition-all group">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-[#0a1628] group-hover:text-primary transition-colors">{job.title}</h3>
+                    <h3 className="text-xl font-bold text-[#0a1628] group-hover:text-[#e87722] transition-colors">{job.title}</h3>
                     <div className="flex items-center gap-2 text-slate-600 mt-1">
                       <Building2 className="w-4 h-4" />
                       <span className="text-sm font-medium">{job.company}</span>
@@ -556,7 +556,7 @@ export default function Jobs() {
                     href={job.url_officielle} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="p-3 bg-slate-50 rounded-xl hover:bg-primary hover:text-black transition-all"
+                    className="p-3 bg-slate-50 rounded-xl hover:bg-[#e87722] hover:text-[#0a1628] transition-all"
                   >
                     <ExternalLink className="w-5 h-5" />
                   </a>
@@ -566,11 +566,11 @@ export default function Jobs() {
                 
                 <div className="flex flex-wrap items-center gap-4 pt-6 border-t border-slate-100">
                   <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-600">
-                    <MapPin className="w-3.5 h-3.5 text-primary" />
+                    <MapPin className="w-3.5 h-3.5 text-[#e87722]" />
                     {job.location}
                   </div>
                   {job.salary && (
-                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#e87722]">
                       <DollarSign className="w-3.5 h-3.5" />
                       {job.salary}
                     </div>
@@ -578,7 +578,7 @@ export default function Jobs() {
                   <div className="ml-auto flex items-center gap-4">
                     <button 
                       onClick={() => handleOptimizeForJob(job.title)}
-                      className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-[#0a1628] transition-colors flex items-center gap-1.5"
+                      className="text-[10px] font-black uppercase tracking-widest text-[#e87722] hover:text-[#0a1628] transition-colors flex items-center gap-1.5"
                     >
                       <Wand2 className="w-3 h-3" />
                       Optimiser mon CV
@@ -587,7 +587,7 @@ export default function Jobs() {
                       href={job.url_officielle}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline"
+                      className="text-[10px] font-black uppercase tracking-widest text-[#e87722] hover:underline"
                     >
                       Postuler
                     </a>
