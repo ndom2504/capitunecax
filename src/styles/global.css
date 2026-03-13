@@ -248,3 +248,13 @@
   visibility: hidden !important;
   opacity: 0 !important;
 }
+/* Styles spécifiques quand affiché via la WebView Mobile */
+html.is-mobile-app, html.is-mobile-app body {
+  background-color: #f5f7fa !important;
+  margin: 0;
+  padding: 0;
+}
+html.is-mobile-app .dashboard-header, html.is-mobile-app footer, html.is-mobile-app .navbar-custom {
+  display: none !important;
+}
+

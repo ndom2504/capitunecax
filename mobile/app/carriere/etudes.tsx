@@ -24,8 +24,8 @@ export default function EtudesScreen() {
         <View style={{ width: 44 }} />
       </View>
       
-      <WebView 
-        source={{ uri: `${API_BASE_URL}/carriere/etudes` }} 
+      <WebView
+        source={{ uri: `${API_BASE_URL}/carriere/etudes?source=app` }}
         style={styles.webview}
         startInLoadingState={true}
         showsVerticalScrollIndicator={false}

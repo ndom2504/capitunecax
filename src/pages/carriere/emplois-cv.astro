@@ -1,18 +1,19 @@
 ---
 import Layout from '../../layouts/main.astro';
 import Jobs from '../../components/carriere/Jobs.tsx';
+
+const isApp = Astro.url.searchParams.get('source') === 'app';
 ---
 
-<Layout title="MarchÃ© de l'Emploi & CV - CAPITUNE">
+<Layout title="Marché de l'Emploi & CV - CAPITUNE" pageClass={isApp ? 'is-mobile-app' : ''}>
   <!-- Styles pour les couleurs light theme sur la page si besoin -->
   <div class="carriere-page  min-h-screen bg-[#f5f7fa] text-[#0a1628]">
-    <div class="back-nav p-4 max-w-7xl mx-auto">
+    {!isApp && (<div class="back-nav p-4 max-w-7xl mx-auto">
       <a href="/dashboard" class="text-slate-600 hover:text-[#0a1628] flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-8 w-fit transition-colors">
         <i class="fa fa-arrow-left"></i> Retour au Dashboard
-      </a>
-    </div>
+      </a>`n    </div>)}
     
-    <Jobs client:only="react" />
+    <Jobs client:only="react" isMobileApp={isApp} />
   </div>
 </Layout>
 

@@ -4,7 +4,7 @@ import { DLI } from "./types";
 import { dataService } from "./services/dataService";
 import { geminiService } from "./services/geminiService";
 
-export default function EED() {
+export default function EED({ isMobileApp }: { isMobileApp?: boolean }) {
   const [institutions, setInstitutions] = useState<DLI[]>([]);
   const [search, setSearch] = useState("");
   const [province, setProvince] = useState("Toutes");
@@ -63,7 +63,7 @@ export default function EED() {
   };
 
   return (
-    <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+    <div className="pt-4 md:pt-24 pb-6 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto">
       {globalProfile ? (
         <div className="bg-[#e87722]/10 border border-[#e87722]/20 p-6 rounded-3xl mb-12 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -80,7 +80,7 @@ export default function EED() {
 
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 text-[#0a1628]">Ã‰tablissements DLI</h1>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase mb-2 text-[#0a1628]">Ã‰tablissements DLI</h1>
           <p className="text-slate-500">AccÃ©dez Ã  la liste officielle des Ã©tablissements d'enseignement dÃ©signÃ©s.</p>
         </div>
         <form onSubmit={handleRemoteSearch} className="flex gap-3 w-full md:w-auto">

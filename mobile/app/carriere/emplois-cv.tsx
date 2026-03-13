@@ -24,8 +24,8 @@ export default function EmploisCVScreen() {
         <View style={{ width: 44 }} />
       </View>
       
-      <WebView 
-        source={{ uri: `${API_BASE_URL}/carriere/emplois-cv` }} 
+      <WebView
+        source={{ uri: `${API_BASE_URL}/carriere/emplois-cv?source=app` }}
         style={styles.webview}
         startInLoadingState={true}
         allowFileAccess={true}

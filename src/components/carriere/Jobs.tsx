@@ -13,7 +13,7 @@ const CV_TEMPLATES = [
   { id: "minimal", name: "Minimaliste", color: "zinc", preview: "https://picsum.photos/seed/minimal/400/500" },
 ];
 
-export default function Jobs() {
+export default function Jobs({ isMobileApp }: { isMobileApp?: boolean }) {
   const [cvText, setCvText] = useState("");
   const [analysis, setAnalysis] = useState<any>(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
@@ -209,9 +209,9 @@ export default function Jobs() {
   };
 
   return (
-    <div className="pt-24 pb-12 px-6 max-w-7xl mx-auto">
+    <div className="pt-4 md:pt-24 pb-6 md:pb-12 px-4 md:px-6 max-w-7xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-black tracking-tighter uppercase mb-2 text-[#0a1628]">CarriÃ¨re & Emploi</h1>
+        <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase mb-2 text-[#0a1628]">CarriÃ¨re & Emploi</h1>
         <p className="text-slate-500">OpportunitÃ©s rÃ©elles synchronisÃ©es avec le Guichet Emplois Canada et votre profil.</p>
       </div>
 
@@ -238,9 +238,9 @@ export default function Jobs() {
         </div>
       ) : null}
 
-      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 ${globalProfile ? 'hidden' : ''}`}>
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 md:p-8 mb-16 ${globalProfile ? 'hidden' : ''}`}>
         {/* CV Input */}
-        <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-sm">
+        <div className="bg-white border border-slate-200 p-4 md:p-8 rounded-3xl shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#e87722]/10 rounded-lg text-[#e87722]">
@@ -298,7 +298,7 @@ export default function Jobs() {
         </div>
 
         {/* Analysis Result */}
-        <div className="bg-white border border-slate-200 p-8 rounded-3xl min-h-[400px] flex flex-col">
+        <div className="bg-white border border-slate-200 p-4 md:p-8 rounded-3xl min-h-[400px] flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500">
               <Sparkles className="w-5 h-5" />
@@ -372,7 +372,7 @@ export default function Jobs() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:p-8">
           {/* Templates Selection */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
@@ -401,7 +401,7 @@ export default function Jobs() {
           </div>
 
           {/* Optimization & Preview */}
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-8 flex flex-col">
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-4 md:p-8 flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
@@ -463,7 +463,7 @@ export default function Jobs() {
                       {JSON.stringify(optimizedCv, null, 2)}
                     </pre>
                   ) : (
-                    <div className="scale-[0.8] origin-top transform-gpu">
+                    <div className="w-full overflow-x-auto pb-4"><div className="min-w-[800px] md:min-w-0 scale-[0.6] sm:scale-[0.7] md:scale-[0.8] origin-top-left md:origin-top transform-gpu">
                       <div id="cv-preview-container" className="bg-white">
                         <CVPreview 
                           data={optimizedCv} 
@@ -472,6 +472,7 @@ export default function Jobs() {
                         />
                       </div>
                     </div>
+                  </div>
                   )}
                 </div>
               ) : (
