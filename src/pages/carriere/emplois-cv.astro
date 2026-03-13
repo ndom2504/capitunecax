@@ -1,28 +1,44 @@
----
+﻿---
 import Layout from '../../layouts/main.astro';
 import Jobs from '../../components/carriere/Jobs.tsx';
 
+// Détection de l'appel depuis l'application mobile via WebView
 const isApp = Astro.url.searchParams.get('source') === 'app';
 ---
 
 <Layout title="Marché de l'Emploi & CV - CAPITUNE" pageClass={isApp ? 'is-mobile-app' : ''}>
-  <!-- Styles pour les couleurs light theme sur la page si besoin -->
-  <div class="carriere-page  min-h-screen bg-[#f5f7fa] text-[#0a1628]">
-    {!isApp && (<div class="back-nav p-4 max-w-7xl mx-auto">
-      <a href="/dashboard" class="text-slate-600 hover:text-[#0a1628] flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-8 w-fit transition-colors">
-        <i class="fa fa-arrow-left"></i> Retour au Dashboard
-      </a>`n    </div>)}
-    
+  <div class="carriere-page min-h-screen bg-[#f5f7fa] text-[#0a1628]">
+    {!isApp && (
+      <div class="back-nav p-4 max-w-7xl mx-auto">
+        <a href="/dashboard" class="text-slate-600 hover:text-[#0a1628] flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-8 w-fit transition-colors">
+          <i class="fa fa-arrow-left"></i> Retour au Dashboard
+        </a>
+      </div>
+    )}
+
     <Jobs client:only="react" isMobileApp={isApp} />
   </div>
 </Layout>
 
-<style>
-/* CSS isolÃ©s pour intÃ©grer proprement l'outil React Tailwind dans Astro */
+<style is:global>
+/* Polices alignées sur le design system Capitune (Anton SC + Inter) */
 .carriere-page {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: Inter, sans-serif;
+  background-color: #f5f7fa;
 }
-.carriere-page .bg-white {
-    background-color: transparent !important;
+.carriere-page h1,
+.carriere-page h2,
+.carriere-page h3,
+.carriere-page h4 {
+  font-family: 'Anton SC', sans-serif;
+  letter-spacing: 0.02em;
+}
+.carriere-page button {
+  font-family: 'Anton SC', sans-serif;
+}
+.carriere-page input,
+.carriere-page textarea,
+.carriere-page select {
+  font-family: Inter, sans-serif;
 }
 </style>

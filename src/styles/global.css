@@ -2,6 +2,14 @@
 @import "../../generated/webflow.css";
 @import "tw-animate-css";
 
+/* Correction des variables polices Tailwind pour correspondre au design system Capitune */
+@layer base {
+  :root {
+    --font-geist-sans: Inter, sans-serif;
+    --font-geist-mono: Inconsolata, monospace;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
