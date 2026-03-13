@@ -2,43 +2,330 @@
 import Layout from '../../layouts/main.astro';
 import EED from '../../components/carriere/EED.tsx';
 
-// Détection de l'appel depuis l'application mobile via WebView
 const isApp = Astro.url.searchParams.get('source') === 'app';
 ---
 
 <Layout title="Espace Études (EED) - CAPITUNE" pageClass={isApp ? 'is-mobile-app' : ''}>
-  <div class="carriere-page min-h-screen bg-[#f5f7fa] text-[#0a1628]">
-    {!isApp && (
-      <div class="back-nav p-4 max-w-7xl mx-auto">
-        <a href="/dashboard" class="text-slate-600 hover:text-[#0a1628] flex items-center gap-2 text-sm font-bold tracking-widest uppercase mb-8 w-fit transition-colors">
-          <i class="fa fa-arrow-left"></i> Retour au Dashboard
-        </a>
-      </div>
-    )}
 
+  <!-- Hero section — même style que le dashboard -->
+  <div class="cap-page-hero">
+    <div class="cap-container">
+      {!isApp && (
+        <a href="/dashboard" class="cap-back-link">&#8592; Retour au Dashboard</a>
+      )}
+      <h1 class="cap-hero-title">🎓 Espace Études — Établissements DLI</h1>
+      <p class="cap-hero-sub">Consultez la liste officielle des établissements d'enseignement désignés (DLI) au Canada.</p>
+    </div>
+  </div>
+
+  <!-- Contenu interactif React -->
+  <div class="cap-page-body">
     <EED client:only="react" isMobileApp={isApp} />
   </div>
+
 </Layout>
 
 <style is:global>
-/* Polices alignées sur le design system Capitune (Anton SC + Inter) */
-.carriere-page {
+/* ─── Variables Capitune ─── */
+:root {
+  --cap-orange: #ff9408;
+  --cap-dark:   #1a1a2e;
+  --cap-blue:   #2980b9;
+  --cap-green:  #27ae60;
+  --cap-red:    #e74c3c;
+}
+
+/* ─── Mise en page de page Carrière ─── */
+.cap-page-hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 40px 0 32px;
+}
+.cap-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+.cap-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
   font-family: Inter, sans-serif;
-  background-color: #f5f7fa;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: color .2s;
 }
-.carriere-page h1,
-.carriere-page h2,
-.carriere-page h3,
-.carriere-page h4 {
+.cap-back-link:hover { color: #fff; }
+.cap-hero-title {
   font-family: 'Anton SC', sans-serif;
-  letter-spacing: 0.02em;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 0.03em;
 }
-.carriere-page button {
-  font-family: 'Anton SC', sans-serif;
-}
-.carriere-page input,
-.carriere-page textarea,
-.carriere-page select {
+.cap-hero-sub {
   font-family: Inter, sans-serif;
+  font-size: 15px;
+  color: rgba(255,255,255,0.68);
+  margin: 0;
+}
+.cap-page-body {
+  background: #f4f6fa;
+  min-height: 60vh;
+  padding: 36px 0 70px;
+}
+
+/* ─── Composant EED ─── */
+.eed-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 30px;
+  font-family: Inter, sans-serif;
+}
+
+/* Bannière profil actif */
+.eed-profile-banner {
+  background: #fff8f0;
+  border: 1px solid #ffd899;
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  font-size: 14px;
+  color: #7a4e00;
+}
+.eed-profile-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,148,8,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.eed-profile-name {
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--cap-dark);
+  margin: 0 0 3px;
+}
+.eed-profile-sub {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+/* Barre de recherche */
+.eed-search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.eed-input-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+.eed-input-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+  font-size: 14px;
+  pointer-events: none;
+}
+.eed-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  padding: 11px 14px 11px 38px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  outline: none;
+  background: #fafafa;
+  transition: border-color .2s, box-shadow .2s;
+  color: var(--cap-dark);
+}
+.eed-input:focus {
+  border-color: var(--cap-orange);
+  box-shadow: 0 0 0 3px rgba(255,148,8,0.12);
+  background: #fff;
+}
+.eed-select {
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  outline: none;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .2s;
+  color: var(--cap-dark);
+  min-width: 170px;
+}
+.eed-select:focus {
+  border-color: var(--cap-orange);
+  box-shadow: 0 0 0 3px rgba(255,148,8,0.12);
+}
+.eed-btn-search {
+  background: linear-gradient(135deg, #ff9408, #e67e00);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 11px 26px;
+  font-size: 13px;
+  font-family: 'Anton SC', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+  white-space: nowrap;
+}
+.eed-btn-search:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 18px rgba(255,148,8,0.35);
+}
+.eed-btn-search:disabled { opacity: .5; pointer-events: none; }
+
+/* Grille de cartes DLI */
+.eed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.eed-card {
+  background: #fff;
+  border: 1.5px solid #eee;
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s, box-shadow .25s, border-color .25s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.eed-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.09);
+  border-color: var(--cap-orange);
+}
+.eed-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.eed-card-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  border: 1.5px solid #eee;
+  overflow: hidden;
+  background: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.eed-card-logo img { width: 100%; height: 100%; object-fit: contain; }
+.eed-card-ext {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f4f6fa;
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #888;
+  font-size: 15px;
+  transition: background .2s, color .2s, border-color .2s;
+  flex-shrink: 0;
+}
+.eed-card-ext:hover {
+  background: var(--cap-orange);
+  color: #fff;
+  border-color: var(--cap-orange);
+}
+.eed-card-name {
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cap-dark);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+.eed-card-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #888;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.eed-card-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+.eed-card-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  border-radius: 9px;
+  background: #f4f6fa;
+  border: 1px solid #eee;
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cap-dark);
+  transition: background .2s, color .2s, border-color .2s;
+}
+.eed-card-btn:hover {
+  background: var(--cap-orange);
+  color: #fff;
+  border-color: var(--cap-orange);
+}
+
+/* États chargement / vide */
+.eed-loading {
+  text-align: center;
+  padding: 60px 0;
+  color: #aaa;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+}
+.eed-empty {
+  text-align: center;
+  padding: 48px;
+  border: 2px dashed #e0e0e0;
+  border-radius: 16px;
+  color: #aaa;
+  font-family: Inter, sans-serif;
+  font-size: 15px;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .cap-hero-title { font-size: 1.6rem; }
+  .cap-container { padding: 0 18px; }
+  .eed-wrap { padding: 0 18px; }
+  .eed-search-bar { flex-direction: column; }
+  .eed-select { min-width: 100%; }
+  .eed-btn-search { width: 100%; }
 }
 </style>
