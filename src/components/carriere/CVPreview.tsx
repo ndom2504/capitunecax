@@ -75,19 +75,19 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
     handleChange('education', newEdu);
   };
 
-  const inputClass = "bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-primary/30 rounded outline-none hover:bg-slate-50 transition-colors";
+  const inputClass = "bg-transparent border-none p-0 m-0 w-full focus:ring-1 focus:ring-[#1f4b6e]/30 rounded outline-none hover:bg-slate-50 transition-colors";
 
   return (
     <div className={`w-full bg-white text-slate-900 shadow-2xl min-h-[1122px] p-12 font-sans cv-printable ${isMinimal ? 'font-light' : ''}`}>
       {/* Header */}
-      <header className={`mb-10 ${isModern ? 'border-l-8 border-primary pl-6' : isCreative ? 'text-center bg-primary/5 p-8 rounded-3xl' : 'border-b pb-8'}`}>
+      <header className={`mb-10 ${isModern ? 'border-l-8 border-[#1f4b6e] pl-6' : isCreative ? 'text-center bg-[#1f4b6e]/5 p-8 rounded-3xl' : 'border-b pb-8'}`}>
         <input 
-          className={`text-4xl font-black tracking-tighter uppercase mb-2 ${isCreative ? 'text-primary/90' : ''} ${inputClass}`}
+          className={`text-4xl font-black tracking-tighter uppercase mb-2 ${isCreative ? 'text-[#1f4b6e]/90' : ''} ${inputClass}`}
           value={data.contact.name}
           onChange={(e) => handleChange('contact.name', e.target.value)}
         />
         <input 
-          className={`text-xl font-bold ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/80' : 'text-slate-500'} ${inputClass}`}
+          className={`text-xl font-bold ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/80' : 'text-slate-500'} ${inputClass}`}
           value={data.contact.title}
           onChange={(e) => handleChange('contact.title', e.target.value)}
         />
@@ -119,11 +119,11 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
         <div className={(isModern || isClassic) ? 'col-span-2 space-y-10' : 'space-y-10'}>
           {/* Profile */}
           <section>
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/90' : 'text-slate-900'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/90' : 'text-slate-900'}`}>
               <Award className="w-4 h-4" /> Profil Professionnel
             </h2>
             <textarea 
-              className={`text-sm leading-relaxed text-slate-600 italic w-full bg-transparent border-none resize-none focus:ring-1 focus:ring-primary/30 rounded outline-none hover:bg-slate-50 transition-colors`}
+              className={`text-sm leading-relaxed text-slate-600 italic w-full bg-transparent border-none resize-none focus:ring-1 focus:ring-[#1f4b6e]/30 rounded outline-none hover:bg-slate-50 transition-colors`}
               rows={4}
               value={data.profile}
               onChange={(e) => handleChange('profile', e.target.value)}
@@ -132,13 +132,13 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
 
           {/* Experience */}
           <section>
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/90' : 'text-slate-900'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2 ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/90' : 'text-slate-900'}`}>
               <Briefcase className="w-4 h-4" /> Expériences Professionnelles
             </h2>
             <div className="space-y-8">
               {data.experience.map((exp, i) => (
                 <div key={i} className="relative pl-6 border-l border-slate-100">
-                  <div className={`absolute -left-1.5 top-1.5 w-3 h-3 rounded-full ${isModern ? 'bg-primary' : isCreative ? 'bg-primary' : 'bg-slate-300'}`} />
+                  <div className={`absolute -left-1.5 top-1.5 w-3 h-3 rounded-full ${isModern ? 'bg-[#1f4b6e]' : isCreative ? 'bg-[#1f4b6e]' : 'bg-slate-300'}`} />
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <input 
@@ -161,9 +161,9 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
                   <ul className="space-y-2">
                     {exp.achievements.map((ach, j) => (
                       <li key={j} className="text-xs text-slate-600 leading-relaxed flex gap-2">
-                        <span className="text-primary">•</span> 
+                        <span className="text-[#1f4b6e]">•</span> 
                         <textarea 
-                          className={`w-full bg-transparent border-none resize-none focus:ring-1 focus:ring-primary/30 rounded outline-none hover:bg-slate-50 transition-colors`}
+                          className={`w-full bg-transparent border-none resize-none focus:ring-1 focus:ring-[#1f4b6e]/30 rounded outline-none hover:bg-slate-50 transition-colors`}
                           rows={1}
                           value={ach}
                           onChange={(e) => updateAchievement(i, j, e.target.value)}
@@ -181,7 +181,7 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
         <div className="space-y-10">
           {/* Skills */}
           <section>
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/90' : 'text-slate-900'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/90' : 'text-slate-900'}`}>
               Compétences
             </h2>
             <div className="space-y-6">
@@ -191,7 +191,7 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
                   {data.skills.technical.map((s, i) => (
                     <input 
                       key={i} 
-                      className={`px-2 py-1 text-[10px] font-bold rounded w-auto inline-block ${isModern ? 'bg-primary/5 text-primary' : 'bg-slate-100 text-slate-600'} ${inputClass}`}
+                      className={`px-2 py-1 text-[10px] font-bold rounded w-auto inline-block ${isModern ? 'bg-[#1f4b6e]/5 text-[#1f4b6e]' : 'bg-slate-100 text-slate-600'} ${inputClass}`}
                       value={s}
                       onChange={(e) => {
                         const newTech = [...data.skills.technical];
@@ -224,7 +224,7 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
 
           {/* Education */}
           <section>
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/90' : 'text-slate-900'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/90' : 'text-slate-900'}`}>
               <GraduationCap className="w-4 h-4" /> Éducation
             </h2>
             <div className="space-y-4">
@@ -244,7 +244,7 @@ export default function CVPreview({ data, templateId, onChange }: Props) {
 
           {/* Languages */}
           <section>
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-primary/90' : isCreative ? 'text-primary/90' : 'text-slate-900'}`}>
+            <h2 className={`text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2 ${isModern ? 'text-[#1f4b6e]/90' : isCreative ? 'text-[#1f4b6e]/90' : 'text-slate-900'}`}>
               <Languages className="w-4 h-4" /> Langues
             </h2>
             <div className="flex flex-wrap gap-3">
