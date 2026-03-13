@@ -78,55 +78,21 @@ export const geminiService = {
   },
 
   async searchJobs(query: string, location?: string) {
-    if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
-    
-    const isGeneral = query === "*";
-    const prompt = isGeneral 
-      ? `Trouve les 10 offres d'emploi les plus récentes et diversifiées au Canada sur le Guichet Emplois (Job Bank Canada).`
-      : `Trouve des offres d'emploi réelles au Canada (Guichet Emplois, LinkedIn, Indeed).
-         Poste: ${query}
-         Lieu: ${location || "Canada"}`;
+    // Scrape réel du Guichet Emplois via /api/jobs (ScraperAPI → jobbank.gc.ca)
+    const params = new URLSearchParams();
+    const q = (!query || query === "*") ? "" : query;
+    params.set("q", q);
+    if (location) params.set("location", location);
 
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        {
-          parts: [
-            { text: `${prompt}
-            Retourne une liste de 10 offres d'emploi actuelles.
-            Chaque offre doit avoir: id (unique), title, company, location, salary (si dispo), description_short, et url_officielle.` }
-          ]
-        }
-      ],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              id: { type: Type.STRING },
-              title: { type: Type.STRING },
-              company: { type: Type.STRING },
-              location: { type: Type.STRING },
-              salary: { type: Type.STRING },
-              description_short: { type: Type.STRING },
-              url_officielle: { type: Type.STRING }
-            },
-            required: ["id", "title", "company", "location", "description_short", "url_officielle"]
-          }
-        },
-        tools: [{ googleSearch: {} }]
-      }
-    });
-
-    try {
-      return JSON.parse(response.text || "[]");
-    } catch (e) {
-      console.error("Failed to parse job search results", e);
+    const res = await fetch(`/api/jobs?${params.toString()}`);
+    if (!res.ok) {
+      console.error("[searchJobs] /api/jobs HTTP", res.status);
       return [];
     }
+    const data = await res.json();
+    if (Array.isArray(data)) return data;
+    console.error("[searchJobs] réponse inattendue:", data);
+    return [];
   },
 
   async analyzeCVFromFile(fileBase64: string, mimeType: string) {

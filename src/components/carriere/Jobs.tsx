@@ -343,8 +343,8 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
         <div className="jobs-section-title">
           <div className="jobs-section-icon">&#128269;</div>
           <div>
-            <h2>{jobQuery ? "Resultats de recherche" : "Dernieres offres"}</h2>
-            <p>Opportunites reelles synchronisees avec le Guichet Emplois Canada.</p>
+            <h2>{jobQuery ? "Résultats pour \'" + jobQuery + "\'" : "Dernières offres"}</h2>
+            <p>Offres réelles scrappées depuis le <a href="https://www.jobbank.gc.ca" target="_blank" rel="noopener noreferrer" style={{ color: "var(--cap-orange)" }}>Guichet Emplois Canada</a>.</p>
           </div>
         </div>
         <div className="jobs-search-bar">
@@ -361,7 +361,10 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
           </button>
         </div>
         {loadingJobs && jobs.length === 0 ? (
-          <div className="jobs-loading"><p>Recherche des meilleures opportunites...</p></div>
+          <div className="jobs-loading">
+            <span style={{ fontSize: "28px", animation: "spin 1s linear infinite", display: "inline-block" }}>&#9881;</span>
+            <p>Recherche sur le Guichet Emplois Canada...</p>
+          </div>
         ) : (
           <div className="jobs-grid">
             {jobs.map(function(job) {
@@ -388,7 +391,8 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
             })}
             {!loadingJobs && jobs.length === 0 && (
               <div className="jobs-empty">
-                <p>Entrez un poste pour decouvrir les offres disponibles.</p>
+                <p>Aucune offre trouvée. Essayez un autre mot-clé ou lieu.</p>
+                <a href="https://www.jobbank.gc.ca/jobsearch/jobsearch" target="_blank" rel="noopener noreferrer" style={{ color: "var(--cap-orange)", fontWeight: "700", fontSize: "13px" }}>&#8599; Parcourir le Guichet Emplois</a>
               </div>
             )}
           </div>
