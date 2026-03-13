@@ -43,9 +43,10 @@ function spanText(block: string, cls: string): string {
 
 // ── Fetch HTML via ScraperAPI ─────────────────────────────────────────────────
 
-async function fetchGuichet(q: string, location: string): Promise<string> {
+async function fetchGuichet(q: string, location: string, page: string): Promise<string> {
   const params = new URLSearchParams({ sort: 'M', action: 'search' });
   if (q)        params.set('searchstring',   q);
+  if (page)     params.set('page', page);
   if (location) params.set('locationstring', location);
 
   const target = `${BASE_FR}/jobsearch/rechercheemplois?${params.toString()}`;
@@ -123,6 +124,7 @@ function parseJobs(html: string): object[] {
 export const GET: APIRoute = async ({ url }) => {
   const q        = (url.searchParams.get('q')        || '').trim();
   const location = (url.searchParams.get('location') || '').trim();
+  const page     = (url.searchParams.get('page')     || '1').trim();
   const debug    = url.searchParams.get('debug') === '1';
 
   const headers = {
@@ -132,7 +134,7 @@ export const GET: APIRoute = async ({ url }) => {
   };
 
   try {
-    const html = await fetchGuichet(q, location);
+    const html = await fetchGuichet(q, location, page);
 
     // Mode debug : retourne le HTML brut (8 ko) pour inspecter la structure
     if (debug) {
@@ -146,9 +148,9 @@ export const GET: APIRoute = async ({ url }) => {
 
     let jobs = parseJobs(html);
 
-    // Fallback sans localisation si 0 résultat
-    if (jobs.length === 0 && location) {
-      const html2 = await fetchGuichet(q, '');
+    // Fallback sans localisation si 0 résultat et page = 1
+    if (jobs.length === 0 && location && page === '1') {
+      const html2 = await fetchGuichet(q, '', page);
       jobs = parseJobs(html2);
     }
 

@@ -77,12 +77,14 @@ export const geminiService = {
     }
   },
 
-  async searchJobs(query: string, location?: string) {
-    // Scrape réel du Guichet Emplois via /api/jobs (ScraperAPI → jobbank.gc.ca)
+  async searchJobs(query: string, location?: string, page: number = 1) {
+    // Scrape réel du Guichet Emplois via /api/jobs (ScraperAPI -> jobbank.gc.ca)
     const params = new URLSearchParams();
     const q = (!query || query === "*") ? "" : query;
     params.set("q", q);
     if (location) params.set("location", location);
+    params.set("page", page.toString());
+    params.set("_t", Date.now().toString());
 
     const res = await fetch(`/api/jobs?${params.toString()}`);
     if (!res.ok) {

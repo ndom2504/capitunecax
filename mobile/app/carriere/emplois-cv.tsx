@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { API_BASE_URL } from '../../lib/api';
 
-const PAGE_URL = `${API_BASE_URL}/carriere/emplois-cv?source=app`;
+const PAGE_URL = `${API_BASE_URL}/carriere/emplois-cv?source=app&_t=${Date.now()}`;
 
 const INJECTED_JS = `
   (function() {

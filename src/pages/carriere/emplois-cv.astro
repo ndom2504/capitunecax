@@ -118,7 +118,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   flex-shrink: 0;
 }
 .jobs-profile-name { font-weight: 700; font-size: 14px; color: var(--cap-dark); margin: 0 0 3px; }
-.jobs-profile-sub  { font-size: 12px; color: #888; margin: 0; }
+.jobs-profile-sub  { font-size: 12px; color: #333; font-size: 14px; margin: 0; }
 .jobs-btn-clear {
   padding: 8px 18px;
   border-radius: 9px;
@@ -386,7 +386,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   margin: 0 0 4px;
   letter-spacing: 0.03em;
 }
-.jobs-section-title p { font-size: 14px; color: #888; margin: 0; }
+.jobs-section-title p { font-size: 14px; color: #333; font-size: 14px; margin: 0; }
 
 .jobs-magic-grid {
   display: grid;
@@ -482,7 +482,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   font-size: 12px;
   font-family: Inter, sans-serif;
   font-weight: 700;
-  color: #888;
+  color: #333; font-size: 14px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -643,20 +643,20 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   align-items: flex-start;
   margin-bottom: 12px;
 }
-.jobs-job-title  { font-size: 16px; font-weight: 800; color: var(--cap-dark); margin: 0 0 5px; line-height: 1.3; transition: color .2s; }
-.jobs-job-card:hover .jobs-job-title { color: var(--cap-orange); }
-.jobs-job-company{ font-size: 13px; color: #777; display: flex; align-items: center; gap: 5px; }
+  .jobs-job-title  { font-family: Inter, sans-serif !important; font-size: 17px; font-weight: 700; color: #111; margin: 0 0 6px; line-height: 1.3; transition: color .2s; text-transform: none !important; letter-spacing: 0; }
+  .jobs-job-card:hover .jobs-job-title { color: var(--cap-orange); }
+  .jobs-job-company{ font-size: 13px; color: #444; font-weight: 500; display: flex; align-items: center; gap: 5px; }
 .jobs-job-ext {
   width: 36px; height: 36px; border-radius: 9px;
   background: #f4f6fa; border: 1px solid #eee;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; color: #888; text-decoration: none; flex-shrink: 0;
+  font-size: 15px; color: #333; font-size: 14px; text-decoration: none; flex-shrink: 0;
   transition: .2s;
 }
 .jobs-job-ext:hover { background: var(--cap-orange); color: #fff; border-color: var(--cap-orange); }
 .jobs-job-desc {
   font-size: 13px;
-  color: #888;
+  color: #333; font-size: 14px;
   line-height: 1.55;
   margin-bottom: 18px;
   display: -webkit-box;
@@ -676,7 +676,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
 .jobs-job-meta {
   font-size: 12px;
   font-weight: 700;
-  color: #777;
+  color: #444; font-weight: 500;
   display: flex;
   align-items: center;
   gap: 5px;

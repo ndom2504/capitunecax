@@ -21,7 +21,10 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
   const fileInputRef = useRef(null);
   const [jobQuery, setJobQuery] = useState("");
   const [jobLocation, setJobLocation] = useState("");
-  const [jobs, setJobs] = useState([]);
+    const [jobs, setJobs] = useState<any[]>([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const observerRef = useRef<HTMLDivElement>(null);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [optimizedCv, setOptimizedCv] = useState(null);
   const [loadingMagic, setLoadingMagic] = useState(false);
@@ -154,13 +157,42 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
     }).from(element).save();
   };
 
-  const handleJobSearch = async (query) => {
-    const q = query || jobQuery;
+  const handleJobSearch = async (query: string | undefined = undefined, p: number = 1) => {
+    const q = (typeof query === 'string' ? query : jobQuery) || jobQuery;
     if (!q || !q.trim()) return;
+    if (p === 1) { setJobs([]); setHasMore(true); }
     setLoadingJobs(true);
-    try { const results = await geminiService.searchJobs(q, jobLocation); setJobs(results); }
-    catch (e) { console.error(e); } finally { setLoadingJobs(false); }
+    try {
+      const results = await geminiService.searchJobs(q, jobLocation, p);
+      if (!results || results.length === 0) setHasMore(false);
+      
+      if (p === 1) {
+        setJobs(results || []);
+      } else {
+        setJobs(prev => {
+          const newJobs = [...prev];
+          (results || []).forEach((r: any) => {
+            if (!newJobs.find(x => x.id === r.id)) newJobs.push(r);
+          });
+          return newJobs;
+        });
+      }
+      setPage(p);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingJobs(false);
+    }
   };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting && hasMore && !loadingJobs && jobs.length > 0) handleJobSearch(jobQuery, page + 1); },
+      { threshold: 0.5 }
+    );
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingJobs, jobs.length, page, jobQuery, jobLocation]);
 
   return (
     <div className="jobs-wrap">
@@ -356,7 +388,7 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
             <span className="jobs-input-icon">&#128205;</span>
             <input type="text" className="jobs-input" placeholder="Lieu (ex: Montreal...)" value={jobLocation} onChange={e => setJobLocation(e.target.value)} />
           </div>
-          <button className="jobs-btn-search" onClick={() => handleJobSearch()} disabled={loadingJobs || !jobQuery.trim()}>
+          <button className="jobs-btn-search" onClick={() => handleJobSearch(jobQuery, 1)} disabled={loadingJobs || !jobQuery.trim()}>
             {loadingJobs ? "Recherche..." : "Chercher"}
           </button>
         </div>
@@ -393,6 +425,11 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
               <div className="jobs-empty">
                 <p>Aucune offre trouvée. Essayez un autre mot-clé ou lieu.</p>
                 <a href="https://www.jobbank.gc.ca/jobsearch/jobsearch" target="_blank" rel="noopener noreferrer" style={{ color: "var(--cap-orange)", fontWeight: "700", fontSize: "13px" }}>&#8599; Parcourir le Guichet Emplois</a>
+              </div>
+            )}
+            {jobs.length > 0 && (
+              <div ref={observerRef} style={{ padding: "20px", textAlign: "center", width: "100%", gridColumn: "1 / -1", color: "#666", fontSize: "14px" }}>
+                {loadingJobs ? "Chargement des offres suivantes..." : (hasMore ? "" : "Fin des résultats")}
               </div>
             )}
           </div>
