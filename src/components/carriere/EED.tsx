@@ -49,10 +49,11 @@ export default function EED({ isMobileApp = false }: { isMobileApp?: boolean }) 
   useEffect(() => {
     const q = search.toLowerCase();
     const filtered = allInstitutions.filter(inst =>
-      (inst.name.toLowerCase().includes(q) || inst.type.toLowerCase().includes(q)) &&
-      (province === "Toutes" || inst.province === province)
+      (!q || inst.name.toLowerCase().includes(q) || inst.type.toLowerCase().includes(q)) &&
+      (province === "Toutes" || inst.province === province || inst.province.toLowerCase() === province.toLowerCase())
     );
     setInstitutions(filtered);
+    setCurrentIdx(0);
   }, [search, province, allInstitutions]);
 
   const handleRemoteSearch = async (e: React.FormEvent) => {
@@ -108,14 +109,19 @@ export default function EED({ isMobileApp = false }: { isMobileApp?: boolean }) 
           onChange={e => setProvince(e.target.value)}
         >
           <option value="Toutes">Toutes les provinces</option>
-          <option value="Québec">Québec</option>
-          <option value="Ontario">Ontario</option>
-          <option value="Colombie-Britannique">Colombie-Britannique</option>
-          <option value="Alberta">Alberta</option>
-          <option value="Manitoba">Manitoba</option>
-          <option value="Saskatchewan">Saskatchewan</option>
-          <option value="Nouvelle-Écosse">Nouvelle-Écosse</option>
-          <option value="Nouveau-Brunswick">Nouveau-Brunswick</option>
+          <option value="QC">Québec</option>
+          <option value="ON">Ontario</option>
+          <option value="BC">Colombie-Britannique</option>
+          <option value="AB">Alberta</option>
+          <option value="MB">Manitoba</option>
+          <option value="SK">Saskatchewan</option>
+          <option value="NS">Nouvelle-Écosse</option>
+          <option value="NB">Nouveau-Brunswick</option>
+          <option value="NL">Terre-Neuve</option>
+          <option value="PE">Île-du-Prince-Édouard</option>
+          <option value="YT">Yukon</option>
+          <option value="NT">Territoires du Nord-Ouest</option>
+          <option value="NU">Nunavut</option>
         </select>
         <button
           type="submit"

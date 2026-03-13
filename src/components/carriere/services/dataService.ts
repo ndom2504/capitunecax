@@ -24,7 +24,16 @@ export const dataService = {
   async getEED(): Promise<DLI[]> {
     const res = await fetch("/api/dli");
     if (!res.ok) return [];
-    return res.json();
+    const json = await res.json();
+    // L'API retourne { total, source, updatedAt, data: [{id, nom, admissionsUrl, ...}] }
+    const raw: any[] = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+    return raw.map(r => ({
+      id: r.id,
+      name: r.name ?? r.nom ?? '',
+      province: r.province ?? '',
+      type: r.type ?? '',
+      url: r.url ?? r.admissionsUrl ?? '',
+    }));
   },
 
   // Local storage fallback for modules not yet in backend
