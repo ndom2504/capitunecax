@@ -84,8 +84,10 @@ export default function CarriereScreen() {
                 if (tab.comingSoon) return;
                 if (tab.id === 'ecole') {
                   router.push('/carriere/etudes' as any);
-                } else if (tab.id === 'emploi' || tab.id === 'cv') {
+                } else if (tab.id === 'emploi') {
                   router.push('/carriere/emplois-cv' as any);
+                } else if (tab.id === 'cv') {
+                  router.push('/carriere/cv' as any);
                 } else {
                   alert('Cette section sera bientôt disponible !');
                 }

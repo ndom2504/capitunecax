@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { API_BASE_URL } from '../../lib/api';
 
-const PAGE_URL = `${API_BASE_URL}/carriere/emplois-cv?source=app`;
+const PAGE_URL = `${API_BASE_URL}/carriere/cv?source=app`;
 
 const INJECTED_JS = `
   (function() {
@@ -20,7 +20,7 @@ const INJECTED_JS = `
   true;
 `;
 
-export default function EmploisCVScreen() {
+export default function CVScreen() {
   const router = useRouter();
   const webRef = useRef<any>(null);
   const [progress, setProgress] = useState(0);
@@ -33,7 +33,7 @@ export default function EmploisCVScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Marché de l'Emploi</Text>
+        <Text style={styles.headerTitle}>CV Magic</Text>
         <TouchableOpacity
           style={styles.reloadBtn}
           onPress={() => { webRef.current?.reload(); setHasError(false); }}
@@ -77,7 +77,7 @@ export default function EmploisCVScreen() {
           allowsBackForwardNavigationGestures
           renderLoading={() => (
             <View style={styles.loader}>
-              <ActivityIndicator size="large" color={Colors.orange} />
+              <ActivityIndicator size="large" color={'#3b82f6'} />
             </View>
           )}
         />
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
 
   progressTrack: { height: 2, backgroundColor: Colors.border },
-  progressFill:  { height: 2, backgroundColor: Colors.orange },
+  progressFill:  { height: 2, backgroundColor: '#3b82f6' },
 
   webview: { flex: 1 },
   loader:  { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -120,8 +120,7 @@ const styles = StyleSheet.create({
   errorSub:   { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
   retryBtn: {
     marginTop: 8, paddingHorizontal: 28, paddingVertical: 12,
-    backgroundColor: Colors.orange, borderRadius: 12,
+    backgroundColor: '#3b82f6', borderRadius: 12,
   },
   retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
-
