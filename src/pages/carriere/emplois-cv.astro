@@ -13,14 +13,14 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
       {!isApp && (
         <a href="/dashboard" class="cap-back-link">&#8592; Retour au Dashboard</a>
       )}
-      <h1 class="cap-hero-title">💼 Marché de l&#39;Emploi &amp; CV</h1>
-      <p class="cap-hero-sub">Analysez votre profil, optimisez votre CV et trouvez des offres sur le Guichet Emplois Canada.</p>
+      <h1 class="cap-hero-title">&#128188; Marché de l&#39;Emploi</h1>
+      <p class="cap-hero-sub">Explorez les offres d'emploi canadiennes et trouvez votre prochain poste sur le Guichet Emplois Canada.</p>
     </div>
   </div>
 
   <!-- Contenu interactif React -->
   <div class="cap-page-body">
-    <Jobs client:only="react" isMobileApp={isApp} />
+    <Jobs client:only="react" isMobileApp={isApp} mode="jobs" />
   </div>
 
 </Layout>

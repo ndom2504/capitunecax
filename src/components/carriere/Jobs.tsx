@@ -12,7 +12,8 @@ const CV_TEMPLATES = [
   { id: "minimal",  name: "Minimaliste", preview: "https://picsum.photos/seed/minimal/400/500"  },
 ];
 
-export default function Jobs({ isMobileApp = false }) {
+export default function Jobs({ isMobileApp = false, mode = "full" }) {
+  // mode: "full" | "jobs" | "cv"
   const [cvText, setCvText] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
@@ -37,14 +38,25 @@ export default function Jobs({ isMobileApp = false }) {
       setGlobalProfile(profile);
       setAnalysis(profile.analysis);
       setCvText(profile.cvText || "");
-      const skill = profile.analysis && profile.analysis.top_skills && profile.analysis.top_skills[0];
-      handleJobSearch(skill || "*");
-    } else {
+      if (mode !== "cv") {
+        const skill = profile.analysis && profile.analysis.top_skills && profile.analysis.top_skills[0];
+        handleJobSearch(skill || "*");
+      }
+    } else if (mode !== "cv") {
       handleJobSearch("*");
+    }
+    // Pré-remplir depuis ?job= (redirection depuis la page emplois)
+    if (typeof window !== "undefined") {
+      const jobParam = new URLSearchParams(window.location.search).get("job");
+      if (jobParam) setJobQuery(jobParam);
     }
   }, []);
 
   const handleOptimizeForJob = (jobTitle) => {
+    if (mode === "jobs") {
+      window.location.href = "/carriere/cv?job=" + encodeURIComponent(jobTitle);
+      return;
+    }
     setJobQuery(jobTitle);
     if (cvMagicRef.current) cvMagicRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -166,7 +178,7 @@ export default function Jobs({ isMobileApp = false }) {
         </div>
       )}
 
-      {!globalProfile && (
+      {!globalProfile && mode !== "jobs" && (
         <div className="jobs-cv-grid">
           <div className="jobs-card">
             <div className="jobs-card-title">
@@ -251,6 +263,7 @@ export default function Jobs({ isMobileApp = false }) {
         </div>
       )}
 
+      {mode !== "jobs" && (
       <div style={{ marginBottom: "40px" }} ref={cvMagicRef}>
         <div className="jobs-section-title">
           <div className="jobs-section-icon">&#128161;</div>
@@ -323,7 +336,9 @@ export default function Jobs({ isMobileApp = false }) {
           </div>
         </div>
       </div>
+      )}
 
+      {mode !== "cv" && (
       <div>
         <div className="jobs-section-title">
           <div className="jobs-section-icon">&#128269;</div>
@@ -379,6 +394,7 @@ export default function Jobs({ isMobileApp = false }) {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
