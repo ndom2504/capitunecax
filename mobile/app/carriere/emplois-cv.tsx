@@ -14,6 +14,7 @@ const PAGE_URL = `${API_BASE_URL}/carriere/emplois-cv?source=app&_t=${Date.now()
 const INJECTED_JS = `
   (function() {
     var style = document.createElement('style');
+    var meta = document.createElement('meta'); meta.name = 'viewport'; meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'; document.head.appendChild(meta);
     style.innerHTML = '.cap-page-hero { display: none !important; } .cap-page-body { padding-top: 8px !important; } body { background: #f5f7fa !important; }';
     document.head.appendChild(style);
   })();

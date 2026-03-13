@@ -88,7 +88,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   font-family: Inter, sans-serif;
 }
 
-/* Bannière profil actif */
+@media (max-width: 600px) { .jobs-job-card { padding: 16px; border-radius: 12px; } .jobs-job-title { font-size: 15px !important; } .jobs-job-footer { flex-direction: column; align-items: stretch; gap: 8px; } .jobs-job-actions { width: 100%; display: flex; gap: 8px; justify-content: space-between; } .jobs-btn-postuler, .jobs-btn-optimize { flex: 1; text-align: center; } .jobs-search-bar { flex-direction: column; } .jobs-input-wrap { width: 100%; border-bottom: 1px solid #eee; border-right: none; } .jobs-btn-search { width: 100%; } } /* Bannière profil actif */
 .jobs-profile-banner {
   background: #fff8f0;
   border: 1px solid #ffd899;
