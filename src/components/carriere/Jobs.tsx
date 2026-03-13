@@ -21,6 +21,10 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
   const fileInputRef = useRef(null);
   const [jobQuery, setJobQuery] = useState("");
   const [jobLocation, setJobLocation] = useState("");
+    // Contexte de recherche réellement exécuté (sert à la pagination).
+    // Important: jobQuery peut rester vide pour "Dernières offres".
+    const [activeQuery, setActiveQuery] = useState<string>("*");
+    const [activeLocation, setActiveLocation] = useState<string>("");
     const [jobs, setJobs] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
@@ -158,12 +162,26 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
   };
 
   const handleJobSearch = async (query: string | undefined = undefined, p: number = 1) => {
-    const q = (typeof query === 'string' ? query : jobQuery) || jobQuery;
-    if (!q || !q.trim()) return;
-    if (p === 1) { setJobs([]); setHasMore(true); }
+    const requestedQuery = (typeof query === 'string') ? query : jobQuery;
+    const requestedLocation = jobLocation;
+
+    const q = (p === 1 ? requestedQuery : activeQuery) ?? "";
+    const loc = (p === 1 ? requestedLocation : activeLocation) ?? "";
+
+    // Autoriser q vide (=> "Dernières offres").
+    if (p === 1) {
+      setJobs([]);
+      setHasMore(true);
+      setPage(1);
+      setActiveQuery(q);
+      setActiveLocation(loc);
+      // Garder l'input vide quand on veut "Dernières offres"
+      if (typeof query === 'string' && query && query !== "*") setJobQuery(query);
+    }
+
     setLoadingJobs(true);
     try {
-      const results = await geminiService.searchJobs(q, jobLocation, p);
+      const results = await geminiService.searchJobs(q, loc, p);
       if (!results || results.length === 0) setHasMore(false);
       
       if (p === 1) {
@@ -187,12 +205,16 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
 
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting && hasMore && !loadingJobs && jobs.length > 0) handleJobSearch(jobQuery, page + 1); },
+      entries => {
+        if (!entries[0].isIntersecting) return;
+        if (!hasMore || loadingJobs || jobs.length === 0) return;
+        handleJobSearch(undefined, page + 1);
+      },
       { threshold: 0.5 }
     );
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loadingJobs, jobs.length, page, jobQuery, jobLocation]);
+  }, [hasMore, loadingJobs, jobs.length, page, activeQuery, activeLocation]);
 
   return (
     <div className="jobs-wrap">
