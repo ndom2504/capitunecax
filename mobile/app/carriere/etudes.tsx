@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
   TextInput, ActivityIndicator, Linking, ScrollView,
-  Modal, Pressable,
+  Modal, Pressable, Image, Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
@@ -17,7 +17,16 @@ import {
   type DLIType,
 } from '../../lib/dli-service';
 
-// ── Constantes de labels ───────────────────────────────────────────────────────
+const { width: SCREEN_W } = Dimensions.get('window');
+
+const EED_COLORS = [
+  { bg: '#0f3460', accent: '#4ecdc4' },
+  { bg: '#1a1a40', accent: '#a78bfa' },
+  { bg: '#183028', accent: '#4ade80' },
+  { bg: '#1a1a2e', accent: '#ff9408' },
+  { bg: '#2d1540', accent: '#f472b6' },
+  { bg: '#0a2744', accent: '#38bdf8' },
+];
 
 const PROVINCES: { code: string; label: string }[] = [
   { code: '', label: 'Toutes les provinces' },
@@ -45,129 +54,22 @@ const TYPES: { code: string; label: string; color: string }[] = [
   { code: 'ecole_langue', label: 'Ecole de langue', color: '#3b82f6' },
 ];
 
-function getTypeConfig(type: string) {
-  return TYPES.find(t => t.code === type) ?? TYPES[0];
-}
-
-// ── Composant carte institution ───────────────────────────────────────────────
-
-const InstitutionCard = React.memo(({ item }: { item: DLIInstitution }) => {
-  const typeConfig = getTypeConfig(item.type);
-
-  const openSite = () => {
-    const url = item.admissionsUrl?.trim()
-      ? item.admissionsUrl
-      : `https://www.google.com/search?q=${encodeURIComponent(item.nom + ' admissions Canada')}`;
-    Linking.openURL(url).catch(() => {});
-  };
-
-  return (
-    <View style={cardStyles.card}>
-      <View style={cardStyles.top}>
-        <View style={[cardStyles.typeBadge, { backgroundColor: typeConfig.color + '1A' }]}>
-          <Text style={[cardStyles.typeText, { color: typeConfig.color }]}>{typeConfig.label}</Text>
-        </View>
-        {item.province ? (
-          <View style={cardStyles.provinceBadge}>
-            <Text style={cardStyles.provinceText}>{item.province}</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={cardStyles.name} numberOfLines={2}>{item.nom}</Text>
-      {item.ville ? (
-        <View style={cardStyles.villeRow}>
-          <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
-          <Text style={cardStyles.ville}>{item.ville}</Text>
-        </View>
-      ) : null}
-      <TouchableOpacity style={cardStyles.btn} onPress={openSite} activeOpacity={0.8}>
-        <Text style={cardStyles.btnText}>Voir les admissions</Text>
-        <Ionicons name="open-outline" size={14} color={Colors.surface} />
-      </TouchableOpacity>
-    </View>
-  );
-});
-
-const cardStyles = StyleSheet.create({
-  card: {
-    ...UI.card,
-    padding: 14,
-    marginBottom: 12,
-  },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  typeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  provinceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: Colors.primary + '1A',
-  },
-  provinceText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: Colors.text,
-    marginBottom: 6,
-    lineHeight: 20,
-  },
-  villeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 10,
-  },
-  ville: {
-    fontSize: 12,
-    color: Colors.textMuted,
-  },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 10,
-    paddingVertical: 9,
-    paddingHorizontal: 14,
-  },
-  btnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.surface,
-  },
-});
-
-// ── Ecran principal ───────────────────────────────────────────────────────────
-
 export default function EtudesScreen() {
   const router = useRouter();
-  const [allData, setAllData] = useState<DLIInstitution[]>([]);
-  const [displayed, setDisplayed] = useState<DLIInstitution[]>([]);
-  const [query, setQuery] = useState('');
-  const [province, setProvince] = useState('');
-  const [type, setType] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [showProvinceModal, setShowProvinceModal] = useState(false);
-  const [showTypeModal, setShowTypeModal] = useState(false);
+  const insets = useSafeAreaInsets();
+  const listRef = useRef<FlatList<DLIInstitution> | null>(null);
 
-  // Chargement initial
+  const [allData, setAllData]           = useState<DLIInstitution[]>([]);
+  const [displayed, setDisplayed]       = useState<DLIInstitution[]>([]);
+  const [query, setQuery]               = useState('');
+  const [province, setProvince]         = useState('');
+  const [type, setType]                 = useState('');
+  const [loading, setLoading]           = useState(true);
+  const [showSearch, setShowSearch]     = useState(false);
+  const [showProvinceModal, setShowProvinceModal] = useState(false);
+  const [showTypeModal, setShowTypeModal]         = useState(false);
+  const [activeIndex, setActiveIndex]   = useState(0);
+
   useEffect(() => {
     fetchDLIInstitutions().then(data => {
       setAllData(data);
@@ -176,7 +78,6 @@ export default function EtudesScreen() {
     }).catch(() => setLoading(false));
   }, []);
 
-  // Filtre réactif
   useEffect(() => {
     if (!allData.length) return;
     const filtered = filterDLI(allData, {
@@ -185,144 +86,253 @@ export default function EtudesScreen() {
       type: (type as DLIType) || undefined,
     });
     setDisplayed(filtered.slice(0, 200));
+    setActiveIndex(0);
+    if (listRef.current && filtered.length > 0) {
+      listRef.current.scrollToOffset({ offset: 0, animated: false });
+    }
   }, [query, province, type, allData]);
 
   const hasFilters = !!(query.trim() || province || type);
   const selectedProv = PROVINCES.find(p => p.code === province) ?? PROVINCES[0];
   const selectedType = TYPES.find(t => t.code === type) ?? TYPES[0];
 
-  const renderItem = useCallback(({ item }: { item: DLIInstitution }) => (
-    <InstitutionCard item={item} />
-  ), []);
+  const handlePrev = () => {
+    if (activeIndex <= 0) return;
+    const idx = activeIndex - 1;
+    setActiveIndex(idx);
+    listRef.current?.scrollToIndex({ index: idx, animated: true });
+  };
 
-  const keyExtractor = useCallback((item: DLIInstitution) => item.id, []);
+  const handleNext = () => {
+    if (activeIndex >= displayed.length - 1) return;
+    const idx = activeIndex + 1;
+    setActiveIndex(idx);
+    listRef.current?.scrollToIndex({ index: idx, animated: true });
+  };
 
-  const ListHeader = (
-    <>
-      {/* Hero */}
-      <View style={styles.hero}>
-        <View style={styles.heroIconWrap}>
-          <Ionicons name="school" size={26} color={Colors.orange} />
+  const renderCard = useCallback(({ item, index }: { item: DLIInstitution; index: number }) => {
+    const col = EED_COLORS[index % EED_COLORS.length];
+    let domain = '';
+    try { domain = new URL(item.admissionsUrl || 'https://example.com').hostname.replace('www.', ''); } catch {}
+    const logoUrl = domain
+      ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+      : null;
+
+    const typeConf = TYPES.find(t => t.code === item.type) ?? TYPES[0];
+
+    const openSite = () => {
+      const url = item.admissionsUrl?.trim()
+        ? item.admissionsUrl
+        : `https://www.google.com/search?q=${encodeURIComponent(item.nom + ' admissions Canada')}`;
+      Linking.openURL(url).catch(() => {});
+    };
+
+    return (
+      <View style={[styles.story, { width: SCREEN_W, backgroundColor: col.bg }]}>
+        {/* Bulles deco */}
+        <View style={[styles.deco1, { backgroundColor: col.accent + '18' }]} />
+        <View style={[styles.deco2, { backgroundColor: col.accent + '10' }]} />
+
+        {/* Overlay sombre */}
+        <View style={styles.shade} pointerEvents="none" />
+
+        {/* Barres de progression */}
+        <View style={[styles.progressWrap, { paddingTop: insets.top + 80 }]}>
+          {displayed.map((_, i) => (
+            <View key={i} style={[
+              styles.bar,
+              i < index    && styles.barDone,
+              i === index  && styles.barActive,
+            ]} />
+          ))}
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.heroTitle}>Etablissements d'Enseignement Designes</Text>
-          <Text style={styles.heroSub}>
-            {loading ? 'Chargement...' : `${allData.length.toLocaleString()} etablissements reconnus par l'IRCC`}
-          </Text>
-        </View>
-      </View>
 
-      {/* Barre de recherche */}
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color={Colors.textMuted} style={{ marginLeft: 12 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher un etablissement, une ville..."
-          placeholderTextColor={Colors.textMuted}
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-      </View>
+        {/* Contenu bas */}
+        <View style={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          {/* Logo */}
+          {logoUrl ? (
+            <View style={[styles.logo, { borderColor: col.accent + '44', backgroundColor: col.accent + '1A' }]}>
+              <Image
+                source={{ uri: logoUrl }}
+                style={{ width: 50, height: 50 }}
+                resizeMode="contain"
+              />
+            </View>
+          ) : (
+            <View style={[styles.logo, { borderColor: col.accent + '44', backgroundColor: col.accent + '1A' }]}>
+              <Ionicons name="school" size={28} color={col.accent} />
+            </View>
+          )}
 
-      {/* Filtres */}
-      <View style={styles.filtersRow}>
-        <TouchableOpacity
-          style={[styles.filterChip, !!province && styles.filterChipActive]}
-          onPress={() => setShowProvinceModal(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="map-outline" size={14} color={province ? Colors.orange : Colors.textMuted} />
-          <Text style={[styles.filterChipText, !!province && styles.filterChipTextActive]} numberOfLines={1}>
-            {province ? selectedProv.label : 'Province'}
-          </Text>
-          <Ionicons name="chevron-down" size={13} color={province ? Colors.orange : Colors.textMuted} />
-        </TouchableOpacity>
+          {/* Type + Province */}
+          <View style={styles.tagsRow}>
+            {item.type ? (
+              <View style={[styles.tag, { backgroundColor: typeConf.color + '22', borderColor: typeConf.color + '55' }]}>
+                <Text style={[styles.tagText, { color: typeConf.color }]}>{typeConf.label}</Text>
+              </View>
+            ) : null}
+            {item.province ? (
+              <View style={styles.tag}>
+                <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.tagText}>{item.province}</Text>
+              </View>
+            ) : null}
+            {item.ville ? (
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{item.ville}</Text>
+              </View>
+            ) : null}
+          </View>
 
-        <TouchableOpacity
-          style={[styles.filterChip, !!type && styles.filterChipActive]}
-          onPress={() => setShowTypeModal(true)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="library-outline" size={14} color={type ? Colors.orange : Colors.textMuted} />
-          <Text style={[styles.filterChipText, !!type && styles.filterChipTextActive]} numberOfLines={1}>
-            {type ? selectedType.label : 'Type'}
-          </Text>
-          <Ionicons name="chevron-down" size={13} color={type ? Colors.orange : Colors.textMuted} />
-        </TouchableOpacity>
+          {/* Nom (grand titre) */}
+          <Text style={styles.name} numberOfLines={3}>{item.nom}</Text>
 
-        {hasFilters && (
+          {/* Bouton */}
           <TouchableOpacity
-            style={styles.filterReset}
-            onPress={() => { setQuery(''); setProvince(''); setType(''); }}
-            activeOpacity={0.8}
+            style={[styles.btn, { backgroundColor: col.accent }]}
+            activeOpacity={0.85}
+            onPress={openSite}
           >
-            <Ionicons name="close-circle" size={16} color={Colors.error} />
-            <Text style={styles.filterResetText}>Effacer</Text>
+            <Ionicons name="school-outline" size={17} color="#fff" />
+            <Text style={styles.btnText}>Voir les admissions</Text>
           </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Compteur */}
-      {!loading && (
-        <Text style={styles.countLabel}>
-          {displayed.length} etablissement{displayed.length !== 1 ? 's' : ''}{hasFilters ? ' trouve(s)' : ' recents'}
-        </Text>
-      )}
-    </>
-  );
+          {/* Compteur */}
+          <Text style={styles.counter}>{activeIndex + 1} / {displayed.length}</Text>
+        </View>
+
+        {/* Zones tap navigation */}
+        <View style={styles.tapZones} pointerEvents="box-none">
+          <TouchableOpacity style={styles.tapLeft}  activeOpacity={1} onPress={handlePrev} />
+          <TouchableOpacity style={styles.tapRight} activeOpacity={1} onPress={handleNext} />
+        </View>
+      </View>
+    );
+  }, [displayed, activeIndex, insets]);
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
+
       {/* Header */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text} />
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
+        <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()} activeOpacity={0.8}>
+          <Ionicons name="chevron-back" size={22} color={Colors.surface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Espace Etudes (EED)</Text>
-        <View style={{ width: 44 }} />
+        <TouchableOpacity style={styles.headerBtn} onPress={() => setShowSearch(s => !s)} activeOpacity={0.8}>
+          <Ionicons name={showSearch ? 'close' : 'search'} size={20} color={Colors.surface} />
+        </TouchableOpacity>
       </View>
 
+      {/* Tiroir recherche + filtres */}
+      {showSearch && (
+        <View style={[styles.drawer, { paddingTop: insets.top + 20 }]}>
+          <View style={styles.searchRow}>
+            <Ionicons name="search-outline" size={15} color={Colors.textMuted} style={{ marginRight: 6 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Etablissement, ville..."
+              placeholderTextColor={Colors.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              returnKeyType="search"
+              autoFocus
+            />
+            {!!query && (
+              <TouchableOpacity onPress={() => setQuery('')}>
+                <Ionicons name="close-circle" size={15} color={Colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.filtersRow}>
+            <TouchableOpacity
+              style={[styles.chip, !!province && styles.chipActive]}
+              onPress={() => setShowProvinceModal(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="map-outline" size={13} color={province ? Colors.orange : Colors.textMuted} />
+              <Text style={[styles.chipText, !!province && styles.chipTextActive]} numberOfLines={1}>
+                {province ? selectedProv.label : 'Province'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.chip, !!type && styles.chipActive]}
+              onPress={() => setShowTypeModal(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="library-outline" size={13} color={type ? Colors.orange : Colors.textMuted} />
+              <Text style={[styles.chipText, !!type && styles.chipTextActive]} numberOfLines={1}>
+                {type ? selectedType.label : 'Type'}
+              </Text>
+            </TouchableOpacity>
+            {hasFilters && (
+              <TouchableOpacity
+                style={styles.chipReset}
+                onPress={() => { setQuery(''); setProvince(''); setType(''); }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="close-circle" size={15} color={Colors.error} />
+                <Text style={styles.chipResetText}>Effacer</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {!loading && (
+            <Text style={styles.countLabel}>
+              {displayed.length} etablissement{displayed.length !== 1 ? 's' : ''}{hasFilters ? ' trouve(s)' : ' recents'}
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Contenu */}
       {loading ? (
-        <View style={styles.loadingWrap}>
+        <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.orange} />
           <Text style={styles.loadingText}>Chargement des etablissements...</Text>
         </View>
+      ) : displayed.length === 0 ? (
+        <View style={styles.center}>
+          <Ionicons name="school-outline" size={48} color={Colors.border} />
+          <Text style={styles.emptyTitle}>Aucun etablissement trouve</Text>
+          <Text style={styles.emptySub}>Modifiez vos criteres de recherche</Text>
+        </View>
       ) : (
         <FlatList
+          ref={r => { listRef.current = r; }}
           data={displayed}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles.listContent}
-          ListHeaderComponent={ListHeader}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-          ListEmptyComponent={
-            <View style={styles.emptyWrap}>
-              <Ionicons name="school-outline" size={48} color={Colors.border} />
-              <Text style={styles.emptyTitle}>Aucun etablissement trouve</Text>
-              <Text style={styles.emptySub}>Modifiez vos criteres de recherche</Text>
-            </View>
-          }
+          keyExtractor={item => item.id}
+          renderItem={renderCard}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          snapToInterval={SCREEN_W}
+          snapToAlignment="start"
+          disableIntervalMomentum
+          onMomentumScrollEnd={e => {
+            const x   = e.nativeEvent.contentOffset.x;
+            const idx = Math.round(x / SCREEN_W);
+            setActiveIndex(Math.max(0, Math.min(displayed.length - 1, idx)));
+          }}
+          onScrollToIndexFailed={() => {}}
         />
       )}
 
       {/* Modal Province */}
       <Modal transparent animationType="slide" visible={showProvinceModal} onRequestClose={() => setShowProvinceModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowProvinceModal(false)}>
+        <Pressable style={styles.overlay} onPress={() => setShowProvinceModal(false)}>
           <View style={styles.modalBox}>
-            <View style={styles.modalHandle} />
+            <View style={styles.handle} />
             <Text style={styles.modalTitle}>Choisir une province</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {PROVINCES.map(p => (
                 <TouchableOpacity
                   key={p.code}
-                  style={[styles.modalOption, province === p.code ? styles.modalOptionActive : undefined]}
+                  style={[styles.option, province === p.code && styles.optionActive]}
                   onPress={() => { setProvince(p.code); setShowProvinceModal(false); }}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.modalOptionText, province === p.code ? styles.modalOptionTextActive : undefined]}>{p.label}</Text>
+                  <Text style={[styles.optionText, province === p.code && styles.optionTextActive]}>{p.label}</Text>
                   {province === p.code && <Ionicons name="checkmark" size={18} color={Colors.orange} />}
                 </TouchableOpacity>
               ))}
@@ -333,19 +343,19 @@ export default function EtudesScreen() {
 
       {/* Modal Type */}
       <Modal transparent animationType="slide" visible={showTypeModal} onRequestClose={() => setShowTypeModal(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setShowTypeModal(false)}>
+        <Pressable style={styles.overlay} onPress={() => setShowTypeModal(false)}>
           <View style={styles.modalBox}>
-            <View style={styles.modalHandle} />
+            <View style={styles.handle} />
             <Text style={styles.modalTitle}>Type d'etablissement</Text>
             {TYPES.map(t => (
               <TouchableOpacity
                 key={t.code}
-                style={[styles.modalOption, type === t.code && styles.modalOptionActive]}
+                style={[styles.option, type === t.code && styles.optionActive]}
                 onPress={() => { setType(t.code); setShowTypeModal(false); }}
                 activeOpacity={0.8}
               >
-                <View style={[styles.typeColorDot, { backgroundColor: t.color }]} />
-                <Text style={[styles.modalOptionText, type === t.code && styles.modalOptionTextActive]}>{t.label}</Text>
+                <View style={[styles.typeDot, { backgroundColor: t.color }]} />
+                <Text style={[styles.optionText, type === t.code && styles.optionTextActive]}>{t.label}</Text>
                 {type === t.code && <Ionicons name="checkmark" size={18} color={Colors.orange} />}
               </TouchableOpacity>
             ))}
@@ -357,133 +367,112 @@ export default function EtudesScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
+  root: { flex: 1, backgroundColor: '#0f3460' },
 
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+  header: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingBottom: 12,
+    backgroundColor: 'transparent',
   },
-  backBtn: {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: Colors.bgLight,
-    justifyContent: 'center', alignItems: 'center',
+  headerBtn: {
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  headerTitle: {
+    flex: 1, textAlign: 'center',
+    fontSize: 16, fontWeight: '700', color: Colors.surface,
+  },
+
+  drawer: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+    backgroundColor: '#fff', padding: 12, gap: 8,
+    borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
+    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, elevation: 10,
+  },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.bgLight, borderRadius: 10, paddingHorizontal: 10, height: 40,
+  },
+  searchInput: { flex: 1, fontSize: 14, color: Colors.text },
+  filtersRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 20, backgroundColor: Colors.bgLight,
     borderWidth: 1, borderColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
+  chipActive: { borderColor: Colors.orange, backgroundColor: Colors.orange + '12' },
+  chipText: { fontSize: 12, color: Colors.textMuted },
+  chipTextActive: { color: Colors.orange, fontWeight: '700' },
+  chipReset: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  chipResetText: { fontSize: 12, color: Colors.error, fontWeight: '600' },
+  countLabel: { fontSize: 12, color: Colors.textMuted, textAlign: 'center' },
 
-  loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
-  loadingText: { fontSize: 14, color: Colors.textMuted },
+  story: { flex: 1 },
+  deco1: { position: 'absolute', width: 300, height: 300, borderRadius: 150, top: -80, right: -80 },
+  deco2: { position: 'absolute', width: 180, height: 180, borderRadius: 90, bottom: 140, left: -50 },
+  shade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.32)' },
 
-  listContent: { padding: 16, paddingBottom: 40 },
+  progressWrap: { paddingHorizontal: 12, flexDirection: 'row', gap: 5 },
+  bar:       { flex: 1, height: 3, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.25)' },
+  barDone:   { backgroundColor: 'rgba(255,255,255,0.55)' },
+  barActive: { backgroundColor: Colors.orange },
 
-  hero: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...UI.cardShadow,
+  content: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 20, gap: 14, paddingTop: 18,
   },
-  heroIconWrap: {
-    width: 52, height: 52, borderRadius: 14,
-    backgroundColor: Colors.orange + '1A',
-    justifyContent: 'center', alignItems: 'center',
+  logo: {
+    width: 76, height: 76, borderRadius: 20,
+    borderWidth: 2, overflow: 'hidden',
+    alignItems: 'center', justifyContent: 'center',
   },
-  heroTitle: { fontSize: 14, fontWeight: '800', color: Colors.text, marginBottom: 4 },
-  heroSub: { fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
-
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: 12,
-    ...UI.cardShadow,
-  },
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: Colors.text,
-  },
-
-  filtersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-    flexWrap: 'wrap',
-  },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  filterChipActive: {
-    borderColor: Colors.orange,
-    backgroundColor: Colors.orange + '12',
-  },
-  filterChipText: { fontSize: 13, color: Colors.textMuted, maxWidth: 110 },
-  filterChipTextActive: { color: Colors.orange, fontWeight: '700' },
-  filterReset: {
+  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tag: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 8,
+    paddingHorizontal: 12, paddingVertical: 5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
   },
-  filterResetText: { fontSize: 12, color: Colors.error, fontWeight: '600' },
-
-  countLabel: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginBottom: 12,
-    fontWeight: '500',
+  tagText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+  name: { fontSize: 26, fontWeight: '900', color: Colors.surface, lineHeight: 32 },
+  btn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 10, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
+    ...UI.cardShadow,
   },
+  btnText: { color: '#fff', fontSize: 14, fontWeight: '900' },
+  counter: { textAlign: 'center', fontSize: 12, color: Colors.surface + '88', fontWeight: '600', marginTop: -6 },
 
-  emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 12 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.textSecondary },
-  emptySub: { fontSize: 13, color: Colors.textMuted },
+  tapZones: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 200, flexDirection: 'row' },
+  tapLeft:  { flex: 1 },
+  tapRight: { flex: 1 },
 
-  // Modals
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
+  loadingText: { fontSize: 14, color: Colors.surface + 'CC' },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.surface },
+  emptySub: { fontSize: 13, color: Colors.surface + 'AA' },
+
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalBox: {
     backgroundColor: Colors.surface,
     borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: 20, maxHeight: '80%',
   },
-  modalHandle: {
+  handle: {
     width: 36, height: 4, borderRadius: 2,
-    backgroundColor: Colors.border,
-    alignSelf: 'center', marginBottom: 18,
+    backgroundColor: Colors.border, alignSelf: 'center', marginBottom: 18,
   },
   modalTitle: { fontSize: 16, fontWeight: '800', color: Colors.text, marginBottom: 16 },
-  modalOption: {
+  option: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingVertical: 13, paddingHorizontal: 4,
     borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
-  modalOptionActive: { backgroundColor: Colors.orange + '0D' },
-  modalOptionText: { flex: 1, fontSize: 14, color: Colors.textSecondary },
-  modalOptionTextActive: { color: Colors.orange, fontWeight: '700' },
-  typeColorDot: { width: 10, height: 10, borderRadius: 5 },
+  optionActive: { backgroundColor: Colors.orange + '0D' },
+  optionText: { flex: 1, fontSize: 14, color: Colors.textSecondary },
+  optionTextActive: { color: Colors.orange, fontWeight: '700' },
+  typeDot: { width: 10, height: 10, borderRadius: 5 },
 });
