@@ -28,34 +28,25 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
-      {/* ── Onglet Accueil (tous) ── */}
+      {/* ── 1. Dashboard ── */}
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarLabel: 'Accueil',
+          tabBarLabel: 'Dashboard',
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
         }}
       />
 
-      {/* ── Projet (tous) ── */}
+      {/* ── 2. Projet ── */}
       <Tabs.Screen
         name="projet"
         options={{
-          tabBarLabel: isPro ? 'Projet' : 'Mon Projet',
+          tabBarLabel: 'Projet',
           tabBarIcon: ({ color, size }) => <Ionicons name="folder-open" size={size} color={color} />,
         }}
       />
 
-      {/* ── Messagerie ── */}
-      <Tabs.Screen
-        name="messagerie"
-        options={{
-          tabBarLabel: 'Messagerie',
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses" size={size} color={color} />,
-        }}
-      />
-
-      {/* ── Inside (communauté) — client seulement, absent du web pro ── */}
+      {/* ── 3. Inside (masqué pour les pros) ── */}
       <Tabs.Screen
         name="inside"
         options={isPro ? { href: null } : {
@@ -64,19 +55,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── Route masquée (compat deep-link) ── */}
-      <Tabs.Screen name="paiements" options={{ href: null }} />
-
-      {/* ── Notre Équipe (pro) / Conseillers (client) — aligné sur le web ── */}
-      <Tabs.Screen
-        name="conseillers"
-        options={{
-          tabBarLabel: isPro ? 'Équipe' : 'Conseillers',
-          tabBarIcon: ({ color, size }) => <Ionicons name={isPro ? 'people' : 'person-add'} size={size} color={color} />,
-        }}
-      />
-
-      {/* ── Documents (tous) ── */}
+      {/* ── 4. Documents ── */}
       <Tabs.Screen
         name="documents"
         options={{
@@ -85,7 +64,7 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── Profil (tous) ── */}
+      {/* ── 5. Profil ── */}
       <Tabs.Screen
         name="profil"
         options={{
@@ -93,6 +72,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
+
+      {/* ── Routes masquées (accessibles via deep-link/navigation interne) ── */}
+      <Tabs.Screen name="messagerie" options={{ href: null }} />
+      <Tabs.Screen name="conseillers" options={{ href: null }} />
+      <Tabs.Screen name="paiements" options={{ href: null }} />
     </Tabs>
   );
 }

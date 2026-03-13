@@ -628,6 +628,25 @@ const proSvcList = [
       .pro-inbox-search-row{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #e4e4e4;border-radius:10px;padding:8px 14px;margin-bottom:14px;}
       .pro-inbox-search-row i{color:#aaa;font-size:14px;}
       .pro-inbox-search-input{flex:1;border:none;outline:none;font-size:13px;color:#2c2f33;background:transparent;}
+      /* ── Stories pro (style Facebook) ── */
+      .pro-stories-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 0 20px;padding:6px 0 10px;}
+      .pro-stories-wrap::-webkit-scrollbar{display:none;}
+      .pro-stories-row{display:flex;gap:16px;padding:2px 2px;}
+      .pro-story-bubble{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;width:68px;background:none;border:none;padding:0;}
+      .pro-story-ring{width:60px;height:60px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,#ccc,#ddd);transition:transform .18s,box-shadow .18s;}
+      .pro-story-ring.soumis,.pro-story-ring.en_cours{background:linear-gradient(135deg,#ff9408,#f8c55a);}
+      .pro-story-ring.proposition{background:linear-gradient(135deg,#2980b9,#74b9ff);}
+      .pro-story-ring.demarre{background:linear-gradient(135deg,#27ae60,#55efc4);}
+      .pro-story-ring.termine{background:linear-gradient(135deg,#27ae60,#55efc4);}
+      .pro-story-ring.annule{background:linear-gradient(135deg,#bbb,#ddd);}
+      .pro-story-ring-inner{width:100%;height:100%;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;}
+      .pro-story-initials{width:calc(100% - 5px);height:calc(100% - 5px);border-radius:50%;background:var(--cap-dark);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;}
+      .pro-story-name{font-size:10.5px;font-weight:700;color:#333;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;line-height:1.2;}
+      .pro-story-status-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;position:absolute;bottom:1px;right:1px;}
+      .pro-story-ring-wrap{position:relative;width:60px;height:60px;}
+      .pro-story-bubble:hover .pro-story-ring{transform:scale(1.08);box-shadow:0 4px 16px rgba(0,0,0,0.13);}
+      .pro-story-bubble:hover .pro-story-name{color:var(--cap-orange);}
+      /* ── Liste inbox ── */
       .pro-inbox-card{background:#fff;border:1px solid #ededed;border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s;margin-bottom:8px;text-decoration:none;color:inherit;}
       .pro-inbox-card:hover{border-color:var(--cap-orange);box-shadow:0 2px 12px rgba(255,148,8,.1);}
       .pro-inbox-avatar{width:40px;height:40px;border-radius:50%;background:var(--cap-blue);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff;flex-shrink:0;}
@@ -1103,6 +1122,10 @@ const proSvcList = [
                 <input type="text" id="proInboxSearch" class="pro-inbox-search-input" placeholder="Rechercher un client…" oninput="filterProInbox(this.value)" />
               </div>
               <div id="proInboxLoading" style="text-align:center;padding:24px;color:#aaa;"><i class="fa fa-spinner fa-spin"></i> Chargement…</div>
+              <!-- Stories style Facebook -->
+              <div class="pro-stories-wrap" id="proStoriesWrap" style="display:none;">
+                <div id="proStoriesRow" class="pro-stories-row"></div>
+              </div>
               <div id="proInboxList"></div>
               <div id="proInboxEmpty" class="pro-inbox-empty" style="display:none;">
                 <i class="fa fa-inbox"></i>
@@ -3456,20 +3479,56 @@ const proSvcList = [
     }
 
     function renderProInbox(clients) {
-      var list  = document.getElementById('proInboxList');
-      var empty = document.getElementById('proInboxEmpty');
+      var list       = document.getElementById('proInboxList');
+      var empty      = document.getElementById('proInboxEmpty');
+      var storiesRow = document.getElementById('proStoriesRow');
+      var storiesWrap= document.getElementById('proStoriesWrap');
       if (!list) return;
       if (!clients.length) {
         list.innerHTML = '';
         if (empty) empty.style.display = '';
+        if (storiesWrap) storiesWrap.style.display = 'none';
         return;
       }
       if (empty) empty.style.display = 'none';
+
       var statusLabel = function(s) {
         if (!s) return '';
         var map = { proposition: 'Proposition', demarre: 'Démarré', en_cours: 'En cours', soumis: 'Soumis', termine: 'Terminé' };
         return map[s.toLowerCase()] || s;
       };
+
+      // ── Stories (style Facebook) ──────────────────────────
+      if (storiesRow && storiesWrap) {
+        storiesWrap.style.display = '';
+        var statusDotColor = function(s) {
+          if (s === 'soumis' || s === 'en_cours') return '#ff9408';
+          if (s === 'proposition') return '#2980b9';
+          if (s === 'demarre' || s === 'termine') return '#27ae60';
+          return '#bbb';
+        };
+        storiesRow.innerHTML = clients.map(function(c) {
+          var name    = String(c.name || c.email || 'Client').trim();
+          var displayName = name.length > 9 ? name.slice(0, 8) + '…' : name;
+          var initial = (name[0] || 'C').toUpperCase();
+          var status  = String(c.project_status || '').toLowerCase();
+          var dotColor= statusDotColor(status);
+          var onclick = 'switchTab(\'messagerie\'); window._openProConv(\''+c.id+'\',\''+encodeURIComponent(name)+'\',\''+encodeURIComponent(c.email||'')+'\')';
+          return '<button class="pro-story-bubble" onclick="'+onclick+'" title="'+escHtml(name)+(statusLabel(status) ? ' – '+statusLabel(status) : '')+'" aria-label="Ouvrir conversation avec '+escHtml(name)+'">'
+            + '<div class="pro-story-ring-wrap">'
+            +   '<div class="pro-story-ring '+status+'">'
+            +     '<div class="pro-story-ring-inner">'
+            +       '<div class="pro-story-initials">'+initial+'</div>'
+            +     '</div>'
+            +   '</div>'
+            +   '<span class="pro-story-status-dot" style="background:'+dotColor+';"></span>'
+            + '</div>'
+            + '<span class="pro-story-name">'+escHtml(displayName)+'</span>'
+            + '</button>';
+        }).join('');
+      }
+
+      // ── Liste complète ────────────────────────────────────
       list.innerHTML = clients.map(function(c) {
         var name = String(c.name || c.email || 'Client').trim();
         var initial = (name[0] || 'C').toUpperCase();
@@ -5568,7 +5627,8 @@ const proSvcList = [
     // ============================================================
     //  ANNULATION / SUPPRESSION DEMANDE
     // ============================================================
-    // ============================================================
+    // ============================================================
+
 
     //  CAPI WIZARD – parcours orientation 8 etapes
     // ============================================================
@@ -5681,6 +5741,98 @@ const proSvcList = [
     }
 
     function capiBuildServices(motif, complexite) {
+      // Essayez d'abord d'utiliser le catalogue (source unique des tarifs côté web)
+      try {
+        var map = window.__catalogServiceMap;
+        if (map && typeof map === 'object') {
+          var motifCatalog = {
+            visiter: [
+              { sid: 'admis-tour', prio: 'obligatoire', sel: true },
+              { sid: 'lettre-inv', prio: 'obligatoire', sel: true },
+              { sid: 'montage-tour', prio: 'obligatoire', sel: true },
+              { sid: 'guide-arr', prio: 'recommande', sel: false },
+              { sid: 'assist-place', prio: 'recommande', sel: false },
+            ],
+            travailler: [
+              { sid: 'admis-emp', prio: 'obligatoire', sel: true },
+              { sid: 'orient-lmia', prio: 'obligatoire', sel: true },
+              { sid: 'montage-emp', prio: 'obligatoire', sel: true },
+              { sid: 'rech-emp', prio: 'recommande', sel: false },
+              { sid: 'suivi-emp', prio: 'recommande', sel: false },
+              { sid: 'supp-emp', prio: 'recommande', sel: false },
+            ],
+            etudier: [
+              { sid: 'eval', prio: 'obligatoire', sel: true },
+              { sid: 'admis', prio: 'obligatoire', sel: true },
+              { sid: 'plan', prio: 'recommande', sel: true },
+              { sid: 'orient', prio: 'recommande', sel: true },
+              { sid: 'montage', prio: 'obligatoire', sel: true },
+              { sid: 'formu', prio: 'obligatoire', sel: true },
+              { sid: 'verif', prio: 'obligatoire', sel: true },
+              { sid: 'soumis', prio: 'obligatoire', sel: true },
+              { sid: 'support', prio: 'recommande', sel: false },
+            ],
+            residence_permanente: [
+              { sid: 'eval', prio: 'obligatoire', sel: true },
+              { sid: 'admis', prio: 'obligatoire', sel: true },
+              { sid: 'plan', prio: 'obligatoire', sel: true },
+              { sid: 'orient', prio: 'obligatoire', sel: true },
+              { sid: 'montage', prio: 'obligatoire', sel: true },
+              { sid: 'formu', prio: 'obligatoire', sel: true },
+              { sid: 'verif', prio: 'obligatoire', sel: true },
+              { sid: 'soumis', prio: 'obligatoire', sel: true },
+              { sid: 'suivi', prio: 'recommande', sel: false },
+              { sid: 'repdem', prio: 'recommande', sel: false },
+              { sid: 'suprio', prio: 'recommande', sel: false },
+            ],
+            famille: [
+              { sid: 'eval', prio: 'obligatoire', sel: true },
+              { sid: 'admis', prio: 'obligatoire', sel: true },
+              { sid: 'plan', prio: 'recommande', sel: true },
+              { sid: 'montage', prio: 'obligatoire', sel: true },
+              { sid: 'formu', prio: 'obligatoire', sel: true },
+              { sid: 'verif', prio: 'obligatoire', sel: true },
+              { sid: 'soumis', prio: 'obligatoire', sel: true },
+              { sid: 'support', prio: 'recommande', sel: false },
+            ],
+            entreprendre: [
+              { sid: 'eval', prio: 'obligatoire', sel: true },
+              { sid: 'admis', prio: 'obligatoire', sel: true },
+              { sid: 'plan', prio: 'obligatoire', sel: true },
+              { sid: 'orient', prio: 'obligatoire', sel: true },
+              { sid: 'montage', prio: 'obligatoire', sel: true },
+              { sid: 'formu', prio: 'obligatoire', sel: true },
+              { sid: 'verif', prio: 'obligatoire', sel: true },
+              { sid: 'soumis', prio: 'obligatoire', sel: true },
+              { sid: 'support', prio: 'recommande', sel: false },
+            ],
+            regularisation: [
+              { sid: 'eval', prio: 'obligatoire', sel: true },
+              { sid: 'admis', prio: 'obligatoire', sel: true },
+              { sid: 'plan', prio: 'recommande', sel: true },
+              { sid: 'support', prio: 'recommande', sel: false },
+            ],
+          };
+
+          var items = motifCatalog[motif] || [];
+          var out = [];
+          items.forEach(function(it) {
+            var s = map[it.sid];
+            if (!s) return;
+            out.push({
+              id: String(s.id),
+              nom: String(s.name || s.id),
+              desc: String(s.description || ''),
+              prio: it.prio,
+              prix: Number(s.basePrice || 0),
+              sel: !!it.sel,
+            });
+          });
+          if (out.length) return out;
+        }
+      } catch(_e) {}
+
+      // Fallback : anciens tarifs hardcodés (si le catalogue n'est pas chargé)
       var svcMap = {
         visiter: [
           {id:'analyse_v',nom:"Analyse d'admissibilité visiteur",desc:"Étude de votre profil et recommandations.",prio:'obligatoire',prix:149,sel:true},
@@ -5811,7 +5963,18 @@ const proSvcList = [
     window.capiToggleSvc = function(el) {
       var id = el.dataset.id;
       var svc = (_capiState.services||[]).find(function(s){ return s.id===id; });
-      if (svc && svc.prio !== 'obligatoire') { svc.sel = !svc.sel; el.classList.toggle('selected'); }
+      if (!svc || svc.prio === 'obligatoire') return;
+      svc.sel = !svc.sel;
+      el.classList.toggle('selected', !!svc.sel);
+      try {
+        var check = el.querySelector('.capi-svc-check');
+        if (check) check.textContent = svc.sel ? '✓' : '';
+      } catch(_e) {}
+      try {
+        var total = (_capiState.services||[]).filter(function(s){return s && s.sel;}).reduce(function(a,s){return a + (Number(s.prix||0)||0);}, 0);
+        var totalEl = document.getElementById('capiSvcTotal');
+        if (totalEl) totalEl.textContent = (typeof formatMoney==='function') ? formatMoney(total) : (total + ' $');
+      } catch(_e) {}
     };
 
     window.capiNextEval = function() { _capiState.step = 6; capiRender(); };
@@ -5991,10 +6154,10 @@ const proSvcList = [
           + '<div class="capi-svc-name">'+s.nom+'</div>'
           + '<div class="capi-svc-desc">'+s.desc+'</div>'
           + '</div>'
-          + (s.prix ? '<div class="capi-svc-price">'+s.prix+'\u00a0$</div>' : '')
+          + (s.prix ? '<div class="capi-svc-price">'+((typeof formatMoney==='function') ? formatMoney(s.prix) : (s.prix+' $'))+'</div>' : '')
           + '</div>';
       });
-      html += '<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;justify-content:space-between;"><span style="font-weight:700;">Total estim\u00e9 (services choisis)</span><span id="capiSvcTotal" style="color:var(--cap-orange);font-weight:700;">'+total+'\u00a0$</span></div>';
+      html += '<div style="background:#fff;border-radius:12px;padding:14px 16px;margin-top:8px;display:flex;justify-content:space-between;"><span style="font-weight:700;">Total estim\u00e9 (services choisis)</span><span id="capiSvcTotal" style="color:var(--cap-orange);font-weight:700;">'+((typeof formatMoney==='function') ? formatMoney(total) : (total+' $'))+'</span></div>';
       html += '<p style="font-size:11px;color:#aaa;margin:8px 0 0;text-align:center;">Prix indicatifs \u2013 un devis d\u00e9finitif sera fourni par votre conseiller.</p>';
       html += '<button class="capi-wiz-btn" onclick="capiNextServices()"><i class="fa fa-arrow-right"></i> Continuer</button>';
       return html;
@@ -6026,7 +6189,7 @@ const proSvcList = [
       var motifLabels = {visiter:'Visiter le Canada', travailler:'Travailler au Canada', etudier:'\u00c9tudier au Canada', residence_permanente:'R\u00e9sidence permanente', famille:'Regroupement familial', entreprendre:'Entreprendre au Canada', regularisation:'R\u00e9gularisation de statut'};
       var modeLabel = _capiState.mode === 'conseiller' ? '\uD83E\uDDD1\u200D\uD83D\uDCBC Mode Conseiller' : '\uD83D\uDDFA\uFE0F Autonomie guid\u00e9e';
       var scoreColor = (ev.score||60) >= 70 ? '#27ae60' : (ev.score||60) >= 50 ? '#f59e0b' : '#e74c3c';
-      var totalSvcs = (_capiState.services||[]).filter(function(s){return s.sel;}).reduce(function(a,s){return a+(s.prix||0);},0);
+      var totalSvcs = (_capiState.services||[]).filter(function(s){return s.sel;}).reduce(function(a,s){return a+(Number(s.prix||0)||0);},0);
       return '<div class="capi-bubble-row"><div class="capi-bubble-avatar">\uD83E\uDD16</div>'
         + '<div class="capi-bubble-text">Votre projet est pr\u00eat\u00a0! Voici le <strong>r\u00e9capitulatif complet</strong>. En activant, votre dossier est cr\u00e9\u00e9.</div></div>'
         + '<div class="capi-eval-score"><div class="capi-eval-score-left"><h3>Score de faisabilit\u00e9</h3><p>'+ev.commentaire+'</p></div>'
@@ -6038,13 +6201,13 @@ const proSvcList = [
         + '<div class="capi-recap-row"><div class="capi-recap-icon">\uD83D\uDCCD</div><div><div class="capi-recap-lbl">Province cible</div><div class="capi-recap-val">'+(_capiState.profil.province||'\u2014')+'</div></div></div>'
         + '<div class="capi-recap-row"><div class="capi-recap-icon">\u23F1\uFE0F</div><div><div class="capi-recap-lbl">D\u00e9lai estim\u00e9</div><div class="capi-recap-val">'+(ev.delai||'\u2014')+'</div></div></div>'
         + '<div class="capi-recap-row"><div class="capi-recap-icon">\uD83E\uDD1D</div><div><div class="capi-recap-lbl">Mode</div><div class="capi-recap-val">'+modeLabel+'</div></div></div>'
-        + (totalSvcs > 0 ? '<div class="capi-recap-row"><div class="capi-recap-icon">\uD83D\uDCB0</div><div><div class="capi-recap-lbl">Services s\u00e9lectionn\u00e9s</div><div class="capi-recap-val">'+totalSvcs+'\u00a0$ (indicatif)</div></div></div>' : '')
+        + (totalSvcs > 0 ? '<div class="capi-recap-row"><div class="capi-recap-icon">\uD83D\uDCB0</div><div><div class="capi-recap-lbl">Services s\u00e9lectionn\u00e9s</div><div class="capi-recap-val">'+((typeof formatMoney==='function') ? formatMoney(totalSvcs) : (totalSvcs+' $'))+' (indicatif)</div></div></div>' : '')
         + '</div>'
         + '<button class="capi-wiz-btn" id="capiBtnActivate" onclick="capiActivate()"><i class="fa fa-rocket"></i> Activer mon projet</button>'
         + '<p style="font-size:11px;color:#aaa;text-align:center;margin-top:8px;">Ces informations sont indicatives et seront v\u00e9rifi\u00e9es par votre conseiller.</p>';
     }
 
-    //  PROJET VIEW MODE â€” logique style mobile
+    //  PROJET VIEW MODE — logique style mobile
     // ============================================================
     var _projetViewLoaded = false;
 
@@ -6053,11 +6216,27 @@ const proSvcList = [
       _projetViewLoaded = true;
       try {
         var res = await fetch('/api/projet', { headers: { Accept: 'application/json' } });
-        if (!res.ok) { showProjEmptyMode(); return; }
+        if (!res.ok) {
+          // Fallback local (utile quand la DB n'est pas dispo)
+          if (ST && ST.projet && ST.projet.type) {
+            restoreProjetForm(ST.projet);
+            renderProjetView(ST.projet);
+            showProjViewMode();
+            return;
+          }
+          showProjEmptyMode();
+          return;
+        }
         var data = await res.json().catch(function(){ return {}; });
         var project = data && data.project ? data.project : null;
         if (!project || !project.type) {
-          // Pas de projet → étatvide
+          // Pas de projet côté DB → tenter l'état local
+          if (ST && ST.projet && ST.projet.type) {
+            restoreProjetForm(ST.projet);
+            renderProjetView(ST.projet);
+            showProjViewMode();
+            return;
+          }
           showProjEmptyMode();
           return;
         }
@@ -6122,18 +6301,18 @@ const proSvcList = [
 
     function renderProjetView(p) {
       var TYPE_LABELS = {
-        rp:'RÃ©sidence Permanente', travail:'Visa Travail', etudes:'Permis Ã‰tudes',
+        rp:'Résidence Permanente', travail:'Visa Travail', etudes:'Permis Études',
         famille:'Regroupement Familial', investissement:'Immigration Investisseur',
         refugie:'Protection Internationale', tourisme:'Visa Tourisme'
       };
-      var PROVINCE_LABELS = { QC:'QuÃ©bec', ON:'Ontario', BC:'Colombie-Brit.', AB:'Alberta', MB:'Manitoba', SK:'Saskatchewan', NS:'Nouvelle-Ã‰cosse', NB:'Nouveau-Brunswick', autre:'Flexible' };
-      var DIPLOME_LABELS = { sans:'Sans diplÃ´me', technique:'Technique/MÃ©tier', college:'CollÃ¨ge', bac:'BaccalaurÃ©at', licence:'Licence (BAC+3)', master:'Master (BAC+5)', doctorat:'Doctorat/PhD' };
+      var PROVINCE_LABELS = { QC:'Québec', ON:'Ontario', BC:'Colombie-Brit.', AB:'Alberta', MB:'Manitoba', SK:'Saskatchewan', NS:'Nouvelle-Écosse', NB:'Nouveau-Brunswick', autre:'Flexible' };
+      var DIPLOME_LABELS = { sans:'Sans diplôme', technique:'Technique/Métier', college:'Collège', bac:'Baccalauréat', licence:'Licence (BAC+3)', master:'Master (BAC+5)', doctorat:'Doctorat/PhD' };
       var STATUT_CFG = {
-        proposition:{ label:'Proposition', pct:15, txt:'Votre dossier a Ã©tÃ© reÃ§u' },
-        demarre:{ label:'DÃ©marrÃ©', pct:40, txt:'Votre dossier est en cours de traitement' },
-        en_cours:{ label:'En cours', pct:55, txt:'Traitement avancÃ©' },
-        soumis:{ label:'Soumis', pct:70, txt:'Dossier soumis aux autoritÃ©s' },
-        termine:{ label:'TerminÃ©', pct:100, txt:'Dossier complÃ©tÃ©' }
+        proposition:{ label:'Proposition', pct:15, txt:'Votre dossier a été reçu' },
+        demarre:{ label:'Démarré', pct:40, txt:'Votre dossier est en cours de traitement' },
+        en_cours:{ label:'En cours', pct:55, txt:'Traitement avancé' },
+        soumis:{ label:'Soumis', pct:70, txt:'Dossier soumis aux autorités' },
+        termine:{ label:'Terminé', pct:100, txt:'Dossier complété' }
       };
       var statusKey = String(p.status || 'proposition').toLowerCase();
       var sc = STATUT_CFG[statusKey] || { label: p.status || 'Proposition', pct: 15, txt: 'En attente' };
@@ -6142,7 +6321,7 @@ const proSvcList = [
       var titleEl = document.getElementById('projViewType');
       if (titleEl) titleEl.textContent = TYPE_LABELS[p.type] || p.type || 'Mon Projet';
       var subEl = document.getElementById('projViewSub');
-      if (subEl) subEl.textContent = [PROVINCE_LABELS[p.province]||p.province, p.pays].filter(Boolean).join(' Â· ');
+      if (subEl) subEl.textContent = [PROVINCE_LABELS[p.province]||p.province, p.pays].filter(Boolean).join(' · ');
 
       // Barre progression
       var bar = document.getElementById('projProgressBar');
@@ -6157,21 +6336,21 @@ const proSvcList = [
       if (!content) return;
 
       var languesStr = Array.isArray(p.langues) ? p.langues.map(function(l){
-        var lm={fr:'FranÃ§ais',en:'Anglais',es:'Espagnol',ar:'Arabe',pt:'Portugais',zh:'Mandarin',de:'Allemand',it:'Italien'};
+        var lm={fr:'Français',en:'Anglais',es:'Espagnol',ar:'Arabe',pt:'Portugais',zh:'Mandarin',de:'Allemand',it:'Italien'};
         return lm[l]||l;
-      }).join(', ') : 'â€”';
+      }).join(', ') : '—';
 
       var infosHtml = '<div class="proj-subtab-content active" id="projPane-infos">'
         + '<div class="proj-infos-grid">'
-        + infoCard('Type de projet', TYPE_LABELS[p.type]||p.type||'â€”')
-        + infoCard('Province cible', PROVINCE_LABELS[p.province]||p.province||'â€”')
-        + infoCard('Pays d\'origine', p.pays||'â€”')
-        + infoCard('DÃ©lai souhaitÃ©', p.delai||'â€”')
-        + infoCard('Personnes', p.nbpersonnes||'â€”')
-        + infoCard('DiplÃ´me', DIPLOME_LABELS[p.diplome]||p.diplome||'â€”')
-        + infoCard('Domaine', p.domaine||'â€”')
-        + infoCard('ExpÃ©rience', p.experience||'â€”')
-        + infoCard('Situation fam.', p.famille||'â€”')
+        + infoCard('Type de projet', TYPE_LABELS[p.type]||p.type||'—')
+        + infoCard('Province cible', PROVINCE_LABELS[p.province]||p.province||'—')
+        + infoCard('Pays d\'origine', p.pays||'—')
+        + infoCard('Délai souhaité', p.delai||'—')
+        + infoCard('Personnes', p.nbpersonnes||'—')
+        + infoCard('Diplôme', DIPLOME_LABELS[p.diplome]||p.diplome||'—')
+        + infoCard('Domaine', p.domaine||'—')
+        + infoCard('Expérience', p.experience||'—')
+        + infoCard('Situation fam.', p.famille||'—')
         + infoCard('Statut dossier', '<span style="color:var(--cap-orange);font-weight:700;">'+sc.label+'</span>')
         + infoCard('Langues', languesStr)
         + '</div>'
@@ -6183,20 +6362,20 @@ const proSvcList = [
         + '</div>';
 
       var docsHtml = '<div class="proj-subtab-content" id="projPane-documents">'
-        + '<div class="proj-empty-state"><i class="fa fa-file-text-o"></i><strong>Documents Ã  fournir</strong>'
-        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Vos documents requis seront listÃ©s ici une fois votre conseiller assignÃ©.</p>'
-        + '<button class="proj-cta-btn" onclick="switchTab(\'documents\')"><i class="fa fa-arrow-right"></i> Aller Ã  l\'espace Documents</button></div>'
+        + '<div class="proj-empty-state"><i class="fa fa-file-text-o"></i><strong>Documents à fournir</strong>'
+        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Vos documents requis seront listés ici une fois votre conseiller assigné.</p>'
+        + '<button class="proj-cta-btn" onclick="switchTab(\'documents\')"><i class="fa fa-arrow-right"></i> Aller à l\'espace Documents</button></div>'
         + '</div>';
 
       var paiementsHtml = '<div class="proj-subtab-content" id="projPane-paiements">'
         + '<div class="proj-empty-state"><i class="fa fa-credit-card"></i><strong>Paiements</strong>'
-        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Consultez et gÃ©rez vos paiements dans l\'onglet dÃ©diÃ©.</p>'
+        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Consultez et gérez vos paiements dans l\'onglet dédié.</p>'
         + '<button class="proj-cta-btn" onclick="switchTab(\'paiements\')"><i class="fa fa-arrow-right"></i> Voir les paiements</button></div>'
         + '</div>';
 
       var conseillerHtml = '<div class="proj-subtab-content" id="projPane-conseiller">'
-        + '<div class="proj-empty-state"><i class="fa fa-user-tie"></i><strong>Conseiller assignÃ©</strong>'
-        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Un conseiller vous sera assignÃ© selon votre profil. Vous recevrez une notification.</p>'
+        + '<div class="proj-empty-state"><i class="fa fa-user-tie"></i><strong>Conseiller assigné</strong>'
+        + '<p style="font-size:13px;max-width:320px;margin:0 auto 16px;">Un conseiller vous sera assigné selon votre profil. Vous recevrez une notification.</p>'
         + '<button class="proj-cta-btn" onclick="switchTab(\'messagerie\')"><i class="fa fa-comments"></i> Contacter CAPITUNE</button></div>'
         + '</div>';
 
@@ -6210,11 +6389,11 @@ const proSvcList = [
     function buildEtapesFromStatus(statusKey, p) {
       var etapes = [
         { key:'profil', label:'Profil projet soumis', desc:'Vos informations personnelles et objectifs.' },
-        { key:'attribution', label:'Attribution d\'un conseiller', desc:'Un conseiller CAPITUNE est assignÃ© Ã  votre dossier.' },
-        { key:'documents', label:'Collecte des documents', desc:'Rassemblement et vÃ©rification des piÃ¨ces justificatives.' },
-        { key:'preparation', label:'PrÃ©paration du dossier', desc:'Montage complet du dossier d\'immigration.' },
-        { key:'soumission', label:'Soumission officielle', desc:'Transmission aux autoritÃ©s compÃ©tentes.' },
-        { key:'suivi', label:'Suivi et rÃ©ponse', desc:'Suivi de la dÃ©cision et accompagnement post-soumission.' }
+        { key:'attribution', label:'Attribution d\'un conseiller', desc:'Un conseiller CAPITUNE est assigné à votre dossier.' },
+        { key:'documents', label:'Collecte des documents', desc:'Rassemblement et vérification des pièces justificatives.' },
+        { key:'preparation', label:'Préparation du dossier', desc:'Montage complet du dossier d\'immigration.' },
+        { key:'soumission', label:'Soumission officielle', desc:'Transmission aux autorités compétentes.' },
+        { key:'suivi', label:'Suivi et réponse', desc:'Suivi de la décision et accompagnement post-soumission.' }
       ];
       var doneMap = { proposition:['profil'], demarre:['profil','attribution'], en_cours:['profil','attribution','documents'], soumis:['profil','attribution','documents','preparation','soumission'], termine:['profil','attribution','documents','preparation','soumission','suivi'] };
       var done = doneMap[statusKey] || ['profil'];
@@ -6223,7 +6402,7 @@ const proSvcList = [
       var html = '';
       etapes.forEach(function(e) {
         var st = done.indexOf(e.key) !== -1 ? 'completed' : (e.key === inProg ? 'in_progress' : 'pending');
-        var badges = { completed:'ComplÃ©tÃ©', in_progress:'En cours', pending:'En attente', blocked:'BloquÃ©' };
+        var badges = { completed:'Complété', in_progress:'En cours', pending:'En attente', blocked:'Bloqué' };
         html += '<div class="proj-step-row">'
           + '<div class="proj-step-dot '+st+'"></div>'
           + '<div class="proj-step-body">'
@@ -6232,7 +6411,7 @@ const proSvcList = [
           + '<div class="proj-step-desc">'+e.desc+'</div>'
           + '</div></div>';
       });
-      return html || '<div class="proj-empty-state"><i class="fa fa-list-ol"></i><strong>Aucune Ã©tape disponible</strong></div>';
+      return html || '<div class="proj-empty-state"><i class="fa fa-list-ol"></i><strong>Aucune étape disponible</strong></div>';
     }
 
     window.confirmCancelDemande = function() {
