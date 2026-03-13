@@ -77,6 +77,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="messagerie" options={{ href: null }} />
       <Tabs.Screen name="conseillers" options={{ href: null }} />
       <Tabs.Screen name="paiements" options={{ href: null }} />
+      <Tabs.Screen name="carriere" options={{ href: null }} />
     </Tabs>
   );
 }

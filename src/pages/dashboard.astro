@@ -263,6 +263,24 @@ const proSvcList = [
       .section-title-block h2{font-size:1.4rem;margin:0 0 8px;color:var(--cap-dark);}
       .title-line{width:50px;height:3px;background:var(--cap-orange);border-radius:2px;margin-bottom:10px;}
       .section-title-block p{color:#777;margin:0;}
+      /* ── CARRIÈRE & ÉTUDES ── */
+      .carriere-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; padding-bottom: 30px; }
+      .carriere-card { background: #fff; border: 1px solid #eaeaea; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; }
+      .carriere-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: var(--cap-primary); }
+      .carriere-card.disabled-card { opacity: 0.6; cursor: not-allowed; }
+      .carriere-card.disabled-card:hover { transform: none; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-color: #eaeaea; }
+      .carriere-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+      .carriere-content h3 { font-size: 1.15rem; font-weight: 800; color: var(--cap-dark); margin: 0 0 8px 0; }
+      .carriere-content p { font-size: 0.9rem; color: #666; line-height: 1.5; margin: 0 0 20px 0; flex: 1; }
+      .btn-outline { background: transparent; border: 1.5px solid var(--cap-border, #ddd); color: var(--cap-dark); padding: 8px 16px; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.2s; width: 100%; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+      .btn-outline:hover { background: #f8f9fa; border-color: #ccc; }
+      .is-dark-mode .carriere-card { background: var(--cap-dark-surface); border-color: var(--cap-dark-border); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+      .is-dark-mode .carriere-card:hover { border-color: var(--cap-primary); }
+      .is-dark-mode .carriere-content h3 { color: #fff; }
+      .is-dark-mode .carriere-content p { color: #aaa; }
+      .is-dark-mode .btn-outline { border-color: var(--cap-dark-border); color: #fff; }
+      .is-dark-mode .btn-outline:hover { background: rgba(255,255,255,0.05); }
+
       /* ── ÉQUIPE (Grid de Cartes façon Story) ── */
       .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px;margin-top:8px;}
       .team-card{position:relative;background:#1a1a2e;border-radius:22px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.12);height:360px;display:flex;flex-direction:column;justify-content:flex-end;transition:.25s;cursor:pointer;border:2px solid transparent;}
@@ -1011,6 +1029,9 @@ const proSvcList = [
                 <li class="dash-nav-item" data-tab="equipe">
                   <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
                 </li>
+                <li class="dash-nav-item" data-tab="carriere">
+                  <a href="#" onclick="switchTab('carriere'); return false;"><i class="fa fa-graduation-cap"></i> Carrière</a>
+                </li>
                 <li class="dash-nav-item" data-tab="documents">
                   <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
                 </li>
@@ -1031,6 +1052,9 @@ const proSvcList = [
                 </li>
                 <li class="dash-nav-item" data-tab="documents">
                   <a href="#" onclick="switchTab('documents'); return false;"><i class="fa fa-file-text-o"></i> Documents</a>
+                </li>
+                <li class="dash-nav-item" data-tab="carriere">
+                  <a href="#" onclick="switchTab('carriere'); return false;"><i class="fa fa-graduation-cap"></i> Carrière</a>
                 </li>
                 <li class="dash-nav-item" data-tab="equipe">
                   <a href="#" onclick="switchTab('equipe'); return false;"><i class="fa fa-users"></i> Équipe</a>
@@ -1070,6 +1094,7 @@ const proSvcList = [
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
                   <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
+                  <li><a href="#" onclick="switchTab('carriere'); toggleProfileMenu(); return false;"><i class="fa fa-graduation-cap"></i> Carrière</a></li>
                   <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
                   <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-th-large"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
@@ -1080,6 +1105,7 @@ const proSvcList = [
                   <li><a href="#" onclick="switchTab('projet'); toggleProfileMenu(); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a></li>
                   <li><a href="#" onclick="switchTab('messagerie'); toggleProfileMenu(); return false;"><i class="fa fa-envelope"></i> Messagerie</a></li>
                   <li><a href="#" onclick="switchTab('documents'); toggleProfileMenu(); return false;"><i class="fa fa-file-text-o"></i> Documents</a></li>
+                  <li><a href="#" onclick="switchTab('carriere'); toggleProfileMenu(); return false;"><i class="fa fa-graduation-cap"></i> Carrière</a></li>
                   <li><a href="#" onclick="switchTab('equipe'); toggleProfileMenu(); return false;"><i class="fa fa-users"></i> Équipe</a></li>
                   <li><a href="#" onclick="switchTab('dashboard'); toggleProfileMenu(); return false;"><i class="fa fa-th-large"></i> Dashboard</a></li>
                   <li><a href="#" onclick="switchTab('parametres'); toggleProfileMenu(); return false;"><i class="fa fa-cog"></i> Profil</a></li>
@@ -2381,6 +2407,74 @@ const proSvcList = [
           </div>
           <div id="team-grid-container">
             <div class="team-loading"><i class="fa fa-spinner fa-spin"></i> Chargement de l'équipe…</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ONGLET : CARRIERE ===== -->
+      <section class="tab-section" id="tab-carriere" style="display:none;">
+        <div class="tab-hero">
+          <div class="tab-hero-inner">
+            <h1><i class="fa fa-graduation-cap"></i> Carrière & Études</h1>
+            <p>Découvrez nos outils dédiés à votre projet professionnel et académique au Canada.</p>
+          </div>
+        </div>
+        
+        <div class="dash-container">
+          <div class="carriere-grid">
+            
+            <div class="carriere-card">
+              <div class="carriere-icon" style="background-color: var(--cap-primary-10);">
+                <i class="fa fa-university" style="color: var(--cap-primary);"></i>
+              </div>
+              <div class="carriere-content">
+                <h3>Espace Études (EED)</h3>
+                <p>Trouvez votre Établissement d'Enseignement Désigné et programmez vos études au Canada.</p>
+                <div class="carriere-actions">
+                  <button class="btn btn-outline" onclick="alert('Module disponible prochainement !')">Explorer les EED <i class="fa fa-arrow-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carriere-card">
+              <div class="carriere-icon" style="background-color: rgba(245, 158, 11, 0.1);">
+                <i class="fa fa-briefcase" style="color: var(--cap-orange);"></i>
+              </div>
+              <div class="carriere-content">
+                <h3>Marché de l'Emploi</h3>
+                <p>Explorez les offres d'emploi ciblées et connectez-vous avec des employeurs canadiens.</p>
+                <div class="carriere-actions">
+                  <button class="btn btn-outline" onclick="alert('Module disponible prochainement !')">Voir les offres <i class="fa fa-arrow-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carriere-card">
+              <div class="carriere-icon" style="background-color: rgba(59, 130, 246, 0.1);">
+                <i class="fa fa-file-text" style="color: #3b82f6;"></i>
+              </div>
+              <div class="carriere-content">
+                <h3>Créateur de CV</h3>
+                <p>Adaptez votre CV au format canadien avec nos outils intégrés pour maximiser vos chances.</p>
+                <div class="carriere-actions">
+                  <button class="btn btn-outline" onclick="alert('Module disponible prochainement !')">Créer mon CV <i class="fa fa-arrow-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="carriere-card disabled-card">
+              <div class="carriere-icon" style="background-color: rgba(139, 92, 246, 0.1);">
+                <i class="fa fa-magic" style="color: #8b5cf6;"></i>
+              </div>
+              <div class="carriere-content">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <h3>Système de Match</h3>
+                  <span class="badge" style="background:#eee;color:#888;font-size:10px;padding:3px 6px;border-radius:4px;">À venir</span>
+                </div>
+                <p>Découvrez votre taux de compatibilité avec les différents programmes provinciaux.</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

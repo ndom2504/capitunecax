@@ -471,6 +471,21 @@ export default function DashboardScreen() {
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
 
+              <TouchableOpacity
+                style={styles.careerBtn}
+                activeOpacity={0.85}
+                onPress={() => router.push('/(tabs)/carriere' as any)}
+              >
+                <View style={styles.careerIcon}>
+                  <Ionicons name="school" size={18} color={Colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.findAdvisorTitle}>Espace Carrière & Études</Text>
+                  <Text style={styles.findAdvisorSub}>Écoles, Emplois, CV et Match</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+
               {/* Raccourcis */}
               <Text style={styles.sectionTitle}>Accès rapide</Text>
               <View style={styles.shortcutsGrid}>
@@ -715,6 +730,28 @@ const styles = StyleSheet.create({
   },
   findAdvisorTitle: { fontSize: 14, fontWeight: '900', color: Colors.text },
   findAdvisorSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  careerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 18,
+    padding: 14,
+    marginBottom: 8,
+    ...UI.cardShadow,
+  },
+  careerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary + '18',
+    borderWidth: 1,
+    borderColor: Colors.primary + '35',
+  },
   avatarPro: { backgroundColor: Colors.primary },
   proBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 6,

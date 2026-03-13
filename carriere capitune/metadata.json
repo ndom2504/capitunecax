@@ -1,0 +1,5 @@
+{
+  "name": "CAPITUNE",
+  "description": "Plateforme d’accompagnement en immigration canadienne structurée et sécurisée.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}
