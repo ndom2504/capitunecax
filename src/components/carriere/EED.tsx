@@ -38,7 +38,9 @@ export default function EED({ isMobileApp = false }: { isMobileApp?: boolean }) 
         const recommended = profile.analysis.recommended_programs?.[0] || profile.analysis.top_skills?.[0];
         if (recommended) setSearch(recommended);
       }
-
+    }).catch(err => {
+      console.error("Erreur chargement EED", err);
+    }).finally(() => {
       setLoading(false);
     });
   }, []);

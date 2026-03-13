@@ -22,7 +22,8 @@ export const dataService = {
   },
 
   async getEED(): Promise<DLI[]> {
-    const res = await fetch("/api/eed");
+    const res = await fetch("/api/dli");
+    if (!res.ok) return [];
     return res.json();
   },
 
