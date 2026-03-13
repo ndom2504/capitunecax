@@ -29,6 +29,16 @@ if (-not $ip) {
 	Write-Host "REACT_NATIVE_PACKAGER_HOSTNAME=$ip" -ForegroundColor Cyan
 }
 
+# URL web pour les WebViews (Jobs/CV) — surcharge via variable d'env.
+if (-not $env:EXPO_PUBLIC_API_BASE_URL -or [string]::IsNullOrWhiteSpace($env:EXPO_PUBLIC_API_BASE_URL)) {
+	if ($ip) {
+		$env:EXPO_PUBLIC_API_BASE_URL = "http://$ip:3000"
+	} else {
+		$env:EXPO_PUBLIC_API_BASE_URL = "http://localhost:3000"
+	}
+}
+Write-Host "EXPO_PUBLIC_API_BASE_URL=$($env:EXPO_PUBLIC_API_BASE_URL)" -ForegroundColor Cyan
+
 Write-Host "Demarrage Expo LAN avec cache reset..." -ForegroundColor Green
 $port = if ($env:EXPO_PORT) { $env:EXPO_PORT } else { '8082' }
 Write-Host "Port Metro: $port" -ForegroundColor Cyan

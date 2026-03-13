@@ -44,3 +44,7 @@ cookies.txt
 headers_login.txt
 login.json
 .vercel
+
+mobile/cloudflared-windows-amd64.exe
+tunnel.log
+

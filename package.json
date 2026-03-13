@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "predev": "npx kill-port 3000 || true",
-    "dev": "astro dev",
+    "dev": "astro dev --host",
     "build": "astro build",
     "build:vercel": "astro build --config astro.config.vercel.mjs",
     "vercel-build": "npm run build:vercel",

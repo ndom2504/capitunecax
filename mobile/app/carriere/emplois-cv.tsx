@@ -1,104 +1,292 @@
-﻿import React, { useState, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
+  TextInput, FlatList, Linking, Dimensions, Platform,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
-import { API_BASE_URL } from '../../lib/api';
+import { UI } from '../../constants/UI';
 
-const PAGE_URL = `${API_BASE_URL}/carriere/emplois-cv?source=app&_t=${Date.now()}`;
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const JOBS_API = 'https://www.capitune.com/api/jobs';
 
-const INJECTED_JS_BEFORE = `
-  (function() {
-    try {
-      var meta = document.querySelector('meta[name="viewport"]');
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.name = 'viewport';
-        document.head.appendChild(meta);
-      }
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
-    } catch (e) {}
-  })();
-  true;
-`;
+const CARD_COLORS = [
+  { bg: '#0a2744', accent: Colors.orange },
+  { bg: '#1a3a5c', accent: '#38bdf8' },
+  { bg: '#1e3a2e', accent: '#4ade80' },
+  { bg: '#2d1b4e', accent: '#a78bfa' },
+  { bg: '#3b1a1a', accent: '#f87171' },
+  { bg: '#1a2e3b', accent: '#fb923c' },
+];
 
-const INJECTED_JS = `
-  (function() {
-    try {
-      var style = document.createElement('style');
-      style.innerHTML = '.cap-page-hero { display: none !important; } .cap-page-body { padding-top: 8px !important; } body { background: #f5f7fa !important; }';
-      document.head.appendChild(style);
-    } catch (e) {}
-  })();
-  true;
-`;
+interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  description_short: string;
+  url_officielle: string;
+}
 
 export default function EmploisCVScreen() {
-  const router = useRouter();
-  const webRef = useRef<any>(null);
-  const [progress, setProgress] = useState(0);
-  const [hasError, setHasError] = useState(false);
+  const router  = useRouter();
+  const insets  = useSafeAreaInsets();
+  const listRef = useRef<FlatList<Job> | null>(null);
+
+  const [query, setQuery]           = useState('');
+  const [location, setLocation]     = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [jobs, setJobs]             = useState<Job[]>([]);
+  const [page, setPage]             = useState(1);
+  const [loading, setLoading]       = useState(false);
+  const [hasMore, setHasMore]       = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const fetchJobs = useCallback(async (q: string, loc: string, p: number, replace: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ q: q || '*', page: String(p) });
+      if (loc) params.set('location', loc);
+      const res  = await fetch(`${JOBS_API}?${params.toString()}`);
+      if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+      const data: Job[] = await res.json();
+      setJobs(prev => replace ? data : [...prev, ...data]);
+      setHasMore(data.length >= 10);
+      setPage(p);
+      if (replace) setActiveIndex(0);
+    } catch (e: any) {
+      setError(e?.message ?? 'Connexion echouee');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchJobs('*', '', 1, true); }, []);
+
+  const handleSearch = () => {
+    setShowSearch(false);
+    fetchJobs(query || '*', location, 1, true);
+  };
+
+  const handlePrev = () => {
+    if (activeIndex <= 0) return;
+    const idx = activeIndex - 1;
+    setActiveIndex(idx);
+    listRef.current?.scrollToIndex({ index: idx, animated: true });
+  };
+
+  const handleNext = () => {
+    if (activeIndex >= jobs.length - 1) {
+      if (hasMore && !loading) fetchJobs(query || '*', location, page + 1, false);
+      return;
+    }
+    const idx = activeIndex + 1;
+    setActiveIndex(idx);
+    listRef.current?.scrollToIndex({ index: idx, animated: true });
+  };
+
+  const renderJob = ({ item, index }: { item: Job; index: number }) => {
+    const color  = CARD_COLORS[index % CARD_COLORS.length];
+    const isActive = index === activeIndex;
+
+    const tags: string[] = [];
+    if (item.location) tags.push(item.location);
+    if (item.salary)   tags.push(item.salary);
+
+    const initials = (item.company ?? 'C')
+      .trim().split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(w => w[0]).join('').toUpperCase();
+
+    return (
+      <View style={[styles.story, { width: SCREEN_W, backgroundColor: color.bg }]}>
+        {/* Fond deco */}
+        <View style={[styles.storyDecoBuble, { backgroundColor: color.accent + '18' }]} />
+        <View style={[styles.storyDecoBuble2, { backgroundColor: color.accent + '10' }]} />
+
+        {/* Overlay */}
+        <View style={styles.storyShade} pointerEvents="none" />
+
+        {/* Barre de progression */}
+        <View style={[styles.storyTop, { paddingTop: insets.top + 52 }]}>
+          <View style={styles.storyProgress}>
+            {jobs.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.storyBar,
+                  i < activeIndex  && styles.storyBarDone,
+                  i === activeIndex && styles.storyBarActive,
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Contenu bas */}
+        <View style={[styles.storyContent, { paddingBottom: insets.bottom + 24 }]}>
+
+          {/* Avatar entreprise */}
+          <View style={styles.storyHeaderRow}>
+            <View style={[styles.storyAvatar, { backgroundColor: color.accent + '33' }]}>
+              <Text style={[styles.storyAvatarInitial, { color: color.accent }]}>{initials}</Text>
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.storyName} numberOfLines={2}>{item.title}</Text>
+              <Text style={styles.storySubtitle} numberOfLines={1}>{item.company}</Text>
+            </View>
+            <View style={[styles.badge, { backgroundColor: color.accent + '22', borderColor: color.accent + '44' }]}>
+              <Ionicons name="briefcase" size={13} color={color.accent} />
+              <Text style={[styles.badgeText, { color: color.accent }]}>Emploi</Text>
+            </View>
+          </View>
+
+          {/* Meta pills */}
+          <View style={styles.storyMetaRow}>
+            {!!item.location && (
+              <View style={styles.storyMetaItem}>
+                <Ionicons name="location-outline" size={13} color={Colors.surface + 'CC'} />
+                <Text style={styles.storyMetaText} numberOfLines={1}>{item.location}</Text>
+              </View>
+            )}
+            {!!item.salary && (
+              <View style={styles.storyMetaItem}>
+                <Ionicons name="cash-outline" size={13} color={Colors.surface + 'CC'} />
+                <Text style={styles.storyMetaText} numberOfLines={1}>{item.salary}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Date */}
+          {!!item.description_short && (
+            <Text style={styles.storyBio} numberOfLines={2}>{item.description_short}</Text>
+          )}
+
+          {/* Bouton */}
+          <TouchableOpacity
+            style={[styles.storyBtn, { backgroundColor: color.accent }]}
+            activeOpacity={0.85}
+            onPress={() => Linking.openURL(item.url_officielle).catch(() => {})}
+          >
+            <Ionicons name="open-outline" size={17} color="#fff" />
+            <Text style={styles.storyBtnText}>Voir l'offre complète</Text>
+          </TouchableOpacity>
+
+          {/* Compteur */}
+          <Text style={styles.storyCounter}>{activeIndex + 1} / {jobs.length}{hasMore ? '+' : ''}</Text>
+        </View>
+
+        {/* Navigation tap zones */}
+        <View style={styles.storyNav} pointerEvents="box-none">
+          <TouchableOpacity style={styles.storyNavLeft}  activeOpacity={1} onPress={handlePrev} />
+          <TouchableOpacity style={styles.storyNavRight} activeOpacity={1} onPress={handleNext} />
+        </View>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {/* Header */}
-      <View style={styles.headerRow}>
+      {/* Header fixe */}
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={24} color={Colors.text} />
+          <Ionicons name="chevron-back" size={22} color={Colors.surface} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Marché de l'Emploi</Text>
+        <Text style={styles.headerTitle}>Marche de l'Emploi</Text>
         <TouchableOpacity
-          style={styles.reloadBtn}
-          onPress={() => { webRef.current?.reload(); setHasError(false); }}
+          style={styles.searchIconBtn}
           activeOpacity={0.8}
+          onPress={() => setShowSearch(s => !s)}
         >
-          <Ionicons name="refresh-outline" size={20} color={Colors.textMuted} />
+          <Ionicons name={showSearch ? 'close' : 'search'} size={20} color={Colors.surface} />
         </TouchableOpacity>
       </View>
 
-      {/* Barre de progression */}
-      {progress < 1 && (
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` as any }]} />
+      {/* Barre de recherche dépliable */}
+      {showSearch && (
+        <View style={styles.searchDrawer}>
+          <View style={styles.searchRow}>
+            <Ionicons name="search-outline" size={15} color={Colors.textMuted} style={{ marginRight: 6 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Poste, competence..."
+              placeholderTextColor={Colors.textMuted}
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+              autoFocus
+            />
+            {!!query && (
+              <TouchableOpacity onPress={() => setQuery('')}>
+                <Ionicons name="close-circle" size={15} color={Colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.searchRow}>
+            <Ionicons name="location-outline" size={15} color={Colors.textMuted} style={{ marginRight: 6 }} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Ville ou province"
+              placeholderTextColor={Colors.textMuted}
+              value={location}
+              onChangeText={setLocation}
+              onSubmitEditing={handleSearch}
+              returnKeyType="search"
+            />
+          </View>
+          <TouchableOpacity style={styles.searchBtn} onPress={handleSearch} activeOpacity={0.8}>
+            <Text style={styles.searchBtnText}>Chercher</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Contenu */}
-      {hasError ? (
-        <View style={styles.errorBox}>
+      {/* États */}
+      {loading && jobs.length === 0 ? (
+        <View style={styles.centerBox}>
+          <ActivityIndicator size="large" color={Colors.orange} />
+          <Text style={styles.loadingText}>Chargement des offres...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.centerBox}>
           <Ionicons name="cloud-offline-outline" size={44} color={Colors.textMuted} />
-          <Text style={styles.errorTitle}>Connexion impossible</Text>
-          <Text style={styles.errorSub}>Vérifiez votre connexion internet et réessayez.</Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={() => { webRef.current?.reload(); setHasError(false); }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.retryBtnText}>Réessayer</Text>
+          <Text style={styles.errorTitle}>Connexion echouee</Text>
+          <Text style={styles.errorSub}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => fetchJobs('*', '', 1, true)} activeOpacity={0.8}>
+            <Text style={styles.retryText}>Reessayer</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <WebView
-          ref={webRef}
-          source={{ uri: PAGE_URL }}
-          style={styles.webview}
-          cacheEnabled={false}
-          injectedJavaScriptBeforeContentLoaded={INJECTED_JS_BEFORE}
-          injectedJavaScript={INJECTED_JS}
-          onLoadProgress={({ nativeEvent }) => setProgress(nativeEvent.progress)}
-          onLoadEnd={() => setProgress(1)}
-          onError={() => { setHasError(true); setProgress(1); }}
-          onHttpError={() => { setHasError(true); setProgress(1); }}
-          allowsBackForwardNavigationGestures
-          renderLoading={() => (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={Colors.orange} />
+        <FlatList
+          ref={r => { listRef.current = r; }}
+          data={jobs}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          decelerationRate="fast"
+          snapToInterval={SCREEN_W}
+          snapToAlignment="start"
+          disableIntervalMomentum
+          onMomentumScrollEnd={e => {
+            const x   = e.nativeEvent.contentOffset.x;
+            const idx = Math.round(x / SCREEN_W);
+            setActiveIndex(Math.max(0, Math.min(jobs.length - 1, idx)));
+            if (idx >= jobs.length - 2 && hasMore && !loading)
+              fetchJobs(query || '*', location, page + 1, false);
+          }}
+          onScrollToIndexFailed={() => {}}
+          renderItem={renderJob}
+          ListEmptyComponent={
+            <View style={[styles.centerBox, { width: SCREEN_W }]}>
+              <Ionicons name="briefcase-outline" size={44} color={Colors.textMuted} />
+              <Text style={styles.errorTitle}>Aucune offre trouvee</Text>
             </View>
-          )}
+          }
         />
       )}
     </SafeAreaView>
@@ -106,41 +294,118 @@ export default function EmploisCVScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fff' },
+  root: { flex: 1, backgroundColor: Colors.primaryDark },
 
-  headerRow: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border,
-    backgroundColor: '#fff',
+  header: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: 'transparent',
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 12, alignItems: 'center',
-    justifyContent: 'center', backgroundColor: Colors.bgLight,
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   headerTitle: {
-    flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: Colors.text,
+    flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '700', color: Colors.surface,
   },
-  reloadBtn: {
-    width: 40, height: 40, borderRadius: 12, alignItems: 'center',
-    justifyContent: 'center', backgroundColor: Colors.bgLight,
+  searchIconBtn: {
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
 
-  progressTrack: { height: 2, backgroundColor: Colors.border },
-  progressFill:  { height: 2, backgroundColor: Colors.orange },
-
-  webview: { flex: 1 },
-  loader:  { flex: 1, alignItems: 'center', justifyContent: 'center' },
-
-  errorBox: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: 40, gap: 12,
+  searchDrawer: {
+    position: 'absolute', top: 56, left: 0, right: 0, zIndex: 20,
+    backgroundColor: '#fff', padding: 12, gap: 8,
+    borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 8,
   },
-  errorTitle: { fontSize: 17, fontWeight: '700', color: Colors.text, textAlign: 'center' },
-  errorSub:   { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.bgLight, borderRadius: 10, paddingHorizontal: 10, height: 40,
+  },
+  searchInput: { flex: 1, fontSize: 14, color: Colors.text },
+  searchBtn: {
+    backgroundColor: Colors.orange, borderRadius: 10,
+    alignItems: 'center', paddingVertical: 10,
+  },
+  searchBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+
+  story: { flex: 1 },
+  storyDecoBuble: {
+    position: 'absolute', width: 280, height: 280, borderRadius: 140,
+    top: -60, right: -60,
+  },
+  storyDecoBuble2: {
+    position: 'absolute', width: 180, height: 180, borderRadius: 90,
+    bottom: 160, left: -40,
+  },
+  storyShade: {
+    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+
+  storyTop: { paddingHorizontal: 12 },
+  storyProgress: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  storyBar:       { flex: 1, height: 3, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.25)' },
+  storyBarDone:   { backgroundColor: 'rgba(255,255,255,0.55)' },
+  storyBarActive: { backgroundColor: Colors.orange },
+
+  storyContent: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    paddingHorizontal: 18, paddingTop: 20, gap: 12,
+  },
+
+  storyHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  storyAvatar: {
+    width: 50, height: 50, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  storyAvatarInitial: { fontSize: 18, fontWeight: '900' },
+  storyName:    { fontSize: 18, fontWeight: '900', color: Colors.surface, lineHeight: 24 },
+  storySubtitle:{ fontSize: 13, color: Colors.surface + 'CC', fontWeight: '700', marginTop: 2 },
+  badge: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1,
+  },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+
+  storyMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  storyMetaItem:{ flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: '75%' },
+  storyMetaText:{ fontSize: 12, color: Colors.surface + 'CC', fontWeight: '600' },
+  storyBio:     { fontSize: 13, color: Colors.surface + 'BB', lineHeight: 18 },
+
+  storyBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 10, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
+    marginTop: 4, ...UI.cardShadow,
+  },
+  storyBtnText: { color: '#fff', fontSize: 14, fontWeight: '900' },
+  storyCounter: {
+    textAlign: 'center', fontSize: 12, color: Colors.surface + '88',
+    fontWeight: '600', marginTop: -4,
+  },
+
+  storyNav: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 160,
+    flexDirection: 'row',
+  },
+  storyNavLeft:  { flex: 1 },
+  storyNavRight: { flex: 1 },
+
+  centerBox: {
+    flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12,
+    paddingVertical: 80,
+  },
+  loadingText: { fontSize: 14, color: Colors.textMuted },
+  errorTitle:  { fontSize: 16, fontWeight: '700', color: Colors.text },
+  errorSub:    { fontSize: 13, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 30 },
   retryBtn: {
-    marginTop: 8, paddingHorizontal: 28, paddingVertical: 12,
+    paddingHorizontal: 28, paddingVertical: 12,
     backgroundColor: Colors.orange, borderRadius: 12,
   },
-  retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  retryText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
-
