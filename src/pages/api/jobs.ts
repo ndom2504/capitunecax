@@ -1,6 +1,6 @@
-// /api/jobs — Scrape réel du Guichet Emplois Canada (guichetemplois.gc.ca)
-// Source exacte : https://www.guichetemplois.gc.ca/jobsearch/rechercheemplois?sort=M
-// Proxy via ScraperAPI (render=true pour le JS) — même clé que /api/dli.ts
+﻿// /api/jobs — Flux RSS officiel Guichet Emplois Canada (guichetemplois.gc.ca)
+// Le flux RSS est XML statique (pas de JS), plus fiable que le scraping HTML.
+// Pas besoin de render=true → rapidité + fiabilité maximales.
 import type { APIRoute } from 'astro';
 
 const SCRAPER_KEY = '624751bbf5ddc786bad6c4f31f50d41c';
@@ -15,100 +15,104 @@ function decode(s: string): string {
     .replace(/&gt;/g,   '>')
     .replace(/&quot;/g, '"')
     .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'")
     .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g,    ' ')
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-/** Extrait le texte brut d'un bloc HTML correspondant à l'une des classes */
-function innerText(block: string, ...classes: string[]): string {
-  for (const cls of classes) {
-    const re = new RegExp(
-      `class="[^"]*\\b${cls}\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/(?:span|div|li|p|td)>`,
-      'i'
-    );
-    const m = re.exec(block);
-    if (m) return m[1].replace(/<[^>]+>/g, '').trim();
-  }
-  return '';
+function xmlTag(xml: string, tag: string): string {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
+  const m  = re.exec(xml);
+  return m ? decode(m[1]) : '';
 }
 
-// ── Fetch via ScraperAPI ──────────────────────────────────────────────────────
+function formatPubDate(raw: string): string {
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return raw;
+  return d.toLocaleDateString('fr-CA', { year: 'numeric', month: 'long', day: 'numeric' });
+}
 
-async function fetchGuichet(q: string, location: string): Promise<string> {
-  const params = new URLSearchParams({ sort: 'M' });
-  if (q)        params.set('searchstring',  q);
-  if (location) params.set('locationstring', location);
+// ── Fetch RSS via ScraperAPI (render=false — XML statique) ────────────────────
 
-  const target = `${BASE_FR}/jobsearch/rechercheemplois?${params.toString()}`;
+async function fetchRSS(q: string, location: string): Promise<string> {
+  // Guichet Emplois expose un flux RSS pour n'importe quelle recherche
+  const rssParams = new URLSearchParams({ sort: 'M', rss: '1', action: 'search' });
+  if (q)        rssParams.set('searchstring',   q);
+  if (location) rssParams.set('locationstring', location);
 
+  const target  = `${BASE_FR}/jobsearch/rechercheemplois?${rssParams.toString()}`;
+
+  // render=false suffit pour du XML pur — beaucoup plus rapide
   const scraperParams = new URLSearchParams({
     api_key: SCRAPER_KEY,
     url:     target,
-    render:  'true',          // exécute le JS (résultats Ajax)
+    render:  'false',
   });
 
-  const scraperUrl = `https://api.scraperapi.com/?${scraperParams.toString()}`;
-  const res = await fetch(scraperUrl, { signal: AbortSignal.timeout(30_000) });
+  const res = await fetch(
+    `https://api.scraperapi.com/?${scraperParams.toString()}`,
+    { signal: AbortSignal.timeout(25_000) }
+  );
   if (!res.ok) throw new Error(`ScraperAPI HTTP ${res.status}`);
   return res.text();
 }
 
-// ── Parser HTML ───────────────────────────────────────────────────────────────
+// ── Parser RSS/XML ─────────────────────────────────────────────────────────────
 
-function parseJobs(html: string): object[] {
+function parseRSS(xml: string): object[] {
   const jobs: object[] = [];
 
-  // Guichet Emplois : chaque offre est dans un <article … class="…resultJobItem…" data-id="NNN">
-  const articleRe = /<article([^>]*)>([\s\S]*?)<\/article>/gi;
+  // Chaque offre est dans un bloc <item>…</item>
+  const itemRe = /<item>([\s\S]*?)<\/item>/gi;
   let m: RegExpExecArray | null;
 
-  while ((m = articleRe.exec(html)) !== null) {
-    const attrs = m[1];
-    const block = m[2];
+  while ((m = itemRe.exec(xml)) !== null) {
+    const item = m[1];
 
-    // Filtrer uniquement les articles d'offres d'emploi
-    if (!/resultJobItem/i.test(attrs)) continue;
+    const title   = xmlTag(item, 'title');
+    const link    = xmlTag(item, 'link');
+    const pubDate = xmlTag(item, 'pubDate');
+    const desc    = xmlTag(item, 'description'); // contient employeur, lieu, salaire
 
-    // ID numérique
-    const idM = /data-id="(\d+)"/.exec(attrs);
+    if (!title || !link) continue;
+
+    // Extraire l'ID de l'URL  ex: /fr/ficheemploi/987654321
+    const idM = /\/(\d{7,12})(?:[/?#]|$)/.exec(link);
     const id  = idM ? idM[1] : Math.random().toString(36).slice(2);
 
-    // Titre : <span class="noctitle"> ou lien ficheemploi/jobposting
-    let title = innerText(block, 'noctitle', 'titre');
-    if (!title) {
-      const lm = /href="[^"]*(?:ficheemploi|jobposting)[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
-      title = lm ? lm[1].replace(/<[^>]+>/g, '').trim() : '';
+    // La <description> du RSS ressemble à :
+    // "Entreprise XYZ - Montréal (QC) - 25 $/h"  ou
+    // "Entreprise XYZ | Montréal | Permanent | 50 000 $/an"
+    let company  = '';
+    let location = '';
+    let salary   = '';
+
+    if (desc) {
+      // Tentative : séparer par ' - ' ou ' | '
+      const sep   = desc.includes(' | ') ? ' | ' : ' - ';
+      const parts = desc.split(sep).map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 1) company  = parts[0];
+      if (parts.length >= 2) location = parts[1];
+      if (parts.length >= 3) {
+        // le salaire contient généralement '$', 'h', 'an', 'mois'
+        const salaryPart = parts.find(p => /\$|salaire|taux/i.test(p));
+        if (salaryPart) salary = salaryPart;
+        else if (parts.length >= 4) salary = parts[3];
+      }
     }
-    if (!title) continue;
-
-    // Entreprise
-    const company   = innerText(block, 'business', 'entreprise', 'resultJobItem-businessName');
-    // Lieu
-    const locText   = innerText(block, 'location',  'lieu',      'resultJobItem-location');
-    // Salaire  
-    const salary    = innerText(block, 'salary',    'salaire',   'resultJobItem-salary');
-    // Date de publication
-    const dateText  = innerText(block, 'date',      'resultJobItem-date');
-
-    // URL — priorité au lien trouvé dans le bloc
-    const urlM = /href="([^"]*(?:ficheemploi|jobposting)\/(\d+)[^"]*)"/i.exec(block);
-    const jobPath    = urlM ? urlM[1] : `/fr/ficheemploi/${id}`;
-    const officialId = urlM ? urlM[2] : id;
-    const urlOfficielle = jobPath.startsWith('http')
-      ? jobPath
-      : `${BASE_FR}${jobPath.startsWith('/') ? '' : '/'}${jobPath}`;
 
     jobs.push({
-      id:               officialId,
-      title:            decode(title),
-      company:          decode(company)  || 'Employeur confidentiel',
-      location:         decode(locText)  || 'Canada',
-      salary:           decode(salary)   || null,
-      description_short: dateText
-        ? `Publié ${decode(dateText)}`
-        : 'Offre récente — Guichet Emplois Canada',
-      url_officielle:   urlOfficielle,
+      id,
+      title,
+      company:           company  || 'Employeur confidentiel',
+      location:          location || 'Canada',
+      salary:            salary   || null,
+      description_short: pubDate  ? `Publié ${formatPubDate(pubDate)}` : 'Offre récente',
+      url_officielle:    link.startsWith('http') ? link : `${BASE_FR}${link}`,
     });
 
     if (jobs.length >= 25) break;
@@ -122,6 +126,7 @@ function parseJobs(html: string): object[] {
 export const GET: APIRoute = async ({ url }) => {
   const q        = (url.searchParams.get('q')        || '').trim();
   const location = (url.searchParams.get('location') || '').trim();
+  const debug    = url.searchParams.get('debug') === '1';
 
   const headers = {
     'Content-Type':                'application/json',
@@ -130,22 +135,29 @@ export const GET: APIRoute = async ({ url }) => {
   };
 
   try {
-    const html = await fetchGuichet(q, location);
-    let jobs   = parseJobs(html);
+    const xml  = await fetchRSS(q, location);
 
-    // Fallback : retry sans localisation si aucun résultat
+    // Mode debug : retourne le XML brut pour diagnostic
+    if (debug) {
+      return new Response(JSON.stringify({ raw: xml.slice(0, 8000) }), { headers });
+    }
+
+    let jobs = parseRSS(xml);
+
+    // Fallback : retry sans localisation si 0 résultat
     if (jobs.length === 0 && location) {
-      const html2 = await fetchGuichet(q, '');
-      jobs = parseJobs(html2);
+      const xml2 = await fetchRSS(q, '');
+      jobs = parseRSS(xml2);
     }
 
     return new Response(JSON.stringify(jobs), { headers });
 
   } catch (err: any) {
-    console.error('[/api/jobs] Erreur scrape:', err?.message);
+    console.error('[/api/jobs] Erreur:', err?.message);
     return new Response(
-      JSON.stringify({ error: err?.message || 'scrape_failed', jobs: [] }),
+      JSON.stringify({ error: err?.message || 'fetch_failed', jobs: [] }),
       { status: 500, headers }
     );
   }
 };
+
