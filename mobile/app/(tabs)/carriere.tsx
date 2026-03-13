@@ -82,8 +82,13 @@ export default function CarriereScreen() {
               activeOpacity={0.8}
               onPress={() => {
                 if (tab.comingSoon) return;
-                // router.push(`/(tabs)/carriere/${tab.id}`) par la suite
-                alert('Cette section sera bientôt disponible !');
+                if (tab.id === 'ecole') {
+                  router.push('/carriere/etudes' as any);
+                } else if (tab.id === 'emploi' || tab.id === 'cv') {
+                  router.push('/carriere/emplois-cv' as any);
+                } else {
+                  alert('Cette section sera bientôt disponible !');
+                }
               }}
             >
               <View style={[styles.iconContainer, { backgroundColor: tab.color + '1A' }]}>
