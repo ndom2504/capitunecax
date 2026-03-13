@@ -4761,8 +4761,10 @@ const proSvcList = [
     // Patch switchTab pour vider les messages en attente à l'ouverture de messagerie
     var _origSwitchTab = window.switchTab;
     window.switchTab = function(tabId) {
-      if (tabId === 'messagerie' && premiumRequired()) {
-        window.openPremiumModal('messagerie');
+      // Bloquer uniquement la création de projet CAPI avec un professionnel (reason === 'projet') si paiement requis.
+      // La messagerie reste libre d'accès pour tous (le bouton "Contacter" de l'équipe y emmène d'ailleurs).
+      if (tabId === 'projet' && premiumRequired() && window.__forcePremiumProjet) {
+        window.openPremiumModal('projet');
         return;
       }
       _origSwitchTab(tabId);
