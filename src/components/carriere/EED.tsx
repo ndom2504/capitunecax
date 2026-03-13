@@ -3,6 +3,15 @@ import { DLI } from "./types";
 import { dataService } from "./services/dataService";
 import { geminiService } from "./services/geminiService";
 
+const TYPE_LABELS: Record<string, string> = {
+  universite: 'Université',
+  college: 'Collège',
+  cegep: 'Cégep',
+  ecole_langue: 'École de langue',
+  technique: 'École technique',
+  polytechnique: 'Polytechnique',
+};
+
 const EED_COLORS = [
   { bg: '#0f3460', accent: '#4ecdc4' },
   { bg: '#1a1a40', accent: '#a78bfa' },
@@ -48,10 +57,13 @@ export default function EED({ isMobileApp = false }: { isMobileApp?: boolean }) 
   // Filtrage local
   useEffect(() => {
     const q = search.toLowerCase();
-    const filtered = allInstitutions.filter(inst =>
-      (!q || inst.name.toLowerCase().includes(q) || inst.type.toLowerCase().includes(q)) &&
-      (province === "Toutes" || inst.province === province || inst.province.toLowerCase() === province.toLowerCase())
-    );
+    const filtered = allInstitutions.filter(inst => {
+      const typeLabel = (TYPE_LABELS[inst.type] ?? inst.type).toLowerCase();
+      return (
+        (!q || inst.name.toLowerCase().includes(q) || inst.type.toLowerCase().includes(q) || typeLabel.includes(q)) &&
+        (province === "Toutes" || inst.province === province || inst.province.toLowerCase() === province.toLowerCase())
+      );
+    });
     setInstitutions(filtered);
     setCurrentIdx(0);
   }, [search, province, allInstitutions]);
@@ -195,7 +207,7 @@ export default function EED({ isMobileApp = false }: { isMobileApp?: boolean }) 
                   <div className="eed-story-content">
                     <div className="eed-story-tags">
                       {inst.type && (
-                        <span className="eed-story-tag" style={{ color: col.accent, borderColor: col.accent + '55' }}>{inst.type}</span>
+                        <span className="eed-story-tag" style={{ color: col.accent, borderColor: col.accent + '55' }}>{TYPE_LABELS[inst.type] ?? inst.type}</span>
                       )}
                       {inst.province && (
                         <span className="eed-story-tag">&#128205; {inst.province}</span>

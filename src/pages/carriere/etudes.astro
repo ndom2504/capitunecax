@@ -11,7 +11,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   <div class="cap-page-hero">
     <div class="cap-container">
       {!isApp && (
-        <a href="/dashboard" class="cap-back-link">&#8592; Retour au Dashboard</a>
+        <button onclick="history.back()" class="cap-back-link">&#8592; Retour</button>
       )}
       <h1 class="cap-hero-title">🎓 Espace Études — Établissements DLI</h1>
       <p class="cap-hero-sub">Consultez la liste officielle des établissements d'enseignement désignés (DLI) au Canada.</p>
@@ -56,6 +56,10 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   font-weight: 600;
   margin-bottom: 20px;
   transition: color .2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 .cap-back-link:hover { color: #fff; }
 .cap-hero-title {
