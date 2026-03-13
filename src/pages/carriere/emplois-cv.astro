@@ -1110,6 +1110,40 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   letter-spacing: .06em;
 }
 
+/* Reset filtre — peu de résultats */
+.jobs-story-reset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  background: rgba(255,148,8,0.07);
+  border-top: 1px solid rgba(255,148,8,0.2);
+}
+.jobs-story-reset-icon { font-size: 28px; opacity: .7; }
+.jobs-story-reset-msg {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+.jobs-story-reset-msg strong { color: #fff; }
+.jobs-story-reset-msg em { font-style: normal; color: var(--cap-orange); }
+.jobs-story-reset-btn {
+  padding: 10px 26px;
+  border-radius: 999px;
+  border: none;
+  background: var(--cap-orange);
+  color: #fff;
+  font-size: 13px;
+  font-family: 'Anton SC', sans-serif;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: opacity .2s, transform .2s;
+}
+.jobs-story-reset-btn:hover { opacity: .85; transform: scale(1.03); }
+
 /* Loading state (spinner) */
 .jobs-story-loading {
   display: flex;

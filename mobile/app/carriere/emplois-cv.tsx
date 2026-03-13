@@ -45,6 +45,8 @@ export default function EmploisCVScreen() {
   const [hasMore, setHasMore]       = useState(true);
   const [error, setError]           = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeQuery, setActiveQuery]     = useState('*');
+  const [activeLoc, setActiveLoc]         = useState('');
 
   const fetchJobs = useCallback(async (q: string, loc: string, p: number, replace: boolean) => {
     setLoading(true);
@@ -58,7 +60,7 @@ export default function EmploisCVScreen() {
       setJobs(prev => replace ? data : [...prev, ...data]);
       setHasMore(data.length >= 10);
       setPage(p);
-      if (replace) setActiveIndex(0);
+      if (replace) { setActiveIndex(0); setActiveQuery(q); setActiveLoc(loc); }
     } catch (e: any) {
       setError(e?.message ?? 'Connexion echouee');
     } finally {
@@ -72,6 +74,14 @@ export default function EmploisCVScreen() {
     setShowSearch(false);
     fetchJobs(query || '*', location, 1, true);
   };
+
+  const resetToAll = () => {
+    setQuery('');
+    setLocation('');
+    fetchJobs('*', '', 1, true);
+  };
+
+  const isFiltered = activeQuery !== '*' && activeQuery !== '';
 
   const handlePrev = () => {
     if (activeIndex <= 0) return;
@@ -112,7 +122,7 @@ export default function EmploisCVScreen() {
         <View style={styles.storyShade} pointerEvents="none" />
 
         {/* Barre de progression */}
-        <View style={[styles.storyTop, { paddingTop: insets.top + 52 }]}>
+        <View style={[styles.storyTop, { paddingTop: insets.top + 80 }]}>
           <View style={styles.storyProgress}>
             {jobs.map((_, i) => (
               <View
@@ -130,20 +140,20 @@ export default function EmploisCVScreen() {
         {/* Contenu bas */}
         <View style={[styles.storyContent, { paddingBottom: insets.bottom + 24 }]}>
 
-          {/* Avatar entreprise */}
-          <View style={styles.storyHeaderRow}>
+          {/* Ligne entreprise + badge */}
+          <View style={styles.storyCompanyRow}>
             <View style={[styles.storyAvatar, { backgroundColor: color.accent + '33' }]}>
               <Text style={[styles.storyAvatarInitial, { color: color.accent }]}>{initials}</Text>
             </View>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.storyName} numberOfLines={2}>{item.title}</Text>
-              <Text style={styles.storySubtitle} numberOfLines={1}>{item.company}</Text>
-            </View>
+            <Text style={styles.storySubtitle} numberOfLines={1}>{item.company}</Text>
             <View style={[styles.badge, { backgroundColor: color.accent + '22', borderColor: color.accent + '44' }]}>
               <Ionicons name="briefcase" size={13} color={color.accent} />
               <Text style={[styles.badgeText, { color: color.accent }]}>Emploi</Text>
             </View>
           </View>
+
+          {/* Grand titre pleine largeur */}
+          <Text style={styles.storyName} numberOfLines={3}>{item.title}</Text>
 
           {/* Meta pills */}
           <View style={styles.storyMetaRow}>
@@ -176,8 +186,16 @@ export default function EmploisCVScreen() {
             <Text style={styles.storyBtnText}>Voir l'offre complète</Text>
           </TouchableOpacity>
 
-          {/* Compteur */}
+          {/* Compteur + reset filtre */}
           <Text style={styles.storyCounter}>{activeIndex + 1} / {jobs.length}{hasMore ? '+' : ''}</Text>
+          {!hasMore && isFiltered && jobs.length < 15 && (
+            <View style={styles.resetBanner}>
+              <Text style={styles.resetBannerText}>Seulement {jobs.length} résultat{jobs.length > 1 ? 's' : ''} pour ce filtre.</Text>
+              <TouchableOpacity style={styles.resetBannerBtn} onPress={resetToAll} activeOpacity={0.8}>
+                <Text style={styles.resetBannerBtnText}>↺  Voir toutes les offres</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Navigation tap zones */}
@@ -192,7 +210,7 @@ export default function EmploisCVScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* Header fixe */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={22} color={Colors.surface} />
         </TouchableOpacity>
@@ -208,7 +226,7 @@ export default function EmploisCVScreen() {
 
       {/* Barre de recherche dépliable */}
       {showSearch && (
-        <View style={styles.searchDrawer}>
+        <View style={[styles.searchDrawer, { paddingTop: insets.top + 20 }]}>
           <View style={styles.searchRow}>
             <Ionicons name="search-outline" size={15} color={Colors.textMuted} style={{ marginRight: 6 }} />
             <TextInput
@@ -300,7 +318,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0, left: 0, right: 0, zIndex: 10,
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 10,
+    paddingHorizontal: 16, paddingBottom: 12,
     backgroundColor: 'transparent',
   },
   backBtn: {
@@ -318,7 +336,7 @@ const styles = StyleSheet.create({
   },
 
   searchDrawer: {
-    position: 'absolute', top: 56, left: 0, right: 0, zIndex: 20,
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
     backgroundColor: '#fff', padding: 12, gap: 8,
     borderBottomLeftRadius: 16, borderBottomRightRadius: 16,
     shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 8,
@@ -359,14 +377,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18, paddingTop: 20, gap: 12,
   },
 
-  storyHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  storyCompanyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   storyAvatar: {
-    width: 50, height: 50, borderRadius: 16,
+    width: 40, height: 40, borderRadius: 12,
     alignItems: 'center', justifyContent: 'center',
   },
-  storyAvatarInitial: { fontSize: 18, fontWeight: '900' },
-  storyName:    { fontSize: 18, fontWeight: '900', color: Colors.surface, lineHeight: 24 },
-  storySubtitle:{ fontSize: 13, color: Colors.surface + 'CC', fontWeight: '700', marginTop: 2 },
+  storyAvatarInitial: { fontSize: 15, fontWeight: '900' },
+  storyName:    { fontSize: 28, fontWeight: '900', color: Colors.surface, lineHeight: 34 },
+  storySubtitle:{ flex: 1, fontSize: 13, color: Colors.surface + 'CC', fontWeight: '700' },
   badge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1,
@@ -389,8 +407,20 @@ const styles = StyleSheet.create({
     fontWeight: '600', marginTop: -4,
   },
 
+  resetBanner: {
+    backgroundColor: 'rgba(255,148,8,0.12)',
+    borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,148,8,0.3)',
+    padding: 12, alignItems: 'center', gap: 8,
+  },
+  resetBannerText: { fontSize: 12, color: Colors.surface + 'BB', textAlign: 'center' },
+  resetBannerBtn: {
+    backgroundColor: Colors.orange, borderRadius: 10,
+    paddingHorizontal: 20, paddingVertical: 8,
+  },
+  resetBannerBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
+
   storyNav: {
-    position: 'absolute', left: 0, right: 0, top: 0, bottom: 160,
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 220,
     flexDirection: 'row',
   },
   storyNavLeft:  { flex: 1 },

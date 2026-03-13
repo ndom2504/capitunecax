@@ -516,10 +516,28 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
             {currentJobIdx < jobs.length - 1 && (
               <button className="jobs-story-nav jobs-story-nav-next" onClick={() => goToJob(currentJobIdx + 1)}>&#8250;</button>
             )}
-            {/* End indicator */}
-            {!hasMore && jobs.length > 0 && (
-              <div className="jobs-story-end">Fin des résultats · {jobs.length} offres affichées</div>
-            )}
+            {/* End indicator / Reset filtre */}
+            {!hasMore && jobs.length > 0 && (() => {
+              const isFiltered = (activeQuery !== '*' && activeQuery !== '') || activeLocation !== '';
+              const fewResults = jobs.length < 15;
+              if (isFiltered && fewResults) {
+                return (
+                  <div className="jobs-story-reset">
+                    <span className="jobs-story-reset-icon">&#128270;</span>
+                    <p className="jobs-story-reset-msg">
+                      Seulement <strong>{jobs.length} offre{jobs.length > 1 ? 's' : ''}</strong> pour <em>&laquo;{activeQuery}&raquo;{activeLocation ? ` à ${activeLocation}` : ''}</em>.
+                    </p>
+                    <button className="jobs-story-reset-btn" onClick={() => {
+                      setJobQuery(''); setJobLocation('');
+                      handleJobSearch('*', 1);
+                    }}>
+                      &#8635; Voir toutes les offres
+                    </button>
+                  </div>
+                );
+              }
+              return <div className="jobs-story-end">Fin des résultats · {jobs.length} offres affichées</div>;
+            })()}
           </div>
         )}
       </div>
