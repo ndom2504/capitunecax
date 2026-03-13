@@ -2377,77 +2377,6 @@ const proSvcList = [
           <div id="team-grid-container">
             <div class="team-loading"><i class="fa fa-spinner fa-spin"></i> Chargement de l'équipe…</div>
           </div>
-
-          <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()" style="position:fixed;">
-            <div class="modal-box" style="position:relative;" onclick="event.stopPropagation()">
-              <!-- Barre de progression story -->
-              <div class="team-story-progress" id="tpStoryProgress" aria-hidden="true"></div>
-              <!-- Flèches navigation -->
-              <button class="team-story-nav team-story-prev" type="button" onclick="teamProfilePrev(); event.stopPropagation();" aria-label="Profil précédent">‹</button>
-              <button class="team-story-nav team-story-next" type="button" onclick="teamProfileNext(); event.stopPropagation();" aria-label="Profil suivant">›</button>
-
-              <!-- HERO SOMBRE (style story) -->
-              <div class="tp-story-header">
-                <button class="tp-story-close" type="button" onclick="closeTeamProfile()" aria-label="Fermer">✕</button>
-                <div class="tp-story-header-inner">
-                  <div class="tp-story-avatar-large" id="tpAvatar"></div>
-                  <div style="flex:1;min-width:0;">
-                    <p class="tp-story-name" id="tpName">—</p>
-                    <p class="tp-story-location" id="tpLocation">—</p>
-                    <span class="tp-story-badge"><i class="fa fa-star"></i> Conseiller Pro</span>
-                  </div>
-                  <span id="tpCountryFlag" title="" style="font-size:38px;line-height:1;display:none;"></span>
-                </div>
-                <p class="tp-story-bio" id="tpBio"></p>
-              </div>
-
-              <!-- CORPS SCROLLABLE -->
-              <div class="tp-story-body">
-                <div id="tpMeta" style="display:none;background:#fff8f0;border:1px solid #ffd899;border-radius:12px;padding:12px 14px;margin:0 0 18px;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div><strong>Diplôme :</strong> <span id="tpDiploma"></span></div>
-                    <div><strong>Expérience :</strong> <span id="tpExperience"></span></div>
-                  </div>
-                  <div style="margin-top:8px;"><strong>Compétences :</strong> <span id="tpCompetences"></span></div>
-                </div>
-
-                <div id="tpPacksBlock">
-                  <div class="section-title-block" style="margin-top:0;">
-                    <h2>Services proposés</h2>
-                    <p style="margin:4px 0 0;font-size:13px;color:#999;">Services inclus dans chaque pack de ce professionnel</p>
-                    <div class="title-line"></div>
-                  </div>
-                  <div id="tpTarifs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:8px;"></div>
-                  <div id="tpNoOffers" style="display:none;color:#aaa;font-size:13px;padding:14px 0;"><i class="fa fa-info-circle"></i> Aucun service disponible pour le moment.</div>
-                </div>
-
-                <!-- AVIS CLIENTS (visible côté client uniquement) -->
-                <div id="tpReviewsBlock" style="margin-top:32px;display:none;">
-                  <div class="section-title-block" style="margin-top:0;">
-                    <h2>Avis des clients</h2>
-                    <div class="title-line"></div>
-                  </div>
-                  <div id="tpReviewsSummary" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;"></div>
-                  <div id="tpReviewsList"></div>
-
-                  <!-- Formulaire notation -->
-                  <div class="review-form-wrap" id="tpReviewForm">
-                    <p style="font-weight:700;font-size:14px;color:var(--cap-dark);margin:0 0 10px;"><i class="fa fa-star" style="color:var(--cap-orange);"></i> Laisser un avis</p>
-                    <div class="star-row" id="tpStarRow">
-                      <button class="star-btn" data-v="1" onclick="setReviewStar(1)" title="1 étoile">&#9733;</button>
-                      <button class="star-btn" data-v="2" onclick="setReviewStar(2)" title="2 étoiles">&#9733;</button>
-                      <button class="star-btn" data-v="3" onclick="setReviewStar(3)" title="3 étoiles">&#9733;</button>
-                      <button class="star-btn" data-v="4" onclick="setReviewStar(4)" title="4 étoiles">&#9733;</button>
-                      <button class="star-btn" data-v="5" onclick="setReviewStar(5)" title="5 étoiles">&#9733;</button>
-                    </div>
-                    <textarea id="tpReviewComment" placeholder="Votre commentaire (optionnel)" style="width:100%;min-height:72px;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #e5d5a0;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
-                    <button class="review-submit-btn" id="tpReviewSubmitBtn" onclick="submitProReview()" disabled>Soumettre ma note</button>
-                    <p id="tpReviewHint" style="font-size:12px;color:#888;margin-top:6px;"></p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -2839,6 +2768,71 @@ const proSvcList = [
       </section>
 
     </main>
+
+    <!-- ===== MODALE PROFIL PRO (Story Facebook) ===== -->
+    <div class="modal-overlay" id="teamProfileModal" onclick="closeTeamProfile()">
+      <div class="modal-box" onclick="event.stopPropagation()">
+        <!-- Barre de progression story -->
+        <div class="team-story-progress" id="tpStoryProgress" aria-hidden="true"></div>
+        <!-- Flèches navigation -->
+        <button class="team-story-nav team-story-prev" type="button" onclick="teamProfilePrev(); event.stopPropagation();" aria-label="Profil précédent">&#8249;</button>
+        <button class="team-story-nav team-story-next" type="button" onclick="teamProfileNext(); event.stopPropagation();" aria-label="Profil suivant">&#8250;</button>
+        <!-- HERO SOMBRE (style story) -->
+        <div class="tp-story-header">
+          <button class="tp-story-close" type="button" onclick="closeTeamProfile()" aria-label="Fermer">&times;</button>
+          <div class="tp-story-header-inner">
+            <div class="tp-story-avatar-large" id="tpAvatar"></div>
+            <div style="flex:1;min-width:0;">
+              <p class="tp-story-name" id="tpName">&mdash;</p>
+              <p class="tp-story-location" id="tpLocation">&mdash;</p>
+              <span class="tp-story-badge"><i class="fa fa-star"></i> Conseiller Pro</span>
+            </div>
+            <span id="tpCountryFlag" title="" style="font-size:38px;line-height:1;display:none;"></span>
+          </div>
+          <p class="tp-story-bio" id="tpBio"></p>
+        </div>
+        <!-- CORPS SCROLLABLE -->
+        <div class="tp-story-body">
+          <div id="tpMeta" style="display:none;background:#fff8f0;border:1px solid #ffd899;border-radius:12px;padding:12px 14px;margin:0 0 18px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><strong>Dipl&ocirc;me :</strong> <span id="tpDiploma"></span></div>
+              <div><strong>Exp&eacute;rience :</strong> <span id="tpExperience"></span></div>
+            </div>
+            <div style="margin-top:8px;"><strong>Comp&eacute;tences :</strong> <span id="tpCompetences"></span></div>
+          </div>
+          <div id="tpPacksBlock">
+            <div class="section-title-block" style="margin-top:0;">
+              <h2>Services propos&eacute;s</h2>
+              <p style="margin:4px 0 0;font-size:13px;color:#999;">Services inclus dans chaque pack de ce professionnel</p>
+              <div class="title-line"></div>
+            </div>
+            <div id="tpTarifs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:8px;"></div>
+            <div id="tpNoOffers" style="display:none;color:#aaa;font-size:13px;padding:14px 0;"><i class="fa fa-info-circle"></i> Aucun service disponible pour le moment.</div>
+          </div>
+          <div id="tpReviewsBlock" style="margin-top:32px;display:none;">
+            <div class="section-title-block" style="margin-top:0;">
+              <h2>Avis des clients</h2>
+              <div class="title-line"></div>
+            </div>
+            <div id="tpReviewsSummary" style="display:flex;align-items:center;gap:14px;margin-bottom:18px;"></div>
+            <div id="tpReviewsList"></div>
+            <div class="review-form-wrap" id="tpReviewForm">
+              <p style="font-weight:700;font-size:14px;color:var(--cap-dark);margin:0 0 10px;"><i class="fa fa-star" style="color:var(--cap-orange);"></i> Laisser un avis</p>
+              <div class="star-row" id="tpStarRow">
+                <button class="star-btn" data-v="1" onclick="setReviewStar(1)" title="1 &eacute;toile">&#9733;</button>
+                <button class="star-btn" data-v="2" onclick="setReviewStar(2)" title="2 &eacute;toiles">&#9733;</button>
+                <button class="star-btn" data-v="3" onclick="setReviewStar(3)" title="3 &eacute;toiles">&#9733;</button>
+                <button class="star-btn" data-v="4" onclick="setReviewStar(4)" title="4 &eacute;toiles">&#9733;</button>
+                <button class="star-btn" data-v="5" onclick="setReviewStar(5)" title="5 &eacute;toiles">&#9733;</button>
+              </div>
+              <textarea id="tpReviewComment" placeholder="Votre commentaire (optionnel)" style="width:100%;min-height:72px;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid #e5d5a0;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
+              <button class="review-submit-btn" id="tpReviewSubmitBtn" onclick="submitProReview()" disabled>Soumettre ma note</button>
+              <p id="tpReviewHint" style="font-size:12px;color:#888;margin-top:6px;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- ===== MODALE ANNULATION DEMANDE ===== -->
     <div class="modal-overlay" id="modalCancelDemande">
