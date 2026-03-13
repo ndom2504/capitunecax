@@ -5,6 +5,15 @@ import mammoth from "mammoth";
 import html2pdf from "html2pdf.js";
 import CVPreview from "./CVPreview";
 
+const CARD_COLORS = [
+  { bg: '#1a1a2e', accent: '#ff9408' },
+  { bg: '#16213e', accent: '#4ecdc4' },
+  { bg: '#0f3460', accent: '#ff6b6b' },
+  { bg: '#1a1a40', accent: '#ffeaa7' },
+  { bg: '#191919', accent: '#a29bfe' },
+  { bg: '#0d1b2a', accent: '#55efc4' },
+];
+
 const CV_TEMPLATES = [
   { id: "modern",   name: "Moderne",     preview: "https://picsum.photos/seed/modern/400/500"   },
   { id: "classic",  name: "Classique",   preview: "https://picsum.photos/seed/classic/400/500"  },
@@ -38,6 +47,12 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
   const [showRawText, setShowRawText] = useState(false);
   const [globalProfile, setGlobalProfile] = useState(null);
   const cvMagicRef = useRef(null);
+  const [currentJobIdx, setCurrentJobIdx] = useState(0);
+  const storyRef = useRef<HTMLDivElement>(null);
+  const goToJob = (idx: number) => {
+    setCurrentJobIdx(idx);
+    if (storyRef.current) storyRef.current.scrollTo({ left: idx * storyRef.current.offsetWidth, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const profile = dataService.getGlobalProfile();
@@ -415,44 +430,95 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
           </button>
         </div>
         {loadingJobs && jobs.length === 0 ? (
-          <div className="jobs-loading">
-            <span style={{ fontSize: "28px", animation: "spin 1s linear infinite", display: "inline-block" }}>&#9881;</span>
+          <div className="jobs-story-loading">
+            <span style={{ fontSize: "36px", animation: "spin 1s linear infinite", display: "inline-block" }}>&#9881;</span>
             <p>Recherche sur le Guichet Emplois Canada...</p>
           </div>
+        ) : jobs.length === 0 ? (
+          <div className="jobs-empty">
+            <p>Aucune offre trouvée. Essayez un autre mot-clé ou lieu.</p>
+            <a href="https://www.jobbank.gc.ca/jobsearch/jobsearch" target="_blank" rel="noopener noreferrer" style={{ color: "var(--cap-orange)", fontWeight: "700", fontSize: "13px" }}>&#8599; Parcourir le Guichet Emplois</a>
+          </div>
         ) : (
-          <div className="jobs-grid">
-            {jobs.map(function(job) {
-              return (
-                <div key={job.id} className="jobs-job-card">
-                  <div className="jobs-job-top">
-                    <div style={{ flex: 1 }}>
-                      <h3 className="jobs-job-title">{job.title}</h3>
-                      <p className="jobs-job-company">&#127970; {job.company}</p>
+          <div className="jobs-story-outer">
+            {/* Progress dots */}
+            <div className="jobs-story-dots">
+              {jobs.map(function(_, idx) {
+                return (
+                  <button key={idx} className={"jobs-story-dot" + (idx === currentJobIdx ? " active" : "")} onClick={() => goToJob(idx)} />
+                );
+              })}
+            </div>
+            {/* Story track */}
+            <div
+              className="jobs-story-track"
+              ref={storyRef}
+              onScroll={function(e) {
+                const el = e.currentTarget;
+                const idx = Math.round(el.scrollLeft / el.offsetWidth);
+                setCurrentJobIdx(idx);
+                if (idx >= jobs.length - 2 && hasMore && !loadingJobs) handleJobSearch(undefined, page + 1);
+              }}
+            >
+              {jobs.map(function(job, idx) {
+                const col = CARD_COLORS[idx % CARD_COLORS.length];
+                const initials = job.company
+                  ? job.company.split(' ').filter(Boolean).slice(0, 2).map(function(w) { return w[0]; }).join('').toUpperCase()
+                  : '?';
+                return (
+                  <div key={job.id} className="jobs-story-card" style={{ background: col.bg }}>
+                    {/* Decorative bubbles */}
+                    <div className="jobs-story-bubble b1" style={{ background: col.accent + '22' }} />
+                    <div className="jobs-story-bubble b2" style={{ background: col.accent + '15' }} />
+                    {/* Header */}
+                    <div className="jobs-story-header">
+                      <span className="jobs-story-counter" style={{ color: col.accent }}>
+                        &#128188; {idx + 1} / {jobs.length}
+                      </span>
+                      <a href={job.url_officielle} target="_blank" rel="noopener noreferrer"
+                        className="jobs-story-ext-btn" style={{ borderColor: col.accent + '55', color: col.accent }}>
+                        &#8599;
+                      </a>
                     </div>
-                    <a href={job.url_officielle} target="_blank" rel="noopener noreferrer" className="jobs-job-ext" title="Voir l'offre">&#8599;</a>
-                  </div>
-                  <p className="jobs-job-desc">{job.description_short}</p>
-                  <div className="jobs-job-footer">
-                    <span className="jobs-job-meta">&#128205; {job.location}</span>
-                    {job.salary && <span className="jobs-job-meta jobs-job-salary">&#128176; {job.salary}</span>}
-                    <div className="jobs-job-actions">
-                      <button className="jobs-btn-optimize" onClick={() => handleOptimizeForJob(job.title)}>Optimiser mon CV</button>
-                      <a href={job.url_officielle} target="_blank" rel="noopener noreferrer" className="jobs-btn-postuler">Postuler</a>
+                    {/* Company avatar */}
+                    <div className="jobs-story-avatar" style={{ background: col.accent + '22', color: col.accent, borderColor: col.accent + '55' }}>
+                      {initials}
+                    </div>
+                    {/* Content */}
+                    <div className="jobs-story-content">
+                      <p className="jobs-story-company" style={{ color: col.accent }}>{job.company}</p>
+                      <h3 className="jobs-story-title">{job.title}</h3>
+                      <p className="jobs-story-desc">{job.description_short}</p>
+                      <div className="jobs-story-tags">
+                        {job.location && <span className="jobs-story-tag">&#128205; {job.location}</span>}
+                        {job.salary && <span className="jobs-story-tag" style={{ color: col.accent, borderColor: col.accent + '55' }}>&#128176; {job.salary}</span>}
+                      </div>
+                      <div className="jobs-story-actions">
+                        <button className="jobs-story-optimize" style={{ color: col.accent }} onClick={() => handleOptimizeForJob(job.title)}>
+                          &#10024; Optimiser mon CV
+                        </button>
+                        <a href={job.url_officielle} target="_blank" rel="noopener noreferrer"
+                          className="jobs-story-postuler" style={{ background: col.accent, color: col.bg }}>
+                          Postuler &#8594;
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-            {!loadingJobs && jobs.length === 0 && (
-              <div className="jobs-empty">
-                <p>Aucune offre trouvée. Essayez un autre mot-clé ou lieu.</p>
-                <a href="https://www.jobbank.gc.ca/jobsearch/jobsearch" target="_blank" rel="noopener noreferrer" style={{ color: "var(--cap-orange)", fontWeight: "700", fontSize: "13px" }}>&#8599; Parcourir le Guichet Emplois</a>
-              </div>
+                );
+              })}
+              {/* Infinite scroll sentinel */}
+              {hasMore && <div ref={observerRef} className="jobs-story-sentinel" />}
+            </div>
+            {/* Navigation arrows */}
+            {currentJobIdx > 0 && (
+              <button className="jobs-story-nav jobs-story-nav-prev" onClick={() => goToJob(currentJobIdx - 1)}>&#8249;</button>
             )}
-            {jobs.length > 0 && (
-              <div ref={observerRef} style={{ padding: "20px", textAlign: "center", width: "100%", gridColumn: "1 / -1", color: "#666", fontSize: "14px" }}>
-                {loadingJobs ? "Chargement des offres suivantes..." : (hasMore ? "" : "Fin des résultats")}
-              </div>
+            {currentJobIdx < jobs.length - 1 && (
+              <button className="jobs-story-nav jobs-story-nav-next" onClick={() => goToJob(currentJobIdx + 1)}>&#8250;</button>
+            )}
+            {/* End indicator */}
+            {!hasMore && jobs.length > 0 && (
+              <div className="jobs-story-end">Fin des résultats · {jobs.length} offres affichées</div>
             )}
           </div>
         )}
