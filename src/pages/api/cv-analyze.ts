@@ -8,7 +8,37 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { GoogleGenAI, createUserContent, createPartFromBase64 } from '@google/genai';
+
+// Gemini REST API — pas de SDK (compatible edge runtime Cloudflare)
+const GEMINI_URL = (key: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+
+async function callGemini(
+  key: string,
+  parts: unknown[],
+  maxTokens: number,
+): Promise<string> {
+  const res = await fetch(GEMINI_URL(key), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+        temperature: 0.4,
+        responseMimeType: 'application/json',
+      },
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.status.toString());
+    throw new Error(`Gemini ${res.status}: ${err.slice(0, 300)}`);
+  }
+  const data = await res.json() as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -16,8 +46,6 @@ function json(data: unknown, status = 200) {
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
   });
 }
-
-const MODEL = 'gemini-2.0-flash';
 
 const SERVICE_CONTEXT: Record<string, string> = {
   cv_canada:      "CV standard canadien, anglais ou français selon la province",
@@ -123,40 +151,27 @@ Rédige une lettre de motivation professionnelle. Retourne EXCLUSIVEMENT un obje
     return json({ error: `Tâche inconnue : ${task}` }, 400);
   }
 
-  // ── Appel Gemini ──────────────────────────────────────────────────────────
+  // ── Appel Gemini REST ────────────────────────────────────────────────────
 
   try {
-    const ai = new GoogleGenAI({ apiKey: geminiKey });
+    // Construire les parts
+    const parts: unknown[] = [];
 
-    // Construire les parts de contenu
-    const parts: any[] = [];
-
-    // Fichier binaire (PDF ou DOCX) → part inline base64
+    // Fichier binaire (PDF, DOCX) → inlineData base64
     if (hasFile) {
       const fileMime = mimeType ||
         (fileName.endsWith('.pdf')  ? 'application/pdf' :
          fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
          'application/octet-stream');
-      parts.push(createPartFromBase64(fileBase64, fileMime));
+      parts.push({ inlineData: { mimeType: fileMime, data: fileBase64 } });
     }
 
-    // Texte du prompt
     parts.push({ text: systemPrompt + '\n\n' + userMessage });
 
-    const result = await ai.models.generateContent({
-      model:  MODEL,
-      contents: createUserContent(parts),
-      config: {
-        maxOutputTokens: maxTokens,
-        temperature:     0.4,
-        responseMimeType: 'application/json',
-      },
-    });
-
-    const raw = result.text?.trim() ?? '';
+    const raw = await callGemini(geminiKey, parts, maxTokens);
     if (!raw) return json({ error: 'Réponse Gemini vide' }, 502);
 
-    // Nettoyer les blocs markdown si présents malgré responseMimeType
+    // Nettoyer les balises markdown résiduelles
     const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
     try   { return json(JSON.parse(cleaned)); }
