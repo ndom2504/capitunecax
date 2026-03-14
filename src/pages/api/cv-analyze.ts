@@ -20,7 +20,7 @@ function json(data: unknown, status = 200) {
   });
 }
 
-const MODEL = 'gpt-4.1-mini';
+const MODEL = 'gpt-5-mini';
 
 const SERVICE_CONTEXT: Record<string, string> = {
   cv_canada:      'CV standard canadien, anglais ou français selon la province',
