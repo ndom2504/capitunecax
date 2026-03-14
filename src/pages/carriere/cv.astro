@@ -6,6 +6,10 @@ import CvCreator from "../../components/carriere/CvCreator";
 
 const service = Astro.url.searchParams.get("service") ?? "";
 
+// Affichage conditionnel selon session
+const sessionCookie = Astro.cookies.get('capitune_session');
+const isLoggedIn = !!sessionCookie?.value;
+
 const CV_SERVICES = [
   {
     id: "cv_canada",
@@ -65,7 +69,16 @@ const CV_SERVICES = [
 ---
 
 <MainLayout>
-  <HeaderNav client:only="react" />
+
+  {isLoggedIn ? (
+    <div class="cvc-dash-topbar">
+      <a href="/dashboard" class="cvc-dash-back">← Tableau de bord</a>
+      <span class="cvc-dash-brand">🍁 Capitune CV</span>
+      <a href="/deconnexion" class="cvc-dash-logout">Déconnexion</a>
+    </div>
+  ) : (
+    <HeaderNav client:only="react" />
+  )}
 
   <main class="cvc-page">
 
@@ -155,10 +168,22 @@ const CV_SERVICES = [
     )}
   </main>
 
-  <FooterCustom client:only="react" />
+  {!isLoggedIn && <FooterCustom client:only="react" />}
 </MainLayout>
 
 <style>
+  /* ── Header dashboard ── */
+  .cvc-dash-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; background: #fff; border-bottom: 1px solid #e8e8e8;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .cvc-dash-back { font-size: 13px; color: #1f4b6e; text-decoration: none; font-weight: 600; }
+  .cvc-dash-back:hover { text-decoration: underline; }
+  .cvc-dash-brand { font-size: 14px; font-weight: 800; color: #0a1628; }
+  .cvc-dash-logout { font-size: 12px; color: #aaa; text-decoration: none; }
+  .cvc-dash-logout:hover { color: #e74c3c; }
+
   .cvc-page  { min-height: 80vh; background: #f7f9fc; }
 
   /* ── Landing ── */
