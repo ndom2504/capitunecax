@@ -20,7 +20,44 @@ function json(data: unknown, status = 200) {
   });
 }
 
-const MODEL = 'gpt-5-mini';
+const MODEL = 'gpt-4.1-mini';
+
+/** Extraction texte basique depuis un PDF base64 (CVs textuels, non scannés) */
+function extractPdfText(b64: string): string {
+  try {
+    const bin = atob(b64);
+    const chunks: string[] = [];
+
+    // Texte dans opérateurs Tj / TJ / ' / "
+    const tjRe = /\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*(?:Tj|\'|\")/g;
+    let m: RegExpExecArray | null;
+    while ((m = tjRe.exec(bin)) !== null) {
+      const t = m[1]
+        .replace(/\\n/g, ' ').replace(/\\r/g, '').replace(/\\\\/g, '\\')
+        .replace(/\\([0-7]{3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)))
+        .replace(/\\./g, '');
+      if (t.trim().length > 1) chunks.push(t);
+    }
+
+    // Texte dans tableaux TJ  [(text) -200 (text2)] TJ
+    const tjArrRe = /\[([^\]]+)\]\s*TJ/g;
+    while ((m = tjArrRe.exec(bin)) !== null) {
+      const inner = m[1];
+      const strRe = /\(([^)]+)\)/g;
+      let sm: RegExpExecArray | null;
+      while ((sm = strRe.exec(inner)) !== null) {
+        chunks.push(sm[1]);
+      }
+    }
+
+    const result = chunks.join(' ').replace(/\s+/g, ' ').trim();
+
+    // Filtrer les caractères non imprimables / binaires
+    return result.replace(/[^\x20-\x7E\u00C0-\u024F\n]/g, ' ').replace(/\s+/g, ' ').trim();
+  } catch {
+    return '';
+  }
+}
 
 const SERVICE_CONTEXT: Record<string, string> = {
   cv_canada:      'CV standard canadien, anglais ou français selon la province',
@@ -143,37 +180,38 @@ Aucun texte hors du JSON.`;
   // ── Appel OpenAI ───────────────────────────────────────────────────────────
 
   try {
-    // Fichier binaire (PDF ou DOCX) → Responses API avec input_file
+    // ── PDF → extraction texte côté serveur ────────────────────────────────
     if (hasFile && mimeType.includes('pdf')) {
-      const aiRes = await fetch('https://api.openai.com/v1/responses', {
+      const extracted = extractPdfText(fileBase64);
+      if (!extracted || extracted.length < 50) {
+        return json({ error: 'Impossible d\'extraire le texte de ce PDF. Assurez-vous que le PDF n\'est pas scanné (image). Convertissez-le en Word/.docx ou copiez-collez le texte.' }, 422);
+      }
+      // Injecter le texte extrait dans userMessage et utiliser Chat Completions
+      const msgWithPdf = userMessage.includes('CV à analyser') || userMessage.includes('CV à transformer') || userMessage.includes('CV du candidat')
+        ? userMessage + '\n\n[Texte extrait du PDF] :\n' + extracted.slice(0, 8000)
+        : extracted.slice(0, 8000);
+
+      const aiResPdf = await fetch('https://api.openai.com/v1/chat/completions', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
         body: JSON.stringify({
-          model: MODEL,
-          input: [{
-            role: 'user',
-            content: [
-              {
-                type:      'input_file',
-                filename:  fileName || 'cv.pdf',
-                file_data: `data:application/pdf;base64,${fileBase64}`,
-              },
-              { type: 'input_text', text: systemPrompt + '\n\n' + userMessage },
-            ],
-          }],
-          text: { format: { type: 'json_object' } },
+          model:           MODEL,
+          messages:        [{ role: 'system', content: systemPrompt }, { role: 'user', content: msgWithPdf }],
+          max_tokens:      maxTokens,
+          temperature:     0.4,
+          response_format: { type: 'json_object' },
         }),
       });
-      if (!aiRes.ok) {
-        const errText = await aiRes.text();
-        console.error('[cv-analyze] OpenAI Responses error:', aiRes.status, errText);
-        return json({ error: 'Erreur OpenAI Responses : ' + aiRes.status }, 502);
+      if (!aiResPdf.ok) {
+        const errText = await aiResPdf.text();
+        console.error('[cv-analyze] OpenAI PDF error:', aiResPdf.status, errText);
+        return json({ error: 'Erreur OpenAI PDF : ' + aiResPdf.status }, 502);
       }
-      const aiData = await aiRes.json() as { output_text?: string };
-      const rawR = (aiData?.output_text ?? '').trim();
-      if (!rawR) return json({ error: 'Réponse IA vide (Responses API)' }, 502);
-      try { return json(JSON.parse(rawR)); }
-      catch { return json({ error: 'Réponse IA non JSON', raw: rawR }, 502); }
+      const aiDataPdf = await aiResPdf.json() as { choices?: { message?: { content?: string } }[] };
+      const rawPdf = aiDataPdf?.choices?.[0]?.message?.content?.trim() ?? '';
+      if (!rawPdf) return json({ error: 'Réponse IA vide (PDF)' }, 502);
+      try { return json(JSON.parse(rawPdf)); }
+      catch { return json({ error: 'Réponse IA non JSON', raw: rawPdf }, 502); }
     }
 
     // Fichier DOCX → extraire texte lisible depuis le XML ZIP
