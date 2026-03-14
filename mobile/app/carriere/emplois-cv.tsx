@@ -41,14 +41,19 @@ export default function EmploisCVScreen() {
   const [showSearch, setShowSearch] = useState(false);
   const [jobs, setJobs]             = useState<Job[]>([]);
   const [page, setPage]             = useState(1);
+  const pageRef                     = useRef(1);        // évite la stale closure
   const [loading, setLoading]       = useState(false);
+  const loadingRef                  = useRef(false);    // même raison
   const [hasMore, setHasMore]       = useState(true);
+  const hasMoreRef                  = useRef(true);
   const [error, setError]           = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeQuery, setActiveQuery]     = useState('*');
   const [activeLoc, setActiveLoc]         = useState('');
 
   const fetchJobs = useCallback(async (q: string, loc: string, p: number, replace: boolean) => {
+    if (loadingRef.current) return;   // dédoublonnage
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -57,14 +62,18 @@ export default function EmploisCVScreen() {
       const res  = await fetch(`${JOBS_API}?${params.toString()}`);
       if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
       const data: Job[] = await res.json();
+      const newHasMore = data.length >= 10;
       setJobs(prev => replace ? data : [...prev, ...data]);
-      setHasMore(data.length >= 10);
+      setHasMore(newHasMore);
+      hasMoreRef.current = newHasMore;
       setPage(p);
+      pageRef.current = p;
       if (replace) { setActiveIndex(0); setActiveQuery(q); setActiveLoc(loc); }
     } catch (e: any) {
       setError(e?.message ?? 'Connexion echouee');
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, []);
 
@@ -92,12 +101,16 @@ export default function EmploisCVScreen() {
 
   const handleNext = () => {
     if (activeIndex >= jobs.length - 1) {
-      if (hasMore && !loading) fetchJobs(query || '*', location, page + 1, false);
+      if (hasMoreRef.current && !loadingRef.current)
+        fetchJobs(activeQuery || '*', activeLoc, pageRef.current + 1, false);
       return;
     }
     const idx = activeIndex + 1;
     setActiveIndex(idx);
     listRef.current?.scrollToIndex({ index: idx, animated: true });
+    // Précharger 4 cartes avant la fin
+    if (idx >= jobs.length - 4 && hasMoreRef.current && !loadingRef.current)
+      fetchJobs(activeQuery || '*', activeLoc, pageRef.current + 1, false);
   };
 
   const renderJob = ({ item, index }: { item: Job; index: number }) => {
@@ -211,7 +224,7 @@ export default function EmploisCVScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* Header fixe */}
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/carriere')} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={22} color={Colors.surface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Marche de l'Emploi</Text>
@@ -293,10 +306,22 @@ export default function EmploisCVScreen() {
           onMomentumScrollEnd={e => {
             const x   = e.nativeEvent.contentOffset.x;
             const idx = Math.round(x / SCREEN_W);
-            setActiveIndex(Math.max(0, Math.min(jobs.length - 1, idx)));
-            if (idx >= jobs.length - 2 && hasMore && !loading)
-              fetchJobs(query || '*', location, page + 1, false);
+            const safe = Math.max(0, Math.min(jobs.length - 1, idx));
+            setActiveIndex(safe);
+            // Précharger dès qu'on est à 4 cartes de la fin
+            if (safe >= jobs.length - 4 && hasMoreRef.current && !loadingRef.current)
+              fetchJobs(activeQuery || '*', activeLoc, pageRef.current + 1, false);
           }}
+          onEndReached={() => {
+            if (hasMoreRef.current && !loadingRef.current)
+              fetchJobs(activeQuery || '*', activeLoc, pageRef.current + 1, false);
+          }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={loading ? (
+            <View style={{ width: SCREEN_W, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={Colors.orange} />
+            </View>
+          ) : null}
           onScrollToIndexFailed={() => {}}
           renderItem={renderJob}
           ListEmptyComponent={
