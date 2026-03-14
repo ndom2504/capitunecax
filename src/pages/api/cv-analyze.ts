@@ -1,17 +1,14 @@
 ﻿/**
- * POST /api/cv-analyze
- * Corps : { task, cvText, targetJob?, suggestions?, service? }
+ * POST /api/cv-analyze  — propulsé par Google Gemini
+ * Corps : { task, cvText?, targetJob?, suggestions?, service?,
+ *           fileBase64?, mimeType?, fileName? }
  *   task    : 'analyze' | 'optimize' | 'cover_letter'
- *   service : 'cv_canada' | 'cv_quebec' | 'cv_etudiant' | 'cv_immigration' | 'letter_ircc'
- *
- * analyze      → { name, experience_years, top_skills, recommended_programs,
- *                  compatibility_score, ats_score, missing_keywords, suggestions }
- * optimize     → format CVPreview complet (contact, profile, experience, skills, education, languages)
- * cover_letter → { subject, greeting, intro, body, closing, signature }
+ *   service : 'cv_canada' | 'cv_quebec' | 'cv_etudiant' | 'cv_immigration' | 'cover_letter' | 'letter_ircc'
  */
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { GoogleGenAI, createUserContent, createPartFromBase64 } from '@google/genai';
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -20,122 +17,25 @@ function json(data: unknown, status = 200) {
   });
 }
 
-const MODEL = 'gpt-4.1-mini';
-
-/** Décode une chaîne PDF (escapes octal, \\n, etc.) */
-function decodePdfStr(s: string): string {
-  return s
-    .replace(/\\n/g, ' ').replace(/\\r/g, '').replace(/\\\\/g, '\\')
-    .replace(/\\([0-7]{3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)))
-    .replace(/\\./g, '');
-}
-
-/** Extrait les opérateurs texte PDF (Tj, TJ, ', ") depuis du contenu décompressé */
-function extractOps(content: string, out: string[]) {
-  // Tj simple
-  const tjRe = /\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*(?:Tj|'|")/g;
-  let m: RegExpExecArray | null;
-  while ((m = tjRe.exec(content)) !== null) {
-    const t = decodePdfStr(m[1]);
-    if (t.trim().length > 0) out.push(t);
-  }
-  // TJ tableau
-  const tjArrRe = /\[([^\]]*)\]\s*TJ/g;
-  while ((m = tjArrRe.exec(content)) !== null) {
-    const inner = m[1];
-    const sRe = /\(([^)]+)\)/g; let sm: RegExpExecArray | null;
-    while ((sm = sRe.exec(inner)) !== null) out.push(decodePdfStr(sm[1]));
-  }
-}
-
-/** Tente de décompresser un flux FlateDecode (deflate-raw) */
-async function inflate(data: Uint8Array): Promise<string | null> {
-  try {
-    const ds = new DecompressionStream('deflate-raw');
-    const writer = ds.writable.getWriter();
-    const reader = ds.readable.getReader();
-    writer.write(data).catch(() => {});
-    writer.close().catch(() => {});
-    const parts: Uint8Array[] = [];
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) parts.push(value);
-      }
-    } catch { /* flux partiel ok */ }
-    const total = parts.reduce((n, p) => n + p.length, 0);
-    if (!total) return null;
-    const merged = new Uint8Array(total);
-    let off = 0; for (const p of parts) { merged.set(p, off); off += p.length; }
-    return new TextDecoder('latin1').decode(merged);
-  } catch { return null; }
-}
-
-/** Extraction texte complète depuis PDF base64 (compressé ou non) */
-async function extractPdfText(b64: string): Promise<string> {
-  try {
-    const binStr = atob(b64);
-    const bytes  = Uint8Array.from(binStr, c => c.charCodeAt(0));
-
-    const chunks: string[] = [];
-
-    // Parcourir les flux stream...endstream
-    let pos = 0;
-    while (pos < bytes.length) {
-      // Trouver "stream\n" ou "stream\r\n"
-      const sIdx = binStr.indexOf('stream', pos);
-      if (sIdx === -1) break;
-      const afterS = sIdx + 6;
-      // Sauter \r\n ou \n
-      const dataStart = binStr[afterS] === '\r' ? afterS + 2 : afterS + 1;
-      const eIdx = binStr.indexOf('endstream', dataStart);
-      if (eIdx === -1) break;
-
-      const streamBytes = bytes.slice(dataStart, eIdx);
-
-      // Essayer de décompresser
-      const decompressed = await inflate(streamBytes);
-      if (decompressed) {
-        extractOps(decompressed, chunks);
-      } else {
-        // Flux non compressé ou zlib avec header
-        const raw = binStr.slice(dataStart, eIdx);
-        extractOps(raw, chunks);
-      }
-
-      pos = eIdx + 9;
-    }
-
-    // Fallback : chercher dans tout le binaire (PDFs sans compression)
-    if (chunks.length === 0) {
-      extractOps(binStr, chunks);
-    }
-
-    return chunks.join(' ').replace(/\s+/g, ' ')
-      .replace(/[^\x20-\x7E\u00C0-\u024F]/g, ' ')
-      .replace(/\s+/g, ' ').trim();
-  } catch {
-    return '';
-  }
-}
+const MODEL = 'gemini-2.0-flash';
 
 const SERVICE_CONTEXT: Record<string, string> = {
-  cv_canada:      'CV standard canadien, anglais ou français selon la province',
-  cv_quebec:      'CV québécois — rédigé en français, marché de l\'emploi du Québec',
-  cv_etudiant:    'CV étudiant / premier emploi au Canada — valoriser stages et formations',
-  cv_immigration: 'CV pour dossier immigration canadienne (Entrée Express, PNP) — profil immigration en avant',
-  letter_ircc:    'Lettre d\'explication pour Immigration, Réfugiés et Citoyenneté Canada (IRCC)',
+  cv_canada:      "CV standard canadien, anglais ou français selon la province",
+  cv_quebec:      "CV québécois — rédigé en français, marché de l'emploi du Québec",
+  cv_etudiant:    "CV étudiant / premier emploi au Canada — valoriser stages et formations",
+  cv_immigration: "CV pour dossier immigration canadienne (Entrée Express, PNP) — profil immigration en avant",
+  cover_letter:   "Lettre de motivation bilingue pour le marché canadien",
+  letter_ircc:    "Lettre d'explication pour Immigration, Réfugiés et Citoyenneté Canada (IRCC)",
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
-  const openaiKey = (
-    (locals as any).runtime?.env?.OPENAI_API_KEY ||
-    import.meta.env.OPENAI_API_KEY ||
+  const geminiKey = (
+    (locals as any).runtime?.env?.GEMINI_API_KEY ||
+    import.meta.env.GEMINI_API_KEY ||
     ''
   ).trim();
 
-  if (!openaiKey) return json({ error: 'Clé OpenAI non configurée (OPENAI_API_KEY)' }, 503);
+  if (!geminiKey) return json({ error: 'Clé Gemini non configurée (GEMINI_API_KEY)' }, 503);
 
   let body: {
     task?: string; cvText?: string; targetJob?: string;
@@ -164,14 +64,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
   let systemPrompt = '';
   let userMessage  = '';
-  let maxTokens    = 800;
+  let maxTokens    = 900;
 
   if (task === 'analyze') {
     systemPrompt = `Tu es un expert en recrutement canadien et en analyse ATS (Applicant Tracking System).
 Contexte du service : ${serviceCtx}
 
-Transforme ce CV en analysant sa compatibilité avec le marché canadien.
-Retourne EXCLUSIVEMENT un objet JSON valide avec cette structure :
+Analyse ce CV et retourne EXCLUSIVEMENT un objet JSON valide (sans markdown, sans \`\`\`json) :
 {
   "name": "Prénom Nom",
   "experience_years": 0,
@@ -181,156 +80,90 @@ Retourne EXCLUSIVEMENT un objet JSON valide avec cette structure :
   "ats_score": 68,
   "missing_keywords": ["project management", "budgeting", "agile"],
   "suggestions": "Conseils concrets pour améliorer la candidature au Canada."
-}
-Aucun texte hors du JSON.`;
-    userMessage = `CV à analyser :\n\n${cvText}${targetJob ? '\n\nPoste cible : ' + targetJob : ''}`;
+}`;
+    userMessage = `CV à analyser :${targetJob ? '\n\nPoste cible : ' + targetJob : ''}\n\n${cvText}`;
     maxTokens   = 900;
 
   } else if (task === 'optimize') {
     systemPrompt = `Tu es un expert en rédaction de CV canadien.
 Contexte du service : ${serviceCtx}
 
-Transform this resume into a Canadian-style resume.
-
-Rules:
-- Maximum 2 pages
-- No photo, no age, no personal details (no SIN, no marital status)
-- Focus on achievements and measurable results
-- Use action verbs (Led, Increased, Developed, Managed, Achieved…)
-- Adapt to Canadian job market standards
-- If context is Quebec, write in French
-
-Retourne EXCLUSIVEMENT un objet JSON valide avec cette structure :
+Transforme ce CV en un CV canadien professionnel. Retourne EXCLUSIVEMENT un objet JSON valide (sans markdown) :
 {
   "contact": { "name": "", "title": "", "email": "", "phone": "", "location": "", "linkedin": "" },
-  "profile": "Résumé professionnel de 2-3 lignes percutant",
+  "profile": "Résumé professionnel 2-3 lignes",
   "experience": [
-    { "company": "", "role": "", "period": "", "location": "", "achievements": ["Résultat chiffré 1", "Résultat chiffré 2"] }
+    { "company": "", "role": "", "period": "", "location": "", "achievements": ["Résultat chiffré 1"] }
   ],
   "skills": { "technical": ["compétence1"], "soft": ["qualité1"] },
   "education": [{ "school": "", "degree": "", "year": "", "location": "" }],
   "languages": ["Français (natif)", "Anglais (professionnel)"]
 }
-Aucun texte hors du JSON.`;
-    userMessage = `CV à transformer :\n${targetJob ? 'Poste cible : ' + targetJob + '\n' : ''}${suggestions ? 'Suggestions : ' + suggestions + '\n' : ''}\n${cvText}`;
-    maxTokens   = 2000;
+Règles : max 2 pages, pas de photo/âge/NAS, verbes d'action, résultats chiffrés.`;
+    userMessage = `${targetJob ? 'Poste cible : ' + targetJob + '\n' : ''}${suggestions ? 'Suggestions : ' + suggestions + '\n' : ''}CV :\n\n${cvText}`;
+    maxTokens   = 2500;
 
   } else if (task === 'cover_letter') {
     systemPrompt = `Tu es un expert en rédaction de lettres de motivation canadiennes.
 Contexte du service : ${serviceCtx}
 
-Rédige une lettre de motivation professionnelle adaptée au marché canadien.
-
-Retourne EXCLUSIVEMENT un objet JSON valide avec cette structure :
+Rédige une lettre de motivation professionnelle. Retourne EXCLUSIVEMENT un objet JSON valide (sans markdown) :
 {
   "subject": "Objet de la lettre",
   "greeting": "Madame, Monsieur,",
   "intro": "Paragraphe d'introduction accrocheur (2-3 phrases)",
-  "body": "Corps principal en 2 paragraphes développant les compétences clés et l'adéquation au poste",
+  "body": "Corps principal en 2 paragraphes",
   "closing": "Paragraphe de clôture avec appel à l'action",
-  "signature": "Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n[Prénom Nom]"
-}
-Aucun texte hors du JSON.`;
-    userMessage = `CV du candidat :\n${cvText}\n${targetJob ? '\nPoste visé : ' + targetJob : ''}${suggestions ? '\nInformations supplémentaires : ' + suggestions : ''}`;
+  "signature": "Veuillez agréer...\n[Prénom Nom]"
+}`;
+    userMessage = `CV du candidat :${targetJob ? '\n\nPoste visé : ' + targetJob : ''}${suggestions ? '\n\nInfos supplémentaires : ' + suggestions : ''}\n\n${cvText}`;
     maxTokens   = 1200;
 
   } else {
     return json({ error: `Tâche inconnue : ${task}` }, 400);
   }
 
-  // ── Appel OpenAI ───────────────────────────────────────────────────────────
+  // ── Appel Gemini ──────────────────────────────────────────────────────────
 
   try {
-    // ── PDF → extraction texte côté serveur ────────────────────────────────
-    if (hasFile && mimeType.includes('pdf')) {
-      const extracted = await extractPdfText(fileBase64);
-      if (!extracted || extracted.length < 50) {
-        return json({ error: 'Impossible d\'extraire le texte de ce PDF. Assurez-vous que le PDF n\'est pas scanné (image). Convertissez-le en Word/.docx ou copiez-collez le texte.' }, 422);
-      }
-      // Injecter le texte extrait dans userMessage et utiliser Chat Completions
-      const msgWithPdf = userMessage.includes('CV à analyser') || userMessage.includes('CV à transformer') || userMessage.includes('CV du candidat')
-        ? userMessage + '\n\n[Texte extrait du PDF] :\n' + extracted.slice(0, 8000)
-        : extracted.slice(0, 8000);
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
 
-      const aiResPdf = await fetch('https://api.openai.com/v1/chat/completions', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
-        body: JSON.stringify({
-          model:           MODEL,
-          messages:        [{ role: 'system', content: systemPrompt }, { role: 'user', content: msgWithPdf }],
-          max_tokens:      maxTokens,
-          temperature:     0.4,
-          response_format: { type: 'json_object' },
-        }),
-      });
-      if (!aiResPdf.ok) {
-        const errText = await aiResPdf.text();
-        console.error('[cv-analyze] OpenAI PDF error:', aiResPdf.status, errText);
-        return json({ error: 'Erreur OpenAI PDF : ' + aiResPdf.status }, 502);
-      }
-      const aiDataPdf = await aiResPdf.json() as { choices?: { message?: { content?: string } }[] };
-      const rawPdf = aiDataPdf?.choices?.[0]?.message?.content?.trim() ?? '';
-      if (!rawPdf) return json({ error: 'Réponse IA vide (PDF)' }, 502);
-      try { return json(JSON.parse(rawPdf)); }
-      catch { return json({ error: 'Réponse IA non JSON', raw: rawPdf }, 502); }
+    // Construire les parts de contenu
+    const parts: any[] = [];
+
+    // Fichier binaire (PDF ou DOCX) → part inline base64
+    if (hasFile) {
+      const fileMime = mimeType ||
+        (fileName.endsWith('.pdf')  ? 'application/pdf' :
+         fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+         'application/octet-stream');
+      parts.push(createPartFromBase64(fileBase64, fileMime));
     }
 
-    // Fichier DOCX → extraire texte lisible depuis le XML ZIP
-    if (hasFile && (mimeType.includes('word') || fileName.endsWith('.docx'))) {
-      // Décode base64 → string brute, extrait contenu des balises <w:t>...</w:t>
-      const raw    = atob(fileBase64);
-      const chunks = [] as string[];
-      const re     = /<w:t[^>]*>([^<]+)<\/w:t>/g;
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(raw)) !== null) chunks.push(m[1]);
-      const extracted = chunks.join(' ').trim();
-      if (!extracted) return json({ error: 'Impossible d\'extraire le texte du DOCX. Convertissez-le en PDF ou TXT.' }, 422);
-      // Relancer avec le texte extrait via Chat Completions
-      const aiResD = await fetch('https://api.openai.com/v1/chat/completions', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
-        body: JSON.stringify({
-          model:           MODEL,
-          messages:        [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage.replace(cvText, extracted) }],
-          max_tokens:      maxTokens,
-          temperature:     0.4,
-          response_format: { type: 'json_object' },
-        }),
-      });
-      if (!aiResD.ok) return json({ error: 'Erreur OpenAI DOCX : ' + aiResD.status }, 502);
-      const aiDataD = await aiResD.json() as { choices?: { message?: { content?: string } }[] };
-      const rawD = aiDataD?.choices?.[0]?.message?.content?.trim() || '';
-      if (!rawD) return json({ error: 'Réponse IA vide (DOCX)' }, 502);
-      try { return json(JSON.parse(rawD)); }
-      catch { return json({ error: 'Réponse IA non JSON', raw: rawD }, 502); }
-    }
-    const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
-      body: JSON.stringify({
-        model:           MODEL,
-        messages:        [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }],
-        max_tokens:      maxTokens,
+    // Texte du prompt
+    parts.push({ text: systemPrompt + '\n\n' + userMessage });
+
+    const result = await ai.models.generateContent({
+      model:  MODEL,
+      contents: createUserContent(parts),
+      config: {
+        maxOutputTokens: maxTokens,
         temperature:     0.4,
-        response_format: { type: 'json_object' },
-      }),
+        responseMimeType: 'application/json',
+      },
     });
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error('[cv-analyze] OpenAI error:', aiRes.status, errText);
-      return json({ error: 'Erreur OpenAI : ' + aiRes.status }, 502);
-    }
+    const raw = result.text?.trim() ?? '';
+    if (!raw) return json({ error: 'Réponse Gemini vide' }, 502);
 
-    const aiData = await aiRes.json() as { choices?: { message?: { content?: string } }[] };
-    const raw = aiData?.choices?.[0]?.message?.content?.trim() || '';
-    if (!raw) return json({ error: 'Réponse IA vide' }, 502);
+    // Nettoyer les blocs markdown si présents malgré responseMimeType
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
-    try { return json(JSON.parse(raw)); }
-    catch { return json({ error: 'Réponse IA non JSON', raw }, 502); }
+    try   { return json(JSON.parse(cleaned)); }
+    catch { return json({ error: 'Réponse non JSON', raw: cleaned }, 502); }
 
-  } catch (err) {
-    console.error('[cv-analyze] fetch error:', err);
-    return json({ error: 'Erreur de connexion à OpenAI' }, 502);
+  } catch (err: any) {
+    console.error('[cv-analyze] Gemini error:', err?.message ?? err);
+    return json({ error: 'Erreur Gemini : ' + (err?.message ?? 'inconnue') }, 502);
   }
 };

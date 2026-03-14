@@ -49,13 +49,15 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 *
-	 * Secrets requis pour la vérification email :
+	 * Secrets requis :
 	 *   wrangler secret put RESEND_API_KEY
+	 *   wrangler secret put GEMINI_API_KEY
 	 *
 	 * Pour le développement local, créez un fichier .dev.vars :
 	 *   RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	 *   GEMINI_API_KEY=AIzaSy...
 	 *
-	 * Obtenez une clé gratuite sur https://resend.com
+	 * Obtenez une clé Gemini gratuite sur https://aistudio.google.com
 	 */
 
 	/**
