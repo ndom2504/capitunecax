@@ -244,4 +244,39 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   .cap-container  { padding: 0 18px; }
   .cv-wrap        { padding: 0 18px; }
 }
+
+/* ── Services ── */
+.cv-section-sub { font-size: 13px; color: #888; margin: -14px 0 20px; }
+.cv-services-section { margin-bottom: 36px; }
+.cv-services-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
+}
+.cv-service-card {
+  display: flex; align-items: center; gap: 10px; background: #fff;
+  border: 2px solid #e8e8e8; border-radius: 14px; padding: 14px 16px;
+  cursor: pointer; text-align: left; transition: border-color .2s, box-shadow .2s;
+  font-family: Inter, sans-serif;
+}
+.cv-service-card:hover    { border-color: var(--cap-orange); }
+.cv-service-card.active   { border-color: var(--cap-orange); box-shadow: 0 0 0 3px rgba(255,148,8,0.1); background: rgba(255,148,8,0.03); }
+.cv-service-icon  { font-size: 22px; flex-shrink: 0; }
+.cv-service-info  { flex: 1; min-width: 0; }
+.cv-service-name  { font-size: 13px; font-weight: 700; color: var(--cap-dark); margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cv-service-desc  { font-size: 11px; color: #999; margin: 0; }
+.cv-service-pricing { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.cv-price-sub  { font-size: 13px; font-weight: 800; color: var(--cap-orange); white-space: nowrap; }
+.cv-price-sub small { font-size: 10px; font-weight: 600; color: #aaa; }
+.cv-price-full { font-size: 11px; color: #bbb; text-decoration: line-through; }
+
+/* ── ATS + mots-clés ── */
+.cv-ats-row  { display: flex; align-items: flex-start; gap: 16px; padding: 12px; background: #f9f9f9; border-radius: 10px; border: 1px solid #eee; }
+.cv-tag.red  { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); color: #ef4444; }
+
+/* ── Lettre de motivation ── */
+.cv-cover-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.cv-cover-letter-box { background: #fff; border: 1.5px solid #e8e8e8; border-radius: 14px; overflow: hidden; }
+.cv-cover-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; background: #fafafa; }
+.cv-cover-toolbar strong { font-size: 13px; color: var(--cap-dark); }
+.cv-cover-body  { padding: 20px 24px; font-size: 14px; color: #444; line-height: 1.75; }
+.cv-cover-body p { margin: 0; }
 </style>

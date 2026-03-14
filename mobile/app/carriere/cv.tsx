@@ -20,7 +20,14 @@ const TIPS = [
   { icon: 'shield-off-outline' as const,   title: 'Pas d\'infos perso',     desc: "Ne mentionnez pas l'âge, l'état civil ni le NAS." },
   { icon: 'star-outline' as const,         title: 'Résumé professionnel',   desc: 'Commencez par 2-3 lignes adaptées pour chaque poste.' },
 ];
-
+const CV_SERVICES = [
+  { id: 'cv_canada',      icon: '🍁', label: 'CV Canada',        price: 10 },
+  { id: 'cv_quebec',      icon: '⚜️', label: 'CV Québec',        price: 10 },
+  { id: 'cv_etudiant',    icon: '🎓', label: 'CV Étudiant',      price: 8  },
+  { id: 'cv_immigration', icon: '✈️', label: 'CV Immigration',   price: 12 },
+  { id: 'cover_letter',   icon: '✉️', label: 'Lettre motivation',price: 10 },
+  { id: 'letter_ircc',    icon: '🏛️', label: 'Lettre IRCC',     price: 15 },
+];
 interface Analysis {
   name: string;
   experience_years: number;
@@ -44,6 +51,10 @@ export default function CVScreen() {
   const [loadingOptimize, setLoadingOptimize]  = useState(false);
   const [error,           setError]            = useState<string | null>(null);
   const [step,            setStep]             = useState<'input' | 'result'>('input');
+  const [service,         setService]          = useState('cv_canada');
+  const [coverLetter,     setCoverLetter]      = useState<any>(null);
+  const [loadingCoverLetter, setLoadingCoverLetter] = useState(false);
+  const [showCoverLetter, setShowCoverLetter]  = useState(false);
 
   // ── Import fichier ────────────────────────────────────────────────────────
   const handlePickFile = async () => {
@@ -91,7 +102,7 @@ export default function CVScreen() {
       const res = await fetch(CV_API, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ task: 'analyze', cvText }),
+        body:    JSON.stringify({ task: 'analyze', cvText, service }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const data = await res.json();
@@ -120,6 +131,7 @@ export default function CVScreen() {
           cvText:      text,
           targetJob,
           suggestions: analysis?.suggestions ?? '',
+          service,
         }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
@@ -136,6 +148,30 @@ export default function CVScreen() {
   const handleReset = () => {
     setCvText(''); setTargetJob(''); setAnalysis(null);
     setOptimizedRaw(null); setError(null); setStep('input'); setImportedFile(null);
+    setCoverLetter(null); setShowCoverLetter(false);
+  };
+
+  // ── Lettre de motivation ───────────────────────────────────────────────────
+  const handleCoverLetter = async () => {
+    if (!cvText.trim()) return;
+    setLoadingCoverLetter(true);
+    setError(null);
+    try {
+      const res = await fetch(CV_API, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ task: 'cover_letter', cvText, targetJob, service }),
+      });
+      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setCoverLetter(data);
+      setShowCoverLetter(true);
+    } catch (e: any) {
+      setError(e?.message ?? 'Erreur inconnue');
+    } finally {
+      setLoadingCoverLetter(false);
+    }
   };
 
   // ── RENDU ──────────────────────────────────────────────────────────────────
@@ -161,6 +197,27 @@ export default function CVScreen() {
         {/* ── Étape 1 : Saisie ── */}
         {step === 'input' && (
           <>
+            {/* Sélecteur de service */}
+            <Text style={styles.sectionTitle}>🔧 Type de service</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+              <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 4 }}>
+                {CV_SERVICES.map(s => (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.serviceChip, service === s.id && styles.serviceChipActive]}
+                    onPress={() => setService(s.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.serviceChipIcon}>{s.icon}</Text>
+                    <View>
+                      <Text style={[styles.serviceChipLabel, service === s.id && { color: Colors.primary }]}>{s.label}</Text>
+                      <Text style={styles.serviceChipPrice}>{Math.round(s.price / 5)}$/forfait · {s.price}$ sans</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+
             {/* Banner */}
             <View style={styles.banner}>
               <View style={styles.bannerIcon}>
@@ -279,6 +336,70 @@ export default function CVScreen() {
               <Text style={styles.cardTitle}>💬 Suggestions IA</Text>
               <Text style={styles.suggText}>{analysis.suggestions}</Text>
             </View>
+
+            {/* ATS */}
+            {analysis.ats_score !== undefined && (
+              <View style={styles.card}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
+                  <View>
+                    <Text style={styles.analysisLabel}>Score ATS</Text>
+                    <Text style={[
+                      styles.scoreValue,
+                      { color: analysis.ats_score >= 70 ? '#22c55e' : analysis.ats_score >= 50 ? Colors.primary : '#ef4444' }
+                    ]}>{analysis.ats_score}%</Text>
+                  </View>
+                  {(analysis.missing_keywords ?? []).length > 0 && (
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.cardTitle}>Mots-clés manquants</Text>
+                      <View style={[styles.tagsWrap, { marginTop: 8 }]}>
+                        {(analysis.missing_keywords ?? []).map((k: string, i: number) => (
+                          <View key={i} style={[styles.tag, styles.tagRed]}><Text style={[styles.tagText, { color: '#ef4444' }]}>{k}</Text></View>
+                        ))}
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* Lettre de motivation */}
+            <Text style={[styles.sectionTitle, { marginTop: 8 }]}>✉️ Lettre de motivation</Text>
+            <TextInput
+              style={styles.inputField}
+              placeholder="Poste visé (facultatif)…"
+              placeholderTextColor={Colors.textMuted}
+              value={targetJob}
+              onChangeText={setTargetJob}
+            />
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: '#1e3a5f' }, loadingCoverLetter && styles.btnDisabled]}
+              onPress={handleCoverLetter}
+              activeOpacity={0.85}
+              disabled={loadingCoverLetter}
+            >
+              {loadingCoverLetter
+                ? <><ActivityIndicator size="small" color="#fff" /><Text style={styles.primaryBtnText}>Génération…</Text></>
+                : <><Ionicons name="mail-outline" size={17} color="#fff" /><Text style={styles.primaryBtnText}>Générer la lettre</Text></>
+              }
+            </TouchableOpacity>
+
+            {coverLetter && (
+              <View style={styles.coverLetterBox}>
+                <TouchableOpacity style={styles.coverLetterHeader} onPress={() => setShowCoverLetter(!showCoverLetter)} activeOpacity={0.8}>
+                  <Text style={styles.coverLetterSubject}>{coverLetter.subject}</Text>
+                  <Ionicons name={showCoverLetter ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
+                </TouchableOpacity>
+                {showCoverLetter && (
+                  <View style={styles.coverLetterBody}>
+                    <Text style={styles.coverLetterText}>{coverLetter.greeting}</Text>
+                    <Text style={styles.coverLetterText}>{coverLetter.intro}</Text>
+                    <Text style={styles.coverLetterText}>{coverLetter.body}</Text>
+                    <Text style={styles.coverLetterText}>{coverLetter.closing}</Text>
+                    <Text style={styles.coverLetterText}>{coverLetter.signature}</Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {/* Section optimisation */}
             <Text style={[styles.sectionTitle, { marginTop: 8 }]}>🪄 CV Magic — Optimisation</Text>
@@ -415,4 +536,25 @@ const styles = StyleSheet.create({
   resultTitle:  { fontSize: 14, fontWeight: '600', color: Colors.text },
   resultSub:    { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
   rawPre:       { fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', color: '#555', lineHeight: 17 },
+
+  // Services
+  serviceChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fff', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14,
+    borderWidth: 1.5, borderColor: Colors.border,
+  },
+  serviceChipActive: { borderColor: Colors.primary, backgroundColor: 'rgba(31,75,110,0.05)' },
+  serviceChipIcon:   { fontSize: 18 },
+  serviceChipLabel:  { fontSize: 12, fontWeight: '600', color: Colors.text },
+  serviceChipPrice:  { fontSize: 10, color: Colors.textMuted, marginTop: 1 },
+
+  // ATS tag rouge
+  tagRed: { backgroundColor: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.25)' },
+
+  // Lettre de motivation
+  coverLetterBox:     { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
+  coverLetterHeader:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, backgroundColor: '#fafafa', borderBottomWidth: 1, borderBottomColor: Colors.border },
+  coverLetterSubject: { flex: 1, fontSize: 13, fontWeight: '600', color: Colors.text },
+  coverLetterBody:    { padding: 16, gap: 12 },
+  coverLetterText:    { fontSize: 13, color: '#444', lineHeight: 20 },
 });

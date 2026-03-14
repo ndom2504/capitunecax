@@ -21,6 +21,15 @@ const CV_TEMPLATES = [
   { id: "minimal",  name: "Minimaliste",  preview: "https://picsum.photos/seed/minimal/200/260"  },
 ];
 
+const CV_SERVICES = [
+  { id: "cv_canada",      icon: "🍁", label: "CV Canada",           desc: "CV standard canadien",            price: 10 },
+  { id: "cv_quebec",      icon: "⚜️", label: "CV Québec",           desc: "Marché québécois, en français",    price: 10 },
+  { id: "cv_etudiant",    icon: "🎓", label: "CV Étudiant",         desc: "Premier emploi / stage",          price: 8  },
+  { id: "cv_immigration", icon: "✈️", label: "CV Immigration",      desc: "Entrée Express / PNP",            price: 12 },
+  { id: "cover_letter",   icon: "✉️", label: "Lettre de motivation", desc: "Cover letter bilingue",           price: 10 },
+  { id: "letter_ircc",    icon: "🏛️", label: "Lettre IRCC",         desc: "Lettre d'explication IRCC",       price: 15 },
+];
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boolean }) {
@@ -35,6 +44,10 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
   const [showRawText, setShowRawText] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [service, setService] = useState("cv_canada");
+  const [coverLetter, setCoverLetter] = useState<any>(null);
+  const [loadingCoverLetter, setLoadingCoverLetter] = useState(false);
+  const [showCoverLetter, setShowCoverLetter] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cvMagicRef = useRef<HTMLDivElement>(null);
@@ -86,7 +99,7 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
     const res = await fetch("/api/cv-analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task: "analyze", cvText: text }),
+      body: JSON.stringify({ task: "analyze", cvText: text, service }),
     });
     if (!res.ok) { setError("Erreur lors de l'analyse (" + res.status + ")"); return; }
     const data = await res.json();
@@ -122,6 +135,7 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
           cvText: text,
           targetJob,
           suggestions: analysis?.suggestions ?? "",
+          service,
         }),
       });
       if (!res.ok) { setError("Erreur optimisation (" + res.status + ")"); return; }
@@ -134,11 +148,35 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
     }
   };
 
+  // ── Lettre de motivation ──────────────────────────────────────────────────
+
+  const handleCoverLetter = async () => {
+    const text = cvText;
+    if (!text.trim()) return;
+    setLoadingCoverLetter(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/cv-analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: "cover_letter", cvText: text, targetJob, service }),
+      });
+      if (!res.ok) { setError("Erreur lettre (" + res.status + ")"); return; }
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setCoverLetter(data);
+      setShowCoverLetter(true);
+    } finally {
+      setLoadingCoverLetter(false);
+    }
+  };
+
   // ── Réinitialiser ─────────────────────────────────────────────────────────
 
   const handleClear = () => {
     setCvText(""); setFileName(null); setAnalysis(null);
     setOptimizedCv(null); setError(null); setTargetJob("");
+    setCoverLetter(null); setShowCoverLetter(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -166,6 +204,31 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
 
   return (
     <div className="cv-wrap">
+
+      {/* ── Sélecteur de service ── */}
+      <section className="cv-services-section">
+        <h2 className="cv-section-title">🔧 Choisir un service</h2>
+        <p className="cv-section-sub">Sélectionnez le type de document à générer. Prix sans forfait → <strong>1/5 avec forfait Capitune</strong>.</p>
+        <div className="cv-services-grid">
+          {CV_SERVICES.map(s => (
+            <button
+              key={s.id}
+              className={`cv-service-card${service === s.id ? " active" : ""}`}
+              onClick={() => setService(s.id)}
+            >
+              <span className="cv-service-icon">{s.icon}</span>
+              <div className="cv-service-info">
+                <p className="cv-service-name">{s.label}</p>
+                <p className="cv-service-desc">{s.desc}</p>
+              </div>
+              <div className="cv-service-pricing">
+                <span className="cv-price-sub">{Math.round(s.price / 5)}$<small>/forfait</small></span>
+                <span className="cv-price-full">{s.price}$</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* ── Conseils ── */}
       <section className="cv-tips-section">
@@ -283,6 +346,26 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
                     ))}
                   </div>
                 </div>
+                {analysis.ats_score !== undefined && (
+                  <div className="cv-ats-row">
+                    <div>
+                      <p className="cv-analysis-label">Score ATS</p>
+                      <p className="cv-score-value" style={{ color: analysis.ats_score >= 70 ? "#22c55e" : analysis.ats_score >= 50 ? "var(--cap-orange)" : "#ef4444" }}>
+                        {analysis.ats_score}%
+                      </p>
+                    </div>
+                    {(analysis.missing_keywords ?? []).length > 0 && (
+                      <div style={{ flex: 1 }}>
+                        <p className="cv-analysis-label">Mots-clés manquants</p>
+                        <div className="cv-tags-wrap" style={{ marginTop: "6px" }}>
+                          {(analysis.missing_keywords ?? []).map((k: string) => (
+                            <span key={k} className="cv-tag red">{k}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="cv-suggestions-box">
                   <strong>💡 Suggestions IA</strong>
                   <p>{analysis.suggestions}</p>
@@ -387,6 +470,66 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── Lettre de motivation ── */}
+      <section className="cv-magic-section" style={{ marginTop: "32px" }}>
+        <div className="cv-section-header">
+          <span className="cv-card-icon">✉️</span>
+          <div>
+            <h2>Lettre de motivation</h2>
+            <p>Génération automatique adaptée au poste et au marché canadien.</p>
+          </div>
+        </div>
+
+        <div className="cv-cover-actions">
+          <input
+            type="text"
+            className="cv-input-field"
+            placeholder="Poste visé (facultatif)…"
+            value={targetJob}
+            onChange={e => setTargetJob(e.target.value)}
+            style={{ maxWidth: "320px" }}
+          />
+          <button
+            className="cv-btn-primary"
+            style={{ maxWidth: "240px" }}
+            onClick={handleCoverLetter}
+            disabled={loadingCoverLetter || !cvText.trim()}
+          >
+            {loadingCoverLetter
+              ? <><span className="cv-spinner" /> Génération…</>
+              : "✉️ Générer la lettre"}
+          </button>
+        </div>
+
+        {coverLetter && (
+          <div className="cv-cover-letter-box">
+            <div className="cv-cover-toolbar">
+              <strong>{coverLetter.subject}</strong>
+              <div className="cv-toolbar-actions">
+                <button className="cv-btn-sm" onClick={() => {
+                  const txt = [coverLetter.subject, coverLetter.greeting, coverLetter.intro, coverLetter.body, coverLetter.closing, coverLetter.signature].join('\n\n');
+                  navigator.clipboard.writeText(txt);
+                }}>Copier</button>
+                <button className="cv-btn-sm" onClick={() => setShowCoverLetter(!showCoverLetter)}>{showCoverLetter ? 'Réduire' : 'Afficher'}</button>
+              </div>
+            </div>
+            {showCoverLetter && (
+              <div className="cv-cover-body">
+                <p>{coverLetter.greeting}</p>
+                <br />
+                <p>{coverLetter.intro}</p>
+                <br />
+                <p style={{ whiteSpace: 'pre-line' }}>{coverLetter.body}</p>
+                <br />
+                <p>{coverLetter.closing}</p>
+                <br />
+                <p style={{ whiteSpace: 'pre-line' }}>{coverLetter.signature}</p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
