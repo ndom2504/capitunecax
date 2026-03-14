@@ -32,7 +32,7 @@ const CV_SERVICES = [
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boolean }) {
+export default function CvCreator({ isMobileApp = false, defaultService = "cv_canada" }: { isMobileApp?: boolean; defaultService?: string }) {
   const [cvText, setCvText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<any>(null);
@@ -44,7 +44,8 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
   const [showRawText, setShowRawText] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [service, setService] = useState("cv_canada");
+  const [service, setService] = useState(defaultService);
+  const [showPaywall, setShowPaywall] = useState(false);
   const [coverLetter, setCoverLetter] = useState<any>(null);
   const [loadingCoverLetter, setLoadingCoverLetter] = useState(false);
   const [showCoverLetter, setShowCoverLetter] = useState(false);
@@ -189,21 +190,34 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
   };
 
   const handleDownloadPDF = () => {
-    const el = document.getElementById("cv-preview-container");
-    if (!el) return;
-    const name = analysis?.name ? analysis.name.replace(/\s+/g, "_") : "CV_Canadien";
-    html2pdf().set({
-      margin: 0, filename: `${name}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-    }).from(el).save();
+    setShowPaywall(true);
   };
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="cv-wrap">
+
+      {/* ── Paywall ── */}
+      {showPaywall && (
+        <div className="cv-paywall-overlay" onClick={() => setShowPaywall(false)}>
+          <div className="cv-paywall-modal" onClick={e => e.stopPropagation()}>
+            <button className="cv-paywall-close" onClick={() => setShowPaywall(false)}>✕</button>
+            <div className="cv-paywall-icon">🔒</div>
+            <h2 className="cv-paywall-title">Téléchargement réservé aux forfaits</h2>
+            <p className="cv-paywall-sub">
+              Pour télécharger votre CV en PDF et accéder à tous les services,
+              activez votre forfait Capitune.
+            </p>
+            <div className="cv-paywall-prices">
+              <div>À partir de <strong>2$/service</strong> avec forfait</div>
+              <div className="cv-paywall-vs">vs {CV_SERVICES.find(s => s.id === service)?.price ?? 10}$ sans forfait</div>
+            </div>
+            <a href="/tarifs" className="cv-paywall-cta">🎯 Voir les forfaits Capitune</a>
+            <p className="cv-paywall-note">Déjà abonné ? <a href="/connexion">Connectez-vous</a></p>
+          </div>
+        </div>
+      )}
 
       {/* ── Sélecteur de service ── */}
       <section className="cv-services-section">
@@ -432,10 +446,10 @@ export default function CvCreator({ isMobileApp = false }: { isMobileApp?: boole
               <p className="cv-step-label" style={{ margin: 0 }}>3. Aperçu du CV généré</p>
               {optimizedCv && (
                 <div className="cv-toolbar-actions">
-                  <button className="cv-btn-sm" onClick={copyToClipboard}>{copied ? "✓ Copié" : "Copier"}</button>
-                  <button className="cv-btn-sm" onClick={() => setShowRawText(!showRawText)} title="Vue brute">👁</button>
-                  <button className="cv-btn-sm orange" onClick={handleDownloadPDF}>⬇ PDF</button>
-                </div>
+                    <button className="cv-btn-sm" onClick={copyToClipboard}>{copied ? "✓ Copié" : "Copier"}</button>
+                    <button className="cv-btn-sm" onClick={() => setShowRawText(!showRawText)} title="Vue brute">👁</button>
+                    <button className="cv-btn-sm orange" onClick={handleDownloadPDF}>⬇ PDF</button>
+                  </div>
               )}
             </div>
 
