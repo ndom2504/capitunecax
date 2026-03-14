@@ -6,6 +6,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { Colors } from '../../constants/Colors';
 
 const CV_API = 'https://www.capitune.com/api/cv-analyze';
@@ -34,12 +36,46 @@ export default function CVScreen() {
 
   const [cvText,          setCvText]          = useState('');
   const [targetJob,       setTargetJob]        = useState('');
+  const [importedFile,    setImportedFile]     = useState<string | null>(null);
+  const [loadingFile,     setLoadingFile]      = useState(false);
   const [analysis,        setAnalysis]         = useState<Analysis | null>(null);
   const [optimizedRaw,    setOptimizedRaw]     = useState<string | null>(null);
   const [loadingAnalysis, setLoadingAnalysis]  = useState(false);
   const [loadingOptimize, setLoadingOptimize]  = useState(false);
   const [error,           setError]            = useState<string | null>(null);
   const [step,            setStep]             = useState<'input' | 'result'>('input');
+
+  // ── Import fichier ────────────────────────────────────────────────────────
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/plain', 'text/*', '*/*'],
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      const asset = result.assets[0];
+      const ext   = asset.name.split('.').pop()?.toLowerCase() ?? '';
+      if (!['txt', 'text', 'csv', 'md'].includes(ext)) {
+        Alert.alert(
+          'Format non supporté',
+          'Sur mobile, seuls les fichiers .txt sont lisibles automatiquement.\nPour les PDF / DOCX, utilisez la version web.',
+        );
+        return;
+      }
+      setLoadingFile(true);
+      const text = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
+      if (!text.trim()) {
+        Alert.alert('Fichier vide', 'Le fichier sélectionné ne contient pas de texte lisible.');
+        return;
+      }
+      setCvText(text);
+      setImportedFile(asset.name);
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.message ?? 'Impossible de lire le fichier.');
+    } finally {
+      setLoadingFile(false);
+    }
+  };
 
   // ── Analyse ────────────────────────────────────────────────────────────────
   const handleAnalyze = async () => {
@@ -99,7 +135,7 @@ export default function CVScreen() {
 
   const handleReset = () => {
     setCvText(''); setTargetJob(''); setAnalysis(null);
-    setOptimizedRaw(null); setError(null); setStep('input');
+    setOptimizedRaw(null); setError(null); setStep('input'); setImportedFile(null);
   };
 
   // ── RENDU ──────────────────────────────────────────────────────────────────
@@ -152,7 +188,24 @@ export default function CVScreen() {
 
             {/* Saisie CV */}
             <Text style={[styles.sectionTitle, { marginTop: 8 }]}>📄 Votre CV</Text>
-            <Text style={styles.sectionSub}>Collez le texte complet de votre CV (expériences, formations, compétences).</Text>
+            <Text style={styles.sectionSub}>Importez un fichier .txt ou collez le texte de votre CV ci-dessous.</Text>
+
+            {/* Bouton import */}
+            <TouchableOpacity style={styles.importBtn} onPress={handlePickFile} activeOpacity={0.8} disabled={loadingFile}>
+              {loadingFile
+                ? <ActivityIndicator size="small" color={Colors.primary} />
+                : <Ionicons name="cloud-upload-outline" size={18} color={Colors.primary} />
+              }
+              <Text style={styles.importBtnText}>
+                {importedFile ? `📎 ${importedFile}` : 'Importer un fichier (.txt)'}
+              </Text>
+              {importedFile && (
+                <TouchableOpacity onPress={() => { setImportedFile(null); setCvText(''); }} hitSlop={10}>
+                  <Ionicons name="close-circle" size={17} color={Colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+
             <TextInput
               style={styles.cvInput}
               placeholder="Collez le texte de votre CV ici..."
@@ -326,6 +379,13 @@ const styles = StyleSheet.create({
   },
   btnDisabled:    { opacity: 0.5 },
   primaryBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+
+  importBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#fff', borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14,
+    borderWidth: 1.5, borderColor: Colors.primary, borderStyle: 'dashed',
+  },
+  importBtnText: { flex: 1, fontSize: 13, fontWeight: '500', color: Colors.primary },
 
   // Résultats analyse
   scoreCard: {
