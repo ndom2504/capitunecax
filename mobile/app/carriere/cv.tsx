@@ -44,6 +44,8 @@ export default function CVScreen() {
   const [cvText,          setCvText]          = useState('');
   const [targetJob,       setTargetJob]        = useState('');
   const [importedFile,    setImportedFile]     = useState<string | null>(null);
+  const [importedB64,     setImportedB64]      = useState<string>('');
+  const [importedMime,    setImportedMime]     = useState<string>('');
   const [loadingFile,     setLoadingFile]      = useState(false);
   const [analysis,        setAnalysis]         = useState<Analysis | null>(null);
   const [optimizedRaw,    setOptimizedRaw]     = useState<string | null>(null);
@@ -60,27 +62,27 @@ export default function CVScreen() {
   const handlePickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['text/plain', 'text/*', '*/*'],
+        type: ['*/*'],
         copyToCacheDirectory: true,
       });
       if (result.canceled || !result.assets?.length) return;
       const asset = result.assets[0];
       const ext   = asset.name.split('.').pop()?.toLowerCase() ?? '';
-      if (!['txt', 'text', 'csv', 'md'].includes(ext)) {
-        Alert.alert(
-          'Format non supporté',
-          'Sur mobile, seuls les fichiers .txt sont lisibles automatiquement.\nPour les PDF / DOCX, utilisez la version web.',
-        );
-        return;
-      }
+      const mime  = asset.mimeType ?? '';
       setLoadingFile(true);
-      const text = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
-      if (!text.trim()) {
-        Alert.alert('Fichier vide', 'Le fichier sélectionné ne contient pas de texte lisible.');
+      if (['txt', 'text', 'md', 'csv'].includes(ext)) {
+        const text = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.UTF8 });
+        if (!text.trim()) { Alert.alert('Fichier vide', 'Le fichier ne contient pas de texte lisible.'); return; }
+        setCvText(text); setImportedFile(asset.name); setImportedB64(''); setImportedMime('');
+      } else if (['pdf', 'docx', 'doc'].includes(ext)) {
+        const b64 = await FileSystem.readAsStringAsync(asset.uri, { encoding: FileSystem.EncodingType.Base64 });
+        setImportedB64(b64);
+        setImportedMime(mime || (ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'));
+        setImportedFile(asset.name); setCvText('');
+      } else {
+        Alert.alert('Format non supporté', 'Formats acceptés : PDF, DOCX, TXT.');
         return;
       }
-      setCvText(text);
-      setImportedFile(asset.name);
     } catch (e: any) {
       Alert.alert('Erreur', e?.message ?? 'Impossible de lire le fichier.');
     } finally {
@@ -88,10 +90,18 @@ export default function CVScreen() {
     }
   };
 
+  // construit le body commun selon la source (texte vs fichier)
+  const buildBody = (extra: Record<string, unknown>) => {
+    if (importedB64) {
+      return { fileBase64: importedB64, mimeType: importedMime, fileName: importedFile ?? 'cv', service, ...extra };
+    }
+    return { cvText, service, ...extra };
+  };
+
   // ── Analyse ────────────────────────────────────────────────────────────────
   const handleAnalyze = async () => {
-    if (!cvText.trim()) {
-      Alert.alert('Champ vide', 'Collez le texte de votre CV pour l\'analyser.');
+    if (!cvText.trim() && !importedB64) {
+      Alert.alert('Champ vide', 'Importez un fichier ou collez le texte de votre CV.');
       return;
     }
     setLoadingAnalysis(true);
@@ -102,7 +112,7 @@ export default function CVScreen() {
       const res = await fetch(CV_API, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ task: 'analyze', cvText, service }),
+        body:    JSON.stringify({ task: 'analyze', ...buildBody({}) }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const data = await res.json();
@@ -118,8 +128,7 @@ export default function CVScreen() {
 
   // ── Optimisation CV ────────────────────────────────────────────────────────
   const handleOptimize = async () => {
-    const text = cvText || (analysis ? 'CV de ' + analysis.name : '');
-    if (!text) return;
+    if (!cvText.trim() && !importedB64) return;
     setLoadingOptimize(true);
     setError(null);
     try {
@@ -127,11 +136,8 @@ export default function CVScreen() {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          task:        'optimize',
-          cvText:      text,
-          targetJob,
-          suggestions: analysis?.suggestions ?? '',
-          service,
+          task: 'optimize',
+          ...buildBody({ targetJob, suggestions: analysis?.suggestions ?? '' }),
         }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
@@ -148,6 +154,7 @@ export default function CVScreen() {
   const handleReset = () => {
     setCvText(''); setTargetJob(''); setAnalysis(null);
     setOptimizedRaw(null); setError(null); setStep('input'); setImportedFile(null);
+    setImportedB64(''); setImportedMime('');
     setCoverLetter(null); setShowCoverLetter(false);
   };
 
@@ -160,7 +167,7 @@ export default function CVScreen() {
       const res = await fetch(CV_API, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ task: 'cover_letter', cvText, targetJob, service }),
+        body:    JSON.stringify({ task: 'cover_letter', ...buildBody({ targetJob }) }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       const data = await res.json();
@@ -254,7 +261,9 @@ export default function CVScreen() {
                 : <Ionicons name="cloud-upload-outline" size={18} color={Colors.primary} />
               }
               <Text style={styles.importBtnText}>
-                {importedFile ? `📎 ${importedFile}` : 'Importer un fichier (.txt)'}
+                {importedFile
+                  ? `📎 ${importedFile}`
+                  : 'Importer un fichier (PDF, DOCX, TXT)'}
               </Text>
               {importedFile && (
                 <TouchableOpacity onPress={() => { setImportedFile(null); setCvText(''); }} hitSlop={10}>
@@ -282,10 +291,10 @@ export default function CVScreen() {
             )}
 
             <TouchableOpacity
-              style={[styles.primaryBtn, (!cvText.trim() || loadingAnalysis) && styles.btnDisabled]}
+              style={[styles.primaryBtn, (!cvText.trim() && !importedB64 || loadingAnalysis) && styles.btnDisabled]}
               onPress={handleAnalyze}
               activeOpacity={0.85}
-              disabled={!cvText.trim() || loadingAnalysis}
+              disabled={(!cvText.trim() && !importedB64) || loadingAnalysis}
             >
               {loadingAnalysis
                 ? <><ActivityIndicator size="small" color="#fff" /><Text style={styles.primaryBtnText}>Analyse en cours…</Text></>

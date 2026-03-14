@@ -42,6 +42,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   let body: {
     task?: string; cvText?: string; targetJob?: string;
     suggestions?: string; service?: string;
+    fileBase64?: string; mimeType?: string; fileName?: string;
   } = {};
   try { body = await request.json(); } catch { return json({ error: 'Corps JSON invalide' }, 400); }
 
@@ -51,9 +52,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
     targetJob   = '',
     suggestions = '',
     service     = 'cv_canada',
+    fileBase64  = '',
+    mimeType    = '',
+    fileName    = 'cv',
   } = body;
 
-  if (!cvText.trim()) return json({ error: 'cvText est requis' }, 400);
+  const hasFile = !!fileBase64.trim();
+  if (!cvText.trim() && !hasFile) return json({ error: 'cvText ou fileBase64 est requis' }, 400);
 
   const serviceCtx = SERVICE_CONTEXT[service] ?? SERVICE_CONTEXT.cv_canada;
 
@@ -138,6 +143,68 @@ Aucun texte hors du JSON.`;
   // ── Appel OpenAI ───────────────────────────────────────────────────────────
 
   try {
+    // Fichier binaire (PDF ou DOCX) → Responses API avec input_file
+    if (hasFile && mimeType.includes('pdf')) {
+      const aiRes = await fetch('https://api.openai.com/v1/responses', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model: MODEL,
+          input: [{
+            role: 'user',
+            content: [
+              {
+                type:      'input_file',
+                filename:  fileName || 'cv.pdf',
+                file_data: `data:application/pdf;base64,${fileBase64}`,
+              },
+              { type: 'input_text', text: systemPrompt + '\n\n' + userMessage },
+            ],
+          }],
+          text: { format: { type: 'json_object' } },
+        }),
+      });
+      if (!aiRes.ok) {
+        const errText = await aiRes.text();
+        console.error('[cv-analyze] OpenAI Responses error:', aiRes.status, errText);
+        return json({ error: 'Erreur OpenAI Responses : ' + aiRes.status }, 502);
+      }
+      const aiData = await aiRes.json() as { output_text?: string };
+      const rawR = (aiData?.output_text ?? '').trim();
+      if (!rawR) return json({ error: 'Réponse IA vide (Responses API)' }, 502);
+      try { return json(JSON.parse(rawR)); }
+      catch { return json({ error: 'Réponse IA non JSON', raw: rawR }, 502); }
+    }
+
+    // Fichier DOCX → extraire texte lisible depuis le XML ZIP
+    if (hasFile && (mimeType.includes('word') || fileName.endsWith('.docx'))) {
+      // Décode base64 → string brute, extrait contenu des balises <w:t>...</w:t>
+      const raw    = atob(fileBase64);
+      const chunks = [] as string[];
+      const re     = /<w:t[^>]*>([^<]+)<\/w:t>/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(raw)) !== null) chunks.push(m[1]);
+      const extracted = chunks.join(' ').trim();
+      if (!extracted) return json({ error: 'Impossible d\'extraire le texte du DOCX. Convertissez-le en PDF ou TXT.' }, 422);
+      // Relancer avec le texte extrait via Chat Completions
+      const aiResD = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
+        body: JSON.stringify({
+          model:           MODEL,
+          messages:        [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage.replace(cvText, extracted) }],
+          max_tokens:      maxTokens,
+          temperature:     0.4,
+          response_format: { type: 'json_object' },
+        }),
+      });
+      if (!aiResD.ok) return json({ error: 'Erreur OpenAI DOCX : ' + aiResD.status }, 502);
+      const aiDataD = await aiResD.json() as { choices?: { message?: { content?: string } }[] };
+      const rawD = aiDataD?.choices?.[0]?.message?.content?.trim() || '';
+      if (!rawD) return json({ error: 'Réponse IA vide (DOCX)' }, 502);
+      try { return json(JSON.parse(rawD)); }
+      catch { return json({ error: 'Réponse IA non JSON', raw: rawD }, 502); }
+    }
     const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` },
