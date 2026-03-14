@@ -22,38 +22,99 @@ function json(data: unknown, status = 200) {
 
 const MODEL = 'gpt-4.1-mini';
 
-/** Extraction texte basique depuis un PDF base64 (CVs textuels, non scannés) */
-function extractPdfText(b64: string): string {
+/** Décode une chaîne PDF (escapes octal, \\n, etc.) */
+function decodePdfStr(s: string): string {
+  return s
+    .replace(/\\n/g, ' ').replace(/\\r/g, '').replace(/\\\\/g, '\\')
+    .replace(/\\([0-7]{3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)))
+    .replace(/\\./g, '');
+}
+
+/** Extrait les opérateurs texte PDF (Tj, TJ, ', ") depuis du contenu décompressé */
+function extractOps(content: string, out: string[]) {
+  // Tj simple
+  const tjRe = /\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*(?:Tj|'|")/g;
+  let m: RegExpExecArray | null;
+  while ((m = tjRe.exec(content)) !== null) {
+    const t = decodePdfStr(m[1]);
+    if (t.trim().length > 0) out.push(t);
+  }
+  // TJ tableau
+  const tjArrRe = /\[([^\]]*)\]\s*TJ/g;
+  while ((m = tjArrRe.exec(content)) !== null) {
+    const inner = m[1];
+    const sRe = /\(([^)]+)\)/g; let sm: RegExpExecArray | null;
+    while ((sm = sRe.exec(inner)) !== null) out.push(decodePdfStr(sm[1]));
+  }
+}
+
+/** Tente de décompresser un flux FlateDecode (deflate-raw) */
+async function inflate(data: Uint8Array): Promise<string | null> {
   try {
-    const bin = atob(b64);
+    const ds = new DecompressionStream('deflate-raw');
+    const writer = ds.writable.getWriter();
+    const reader = ds.readable.getReader();
+    writer.write(data).catch(() => {});
+    writer.close().catch(() => {});
+    const parts: Uint8Array[] = [];
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) parts.push(value);
+      }
+    } catch { /* flux partiel ok */ }
+    const total = parts.reduce((n, p) => n + p.length, 0);
+    if (!total) return null;
+    const merged = new Uint8Array(total);
+    let off = 0; for (const p of parts) { merged.set(p, off); off += p.length; }
+    return new TextDecoder('latin1').decode(merged);
+  } catch { return null; }
+}
+
+/** Extraction texte complète depuis PDF base64 (compressé ou non) */
+async function extractPdfText(b64: string): Promise<string> {
+  try {
+    const binStr = atob(b64);
+    const bytes  = Uint8Array.from(binStr, c => c.charCodeAt(0));
+
     const chunks: string[] = [];
 
-    // Texte dans opérateurs Tj / TJ / ' / "
-    const tjRe = /\(([^)\\]*(?:\\.[^)\\]*)*)\)\s*(?:Tj|\'|\")/g;
-    let m: RegExpExecArray | null;
-    while ((m = tjRe.exec(bin)) !== null) {
-      const t = m[1]
-        .replace(/\\n/g, ' ').replace(/\\r/g, '').replace(/\\\\/g, '\\')
-        .replace(/\\([0-7]{3})/g, (_, o) => String.fromCharCode(parseInt(o, 8)))
-        .replace(/\\./g, '');
-      if (t.trim().length > 1) chunks.push(t);
-    }
+    // Parcourir les flux stream...endstream
+    let pos = 0;
+    while (pos < bytes.length) {
+      // Trouver "stream\n" ou "stream\r\n"
+      const sIdx = binStr.indexOf('stream', pos);
+      if (sIdx === -1) break;
+      const afterS = sIdx + 6;
+      // Sauter \r\n ou \n
+      const dataStart = binStr[afterS] === '\r' ? afterS + 2 : afterS + 1;
+      const eIdx = binStr.indexOf('endstream', dataStart);
+      if (eIdx === -1) break;
 
-    // Texte dans tableaux TJ  [(text) -200 (text2)] TJ
-    const tjArrRe = /\[([^\]]+)\]\s*TJ/g;
-    while ((m = tjArrRe.exec(bin)) !== null) {
-      const inner = m[1];
-      const strRe = /\(([^)]+)\)/g;
-      let sm: RegExpExecArray | null;
-      while ((sm = strRe.exec(inner)) !== null) {
-        chunks.push(sm[1]);
+      const streamBytes = bytes.slice(dataStart, eIdx);
+
+      // Essayer de décompresser
+      const decompressed = await inflate(streamBytes);
+      if (decompressed) {
+        extractOps(decompressed, chunks);
+      } else {
+        // Flux non compressé ou zlib avec header
+        const raw = binStr.slice(dataStart, eIdx);
+        extractOps(raw, chunks);
       }
+
+      pos = eIdx + 9;
     }
 
-    const result = chunks.join(' ').replace(/\s+/g, ' ').trim();
+    // Fallback : chercher dans tout le binaire (PDFs sans compression)
+    if (chunks.length === 0) {
+      extractOps(binStr, chunks);
+    }
 
-    // Filtrer les caractères non imprimables / binaires
-    return result.replace(/[^\x20-\x7E\u00C0-\u024F\n]/g, ' ').replace(/\s+/g, ' ').trim();
+    return chunks.join(' ').replace(/\s+/g, ' ')
+      .replace(/[^\x20-\x7E\u00C0-\u024F]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
   } catch {
     return '';
   }
@@ -182,7 +243,7 @@ Aucun texte hors du JSON.`;
   try {
     // ── PDF → extraction texte côté serveur ────────────────────────────────
     if (hasFile && mimeType.includes('pdf')) {
-      const extracted = extractPdfText(fileBase64);
+      const extracted = await extractPdfText(fileBase64);
       if (!extracted || extracted.length < 50) {
         return json({ error: 'Impossible d\'extraire le texte de ce PDF. Assurez-vous que le PDF n\'est pas scanné (image). Convertissez-le en Word/.docx ou copiez-collez le texte.' }, 422);
       }
