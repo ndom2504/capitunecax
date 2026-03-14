@@ -1,133 +1,228 @@
 ---
 import MainLayout from '../layouts/main.astro';
-import { baseUrl } from '../lib/base-url';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
 import { publicConfig } from '../lib/public-config';
+import { baseUrl } from '../lib/base-url';
 ---
 
 <MainLayout>
-  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
-  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
+<HeaderNav client:only="react" />
 
-  <div class="DesignHolder legal-page">
-    <div class="LayoutFrame">
-      <header class="auth-header">
-        <div class="Center">
-          <div class="site-logo">
-            <a href={`${baseUrl}/`}>
-              <img
-                src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png"
-                alt="CAPITUNE"
-              />
-            </a>
-          </div>
-          <nav class="Navigation auth-nav">
-            <ul>
-              <li><a href={`${baseUrl}/`}>Accueil</a></li>
-              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
-              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
-            </ul>
-          </nav>
-          <div class="clear"></div>
-        </div>
-      </header>
-
-      <section class="AuthHero_sec">
-        <div class="Center">
-          <h1>Politique De Confidentialité</h1>
-          <p>Comprendre quelles données sont collectées et comment elles sont utilisées.</p>
-        </div>
-      </section>
-
-      <section class="Get_sec auth-sec">
-        <div class="Mid">
-          <div class="Leftside auth-form-side auth-form-wide">
-            <h3 style="margin-bottom: 12px;">Résumé</h3>
-            <address>
-              <i class="fa fa-file-text" style="color:#ff9408;margin-right:10px;"></i>
-              CAPITUNE traite vos informations afin de fournir le service (création de compte, gestion du projet, messagerie, paiements) et répondre à vos demandes.
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Données Collectées</h3>
-            <address>
-              <i class="fa fa-database" style="color:#ff9408;margin-right:10px;"></i>
-              Informations de compte (nom, email).
-            </address>
-            <address>
-              <i class="fa fa-folder-open" style="color:#ff9408;margin-right:10px;"></i>
-              Informations liées au projet lorsque vous les saisissez.
-            </address>
-            <address>
-              <i class="fa fa-comments" style="color:#ff9408;margin-right:10px;"></i>
-              Messages échangés via la messagerie.
-            </address>
-            <address>
-              <i class="fa fa-cog" style="color:#ff9408;margin-right:10px;"></i>
-              Données techniques nécessaires au fonctionnement (cookies de session, journaux techniques).
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Finalités</h3>
-            <address>
-              <i class="fa fa-lock" style="color:#ff9408;margin-right:10px;"></i>
-              Fournir et sécuriser l’accès à votre espace (authentification, session).
-            </address>
-            <address>
-              <i class="fa fa-exchange" style="color:#ff9408;margin-right:10px;"></i>
-              Permettre le suivi de votre projet et la communication avec l’équipe.
-            </address>
-            <address>
-              <i class="fa fa-credit-card" style="color:#ff9408;margin-right:10px;"></i>
-              Gérer les transactions et justificatifs liés aux paiements.
-            </address>
-            <address>
-              <i class="fa fa-line-chart" style="color:#ff9408;margin-right:10px;"></i>
-              Améliorer le service (diagnostic, prévention des abus).
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Contact</h3>
-            <address class="Email">
-              <i class="fa fa-envelope" style="color:#ff9408;margin-right:10px;"></i>
-              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
-            </address>
-
-            <p style="margin-top: 18px; color:#a9abad;">
-              Dernière mise à jour : février 2026.
-            </p>
-          </div>
-
-          <div class="Rightside auth-info-side">
-            <h3>Ressources</h3>
-            <address>
-              <i class="fa fa-balance-scale" style="color:#ff9408;margin-right:10px;"></i>
-              Consultez aussi les mentions légales.
-            </address>
-            <address class="Email">
-              <a href={`${baseUrl}/mentions-legales`}>Mentions légales →</a>
-            </address>
-            <address class="Email">
-              <a href={`${baseUrl}/dashboard`}>Retour au dashboard →</a>
-            </address>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <div class="Cntr">
-          <p>
-            © 2026 <strong>CAPITUNE</strong> – Tous droits réservés.
-            | <a href={`${baseUrl}/mentions-legales`} style="color:#a9abad;">Mentions légales</a>
-            | <a href={`${baseUrl}/confidentialite`} style="color:#a9abad;">Confidentialité</a>
-          </p>
-        </div>
-      </footer>
-    </div>
+<section class="legal-hero">
+  <div class="legal-hero-inner">
+    <h1>Politique de confidentialité</h1>
+    <p>Comprendre quelles données sont collectées et comment elles sont utilisées.</p>
   </div>
+</section>
+
+<section class="legal-body">
+  <div class="legal-container">
+
+    <div class="legal-content">
+
+      <div class="legal-section">
+        <h2>Résumé</h2>
+        <p>
+          CAPITUNE traite vos informations afin de fournir le service (création de compte, gestion du projet, messagerie, paiements) et de répondre à vos demandes.
+          Nous nous engageons à protéger vos données personnelles conformément aux lois applicables.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Données collectées</h2>
+        <ul class="legal-list">
+          <li><strong>Informations de compte</strong> — nom, prénom, adresse email, téléphone, pays de résidence.</li>
+          <li><strong>Informations de projet</strong> — toute information que vous saisissez dans votre espace personnel (dossiers, documents, messages).</li>
+          <li><strong>Messages</strong> — échanges via la messagerie interne avec l'équipe CAPITUNE.</li>
+          <li><strong>Données techniques</strong> — cookies de session, journaux de connexion nécessaires au bon fonctionnement du service.</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Finalités du traitement</h2>
+        <ul class="legal-list">
+          <li><strong>Authentification & sécurité</strong> — fournir et sécuriser l'accès à votre espace personnalisé.</li>
+          <li><strong>Suivi de projet</strong> — permettre la communication et le suivi de votre dossier avec notre équipe.</li>
+          <li><strong>Paiements</strong> — gérer les transactions et justificatifs liés aux paiements sécurisés.</li>
+          <li><strong>Amélioration du service</strong> — diagnostic technique et prévention des abus.</li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Vos droits</h2>
+        <p>
+          Conformément à la réglementation applicable, vous disposez d'un droit d'accès, de rectification,
+          de suppression et de portabilité de vos données personnelles.
+          Pour exercer ces droits, contactez-nous à l'adresse ci-dessous.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Contact</h2>
+        <p>
+          Pour toute question relative à vos données personnelles :<br />
+          <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+        </p>
+        <p class="legal-update-date">Dernière mise à jour : février 2026.</p>
+      </div>
+
+    </div>
+
+    <aside class="legal-aside">
+      <div class="legal-aside-card">
+        <h3>Ressources</h3>
+        <p>Documents juridiques du site CAPITUNE.</p>
+        <a href={`${baseUrl}/mentions-legales`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Mentions légales
+        </a>
+        <a href={`${baseUrl}/dashboard`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Tableau de bord
+        </a>
+        <a href={`${baseUrl}/contact`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Nous contacter
+        </a>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<FooterCustom client:only="react" />
 </MainLayout>
+
+<style>
+  .legal-update-date {
+    color: #8fa3ba !important;
+    font-size: 12px !important;
+    margin-top: 8px !important;
+  }
+  .legal-list {
+    margin: 0;
+    padding: 0 0 0 0;
+    list-style: none;
+  }
+  .legal-list li {
+    color: #4a6880;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 8px 0 8px 20px;
+    border-bottom: 1px solid #f0f3f8;
+    position: relative;
+  }
+  .legal-list li:last-child { border-bottom: none; }
+  .legal-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: #ff9408;
+    font-weight: 700;
+  }
+
+  .legal-hero {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    padding: 64px 24px 48px;
+    text-align: center;
+  }
+  .legal-hero-inner {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .legal-hero h1 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  .legal-hero p {
+    color: #a8c4e0;
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .legal-body {
+    background: #f7f9fc;
+    padding: 56px 24px;
+  }
+  .legal-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .legal-container { grid-template-columns: 1fr; }
+  }
+
+  .legal-section {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .legal-section h2 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff9408;
+    display: inline-block;
+  }
+  .legal-section p {
+    color: #4a6880;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 10px;
+  }
+  .legal-section p:last-child { margin-bottom: 0; }
+  .legal-section a { color: #1f4b6e; font-weight: 600; }
+  .legal-section a:hover { color: #ff9408; }
+
+  .legal-aside-card {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 28px 24px;
+    position: sticky;
+    top: 24px;
+  }
+  .legal-aside-card h3 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 18px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 8px;
+  }
+  .legal-aside-card > p {
+    color: #8fa3ba;
+    font-size: 13px;
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .legal-aside-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1f4b6e;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f3f8;
+  }
+  .legal-aside-link:last-child { border-bottom: none; }
+  .legal-aside-link:hover { color: #ff9408; }
+  .legal-aside-link svg { flex-shrink: 0; color: #ff9408; }
+</style>

@@ -6,82 +6,54 @@ const email = Astro.url.searchParams.get('email') ?? '';
 ---
 
 <MainLayout>
-  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
+<div class="vauth-root">
 
-  <div class="DesignHolder auth-page">
-    <div class="LayoutFrame">
-      <header class="auth-header">
-        <div class="Center">
-          <div class="site-logo">
-            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
-          </div>
-          <nav class="Navigation auth-nav">
-            <ul>
-              <li><a href={`${baseUrl}/`}>Accueil</a></li>
-              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
-              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
-            </ul>
-          </nav>
-          <div class="clear"></div>
+  <div class="vauth-card-wrap">
+
+    <a href={`${baseUrl}/`} class="vauth-brand">CAPITUNE</a>
+
+    <div class="vauth-card">
+      <div class="vauth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,12 2,6"/>
+        </svg>
+      </div>
+
+      <h1 class="vauth-title">Vérifiez votre courriel</h1>
+      <p class="vauth-sub">Un lien de confirmation vous a été envoyé.</p>
+
+      {email ? (
+        <div class="vauth-email-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          <strong id="shown-email">{email}</strong>
         </div>
-      </header>
+      ) : null}
 
-      <section class="AuthHero_sec">
-        <div class="Center">
-          <h1>Vérifiez votre courriel</h1>
-          <p>Un lien de confirmation vous a été envoyé.</p>
-        </div>
-      </section>
+      <p class="vauth-desc">
+        Consultez votre boîte de réception et cliquez sur le lien de confirmation.
+        Le lien expire dans <strong>24 heures</strong>.
+      </p>
 
-      <section class="Get_sec auth-sec">
-        <div class="Mid">
-          <div class="Leftside auth-form-side" style="max-width:520px;margin:0 auto;">
+      <div class="vauth-spam-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Vérifiez aussi vos courriers indésirables (spam).
+      </div>
 
-            <!-- Carte principale -->
-            <div class="verify-card">
-              <div class="verify-icon">
-                <i class="fa fa-envelope-o"></i>
-              </div>
-              <h2>Email de confirmation envoyé !</h2>
-              {email ? (
-                <p class="verify-email-addr">
-                  <i class="fa fa-envelope" style="color:var(--cap-orange);margin-right:6px;"></i>
-                  <strong id="shown-email">{email}</strong>
-                </p>
-              ) : null}
-              <p class="verify-desc">
-                Consultez votre boîte de réception et cliquez sur le lien de confirmation.
-                Le lien expire dans <strong>24 heures</strong>.
-              </p>
-              <p class="verify-spam">
-                <i class="fa fa-info-circle"></i>
-                Vérifiez aussi vos courriers indésirables (spam).
-              </p>
+      <div id="resend-area" class="vauth-resend-area">
+        <button id="resend-btn" class="vauth-resend-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51"/></svg>
+          Renvoyer l'email de vérification
+        </button>
+        <p id="resend-msg" class="vauth-resend-msg"></p>
+      </div>
 
-              <!-- Bouton renvoi -->
-              <div id="resend-area" style="margin-top:24px;">
-                <button id="resend-btn" class="resend-btn">
-                  <i class="fa fa-refresh" id="resend-icon"></i>
-                  Renvoyer l'email de vérification
-                </button>
-                <p id="resend-msg" style="margin:8px 0 0;font-size:13px;text-align:center;"></p>
-              </div>
-
-              <div style="margin-top:24px;padding-top:20px;border-top:1px solid #eee;text-align:center;">
-                <a href={`${baseUrl}/connexion`} style="color:#1f4b6e;font-size:13px;opacity:.75;text-decoration:none;">
-                  ← Retour à la connexion
-                </a>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      <a href={`${baseUrl}/connexion`} class="vauth-back-link">← Retour à la connexion</a>
     </div>
+
   </div>
+
+</div>
 </MainLayout>
 
 <script define:vars={{ emailFromServer: email }}>
@@ -89,7 +61,6 @@ const email = Astro.url.searchParams.get('email') ?? '';
     new URLSearchParams(window.location.search).get('email') || '';
 
   const btn = document.getElementById('resend-btn');
-  const icon = document.getElementById('resend-icon');
   const msg = document.getElementById('resend-msg');
 
   let lastSent = 0;
@@ -103,7 +74,6 @@ const email = Astro.url.searchParams.get('email') ?? '';
     }
 
     if (btn) { btn.disabled = true; }
-    if (icon) { icon.className = 'fa fa-spinner fa-spin'; }
     if (msg) { msg.style.color = '#888'; msg.textContent = 'Envoi en cours…'; }
 
     try {
@@ -119,36 +89,27 @@ const email = Astro.url.searchParams.get('email') ?? '';
         if (msg) { msg.style.color = '#27ae60'; msg.textContent = '✓ Email envoyé ! Vérifiez votre boîte.'; }
         startCooldown();
       } else {
-        if (msg) { msg.style.color = '#e74c3c'; msg.textContent = data?.error || 'Erreur lors de l\'envoi.'; }
+        if (msg) { msg.style.color = '#e74c3c'; msg.textContent = data?.error || "Erreur lors de l'envoi."; }
         if (btn) { btn.disabled = false; }
-        if (icon) { icon.className = 'fa fa-refresh'; }
       }
     } catch {
       if (msg) { msg.style.color = '#e74c3c'; msg.textContent = 'Erreur réseau. Réessayez.'; }
       if (btn) { btn.disabled = false; }
-      if (icon) { icon.className = 'fa fa-refresh'; }
     }
   }
 
   function startCooldown() {
-    if (btn) btn.disabled = true;
-    if (icon) icon.className = 'fa fa-clock-o';
+    if (!btn) return;
+    btn.disabled = true;
     let remaining = 60;
     const interval = setInterval(() => {
       remaining--;
-      if (btn) btn.textContent = '';
-      const ic = document.createElement('i');
-      ic.id = 'resend-icon';
-      ic.className = 'fa fa-clock-o';
-      if (btn) {
-        btn.textContent = `  Renvoyer dans ${remaining}s`;
-        btn.prepend(ic);
-      }
+      if (btn) btn.textContent = `Renvoyer dans ${remaining}s`;
       if (remaining <= 0) {
         clearInterval(interval);
         if (btn) {
           btn.disabled = false;
-          btn.innerHTML = '<i class="fa fa-refresh" id="resend-icon"></i> Renvoyer l\'email de vérification';
+          btn.textContent = 'Renvoyer l\'email de vérification';
           btn.addEventListener('click', resendVerification, { once: true });
         }
       }
@@ -158,66 +119,133 @@ const email = Astro.url.searchParams.get('email') ?? '';
   if (btn) btn.addEventListener('click', resendVerification, { once: true });
 </script>
 
-<style is:global>
-  .verify-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 40px 36px;
-    box-shadow: 0 4px 24px rgba(0,0,0,.09);
-    text-align: center;
+<style>
+  .vauth-root {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
   }
-  .verify-icon {
-    width: 72px; height: 72px;
+  .vauth-card-wrap {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .vauth-brand {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 28px;
+    letter-spacing: .1em;
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .vauth-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,.24);
+  }
+  .vauth-icon {
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     background: linear-gradient(135deg, #1f4b6e, #2d6a96);
     color: #fff;
-    font-size: 30px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin: 0 auto 20px;
   }
-  .verify-card h2 {
-    margin: 0 0 14px;
-    color: #1f4b6e;
-    font-size: 20px;
-    font-weight: 700;
+  .vauth-title {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 24px;
+    letter-spacing: .04em;
+    color: #0a1628;
+    text-transform: uppercase;
+    margin: 0 0 8px;
   }
-  .verify-email-addr {
+  .vauth-sub {
+    color: #8fa3ba;
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+  .vauth-email-box {
     background: #f5f7fa;
     border-radius: 8px;
     padding: 10px 16px;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     margin: 0 0 16px;
     font-size: 14px;
-    color: #333;
+    color: #1f4b6e;
+    font-weight: 600;
     word-break: break-all;
+    border: 1px solid #e4e8f0;
   }
-  .verify-desc {
-    color: #555;
+  .vauth-email-box svg { flex-shrink: 0; color: #ff9408; }
+  .vauth-desc {
+    color: #4a6880;
     font-size: 15px;
-    line-height: 1.6;
-    margin: 0 0 12px;
+    line-height: 1.65;
+    margin: 0 0 14px;
   }
-  .verify-spam {
+  .vauth-spam-warn {
     background: #fff8f0;
     border: 1px solid #f5c98a;
     border-radius: 8px;
     padding: 10px 14px;
     color: #b55e00;
     font-size: 13px;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 24px;
+    text-align: left;
   }
-  .resend-btn {
+  .vauth-spam-warn svg { flex-shrink: 0; }
+  .vauth-resend-area { margin-bottom: 20px; }
+  .vauth-resend-btn {
     background: linear-gradient(135deg, #e87722, #d4631a);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    padding: 12px 28px;
+    border-radius: 10px;
+    padding: 13px 24px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: opacity .2s;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: .04em;
   }
-  .resend-btn:disabled { opacity: .6; cursor: not-allowed; }
-  .resend-btn:not(:disabled):hover { opacity: .88; }
+  .vauth-resend-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .vauth-resend-btn:not(:disabled):hover { opacity: .88; }
+  .vauth-resend-msg {
+    margin: 8px 0 0;
+    font-size: 13px;
+    text-align: center;
+    min-height: 18px;
+  }
+  .vauth-back-link {
+    color: #8fa3ba;
+    font-size: 13px;
+    text-decoration: none;
+    display: block;
+    padding-top: 18px;
+    border-top: 1px solid #f0f3f8;
+  }
+  .vauth-back-link:hover { color: #1f4b6e; }
 </style>

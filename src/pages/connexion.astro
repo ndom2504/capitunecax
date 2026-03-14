@@ -4,129 +4,125 @@ import { baseUrl } from '../lib/base-url';
 ---
 
 <MainLayout>
-  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
-  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
+<div class="auth-root">
 
-  <div class="DesignHolder auth-page">
-    <div class="LayoutFrame">
-      <header class="auth-header">
-        <div class="Center">
-          <div class="site-logo">
-            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
-          </div>
-          <nav class="Navigation auth-nav">
-            <ul>
-              <li><a href={`${baseUrl}/`}>Accueil</a></li>
-              <li class="active"><a href={`${baseUrl}/connexion`}>Connexion</a></li>
-              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
-            </ul>
-          </nav>
-          <div class="clear"></div>
-        </div>
-      </header>
+  <!-- ── Panneau gauche : branding ── -->
+  <div class="auth-panel-left">
+    <a href={`${baseUrl}/`} class="auth-brand">
+      <span class="auth-brand-name">CAPITUNE</span>
+      <span class="auth-brand-sub">Votre partenaire de confiance pour votre projet au Canada</span>
+    </a>
 
-      <section class="AuthHero_sec">
-        <div class="Center">
-          <h1>Connexion À Votre Espace</h1>
-          <p>Choisissez votre profil puis connectez-vous.</p>
-        </div>
-      </section>
+    <div class="auth-benefits">
+      <div class="auth-benefit"><span class="auth-benefit-icon">✓</span>Suivi de dossier en temps réel</div>
+      <div class="auth-benefit"><span class="auth-benefit-icon">✓</span>Accès sécurisé à vos documents</div>
+      <div class="auth-benefit"><span class="auth-benefit-icon">✓</span>Messagerie et rendez-vous</div>
+      <div class="auth-benefit"><span class="auth-benefit-icon">✓</span>Gestion des paiements</div>
+    </div>
 
-      <section class="Get_sec auth-sec">
-        <div class="Mid">
-          <div class="Leftside auth-form-side">
-            <div class="auth-error" id="loginError">
-              <i class="fa fa-exclamation-circle"></i> <span id="loginErrorMsg">Email ou mot de passe incorrect.</span>
-            </div>
-
-            <div class="auth-success" id="loginSuccess" style="display:none;">
-              <i class="fa fa-check-circle"></i> <span id="loginSuccessMsg"></span>
-            </div>
-
-            <div id="verify-email-notice" style="display:none;background:rgba(231,135,0,.1);border:1px solid rgba(231,135,0,.45);border-radius:8px;padding:14px 16px;margin-bottom:14px;">
-              <p style="margin:0 0 6px;font-weight:700;color:#c05e00;font-size:13px;"><i class="fa fa-envelope"></i>&nbsp; Courriel non vérifié</p>
-              <p style="margin:0 0 10px;color:#a04a00;font-size:13px;">Vérifiez votre boîte de réception pour l'email envoyé à <strong id="unverified-email-label"></strong> et cliquez sur le lien de confirmation.</p>
-              <button id="resend-verify-btn" style="background:#e87722;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;" type="button">
-                <i class="fa fa-refresh" id="resend-verify-icon"></i>&nbsp; Renvoyer l'email
-              </button>
-              <span id="resend-verify-msg" style="font-size:12px;margin-left:10px;vertical-align:middle;"></span>
-            </div>
-
-            <form id="loginForm">
-              <fieldset>
-                <div class="auth-account-type">
-                  <p class="auth-account-type-label">Je suis :</p>
-                  <div class="auth-account-type-row">
-                    <label class="auth-radio">
-                      <input type="radio" name="accountType" value="client" checked />
-                      <span>Particulier (demande de service)</span>
-                    </label>
-                    <label class="auth-radio">
-                      <input type="radio" name="accountType" value="pro" />
-                      <span>Professionnel (offre de service)</span>
-                    </label>
-                  </div>
-                </div>
-
-                <p><input type="email" id="email" required placeholder="EMAIL" class="field" /></p>
-                <p><input type="password" id="password" required placeholder="MOT DE PASSE" class="field" /></p>
-
-                <p class="auth-row">
-                  <label class="remember-wrap">
-                    <input type="checkbox" class="remember-check" />
-                    <span>Se Souvenir De Moi</span>
-                  </label>
-                  <a href="#" class="forgot-link">Mot De Passe Oublié ?</a>
-                </p>
-
-                <p><input type="submit" value="Se Connecter" class="button" /></p>
-              </fieldset>
-            </form>
-
-            <div class="auth-subline">
-              <p>Vous N'avez Pas De Compte ? <a href={`${baseUrl}/inscription`}>Créer Un Compte</a></p>
-            </div>
-
-            <div class="auth-divider"><span>Ou Via</span></div>
-
-            <div class="auth-social-grid">
-              <button type="button" id="googleLoginBtn" class="auth-social-btn">
-                <svg class="auth-social-icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                <span>Google</span>
-              </button>
-
-              <button type="button" id="microsoftLoginBtn" class="auth-social-btn">
-                <svg class="auth-social-icon" viewBox="0 0 23 23" aria-hidden="true">
-                  <path fill="#f35325" d="M1 1h10v10H1z"/>
-                  <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                  <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                  <path fill="#ffba08" d="M12 12h10v10H12z"/>
-                </svg>
-                <span>Microsoft</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="Rightside auth-info-side">
-            <h3>Pourquoi Vous Connecter ?</h3>
-            <address><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Suivi de dossier en temps réel</address>
-            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Accès sécurisé à vos documents</address>
-            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Messagerie et rendez-vous</address>
-            <address class="Number"><i class="fa fa-check" style="color:#ff9408;margin-right:10px;"></i>Gestion des paiements</address>
-            <address class="Email"><a href={`${baseUrl}/inscription`}>Pas encore de compte ? →</a></address>
-          </div>
-        </div>
-      </section>
+    <div class="auth-left-footer">
+      <a href={`${baseUrl}/`}>Accueil</a>
+      <a href={`${baseUrl}/a-propos`}>À Propos</a>
+      <a href={`${baseUrl}/contact`}>Contact</a>
     </div>
   </div>
+
+  <!-- ── Panneau droit : formulaire ── -->
+  <div class="auth-panel-right">
+    <div class="auth-form-wrap">
+
+      <div class="auth-form-header">
+        <h1 class="auth-form-title">Connexion</h1>
+        <p class="auth-form-sub">Connectez-vous à votre espace Capitune.</p>
+      </div>
+
+      <!-- Erreur / Succès -->
+      <div class="auth-alert auth-alert--error" id="loginError">
+        <span class="auth-alert-icon">⚠</span>
+        <span id="loginErrorMsg">Email ou mot de passe incorrect.</span>
+      </div>
+      <div class="auth-alert auth-alert--success" id="loginSuccess" style="display:none;">
+        <span class="auth-alert-icon">✓</span>
+        <span id="loginSuccessMsg"></span>
+      </div>
+
+      <!-- Notice email non vérifié -->
+      <div id="verify-email-notice" style="display:none;" class="auth-alert auth-alert--warning">
+        <p style="margin:0 0 6px;font-weight:700;font-size:13px;">📧 Courriel non vérifié</p>
+        <p style="margin:0 0 10px;font-size:13px;">Email envoyé à <strong id="unverified-email-label"></strong> — cliquez sur le lien de confirmation.</p>
+        <button id="resend-verify-btn" class="auth-resend-btn" type="button">
+          <span id="resend-verify-icon">↺</span> Renvoyer l'email
+        </button>
+        <span id="resend-verify-msg" style="font-size:12px;margin-left:10px;vertical-align:middle;"></span>
+      </div>
+
+      <!-- Sélecteur type de compte -->
+      <div class="auth-type-picker">
+        <label class="auth-type-option">
+          <input type="radio" name="accountType" value="client" checked />
+          <span class="auth-type-label">
+            <strong>Particulier</strong>
+            <small>Demande de service</small>
+          </span>
+        </label>
+        <label class="auth-type-option">
+          <input type="radio" name="accountType" value="pro" />
+          <span class="auth-type-label">
+            <strong>Professionnel</strong>
+            <small>Offre de service</small>
+          </span>
+        </label>
+      </div>
+
+      <!-- Formulaire -->
+      <form id="loginForm" class="auth-form">
+        <div class="auth-field-group">
+          <label class="auth-label">Email</label>
+          <input type="email" id="email" required placeholder="votre@email.com" class="auth-input" />
+        </div>
+        <div class="auth-field-group">
+          <label class="auth-label">Mot de passe</label>
+          <input type="password" id="password" required placeholder="••••••••" class="auth-input" />
+        </div>
+        <div class="auth-row-between">
+          <label class="auth-check-wrap">
+            <input type="checkbox" class="auth-checkbox" />
+            <span>Se souvenir de moi</span>
+          </label>
+          <a href="#" class="auth-link-muted">Mot de passe oublié ?</a>
+        </div>
+        <button type="submit" class="auth-btn-primary">Se connecter →</button>
+      </form>
+
+      <p class="auth-switch">Pas de compte ? <a href={`${baseUrl}/inscription`} class="auth-link-orange">Créer un compte</a></p>
+
+      <div class="auth-divider"><span>ou continuer avec</span></div>
+
+      <div class="auth-social-row">
+        <button type="button" id="googleLoginBtn" class="auth-social-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Google
+        </button>
+        <button type="button" id="microsoftLoginBtn" class="auth-social-btn">
+          <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true">
+            <path fill="#f35325" d="M1 1h10v10H1z"/>
+            <path fill="#81bc06" d="M12 1h10v10H12z"/>
+            <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+            <path fill="#ffba08" d="M12 12h10v10H12z"/>
+          </svg>
+          Microsoft
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>
 </MainLayout>
 
 <script>
@@ -272,243 +268,184 @@ import { baseUrl } from '../lib/base-url';
 </script>
 
 <style is:global>
-  .auth-page {
-    background: #1f4b6e;
+  /* ── Auth Layout Split ── */
+  .auth-root {
+    display: flex;
     min-height: 100vh;
+    font-family: Inter, sans-serif;
   }
 
-  .auth-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(0,0,0,0.35) !important;
-  }
-
-  .site-logo a { display:inline-block; line-height:0; }
-  .site-logo img { height: 64px; width: auto; display:block; }
-  header.auth-header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
-  header.auth-header.smaller .site-logo { height: 60px; }
-  header.auth-header.smaller .site-logo img { height: 36px; }
-
-  .auth-error {
-    background: rgba(231,76,60,0.15);
-    border: 1px solid rgba(231,76,60,0.4);
-    color: #ff6b6b;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    display: none;
-  }
-  .auth-error.show { display: block; }
-  .auth-success {
-    background: rgba(39,174,96,.15);
-    border: 1px solid rgba(39,174,96,.4);
-    color: #1e8449;
-    padding: 10px 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
-
-  .auth-nav {
-    float: right;
-    margin-top: 20px;
-  }
-
-  .auth-nav ul {
+  /* Panneau gauche */
+  .auth-panel-left {
+    width: 42%;
+    background: linear-gradient(160deg, #0a1628 0%, #1f4b6e 100%);
+    padding: 56px 48px;
     display: flex;
-    gap: 18px;
+    flex-direction: column;
+    gap: 48px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .auth-brand { text-decoration: none; }
+  .auth-brand-name { display: block; font-family: 'Anton SC', sans-serif; font-size: 2rem; color: #fff; letter-spacing: .04em; }
+  .auth-brand-sub  { display: block; font-size: 13px; color: rgba(255,255,255,.6); margin-top: 6px; line-height: 1.5; max-width: 280px; }
+
+  .auth-benefits { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .auth-benefit {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.4;
+  }
+  .auth-benefit-icon {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(255,148,8,.2); border: 1px solid rgba(255,148,8,.4);
+    color: #ff9408; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
 
-  .auth-account-type{margin:0 0 14px;padding:12px 12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:10px;}
-  .auth-account-type-label{margin:0 0 10px;color:#fff;font-weight:700;font-size:13px;letter-spacing:.2px;}
-  .auth-account-type-row{display:flex;gap:12px;flex-wrap:wrap;}
-  .auth-radio{display:flex;align-items:flex-start;gap:10px;color:#fff;font-size:13px;line-height:1.35;cursor:pointer;user-select:none;}
-  .auth-radio input{margin-top:2px;accent-color:#ff9408;}
+  .auth-left-footer { display: flex; gap: 20px; flex-wrap: wrap; }
+  .auth-left-footer a { font-size: 12px; color: rgba(255,255,255,.45); text-decoration: none; }
+  .auth-left-footer a:hover { color: rgba(255,255,255,.8); }
 
-  .auth-nav ul li a {
-    color: #fff;
-    font-size: 14px;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .AuthHero_sec {
-    padding: 86px 0 36px;
-    text-align: center;
-  }
-
-  .AuthHero_sec h1 {
-    color: #fff;
-    font-family: 'Oswald', sans-serif;
-    font-size: 52px;
-    line-height: 1.05;
-    white-space: normal !important;
-    margin-bottom: 18px;
-  }
-
-  .AuthHero_sec p {
-    color: #e8edf3;
-    font-size: 20px;
-    max-width: 760px;
-    margin: 0 auto;
-  }
-
-  .auth-sec {
-    background: url('/templatemo_473_november/img/Get-bg.jpg') center center no-repeat;
-    background-size: cover;
-  }
-
-  .auth-form-side {
-    width: 54% !important;
-  }
-
-  .auth-info-side {
-    width: 40% !important;
-  }
-
-  .auth-form-side .field {
-    background: rgba(255, 255, 255, 0.95) !important;
-    color: #102a43 !important;
-    font-weight: 600;
-    border: 1px solid rgba(16, 42, 67, 0.18) !important;
-  }
-
-  .auth-row {
+  /* Panneau droit */
+  .auth-panel-right {
+    flex: 1;
+    background: #f7f9fc;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .remember-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    font-size: 13px;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .remember-check {
-    width: 14px;
-    height: 14px;
-  }
-
-  .forgot-link {
-    color: #ffb049;
-    font-size: 13px;
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-
-  .auth-subline {
-    margin-top: 10px;
-    text-align: center;
-  }
-
-  .auth-subline p {
-    color: #d9e4ef;
-    font-size: 14px;
-  }
-
-  .auth-subline a {
-    color: #ffb049;
-    font-weight: 700;
-  }
-
-  .auth-divider {
-    margin: 20px 0 18px;
-    text-align: center;
-    position: relative;
-  }
-
-  .auth-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.22);
-  }
-
-  .auth-divider span {
-    position: relative;
-    z-index: 1;
-    color: #fff;
-    background: rgba(20, 55, 84, 0.75);
-    padding: 0 14px;
-    text-transform: uppercase;
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  .auth-social-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .auth-social-btn {
-    border: 1px solid rgba(255, 255, 255, 0.32);
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
-    height: 46px;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    padding: 48px 32px;
+    overflow-y: auto;
+  }
+  .auth-form-wrap {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 36px;
+    box-shadow: 0 4px 32px rgba(0,0,0,.07);
+    border: 1px solid #e4e8f0;
+  }
+
+  /* Header du formulaire */
+  .auth-form-header { margin-bottom: 24px; }
+  .auth-form-title { font-family: 'Anton SC', sans-serif; font-size: 1.8rem; color: #0a1628; margin: 0 0 6px; letter-spacing: .02em; }
+  .auth-form-sub   { font-size: 14px; color: #6b7280; margin: 0; }
+
+  /* Alertes */
+  .auth-alert {
+    display: none;
+    padding: 11px 14px;
+    border-radius: 10px;
     font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    transition: all 0.25s ease;
+    font-weight: 600;
+    margin-bottom: 16px;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .auth-alert.show, .auth-alert[style*="display:block"] { display: flex !important; }
+  .auth-alert--error   { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; }
+  .auth-alert--success { background: #f0fdf4; border: 1px solid #86efac; color: #16a34a; }
+  .auth-alert--warning { background: #fff7ed; border: 1px solid #fdba74; color: #c2410c; flex-direction: column; gap: 6px; }
+  .auth-alert-icon { font-size: 15px; }
+
+  /* Bouton renvoi */
+  .auth-resend-btn {
+    background: #ff9408; color: #fff; border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: opacity .2s;
+  }
+  .auth-resend-btn:hover { opacity: .85; }
+
+  /* Type picker (client / pro) */
+  .auth-type-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .auth-type-option { cursor: pointer; }
+  .auth-type-option input { display: none; }
+  .auth-type-label {
+    display: flex; flex-direction: column; gap: 2px;
+    border: 2px solid #e4e8f0; border-radius: 12px; padding: 12px 14px;
+    background: #f9fafb; transition: all .2s; font-size: 13px;
+  }
+  .auth-type-label strong { color: #0a1628; font-size: 13px; }
+  .auth-type-label small  { color: #9ca3af; font-size: 11px; }
+  .auth-type-option input:checked ~ .auth-type-label {
+    border-color: #1f4b6e; background: #eef4fb;
+  }
+  .auth-type-option input:checked ~ .auth-type-label strong { color: #1f4b6e; }
+
+  /* Champs */
+  .auth-form { display: flex; flex-direction: column; gap: 14px; }
+  .auth-field-group { display: flex; flex-direction: column; gap: 5px; }
+  .auth-label { font-size: 12px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: .05em; }
+  .auth-input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #e4e8f0;
+    border-radius: 10px; font-size: 14px; color: #0a1628;
+    background: #fff; outline: none; transition: border-color .2s;
+    box-sizing: border-box;
+  }
+  .auth-input:focus { border-color: #1f4b6e; }
+
+  /* Ligne remember + oubli */
+  .auth-row-between {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .auth-check-wrap { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #6b7280; cursor: pointer; }
+  .auth-checkbox   { width: 14px; height: 14px; accent-color: #1f4b6e; }
+  .auth-link-muted { font-size: 13px; color: #6b7280; text-decoration: none; }
+  .auth-link-muted:hover { color: #1f4b6e; }
+
+  /* Bouton primary */
+  .auth-btn-primary {
+    width: 100%; padding: 13px; background: linear-gradient(135deg, #0a1628, #1f4b6e);
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s;
+    margin-top: 4px;
+  }
+  .auth-btn-primary:hover { opacity: .88; }
+
+  /* Lien switch */
+  .auth-switch { text-align: center; font-size: 14px; color: #6b7280; margin: 16px 0 0; }
+  .auth-link-orange { color: #ff9408; font-weight: 700; text-decoration: none; }
+  .auth-link-orange:hover { text-decoration: underline; }
+
+  /* Divider */
+  .auth-divider {
+    margin: 20px 0; text-align: center; position: relative;
+  }
+  .auth-divider::before {
+    content: ''; position: absolute; top: 50%; left: 0; right: 0;
+    border-top: 1px solid #e4e8f0;
+  }
+  .auth-divider span {
+    position: relative; z-index: 1;
+    background: #fff; padding: 0 12px;
+    font-size: 12px; color: #9ca3af; text-transform: uppercase; font-weight: 600;
   }
 
-  .auth-social-btn:hover {
-    background: rgba(255, 255, 255, 0.22);
+  /* Boutons sociaux */
+  .auth-social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .auth-social-btn {
+    height: 46px; border: 1.5px solid #e4e8f0; background: #fff;
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    gap: 8px; font-size: 13px; font-weight: 700; color: #374151;
+    cursor: pointer; transition: all .2s;
   }
+  .auth-social-btn:hover { border-color: #1f4b6e; background: #f0f5fb; }
 
-  .auth-social-icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .auth-info-side h3 {
-    font-size: 44px !important;
-    line-height: 1.03 !important;
-    white-space: normal !important;
-    padding-bottom: 24px !important;
-  }
-
-  @media (max-width: 980px) {
-    .auth-nav {
-      float: none;
-      margin: 14px 0 18px;
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .auth-root { flex-direction: column; }
+    .auth-panel-left {
+      width: 100%; height: auto; position: static;
+      padding: 28px 24px; gap: 20px;
     }
-
-    .auth-nav ul {
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .AuthHero_sec h1 {
-      font-size: 38px;
-    }
-
-    .AuthHero_sec p {
-      font-size: 17px;
-      padding: 0 12px;
-    }
-
-    .auth-form-side,
-    .auth-info-side {
-      width: 100% !important;
-    }
-
-    .auth-social-grid {
-      grid-template-columns: 1fr;
-    }
+    .auth-benefits { display: none; }
+    .auth-brand-name { font-size: 1.6rem; }
+    .auth-panel-right { padding: 24px 16px; align-items: flex-start; }
+    .auth-form-wrap { padding: 28px 20px; border-radius: 16px; }
+    .auth-type-picker { grid-template-columns: 1fr; }
+    .auth-social-row  { grid-template-columns: 1fr; }
   }
 </style>

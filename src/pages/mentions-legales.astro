@@ -1,113 +1,194 @@
 ---
 import MainLayout from '../layouts/main.astro';
-import { baseUrl } from '../lib/base-url';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
 import { getContactAddressLines, publicConfig } from '../lib/public-config';
+import { baseUrl } from '../lib/base-url';
 
 const addressLines = getContactAddressLines();
 const locationLine = addressLines[addressLines.length - 1] ?? '';
 ---
 
 <MainLayout>
-  <link rel="stylesheet" href="/templatemo_473_november/css/theme.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/media.css" />
-  <link rel="stylesheet" href="/templatemo_473_november/css/font-awesome.min.css" />
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,600italic,400italic,800,700" rel="stylesheet" type="text/css" />
-  <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
+<HeaderNav client:only="react" />
 
-  <div class="DesignHolder legal-page">
-    <div class="LayoutFrame">
-      <header class="auth-header">
-        <div class="Center">
-          <div class="site-logo">
-            <a href={`${baseUrl}/`}>
-              <img
-                src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png"
-                alt="CAPITUNE"
-              />
-            </a>
-          </div>
-          <nav class="Navigation auth-nav">
-            <ul>
-              <li><a href={`${baseUrl}/`}>Accueil</a></li>
-              <li><a href={`${baseUrl}/connexion`}>Connexion</a></li>
-              <li><a href={`${baseUrl}/inscription`}>Inscription</a></li>
-            </ul>
-          </nav>
-          <div class="clear"></div>
-        </div>
-      </header>
-
-      <section class="AuthHero_sec">
-        <div class="Center">
-          <h1>Mentions Légales</h1>
-          <p>Informations légales et éditeur du site CAPITUNE.</p>
-        </div>
-      </section>
-
-      <section class="Get_sec auth-sec">
-        <div class="Mid">
-          <div class="Leftside auth-form-side auth-form-wide">
-            <h3 style="margin-bottom: 12px;">Éditeur</h3>
-            <address>
-              <i class="fa fa-building" style="color:#ff9408;margin-right:10px;"></i>
-              CAPITUNE{locationLine ? ` — ${locationLine}` : ''}
-            </address>
-            <address class="Email">
-              <i class="fa fa-envelope" style="color:#ff9408;margin-right:10px;"></i>
-              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Hébergement</h3>
-            <address>
-              <i class="fa fa-cloud" style="color:#ff9408;margin-right:10px;"></i>
-              Hébergement assuré via l’infrastructure de déploiement du projet (selon l’environnement de production).
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Propriété Intellectuelle</h3>
-            <address>
-              <i class="fa fa-copyright" style="color:#ff9408;margin-right:10px;"></i>
-              Les contenus (textes, visuels, logos, éléments graphiques) sont protégés. Toute reproduction non autorisée est interdite.
-            </address>
-
-            <div style="height: 18px;"></div>
-
-            <h3 style="margin-bottom: 12px;">Données Personnelles</h3>
-            <address>
-              <i class="fa fa-shield" style="color:#ff9408;margin-right:10px;"></i>
-              Pour en savoir plus, consultez la
-              <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a>.
-            </address>
-          </div>
-
-          <div class="Rightside auth-info-side">
-            <h3>Besoin d'aide ?</h3>
-            <address>
-              <i class="fa fa-info-circle" style="color:#ff9408;margin-right:10px;"></i>
-              Écrivez-nous à tout moment.
-            </address>
-            <address class="Email">
-              <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
-            </address>
-            <address class="Email">
-              <a href={`${baseUrl}/dashboard`}>Retour au dashboard →</a>
-            </address>
-          </div>
-        </div>
-      </section>
-
-      <footer>
-        <div class="Cntr">
-          <p>
-            © 2026 <strong>CAPITUNE</strong> – Tous droits réservés.
-            | <a href={`${baseUrl}/mentions-legales`} style="color:#a9abad;">Mentions légales</a>
-            | <a href={`${baseUrl}/confidentialite`} style="color:#a9abad;">Confidentialité</a>
-          </p>
-        </div>
-      </footer>
-    </div>
+<section class="legal-hero">
+  <div class="legal-hero-inner">
+    <h1>Mentions légales</h1>
+    <p>Informations légales et éditeur du site CAPITUNE.</p>
   </div>
+</section>
+
+<section class="legal-body">
+  <div class="legal-container">
+
+    <div class="legal-content">
+
+      <div class="legal-section">
+        <h2>Éditeur</h2>
+        <p>
+          <strong>CAPITUNE</strong>{locationLine ? ` — ${locationLine}` : ''}<br />
+          Propulsé par <strong>Export Monde Prestige Inc.</strong>
+        </p>
+        <p>
+          Email : <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Hébergement</h2>
+        <p>
+          L'hébergement est assuré via l'infrastructure de déploiement du projet (selon l'environnement de production en vigueur).
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Propriété intellectuelle</h2>
+        <p>
+          Les contenus du site (textes, visuels, logos, éléments graphiques) sont protégés par le droit de la propriété intellectuelle.
+          Toute reproduction, distribution ou utilisation sans autorisation écrite préalable est strictement interdite.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Données personnelles</h2>
+        <p>
+          Pour en savoir plus sur la collecte et le traitement de vos données,
+          consultez notre <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a>.
+        </p>
+      </div>
+
+    </div>
+
+    <aside class="legal-aside">
+      <div class="legal-aside-card">
+        <h3>Besoin d'aide ?</h3>
+        <p>Notre équipe est disponible pour toute question.</p>
+        <a href={`mailto:${publicConfig.contactEmail}`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          {publicConfig.contactEmail}
+        </a>
+        <a href={`${baseUrl}/dashboard`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Tableau de bord
+        </a>
+        <a href={`${baseUrl}/contact`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Formulaire de contact
+        </a>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+<FooterCustom client:only="react" />
 </MainLayout>
+
+<style>
+  .legal-hero {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    padding: 64px 24px 48px;
+    text-align: center;
+  }
+  .legal-hero-inner {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .legal-hero h1 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  .legal-hero p {
+    color: #a8c4e0;
+    font-size: 18px;
+    margin: 0;
+  }
+
+  .legal-body {
+    background: #f7f9fc;
+    padding: 56px 24px;
+  }
+  .legal-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .legal-container { grid-template-columns: 1fr; }
+  }
+
+  .legal-content {}
+  .legal-section {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .legal-section h2 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff9408;
+    display: inline-block;
+  }
+  .legal-section p {
+    color: #4a6880;
+    font-size: 15px;
+    line-height: 1.7;
+    margin: 0 0 10px;
+  }
+  .legal-section p:last-child { margin-bottom: 0; }
+  .legal-section a { color: #1f4b6e; font-weight: 600; }
+  .legal-section a:hover { color: #ff9408; }
+
+  .legal-aside {}
+  .legal-aside-card {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 28px 24px;
+    position: sticky;
+    top: 24px;
+  }
+  .legal-aside-card h3 {
+    font-family: 'Anton SC', 'Anton', sans-serif;
+    font-size: 18px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 8px;
+  }
+  .legal-aside-card > p {
+    color: #8fa3ba;
+    font-size: 13px;
+    margin: 0 0 20px;
+    line-height: 1.5;
+  }
+  .legal-aside-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1f4b6e;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f3f8;
+  }
+  .legal-aside-link:last-child { border-bottom: none; }
+  .legal-aside-link:hover { color: #ff9408; }
+  .legal-aside-link svg { flex-shrink: 0; color: #ff9408; }
+</style>
