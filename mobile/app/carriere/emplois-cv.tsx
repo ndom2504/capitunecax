@@ -224,7 +224,7 @@ export default function EmploisCVScreen() {
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* Header fixe */}
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/carriere')} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/(tabs)/carriere')} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={22} color={Colors.surface} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Marche de l'Emploi</Text>
