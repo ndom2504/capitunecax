@@ -999,9 +999,9 @@ const landingServices = [
   /* ── Layout principal ── */
   .cap-mob-layout {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 60px;
+    gap: 56px;
   }
 
   /* ── Téléphone ── */
@@ -1203,14 +1203,14 @@ const landingServices = [
   }
 
   /* ── Features liste ── */
-  .cap-mob-features { flex: 1; }
-  .cap-mob-features > ul { list-style: none; margin: 0 0 36px; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+  .cap-mob-features { width: 100%; max-width: 860px; }
+  .cap-mob-features > ul { list-style: none; margin: 0 0 36px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px; }
   .cap-mob-feat {
     display: flex; align-items: flex-start; gap: 16px;
-    opacity: 0; transform: translateX(40px);
+    opacity: 0; transform: translateY(20px);
     transition: opacity .5s ease, transform .5s ease;
   }
-  .cap-mob-feat.is-visible { opacity: 1; transform: translateX(0); }
+  .cap-mob-feat.is-visible { opacity: 1; transform: translateY(0); }
   .cap-mob-feat-icon {
     flex: 0 0 48px; height: 48px;
     background: rgba(232,119,34,.15);
@@ -1269,9 +1269,9 @@ const landingServices = [
 
   /* ── Responsive ── */
   @media (max-width: 900px) {
-    .cap-mob-layout { flex-direction: column; gap: 48px; align-items: center; }
+    .cap-mob-layout { gap: 40px; }
     .cap-mob-header h2 { font-size: 32px !important; }
-    .cap-mob-features > ul { gap: 16px; }
+    .cap-mob-features > ul { grid-template-columns: 1fr; gap: 16px; }
   }
   @media (max-width: 540px) {
     .cap-mob-stats { gap: 12px; }
