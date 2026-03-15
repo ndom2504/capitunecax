@@ -4,6 +4,8 @@ import { HeaderNav } from "../../components/HeaderNav";
 import { FooterCustom } from "../../components/FooterCustom";
 import CvCreator from "../../components/carriere/CvCreator";
 
+const isApp = Astro.url.searchParams.get('source') === 'app';
+
 const service = Astro.url.searchParams.get("service") ?? "";
 
 // Affichage conditionnel selon session
@@ -68,7 +70,7 @@ const CV_SERVICES = [
 ];
 ---
 
-<MainLayout>
+<MainLayout pageClass={isApp ? 'is-mobile-app' : ''}>
 
   {isLoggedIn ? (
     <div class="cvc-dash-topbar">
@@ -82,21 +84,36 @@ const CV_SERVICES = [
 
   <main class="cvc-page">
 
-    {service ? (
-      /* ── Mode génération ── */
-      <>
-        <div class="cvc-gen-bar">
-          <a href="/carriere/cv" class="cvc-back-btn">← Choisir un autre service</a>
-          <span class="cvc-gen-service-label">
-            {CV_SERVICES.find(s => s.id === service)?.icon}
-            {CV_SERVICES.find(s => s.id === service)?.label ?? service}
-          </span>
+    {!isApp ? (
+      <div class="cap-disabled-wrap">
+        <div class="cap-disabled-card">
+          <div class="cap-disabled-icon">🛠️</div>
+          <h1 class="cap-disabled-title">Fonctionnalité temporairement indisponible sur le web</h1>
+          <p class="cap-disabled-sub">
+            Le module Carrière (CV, lettres, analyse) est momentanément désactivé sur la version web.
+            Merci d’utiliser l’application mobile.
+          </p>
+          <div class="cap-disabled-actions">
+            <a class="cap-disabled-btn" href="/dashboard">Retour au dashboard</a>
+            <a class="cap-disabled-link" href="/contact">Contacter le support</a>
+          </div>
         </div>
-        <CvCreator client:only="react" defaultService={service} />
-      </>
-    ) : (
-      /* ── Mode landing services ── */
-      <div class="cvc-landing">
+      </div>
+    ) : service ? (
+        /* ── Mode génération ── */
+        <>
+          <div class="cvc-gen-bar">
+            <a href="/carriere/cv?source=app" class="cvc-back-btn">← Choisir un autre service</a>
+            <span class="cvc-gen-service-label">
+              {CV_SERVICES.find(s => s.id === service)?.icon}
+              {CV_SERVICES.find(s => s.id === service)?.label ?? service}
+            </span>
+          </div>
+          <CvCreator client:only="react" defaultService={service} />
+        </>
+      ) : (
+        /* ── Mode landing services ── */
+        <div class="cvc-landing">
 
         <!-- Hero -->
         <div class="cvc-hero">
@@ -112,7 +129,7 @@ const CV_SERVICES = [
         <div class="cvc-services-grid">
           {CV_SERVICES.map(s => (
             <a
-              href={`/carriere/cv?service=${s.id}`}
+              href={`/carriere/cv?service=${s.id}&source=app`}
               class="cvc-service-card"
               style={`--card-bg:${s.color}; --card-border:${s.border};`}
             >
@@ -185,6 +202,64 @@ const CV_SERVICES = [
   .cvc-dash-logout:hover { color: #e74c3c; }
 
   .cvc-page  { min-height: 80vh; background: #f7f9fc; }
+
+  /* ── Web masking (carrière désactivée) ── */
+  .cap-disabled-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+  .cap-disabled-card {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 18px;
+    padding: 34px 28px;
+    text-align: center;
+    box-shadow: 0 10px 36px rgba(0,0,0,.06);
+  }
+  .cap-disabled-icon { font-size: 40px; margin-bottom: 12px; }
+  .cap-disabled-title {
+    font-family: 'Anton SC', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: .02em;
+    color: #0a1628;
+    margin: 0 0 10px;
+  }
+  .cap-disabled-sub {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.7;
+    margin: 0 auto 18px;
+    max-width: 620px;
+    white-space: normal;
+  }
+  .cap-disabled-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .cap-disabled-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0a1628, #1f4b6e);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .cap-disabled-link {
+    color: #1f4b6e;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .cap-disabled-link:hover { text-decoration: underline; }
 
   /* ── Landing ── */
   .cvc-landing { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; display: flex; flex-direction: column; gap: 56px; }

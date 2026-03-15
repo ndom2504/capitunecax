@@ -20,7 +20,24 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
 
   <!-- Contenu interactif React -->
   <div class="cap-page-body">
-    <Jobs client:only="react" isMobileApp={isApp} mode="jobs" />
+    {isApp ? (
+      <Jobs client:only="react" isMobileApp={isApp} mode="jobs" />
+    ) : (
+      <div class="cap-disabled-wrap">
+        <div class="cap-disabled-card">
+          <div class="cap-disabled-icon">🛠️</div>
+          <h2 class="cap-disabled-title">Fonctionnalité temporairement indisponible sur le web</h2>
+          <p class="cap-disabled-sub">
+            Le module Carrière est momentanément désactivé sur la version web.
+            Merci d’utiliser l’application mobile.
+          </p>
+          <div class="cap-disabled-actions">
+            <a class="cap-disabled-btn" href="/dashboard">Retour au dashboard</a>
+            <a class="cap-disabled-link" href="/contact">Contacter le support</a>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 
 </Layout>
@@ -78,6 +95,67 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
   padding: 36px 0 70px;
   overflow-x: hidden;
 }
+
+/* ── Web masking (carrière désactivée) ── */
+.cap-disabled-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 30px;
+}
+.cap-disabled-card {
+  background: #fff;
+  border: 1px solid #e4e8f0;
+  border-radius: 16px;
+  padding: 28px 22px;
+  text-align: center;
+  box-shadow: 0 10px 36px rgba(0,0,0,.06);
+}
+.cap-disabled-icon { font-size: 40px; margin-bottom: 10px; }
+.cap-disabled-title {
+  font-family: 'Anton SC', sans-serif;
+  font-size: 1.5rem;
+  color: #0a1628;
+  margin: 0 0 10px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.cap-disabled-sub {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.7;
+  margin: 0 auto 18px;
+  max-width: 640px;
+  white-space: normal;
+}
+.cap-disabled-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cap-disabled-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  text-decoration: none;
+}
+.cap-disabled-link {
+  color: rgba(15,52,96,0.95);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  font-family: Inter, sans-serif;
+}
+.cap-disabled-link:hover { text-decoration: underline; }
 
 /* ═══════════════════════════════════════
    COMPOSANT JOBS — styles Capitune
