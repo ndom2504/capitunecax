@@ -10,19 +10,19 @@ export function FooterCustom() {
 
   return (
     <footer className="bg-muted/30 border-t border-border">
-      <div className="container mx-auto px-4 md:px-6 py-12">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+      <div className="mx-auto max-w-6xl px-4 md:px-6 py-12">
+        <div className="grid gap-8 md:grid-cols-4 mb-8">
           {/* Brand */}
           <div className="md:col-span-1">
-            <h2 className="text-2xl font-bold text-primary font-heading mb-4">CAPITUNE</h2>
-            <p className="text-muted-foreground text-sm">
+            <div className="text-2xl md:text-3xl font-bold text-primary font-heading leading-none">CAPITUNE</div>
+            <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
               Votre partenaire de confiance pour votre projet au Canada
             </p>
           </div>
 
           {/* Navigation */}
           <div>
-            <h3 className="font-bold text-foreground mb-4">Navigation</h3>
+            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Navigation</div>
             <ul className="space-y-2">
               <li>
                 <a href={`${baseUrl}/`} className="text-muted-foreground hover:text-primary transition text-sm">
@@ -49,7 +49,7 @@ export function FooterCustom() {
 
           {/* Services */}
           <div>
-            <h3 className="font-bold text-foreground mb-4">Nos Services</h3>
+            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Nos services</div>
             <ul className="space-y-2">
               {servicesCatalog.map((service) => (
                 <li key={service.id} className="text-muted-foreground text-sm">
@@ -61,7 +61,7 @@ export function FooterCustom() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-bold text-foreground mb-4">Contact</h3>
+            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Contact</div>
             <ul className="space-y-2">
               <li className="text-muted-foreground text-sm">
                 📧 {publicConfig.contactEmail}

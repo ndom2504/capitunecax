@@ -96,13 +96,29 @@ export default function CvCreator({ isMobileApp = false, defaultService = "cv_ca
 
   // ── Analyse IA ─────────────────────────────────────────────────────────────
 
+  const readApiError = async (res: Response) => {
+    try {
+      const data = await res.json();
+      if (data?.error) return String(data.error);
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   const runAnalyze = async (text: string) => {
     const res = await fetch("/api/cv-analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ task: "analyze", cvText: text, service }),
     });
-    if (!res.ok) { setError("Erreur lors de l'analyse (" + res.status + ")"); return; }
+
+    if (!res.ok) {
+      const msg = await readApiError(res);
+      setError(msg || "Erreur lors de l'analyse (" + res.status + ")");
+      return;
+    }
+
     const data = await res.json();
     if (data.error) { setError(data.error); return; }
     setAnalysis(data);
@@ -139,7 +155,13 @@ export default function CvCreator({ isMobileApp = false, defaultService = "cv_ca
           service,
         }),
       });
-      if (!res.ok) { setError("Erreur optimisation (" + res.status + ")"); return; }
+
+      if (!res.ok) {
+        const msg = await readApiError(res);
+        setError(msg || "Erreur optimisation (" + res.status + ")");
+        return;
+      }
+
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setOptimizedCv(data);
@@ -162,7 +184,13 @@ export default function CvCreator({ isMobileApp = false, defaultService = "cv_ca
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ task: "cover_letter", cvText: text, targetJob, service }),
       });
-      if (!res.ok) { setError("Erreur lettre (" + res.status + ")"); return; }
+
+      if (!res.ok) {
+        const msg = await readApiError(res);
+        setError(msg || "Erreur lettre (" + res.status + ")");
+        return;
+      }
+
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setCoverLetter(data);

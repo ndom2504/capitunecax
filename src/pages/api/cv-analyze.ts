@@ -30,14 +30,26 @@ async function callGemini(
       },
     }),
   });
+
   if (!res.ok) {
-    const err = await res.text().catch(() => res.status.toString());
-    throw new Error(`Gemini ${res.status}: ${err.slice(0, 300)}`);
+    const errText = await res.text().catch(() => '');
+    throw new GeminiHttpError(res.status, errText);
   }
   const data = await res.json() as {
     candidates?: { content?: { parts?: { text?: string }[] } }[];
   };
   return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+}
+
+class GeminiHttpError extends Error {
+  public readonly status: number;
+  public readonly details: string;
+
+  constructor(status: number, details: string) {
+    super(`Gemini ${status}`);
+    this.status = status;
+    this.details = details;
+  }
 }
 
 function json(data: unknown, status = 200) {
@@ -178,6 +190,43 @@ Rédige une lettre de motivation professionnelle. Retourne EXCLUSIVEMENT un obje
     catch { return json({ error: 'Réponse non JSON', raw: cleaned }, 502); }
 
   } catch (err: any) {
+    if (err instanceof GeminiHttpError) {
+      const details = (err.details || '').slice(0, 400);
+
+      // Messages UX plus clairs sur les cas fréquents
+      if (err.status === 429) {
+        return json(
+          {
+            error:
+              "Quota Gemini dépassé (429). Réessayez plus tard, ou remplacez la clé GEMINI_API_KEY avec une clé ayant du quota.",
+            upstreamStatus: 429,
+            upstreamDetails: details,
+          },
+          429,
+        );
+      }
+
+      if (err.status === 401 || err.status === 403) {
+        return json(
+          {
+            error: "Accès Gemini refusé. Vérifiez la clé GEMINI_API_KEY (active, autorisée, facturation/quota).",
+            upstreamStatus: err.status,
+            upstreamDetails: details,
+          },
+          503,
+        );
+      }
+
+      return json(
+        {
+          error: `Erreur Gemini HTTP ${err.status}`,
+          upstreamStatus: err.status,
+          upstreamDetails: details,
+        },
+        err.status,
+      );
+    }
+
     console.error('[cv-analyze] Gemini error:', err?.message ?? err);
     return json({ error: 'Erreur Gemini : ' + (err?.message ?? 'inconnue') }, 502);
   }
