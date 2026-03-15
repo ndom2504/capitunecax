@@ -33,7 +33,7 @@ const getEnv = (key: PublicEnvKey): string | undefined => {
 };
 
 export const publicConfig: PublicConfig = {
-  contactEmail: getEnv('PUBLIC_CONTACT_EMAIL') ?? 'contact@capitune.com',
+  contactEmail: getEnv('PUBLIC_CONTACT_EMAIL') ?? 'equipe@capitune.com',
   contactPhone: getEnv('PUBLIC_CONTACT_PHONE') ?? '+1 581 443 9464',
   contactAddress:
     getEnv('PUBLIC_CONTACT_ADDRESS') ??
