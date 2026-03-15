@@ -11,8 +11,10 @@ import { baseUrl } from '../lib/base-url';
 
 <section class="legal-hero">
   <div class="legal-hero-inner">
+    <div class="legal-hero-badge">Protection des données</div>
     <h1>Politique de confidentialité</h1>
-    <p>Comprendre quelles données sont collectées et comment elles sont utilisées.</p>
+    <p>Comment CAPITUNE collecte, utilise et protège vos renseignements personnels.</p>
+    <p class="legal-date">Dernière mise à jour : 14 mars 2026</p>
   </div>
 </section>
 
@@ -22,68 +24,301 @@ import { baseUrl } from '../lib/base-url';
     <div class="legal-content">
 
       <div class="legal-section">
-        <h2>Résumé</h2>
+        <h2>Engagement de CAPITUNE</h2>
         <p>
-          CAPITUNE traite vos informations afin de fournir le service (création de compte, gestion du projet, messagerie, paiements) et de répondre à vos demandes.
-          Nous nous engageons à protéger vos données personnelles conformément aux lois applicables.
+          CAPITUNE, exploité par <strong>Export Monde Prestige Inc.</strong>, s'engage à protéger vos
+          renseignements personnels. La présente politique décrit les types de renseignements que nous
+          collectons, la façon dont nous les utilisons et les protégeons, et vos droits à leur égard.
+        </p>
+        <p>
+          Nous respectons la <strong>Loi sur la protection des renseignements personnels et les documents
+          électroniques (LPRPDE)</strong> (fédérale) ainsi que la <strong>Loi 25 (Loi modernisant des
+          dispositions législatives en matière de protection des renseignements personnels)</strong>
+          du Québec.
         </p>
       </div>
 
       <div class="legal-section">
-        <h2>Données collectées</h2>
+        <h2>Responsable de la protection des données</h2>
+        <table class="legal-table">
+          <tbody>
+            <tr><th>Organisation</th><td>Export Monde Prestige Inc. (CAPITUNE)</td></tr>
+            <tr><th>Adresse</th><td>93 Rue des Castels, Lévis, QC G6V 2B8, Canada</td></tr>
+            <tr><th>Email</th><td><a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a></td></tr>
+            <tr><th>Téléphone</th><td><a href={`tel:${publicConfig.contactPhone}`}>{publicConfig.contactPhone}</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="legal-section">
+        <h2>Renseignements collectés</h2>
+        <p>Nous collectons uniquement les renseignements nécessaires à la fourniture de nos services :</p>
         <ul class="legal-list">
-          <li><strong>Informations de compte</strong> — nom, prénom, adresse email, téléphone, pays de résidence.</li>
-          <li><strong>Informations de projet</strong> — toute information que vous saisissez dans votre espace personnel (dossiers, documents, messages).</li>
-          <li><strong>Messages</strong> — échanges via la messagerie interne avec l'équipe CAPITUNE.</li>
-          <li><strong>Données techniques</strong> — cookies de session, journaux de connexion nécessaires au bon fonctionnement du service.</li>
+          <li>
+            <strong>Identité et coordonnées</strong> — nom, prénom, adresse email, numéro de téléphone,
+            pays et province de résidence, fournis lors de la création de votre compte.
+          </li>
+          <li>
+            <strong>Informations de projet</strong> — données relatives à votre dossier d'immigration ou
+            de démarches au Canada (documents téléversés, formulaires remplis, notes de suivi).
+          </li>
+          <li>
+            <strong>Communications</strong> — échanges via la messagerie interne entre vous et l'équipe CAPITUNE,
+            ainsi que toute correspondance email.
+          </li>
+          <li>
+            <strong>Informations de paiement</strong> — montants des transactions, référence des paiements,
+            justificatifs. <em>Nous ne stockons jamais vos données bancaires complètes</em> — les paiements
+            sont traités par des prestataires certifiés PCI-DSS (Stripe, PayPal).
+          </li>
+          <li>
+            <strong>Données techniques</strong> — adresse IP, type de navigateur, cookies de session
+            strictement nécessaires au bon fonctionnement du service, journaux d'accès.
+          </li>
         </ul>
       </div>
 
       <div class="legal-section">
         <h2>Finalités du traitement</h2>
         <ul class="legal-list">
-          <li><strong>Authentification & sécurité</strong> — fournir et sécuriser l'accès à votre espace personnalisé.</li>
-          <li><strong>Suivi de projet</strong> — permettre la communication et le suivi de votre dossier avec notre équipe.</li>
-          <li><strong>Paiements</strong> — gérer les transactions et justificatifs liés aux paiements sécurisés.</li>
-          <li><strong>Amélioration du service</strong> — diagnostic technique et prévention des abus.</li>
+          <li>
+            <strong>Création et gestion de compte</strong> — permettre l'accès sécurisé à votre espace personnel CAPITUNE.
+          </li>
+          <li>
+            <strong>Fourniture du service</strong> — suivi de vos démarches, communication avec votre conseiller,
+            accès aux outils professionnels (CV, formulaires, guides).
+          </li>
+          <li>
+            <strong>Traitement des paiements</strong> — gérer vos transactions pour les services souscrits
+            et émettre des reçus.
+          </li>
+          <li>
+            <strong>Support et assistance</strong> — répondre à vos demandes d'aide et résoudre les problèmes
+            liés à votre compte.
+          </li>
+          <li>
+            <strong>Sécurité et conformité</strong> — prévenir la fraude, détecter les comportements
+            malveillants et satisfaire aux obligations légales.
+          </li>
+          <li>
+            <strong>Amélioration des services</strong> — analyser l'utilisation de la plateforme
+            (données agrégées et anonymisées uniquement) afin d'améliorer l'expérience utilisateur.
+          </li>
         </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Partage des renseignements</h2>
+        <p>
+          CAPITUNE ne vend pas et ne loue pas vos renseignements personnels à des tiers. Vos données
+          peuvent être partagées uniquement dans les cas suivants :
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Prestataires de services</strong> — hébergement (Cloudflare, Neon), traitement des
+            paiements (Stripe, PayPal) — exclusivement dans le cadre nécessaire à la fourniture du service.
+          </li>
+          <li>
+            <strong>Obligations légales</strong> — si la loi l'exige ou en réponse à une demande valide
+            des autorités compétentes.
+          </li>
+          <li>
+            <strong>Votre consentement explicite</strong> — dans tout autre cas, uniquement avec votre
+            accord préalable.
+          </li>
+        </ul>
+        <p>
+          Nos partenaires sont contractuellement tenus de protéger vos données et ne peuvent les utiliser
+          que pour les fins prévues.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Durée de conservation</h2>
+        <ul class="legal-list">
+          <li>
+            <strong>Données de compte actif</strong> — conservées pendant toute la durée de votre relation
+            avec CAPITUNE et pour une période de 12 mois suivant la clôture de votre compte.
+          </li>
+          <li>
+            <strong>Données de paiement</strong> — 7 ans à compter de la transaction, conformément aux
+            obligations comptables et fiscales applicables au Canada.
+          </li>
+          <li>
+            <strong>Journaux techniques</strong> — maximum 90 jours à des fins de sécurité et de diagnostic.
+          </li>
+          <li>
+            <strong>Données de communications</strong> — pendant la durée de la relation contractuelle
+            et 12 mois après sa fin.
+          </li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Cookies et technologies similaires</h2>
+        <p>
+          CAPITUNE utilise des cookies <strong>strictement nécessaires</strong> au fonctionnement du service :
+          gestion de session d'authentification, préférences d'affichage, protection contre les attaques
+          CSRF. Nous n'utilisons pas de cookies publicitaires ni de traceurs tiers à des fins marketing.
+        </p>
+        <p>
+          Vous pouvez configurer votre navigateur pour refuser les cookies, mais certaines fonctionnalités
+          du service pourraient alors être indisponibles (connexion, tableau de bord).
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Sécurité de vos données</h2>
+        <p>
+          CAPITUNE met en œuvre des mesures techniques et organisationnelles appropriées pour protéger
+          vos renseignements contre l'accès non autorisé, la divulgation, l'altération ou la destruction :
+        </p>
+        <ul class="legal-list">
+          <li>Chiffrement des données en transit (TLS/HTTPS) et au repos.</li>
+          <li>Authentification sécurisée avec hachage des mots de passe (bcrypt).</li>
+          <li>Accès aux données restreint selon le principe du moindre privilège.</li>
+          <li>Surveillance des accès et journaux d'audit.</li>
+          <li>Infrastructure hébergée chez des prestataires certifiés (SOC 2, ISO 27001).</li>
+        </ul>
+        <p>
+          En cas d'incident de confidentialité susceptible de présenter un risque sérieux, nous vous
+          en informerons dans les délais prévus par la Loi 25 et la LPRPDE.
+        </p>
       </div>
 
       <div class="legal-section">
         <h2>Vos droits</h2>
         <p>
-          Conformément à la réglementation applicable, vous disposez d'un droit d'accès, de rectification,
-          de suppression et de portabilité de vos données personnelles.
-          Pour exercer ces droits, contactez-nous à l'adresse ci-dessous.
+          Conformément à la LPRPDE et à la Loi 25 du Québec, vous disposez des droits suivants sur
+          vos renseignements personnels :
+        </p>
+        <ul class="legal-list">
+          <li>
+            <strong>Droit d'accès</strong> — obtenir une copie des renseignements personnels que nous
+            détenons à votre sujet.
+          </li>
+          <li>
+            <strong>Droit de rectification</strong> — corriger tout renseignement inexact, incomplet
+            ou ambigu.
+          </li>
+          <li>
+            <strong>Droit à la suppression</strong> — demander l'effacement de vos renseignements
+            personnels, sous réserve des obligations légales de conservation.
+          </li>
+          <li>
+            <strong>Droit à la portabilité</strong> — recevoir vos données dans un format structuré
+            et lisible par machine.
+          </li>
+          <li>
+            <strong>Droit de retirer votre consentement</strong> — retirer à tout moment votre consentement
+            à un traitement basé sur celui-ci.
+          </li>
+          <li>
+            <strong>Droit de déposer une plainte</strong> — auprès du Commissariat à la protection
+            de la vie privée du Canada (<a href="https://www.priv.gc.ca" target="_blank" rel="noopener">priv.gc.ca</a>)
+            ou de la Commission d'accès à l'information du Québec (<a href="https://www.cai.gouv.qc.ca" target="_blank" rel="noopener">cai.gouv.qc.ca</a>).
+          </li>
+        </ul>
+      </div>
+
+      <div class="legal-section">
+        <h2>Exercer vos droits — Suppression de compte</h2>
+        <p>
+          Pour exercer l'un de vos droits, contactez notre responsable de la protection des données :
+        </p>
+        <div class="legal-rights-box">
+          <div class="legal-rights-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+            <div>
+              <strong>Par email</strong><br />
+              <a href={`mailto:${publicConfig.contactEmail}?subject=Demande%20suppression%20données%20personnelles`}>
+                {publicConfig.contactEmail}
+              </a>
+              <span class="legal-hint">(objet : « Demande suppression données personnelles »)</span>
+            </div>
+          </div>
+          <div class="legal-rights-row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div>
+              <strong>Par courrier</strong><br />
+              Export Monde Prestige Inc. – CAPITUNE<br />
+              93 Rue des Castels, Lévis, QC G6V 2B8, Canada
+            </div>
+          </div>
+        </div>
+        <p>
+          Nous nous engageons à accuser réception dans les <strong>5 jours ouvrables</strong> et à
+          traiter votre demande dans un délai maximal de <strong>30 jours</strong> à compter de la réception.
+          Si des délais supplémentaires sont nécessaires, nous vous en informerons par écrit.
+        </p>
+        <p>
+          Pour la <strong>suppression définitive de votre compte et de vos données</strong>, précisez-le
+          clairement dans votre message. Nous procéderons à l'effacement de vos renseignements dans nos
+          systèmes, sauf pour les données dont la conservation est imposée par la loi (données comptables, fiscales).
         </p>
       </div>
 
       <div class="legal-section">
-        <h2>Contact</h2>
+        <h2>Modifications de la politique</h2>
         <p>
-          Pour toute question relative à vos données personnelles :<br />
-          <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+          CAPITUNE se réserve le droit de modifier la présente politique à tout moment. En cas de
+          modification substantielle, une notification vous sera envoyée par email ou affichée de manière
+          visible sur la plateforme. La date de dernière mise à jour figure en haut de ce document.
         </p>
-        <p class="legal-update-date">Dernière mise à jour : février 2026.</p>
+        <p>
+          La poursuite de l'utilisation du service après notification vaut acceptation des modifications.
+        </p>
       </div>
 
     </div>
 
     <aside class="legal-aside">
       <div class="legal-aside-card">
-        <h3>Ressources</h3>
-        <p>Documents juridiques du site CAPITUNE.</p>
+        <h3>Vos droits</h3>
+        <p>Demander l'accès, la rectification ou la suppression de vos données.</p>
+        <a
+          href={`mailto:${publicConfig.contactEmail}?subject=Demande%20suppression%20données%20personnelles`}
+          class="legal-aside-link"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M3 6l9 6 9-6"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+          Supprimer mes données
+        </a>
+        <a
+          href={`mailto:${publicConfig.contactEmail}?subject=Demande%20accès%20données%20personnelles`}
+          class="legal-aside-link"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Accéder à mes données
+        </a>
+        <a href={`${baseUrl}/support`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Centre d'aide
+        </a>
+      </div>
+
+      <div class="legal-aside-card" style="margin-top:20px;">
+        <h3>Documents légaux</h3>
+        <p>Autres documents du site CAPITUNE.</p>
         <a href={`${baseUrl}/mentions-legales`} class="legal-aside-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Mentions légales
         </a>
-        <a href={`${baseUrl}/dashboard`} class="legal-aside-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Tableau de bord
-        </a>
         <a href={`${baseUrl}/contact`} class="legal-aside-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Nous contacter
+        </a>
+      </div>
+
+      <div class="legal-aside-card" style="margin-top:20px;">
+        <h3>Autorités</h3>
+        <p>Déposer une plainte auprès des autorités compétentes.</p>
+        <a href="https://www.priv.gc.ca" target="_blank" rel="noopener" class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Commissariat Canada
+        </a>
+        <a href="https://www.cai.gouv.qc.ca" target="_blank" rel="noopener" class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          CAI Québec
         </a>
       </div>
     </aside>
@@ -95,21 +330,80 @@ import { baseUrl } from '../lib/base-url';
 </MainLayout>
 
 <style>
-  .legal-update-date {
-    color: #8fa3ba !important;
-    font-size: 12px !important;
-    margin-top: 8px !important;
+  .legal-hero {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    padding: 64px 24px 48px;
+    text-align: center;
   }
+  .legal-hero-inner { max-width: 700px; margin: 0 auto; }
+  .legal-hero-badge {
+    display: inline-block;
+    background: rgba(255,148,8,.15);
+    color: #ff9408;
+    border: 1px solid rgba(255,148,8,.35);
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    margin-bottom: 18px;
+  }
+  .legal-hero h1 {
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: clamp(28px,5vw,48px);
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  .legal-hero p { color: #a8c4e0; font-size: 17px; margin: 0 0 6px; }
+  .legal-date { color: #6a8ca8 !important; font-size: 13px !important; }
+
+  .legal-body { background: #f7f9fc; padding: 56px 24px; }
+  .legal-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 768px) { .legal-container { grid-template-columns: 1fr; } }
+
+  .legal-section {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+  }
+  .legal-section h2 {
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: 18px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ff9408;
+    display: inline-block;
+  }
+  .legal-section p { color: #4a6880; font-size: 15px; line-height: 1.75; margin: 0 0 10px; }
+  .legal-section p:last-child { margin-bottom: 0; }
+  .legal-section a { color: #1f4b6e; font-weight: 600; }
+  .legal-section a:hover { color: #ff9408; }
+
   .legal-list {
-    margin: 0;
-    padding: 0 0 0 0;
+    margin: 8px 0 0;
+    padding: 0;
     list-style: none;
   }
   .legal-list li {
     color: #4a6880;
     font-size: 15px;
-    line-height: 1.7;
-    padding: 8px 0 8px 20px;
+    line-height: 1.75;
+    padding: 10px 0 10px 22px;
     border-bottom: 1px solid #f0f3f8;
     position: relative;
   }
@@ -121,73 +415,40 @@ import { baseUrl } from '../lib/base-url';
     color: #ff9408;
     font-weight: 700;
   }
+  .legal-list a { color: #1f4b6e; font-weight: 600; }
+  .legal-list a:hover { color: #ff9408; }
 
-  .legal-hero {
-    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
-    padding: 64px 24px 48px;
-    text-align: center;
-  }
-  .legal-hero-inner {
-    max-width: 700px;
-    margin: 0 auto;
-  }
-  .legal-hero h1 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: clamp(32px, 5vw, 52px);
-    color: #fff;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    margin: 0 0 12px;
-  }
-  .legal-hero p {
-    color: #a8c4e0;
-    font-size: 18px;
-    margin: 0;
-  }
+  .legal-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .legal-table th, .legal-table td { padding: 10px 12px; font-size: 14px; text-align: left; border-bottom: 1px solid #f0f3f8; vertical-align: top; }
+  .legal-table tr:last-child th, .legal-table tr:last-child td { border-bottom: none; }
+  .legal-table th { color: #8fa3ba; font-weight: 600; white-space: nowrap; width: 38%; }
+  .legal-table td { color: #2d4a62; font-weight: 500; }
+  .legal-table td a { color: #1f4b6e; font-weight: 600; }
+  .legal-table td a:hover { color: #ff9408; }
 
-  .legal-body {
+  .legal-rights-box {
     background: #f7f9fc;
-    padding: 56px 24px;
-  }
-  .legal-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 40px;
-    align-items: start;
-  }
-  @media (max-width: 768px) {
-    .legal-container { grid-template-columns: 1fr; }
-  }
-
-  .legal-section {
-    background: #fff;
     border: 1px solid #e4e8f0;
-    border-radius: 12px;
-    padding: 28px 32px;
-    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 12px 0 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
-  .legal-section h2 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: 20px;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: #0a1628;
-    margin: 0 0 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #ff9408;
-    display: inline-block;
-  }
-  .legal-section p {
+  .legal-rights-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 14px;
     color: #4a6880;
-    font-size: 15px;
-    line-height: 1.7;
-    margin: 0 0 10px;
+    line-height: 1.65;
   }
-  .legal-section p:last-child { margin-bottom: 0; }
-  .legal-section a { color: #1f4b6e; font-weight: 600; }
-  .legal-section a:hover { color: #ff9408; }
+  .legal-rights-row svg { flex-shrink: 0; color: #ff9408; margin-top: 2px; }
+  .legal-rights-row strong { color: #0a1628; display: block; margin-bottom: 2px; }
+  .legal-rights-row a { color: #1f4b6e; font-weight: 600; }
+  .legal-rights-row a:hover { color: #ff9408; }
+  .legal-hint { display: block; color: #8fa3ba; font-size: 12px; margin-top: 2px; }
 
   .legal-aside-card {
     background: #fff;
@@ -198,19 +459,14 @@ import { baseUrl } from '../lib/base-url';
     top: 24px;
   }
   .legal-aside-card h3 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: 18px;
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: 16px;
     letter-spacing: .04em;
     text-transform: uppercase;
     color: #0a1628;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
   }
-  .legal-aside-card > p {
-    color: #8fa3ba;
-    font-size: 13px;
-    margin: 0 0 20px;
-    line-height: 1.5;
-  }
+  .legal-aside-card > p { color: #8fa3ba; font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
   .legal-aside-link {
     display: flex;
     align-items: center;

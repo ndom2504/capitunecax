@@ -1,0 +1,430 @@
+---
+import MainLayout from '../layouts/main.astro';
+import { HeaderNav } from '../components/HeaderNav';
+import { FooterCustom } from '../components/FooterCustom';
+import { publicConfig } from '../lib/public-config';
+import { baseUrl } from '../lib/base-url';
+---
+
+<MainLayout>
+<HeaderNav client:only="react" />
+
+<section class="sup-hero">
+  <div class="sup-hero-inner">
+    <div class="sup-hero-badge">Assistance</div>
+    <h1>Centre de support</h1>
+    <p>Une question ? Un problème ? Notre équipe est là pour vous aider.</p>
+  </div>
+</section>
+
+<!-- Canaux de contact -->
+<section class="sup-channels">
+  <div class="sup-container">
+    <div class="sup-channels-grid">
+
+      <a href={`mailto:${publicConfig.contactEmail}`} class="sup-channel-card sup-channel-primary">
+        <div class="sup-channel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+        </div>
+        <div class="sup-channel-body">
+          <h3>Email</h3>
+          <p>Réponse sous 24–48 h (jours ouvrables)</p>
+          <span class="sup-channel-value">{publicConfig.contactEmail}</span>
+        </div>
+        <div class="sup-channel-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href={`tel:${publicConfig.contactPhone}`} class="sup-channel-card">
+        <div class="sup-channel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.44 2 2 0 0 1 3.58 2.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.03-1.03a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div class="sup-channel-body">
+          <h3>Téléphone</h3>
+          <p>Lun–Ven, 9 h – 17 h (heure de l'Est)</p>
+          <span class="sup-channel-value">{publicConfig.contactPhone}</span>
+        </div>
+        <div class="sup-channel-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+      <a href={`${baseUrl}/contact`} class="sup-channel-card">
+        <div class="sup-channel-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="sup-channel-body">
+          <h3>Formulaire de contact</h3>
+          <p>Pour les demandes détaillées ou les pièces jointes</p>
+          <span class="sup-channel-value">capitune.com/contact</span>
+        </div>
+        <div class="sup-channel-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sup-faq">
+  <div class="sup-container">
+    <div class="sup-section-header">
+      <h2>Questions fréquentes</h2>
+      <p>Les réponses aux questions les plus courantes de nos clients.</p>
+    </div>
+
+    <div class="sup-faq-grid">
+
+      <div class="sup-faq-group">
+        <div class="sup-faq-group-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Compte et connexion
+        </div>
+        <details class="sup-faq-item">
+          <summary>Je n'arrive pas à me connecter à mon compte.</summary>
+          <div class="sup-faq-answer">
+            <p>Vérifiez que votre email et mot de passe sont correct. Si vous avez oublié votre mot de passe, utilisez le lien « Mot de passe oublié » sur la <a href={`${baseUrl}/connexion`}>page de connexion</a>. Si le problème persiste, contactez-nous à <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Comment modifier mon adresse email ?</summary>
+          <div class="sup-faq-answer">
+            <p>La modification de l'email de votre compte doit être faite via notre équipe pour des raisons de sécurité. Envoyez une demande à <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a> depuis votre adresse email actuelle.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Comment supprimer mon compte ?</summary>
+          <div class="sup-faq-answer">
+            <p>Pour supprimer définitivement votre compte et vos données, envoyez une demande à <a href={`mailto:${publicConfig.contactEmail}?subject=Demande%20suppression%20compte`}>{publicConfig.contactEmail}</a> avec pour objet « Demande suppression compte ». Consultez notre <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a> pour plus d'informations.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="sup-faq-group">
+        <div class="sup-faq-group-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Paiements et facturation
+        </div>
+        <details class="sup-faq-item">
+          <summary>Comment effectuer un paiement ?</summary>
+          <div class="sup-faq-answer">
+            <p>Les paiements s'effectuent directement depuis votre tableau de bord, dans l'onglet « Paiements ». Nous acceptons les cartes Visa/Mastercard (via Stripe), PayPal, le virement bancaire et Interac.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Je n'ai pas reçu mon reçu de paiement.</summary>
+          <div class="sup-faq-answer">
+            <p>Un reçu est envoyé automatiquement par email après chaque transaction validée. Vérifiez votre dossier spam. Si vous ne le trouvez pas, contactez-nous à <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a> en précisant la date et le montant du paiement.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Mon paiement a été refusé. Que faire ?</summary>
+          <div class="sup-faq-answer">
+            <p>Vérifiez que les informations de votre carte sont correctes et que vous avez suffisamment de fonds. Certaines banques bloquent les transactions internationales — contactez votre banque pour autoriser le paiement, puis réessayez. En cas de problème persistant, écrivez-nous.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="sup-faq-group">
+        <div class="sup-faq-group-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Dossier et services
+        </div>
+        <details class="sup-faq-item">
+          <summary>Comment suivre l'avancement de mon dossier ?</summary>
+          <div class="sup-faq-answer">
+            <p>L'avancement de votre dossier est visible en temps réel dans votre <a href={`${baseUrl}/dashboard`}>tableau de bord</a>. Vous pouvez aussi consulter vos messages internes pour les mises à jour de votre conseiller.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Quels sont les délais de traitement ?</summary>
+          <div class="sup-faq-answer">
+            <p>Les délais varient selon le type de service souscrit et les procédures gouvernementales en vigueur. Votre conseiller CAPITUNE vous communique une estimation lors de l'ouverture de votre dossier.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Comment transmettre des documents à mon conseiller ?</summary>
+          <div class="sup-faq-answer">
+            <p>Vous pouvez transmettre vos documents directement via la messagerie de votre tableau de bord, ou par email à <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a> en précisant votre nom et votre numéro de dossier.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="sup-faq-group">
+        <div class="sup-faq-group-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Données et confidentialité
+        </div>
+        <details class="sup-faq-item">
+          <summary>Comment exercer mes droits sur mes données personnelles ?</summary>
+          <div class="sup-faq-answer">
+            <p>Envoyez un email à <a href={`mailto:${publicConfig.contactEmail}?subject=Demande%20données%20personnelles`}>{publicConfig.contactEmail}</a> en précisant votre demande (accès, rectification, suppression ou portabilité). Consultez notre <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a> pour les détails.</p>
+          </div>
+        </details>
+        <details class="sup-faq-item">
+          <summary>Mes données sont-elles sécurisées ?</summary>
+          <div class="sup-faq-answer">
+            <p>Oui. CAPITUNE chiffre toutes vos données en transit (HTTPS/TLS) et au repos. Vos mots de passe ne sont jamais stockés en clair. Nous hébergeons notre infrastructure chez des prestataires certifiés SOC 2. Voir notre <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a>.</p>
+          </div>
+        </details>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Bouton contact -->
+<section class="sup-cta">
+  <div class="sup-container">
+    <div class="sup-cta-box">
+      <div class="sup-cta-text">
+        <h2>Vous n'avez pas trouvé votre réponse ?</h2>
+        <p>Notre équipe répond à toutes vos questions du lundi au vendredi, de 9 h à 17 h (heure de l'Est).</p>
+      </div>
+      <div class="sup-cta-actions">
+        <a href={`mailto:${publicConfig.contactEmail}`} class="sup-btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+          Envoyer un email
+        </a>
+        <a href={`tel:${publicConfig.contactPhone}`} class="sup-btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.44 2 2 0 0 1 3.58 2.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.03-1.03a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          {publicConfig.contactPhone}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<FooterCustom client:only="react" />
+</MainLayout>
+
+<style>
+  /* Hero */
+  .sup-hero {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    padding: 64px 24px 48px;
+    text-align: center;
+  }
+  .sup-hero-inner { max-width: 700px; margin: 0 auto; }
+  .sup-hero-badge {
+    display: inline-block;
+    background: rgba(255,148,8,.15);
+    color: #ff9408;
+    border: 1px solid rgba(255,148,8,.35);
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    margin-bottom: 18px;
+  }
+  .sup-hero h1 {
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: clamp(28px,5vw,50px);
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 14px;
+  }
+  .sup-hero p { color: #a8c4e0; font-size: 18px; margin: 0; }
+
+  /* Layout */
+  .sup-container { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+  /* Channels */
+  .sup-channels { background: #fff; padding: 56px 24px; }
+  .sup-channels-grid {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 20px;
+  }
+  @media (max-width: 800px) { .sup-channels-grid { grid-template-columns: 1fr; } }
+
+  .sup-channel-card {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: #f7f9fc;
+    border: 1px solid #e4e8f0;
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-decoration: none;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+  }
+  .sup-channel-card:hover {
+    border-color: #ff9408;
+    box-shadow: 0 4px 20px rgba(255,148,8,.12);
+    transform: translateY(-2px);
+  }
+  .sup-channel-primary {
+    background: #0a1628;
+    border-color: #1a3a5c;
+  }
+  .sup-channel-primary:hover { border-color: #ff9408; }
+  .sup-channel-primary .sup-channel-body h3 { color: #fff; }
+  .sup-channel-primary .sup-channel-body p { color: #a8c4e0; }
+  .sup-channel-primary .sup-channel-value { color: #ff9408 !important; }
+  .sup-channel-primary .sup-channel-arrow { color: #ff9408; }
+  .sup-channel-primary .sup-channel-icon { background: rgba(255,148,8,.15); }
+  .sup-channel-primary .sup-channel-icon svg { color: #ff9408; }
+
+  .sup-channel-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(31,75,110,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .sup-channel-icon svg { color: #1f4b6e; }
+  .sup-channel-body { flex: 1; min-width: 0; }
+  .sup-channel-body h3 { font-size: 15px; font-weight: 700; color: #0a1628; margin: 0 0 3px; }
+  .sup-channel-body p { font-size: 12px; color: #8fa3ba; margin: 0 0 6px; line-height: 1.4; }
+  .sup-channel-value { font-size: 13px; font-weight: 600; color: #1f4b6e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .sup-channel-arrow { color: #c0ccd8; flex-shrink: 0; }
+
+  /* FAQ */
+  .sup-faq { background: #f7f9fc; padding: 56px 24px; }
+  .sup-section-header { text-align: center; margin-bottom: 40px; }
+  .sup-section-header h2 {
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: clamp(24px,3vw,36px);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #0a1628;
+    margin: 0 0 10px;
+  }
+  .sup-section-header p { color: #8fa3ba; font-size: 16px; margin: 0; }
+
+  .sup-faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 768px) { .sup-faq-grid { grid-template-columns: 1fr; } }
+
+  .sup-faq-group {
+    background: #fff;
+    border: 1px solid #e4e8f0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .sup-faq-group-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: 13px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #0a1628;
+    padding: 18px 24px;
+    border-bottom: 1px solid #e4e8f0;
+    background: #f7f9fc;
+  }
+  .sup-faq-group-title svg { color: #ff9408; flex-shrink: 0; }
+
+  .sup-faq-item {
+    border-bottom: 1px solid #f0f3f8;
+  }
+  .sup-faq-item:last-child { border-bottom: none; }
+  .sup-faq-item summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f4b6e;
+    transition: color .2s, background .2s;
+    user-select: none;
+  }
+  .sup-faq-item summary::-webkit-details-marker { display: none; }
+  .sup-faq-item summary::after {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff9408' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") center/contain no-repeat;
+    flex-shrink: 0;
+    transition: transform .25s;
+  }
+  .sup-faq-item[open] summary::after { transform: rotate(180deg); }
+  .sup-faq-item summary:hover { color: #ff9408; background: #fef9f3; }
+  .sup-faq-item[open] summary { color: #ff9408; }
+
+  .sup-faq-answer {
+    padding: 4px 24px 18px;
+    animation: fadeIn .2s ease;
+  }
+  .sup-faq-answer p { color: #4a6880; font-size: 14px; line-height: 1.75; margin: 8px 0 0; }
+  .sup-faq-answer a { color: #1f4b6e; font-weight: 600; }
+  .sup-faq-answer a:hover { color: #ff9408; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* CTA */
+  .sup-cta { background: #fff; padding: 56px 24px; }
+  .sup-cta-box {
+    background: linear-gradient(135deg, #0a1628 0%, #1a3a5c 100%);
+    border-radius: 20px;
+    padding: 48px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .sup-cta-text h2 {
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: clamp(20px,2.5vw,30px);
+    color: #fff;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .sup-cta-text p { color: #a8c4e0; font-size: 15px; margin: 0; max-width: 500px; }
+  .sup-cta-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+  .sup-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #ff9408;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 14px 26px;
+    border-radius: 50px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .2s, transform .15s, box-shadow .2s;
+  }
+  .sup-btn-primary:hover { background: #e07800; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,148,8,.4); }
+
+  .sup-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 14px 26px;
+    border-radius: 50px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .2s, border-color .2s;
+  }
+  .sup-btn-secondary:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.4); }
+</style>

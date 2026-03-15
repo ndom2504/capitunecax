@@ -2,11 +2,8 @@
 import MainLayout from '../layouts/main.astro';
 import { HeaderNav } from '../components/HeaderNav';
 import { FooterCustom } from '../components/FooterCustom';
-import { getContactAddressLines, publicConfig } from '../lib/public-config';
+import { publicConfig } from '../lib/public-config';
 import { baseUrl } from '../lib/base-url';
-
-const addressLines = getContactAddressLines();
-const locationLine = addressLines[addressLines.length - 1] ?? '';
 ---
 
 <MainLayout>
@@ -14,8 +11,10 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
 
 <section class="legal-hero">
   <div class="legal-hero-inner">
+    <div class="legal-hero-badge">Document légal</div>
     <h1>Mentions légales</h1>
-    <p>Informations légales et éditeur du site CAPITUNE.</p>
+    <p>Informations légales relatives au site <strong>capitune.com</strong> et à son éditeur.</p>
+    <p class="legal-date">Dernière mise à jour : 14 mars 2026</p>
   </div>
 </section>
 
@@ -25,36 +24,119 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
     <div class="legal-content">
 
       <div class="legal-section">
-        <h2>Éditeur</h2>
+        <h2>Éditeur du site</h2>
         <p>
-          <strong>CAPITUNE</strong>{locationLine ? ` — ${locationLine}` : ''}<br />
-          Propulsé par <strong>Export Monde Prestige Inc.</strong>
+          Le site <strong>capitune.com</strong> est édité par :
         </p>
+        <table class="legal-table">
+          <tbody>
+            <tr><th>Raison sociale</th><td>Export Monde Prestige Inc.</td></tr>
+            <tr><th>Marque commerciale</th><td>CAPITUNE</td></tr>
+            <tr><th>Statut juridique</th><td>Société par actions (Inc.), incorporée au Québec, Canada</td></tr>
+            <tr><th>Adresse</th><td>93 Rue des Castels, Lévis, QC G6V 2B8, Canada</td></tr>
+            <tr><th>Province</th><td>Québec, Canada</td></tr>
+            <tr><th>Email</th><td><a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a></td></tr>
+            <tr><th>Téléphone</th><td><a href={`tel:${publicConfig.contactPhone}`}>{publicConfig.contactPhone}</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="legal-section">
+        <h2>Directeur de la publication</h2>
         <p>
-          Email : <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+          Le directeur de la publication est le représentant légal d'<strong>Export Monde Prestige Inc.</strong>,
+          société responsable de l'édition et de la gestion du site capitune.com.
         </p>
       </div>
 
       <div class="legal-section">
         <h2>Hébergement</h2>
         <p>
-          L'hébergement est assuré via l'infrastructure de déploiement du projet (selon l'environnement de production en vigueur).
+          Le site est hébergé et déployé via les infrastructures suivantes :
+        </p>
+        <table class="legal-table">
+          <tbody>
+            <tr><th>Hébergeur principal</th><td>Cloudflare, Inc. — 101 Townsend St, San Francisco, CA 94107, États-Unis</td></tr>
+            <tr><th>Plateforme CDN / DNS</th><td>Cloudflare Workers &amp; Pages</td></tr>
+            <tr><th>Base de données</th><td>Neon (Neon Tech, Inc.) — infrastructure PostgreSQL distribuée</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Ces prestataires disposent de leurs propres politiques de confidentialité et de sécurité accessibles
+          sur leurs sites respectifs (<a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com</a>,
+          <a href="https://neon.tech/privacy-policy" target="_blank" rel="noopener">neon.tech</a>).
         </p>
       </div>
 
       <div class="legal-section">
         <h2>Propriété intellectuelle</h2>
         <p>
-          Les contenus du site (textes, visuels, logos, éléments graphiques) sont protégés par le droit de la propriété intellectuelle.
-          Toute reproduction, distribution ou utilisation sans autorisation écrite préalable est strictement interdite.
+          L'ensemble des contenus présents sur le site capitune.com — incluant, sans s'y limiter, les textes,
+          photographies, illustrations, logos, icônes, vidéos, interfaces graphiques et bases de données —
+          est la propriété exclusive d'<strong>Export Monde Prestige Inc.</strong> ou de ses partenaires,
+          et est protégé par les lois canadiennes et internationales sur le droit d'auteur et la propriété intellectuelle.
+        </p>
+        <p>
+          Toute reproduction, représentation, modification, publication, transmission ou exploitation partielle
+          ou totale des contenus est strictement interdite sans autorisation écrite préalable de l'éditeur.
+          Toute demande doit être adressée à <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Droit applicable et juridiction</h2>
+        <p>
+          Les présentes mentions légales sont régies par les lois en vigueur au <strong>Québec, Canada</strong>,
+          notamment la <em>Loi sur les contrats des organismes publics</em>, la <em>Loi concernant le cadre
+          juridique des technologies de l'information</em> (LCCJTI) et les dispositions pertinentes du
+          <em>Code civil du Québec</em>.
+        </p>
+        <p>
+          Tout litige relatif au site capitune.com relève de la compétence exclusive des tribunaux compétents
+          de la province de <strong>Québec, Canada</strong>.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Limitation de responsabilité</h2>
+        <p>
+          CAPITUNE s'efforce de fournir des informations exactes et à jour. Toutefois, l'éditeur ne saurait
+          garantir l'exactitude, la complétude ou l'actualité des informations présentes sur le site.
+          CAPITUNE décline toute responsabilité pour tout dommage direct ou indirect résultant de l'utilisation
+          du site, d'une interruption de service ou de l'accès à des sites tiers liés.
+        </p>
+        <p>
+          Les hyperliens vers des sites tiers sont fournis à titre informatif. CAPITUNE n'exerce aucun contrôle
+          sur ces sites et décline toute responsabilité quant à leur contenu.
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Accessibilité</h2>
+        <p>
+          CAPITUNE s'engage à rendre son service accessible au plus grand nombre. Si vous rencontrez une
+          difficulté d'accessibilité, veuillez nous contacter à
+          <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a> afin que nous puissions
+          y remédier dans les meilleurs délais.
         </p>
       </div>
 
       <div class="legal-section">
         <h2>Données personnelles</h2>
         <p>
-          Pour en savoir plus sur la collecte et le traitement de vos données,
-          consultez notre <a href={`${baseUrl}/confidentialite`}>politique de confidentialité</a>.
+          La collecte et le traitement de vos données personnelles sont encadrés par notre
+          <a href={`${baseUrl}/confidentialite`}>Politique de confidentialité</a> détaillée, conforme à la
+          <em>Loi 25 (Loi modernisant des dispositions législatives en matière de protection des renseignements personnels)</em>
+          et à la <em>Loi sur la protection des renseignements personnels et les documents électroniques</em> (LPRPDE).
+        </p>
+      </div>
+
+      <div class="legal-section">
+        <h2>Modifications</h2>
+        <p>
+          CAPITUNE se réserve le droit de modifier les présentes mentions légales à tout moment.
+          Les utilisateurs sont invités à les consulter régulièrement. Toute modification prend effet
+          dès sa publication sur le site.
         </p>
       </div>
 
@@ -62,20 +144,37 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
 
     <aside class="legal-aside">
       <div class="legal-aside-card">
-        <h3>Besoin d'aide ?</h3>
-        <p>Notre équipe est disponible pour toute question.</p>
+        <h3>Documents légaux</h3>
+        <p>Tous les documents juridiques de CAPITUNE.</p>
+        <a href={`${baseUrl}/confidentialite`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Politique de confidentialité
+        </a>
+        <a href={`${baseUrl}/support`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Support &amp; aide
+        </a>
+        <a href={`${baseUrl}/contact`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Nous contacter
+        </a>
+      </div>
+
+      <div class="legal-aside-card" style="margin-top:20px;">
+        <h3>Contact légal</h3>
+        <p>Pour toute question d'ordre juridique :</p>
         <a href={`mailto:${publicConfig.contactEmail}`} class="legal-aside-link">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
           {publicConfig.contactEmail}
         </a>
-        <a href={`${baseUrl}/dashboard`} class="legal-aside-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          Tableau de bord
+        <a href={`tel:${publicConfig.contactPhone}`} class="legal-aside-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.44 2 2 0 0 1 3.58 2.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.03-1.03a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          {publicConfig.contactPhone}
         </a>
-        <a href={`${baseUrl}/contact`} class="legal-aside-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          Formulaire de contact
-        </a>
+        <div class="legal-aside-address">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>93 Rue des Castels<br />Lévis, QC G6V 2B8<br />Canada</span>
+        </div>
       </div>
     </aside>
 
@@ -91,28 +190,33 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
     padding: 64px 24px 48px;
     text-align: center;
   }
-  .legal-hero-inner {
-    max-width: 700px;
-    margin: 0 auto;
+  .legal-hero-inner { max-width: 700px; margin: 0 auto; }
+  .legal-hero-badge {
+    display: inline-block;
+    background: rgba(255,148,8,.15);
+    color: #ff9408;
+    border: 1px solid rgba(255,148,8,.35);
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    margin-bottom: 18px;
   }
   .legal-hero h1 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: clamp(32px, 5vw, 52px);
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: clamp(28px,5vw,48px);
     color: #fff;
     letter-spacing: .04em;
     text-transform: uppercase;
     margin: 0 0 12px;
   }
-  .legal-hero p {
-    color: #a8c4e0;
-    font-size: 18px;
-    margin: 0;
-  }
+  .legal-hero p { color: #a8c4e0; font-size: 17px; margin: 0 0 6px; }
+  .legal-hero p strong { color: #fff; }
+  .legal-date { color: #6a8ca8 !important; font-size: 13px !important; }
 
-  .legal-body {
-    background: #f7f9fc;
-    padding: 56px 24px;
-  }
+  .legal-body { background: #f7f9fc; padding: 56px 24px; }
   .legal-container {
     max-width: 1000px;
     margin: 0 auto;
@@ -121,11 +225,8 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
     gap: 40px;
     align-items: start;
   }
-  @media (max-width: 768px) {
-    .legal-container { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 768px) { .legal-container { grid-template-columns: 1fr; } }
 
-  .legal-content {}
   .legal-section {
     background: #fff;
     border: 1px solid #e4e8f0;
@@ -134,27 +235,29 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
     margin-bottom: 20px;
   }
   .legal-section h2 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: 20px;
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: 18px;
     letter-spacing: .04em;
     text-transform: uppercase;
     color: #0a1628;
-    margin: 0 0 14px;
+    margin: 0 0 16px;
     padding-bottom: 10px;
     border-bottom: 2px solid #ff9408;
     display: inline-block;
   }
-  .legal-section p {
-    color: #4a6880;
-    font-size: 15px;
-    line-height: 1.7;
-    margin: 0 0 10px;
-  }
+  .legal-section p { color: #4a6880; font-size: 15px; line-height: 1.75; margin: 0 0 10px; }
   .legal-section p:last-child { margin-bottom: 0; }
   .legal-section a { color: #1f4b6e; font-weight: 600; }
   .legal-section a:hover { color: #ff9408; }
 
-  .legal-aside {}
+  .legal-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .legal-table th, .legal-table td { padding: 10px 12px; font-size: 14px; text-align: left; border-bottom: 1px solid #f0f3f8; vertical-align: top; }
+  .legal-table tr:last-child th, .legal-table tr:last-child td { border-bottom: none; }
+  .legal-table th { color: #8fa3ba; font-weight: 600; white-space: nowrap; width: 40%; }
+  .legal-table td { color: #2d4a62; font-weight: 500; }
+  .legal-table td a { color: #1f4b6e; font-weight: 600; }
+  .legal-table td a:hover { color: #ff9408; }
+
   .legal-aside-card {
     background: #fff;
     border: 1px solid #e4e8f0;
@@ -164,19 +267,14 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
     top: 24px;
   }
   .legal-aside-card h3 {
-    font-family: 'Anton SC', 'Anton', sans-serif;
-    font-size: 18px;
+    font-family: 'Anton SC','Anton',sans-serif;
+    font-size: 16px;
     letter-spacing: .04em;
     text-transform: uppercase;
     color: #0a1628;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
   }
-  .legal-aside-card > p {
-    color: #8fa3ba;
-    font-size: 13px;
-    margin: 0 0 20px;
-    line-height: 1.5;
-  }
+  .legal-aside-card > p { color: #8fa3ba; font-size: 13px; margin: 0 0 16px; line-height: 1.5; }
   .legal-aside-link {
     display: flex;
     align-items: center;
@@ -191,4 +289,14 @@ const locationLine = addressLines[addressLines.length - 1] ?? '';
   .legal-aside-link:last-child { border-bottom: none; }
   .legal-aside-link:hover { color: #ff9408; }
   .legal-aside-link svg { flex-shrink: 0; color: #ff9408; }
+  .legal-aside-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    font-size: 13px;
+    color: #4a6880;
+    line-height: 1.6;
+  }
+  .legal-aside-address svg { flex-shrink: 0; color: #ff9408; margin-top: 2px; }
 </style>
