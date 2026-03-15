@@ -2,6 +2,7 @@
 import MainLayout from '../layouts/main.astro';
 import { baseUrl } from '../lib/base-url';
 import { getServiceById } from '../lib/service-catalog';
+import { FooterCustom } from '../components/FooterCustom';
 import { publicConfig, getContactAddressLines } from '../lib/public-config';
 
 const consultation = getServiceById('consultation');
@@ -467,7 +468,7 @@ const landingServices = [
               </div>
             </div>
 
-            <footer>
+            <footer style="display:none;">
               <div class="Cntr">
                 <p>© 2026 <strong>CAPITUNE</strong> – Tous droits réservés. | <a href={`${baseUrl}/connexion`} style="color:#a9abad;">Espace Client</a></p>
               </div>
@@ -477,6 +478,8 @@ const landingServices = [
       </div>
     </div>
   </div>
+
+  <FooterCustom client:only="react" />
 
   <div id="loader-wrapper">
     <div id="loader"></div>

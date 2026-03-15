@@ -148,7 +148,7 @@ export function HeaderNav() {
 
           <nav className="cap-nav">
             <a href={`${baseUrl}/`}>Accueil</a>
-            <a href={`${baseUrl}/a-propos`}>Ã€ propos</a>
+            <a href={`${baseUrl}/a-propos`}>À propos</a>
             <a href={`${baseUrl}/#services`}>Services</a>
             <a href={`${baseUrl}/contact`}>Contact</a>
             <a href={`${baseUrl}/support`}>Support</a>
@@ -173,7 +173,7 @@ export function HeaderNav() {
         {isMenuOpen && (
           <div className="cap-mobile-menu">
             <a href={`${baseUrl}/`} onClick={() => setIsMenuOpen(false)}>Accueil</a>
-            <a href={`${baseUrl}/a-propos`} onClick={() => setIsMenuOpen(false)}>Ã€ propos</a>
+            <a href={`${baseUrl}/a-propos`} onClick={() => setIsMenuOpen(false)}>À propos</a>
             <a href={`${baseUrl}/#services`} onClick={() => setIsMenuOpen(false)}>Services</a>
             <a href={`${baseUrl}/contact`} onClick={() => setIsMenuOpen(false)}>Contact</a>
             <a href={`${baseUrl}/support`} onClick={() => setIsMenuOpen(false)}>Support</a>

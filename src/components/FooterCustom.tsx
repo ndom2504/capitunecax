@@ -103,7 +103,7 @@ export function FooterCustom() {
                   <polyline points="10 17 15 12 10 7"/>
                   <line x1="15" y1="12" x2="3" y2="12"/>
                 </svg>
-                AccÃ©der Ã  mon espace
+                Accéder à mon espace
               </a>
             </div>
 
@@ -112,19 +112,19 @@ export function FooterCustom() {
               <div className="cap-footer-col-title">Navigation</div>
               <ul className="cap-footer-links">
                 <li><a href={`${baseUrl}/`}>Accueil</a></li>
-                <li><a href={`${baseUrl}/a-propos`}>Ã€ propos</a></li>
+                <li><a href={`${baseUrl}/a-propos`}>À propos</a></li>
                 <li><a href={`${baseUrl}/#services`}>Services</a></li>
                 <li><a href={`${baseUrl}/contact`}>Contact</a></li>
                 <li><a href={`${baseUrl}/support`}>Support</a></li>
               </ul>
             </div>
 
-            {/* LÃ©gal */}
+            {/* Légal */}
             <div>
-              <div className="cap-footer-col-title">LÃ©gal</div>
+              <div className="cap-footer-col-title">Légal</div>
               <ul className="cap-footer-links">
-                <li><a href={`${baseUrl}/mentions-legales`}>Mentions lÃ©gales</a></li>
-                <li><a href={`${baseUrl}/confidentialite`}>ConfidentialitÃ©</a></li>
+                <li><a href={`${baseUrl}/mentions-legales`}>Mentions légales</a></li>
+                <li><a href={`${baseUrl}/confidentialite`}>Confidentialité</a></li>
                 <li><a href={`${baseUrl}/support`}>Centre d'aide</a></li>
               </ul>
             </div>
@@ -143,7 +143,7 @@ export function FooterCustom() {
                 </div>
                 <div className="cap-footer-contact-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span>93 Rue des Castels, LÃ©vis<br />QC G6V 2B8, Canada</span>
+                  <span>93 Rue des Castels, Lévis<br />QC G6V 2B8, Canada</span>
                 </div>
               </div>
             </div>
@@ -152,10 +152,10 @@ export function FooterCustom() {
 
           {/* Bottom */}
           <div className="cap-footer-bottom">
-            <p>Â© {currentYear} CAPITUNE â€” Export Monde Prestige Inc. Tous droits rÃ©servÃ©s.</p>
+            <p>© {currentYear} CAPITUNE – Export Monde Prestige Inc. Tous droits réservés.</p>
             <div className="cap-footer-legal">
-              <a href={`${baseUrl}/mentions-legales`}>Mentions lÃ©gales</a>
-              <a href={`${baseUrl}/confidentialite`}>Politique de confidentialitÃ©</a>
+              <a href={`${baseUrl}/mentions-legales`}>Mentions légales</a>
+              <a href={`${baseUrl}/confidentialite`}>Politique de confidentialité</a>
               <a href={`${baseUrl}/support`}>Centre d'aide</a>
             </div>
           </div>
