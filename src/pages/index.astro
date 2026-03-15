@@ -59,11 +59,34 @@ const landingServices = [
   <link href="https://fonts.googleapis.com/css?family=Oswald:400,700,300" rel="stylesheet" type="text/css" />
 
   <style is:global>
+    /* ── Header layout fix ── */
+    header .Center { display:flex !important; align-items:center; justify-content:space-between; }
+    header .site-logo { float:none !important; padding:0 !important; height:auto !important; flex-shrink:0; }
     .site-logo a { display:inline-block; line-height:0; }
-    .site-logo img { height: 64px; width: auto; display:block; }
-    header .site-logo { padding: 0 !important; height: 105px; display:flex; align-items:center; }
-    header.smaller .site-logo { height: 60px; }
+    .site-logo img { height: 56px; width: auto; display:block; }
     header.smaller .site-logo img { height: 36px; }
+    #mobile_sec { flex:1; display:flex; align-items:center; justify-content:flex-end; }
+    .Navigation { float:none !important; width:auto !important; margin-right:0 !important; }
+    /* ── Bouton Connexion coin droit ── */
+    .header-cta-connexion {
+      display:inline-flex; align-items:center; gap:8px; flex-shrink:0;
+      background:#ff9408; color:#fff !important;
+      padding:10px 24px; border-radius:50px;
+      font-weight:700; font-size:14px; font-family:'Open Sans',sans-serif;
+      text-decoration:none; white-space:nowrap; margin-left:18px;
+      box-shadow:0 4px 14px rgba(255,148,8,0.35);
+      transition:background 0.2s, transform 0.15s;
+    }
+    .header-cta-connexion:hover { background:#e08300; transform:translateY(-1px); }
+    header.smaller .header-cta-connexion { padding:7px 16px; font-size:13px; margin-left:12px; }
+    .Navigation li a { padding:0 22px !important; line-height:105px !important; display:block; }
+    header.smaller .Navigation li a { line-height:60px !important; }
+    .Navigation li { height:105px !important; }
+    header.smaller .Navigation li { height:60px !important; }
+    /* Desktop : cacher le li connexion du nav, montrer le bouton CTA */
+    @media (min-width: 769px) { .mobile-only-nav-item { display:none !important; } }
+    /* Mobile : cacher le bouton CTA desktop, laisser le li du menu */
+    @media (max-width: 768px) { .desktop-only-cta { display:none !important; } }
 
     /* Vidéo hero arrière-plan */
     .Banner_sec { position: relative; overflow: hidden; }
@@ -92,7 +115,7 @@ const landingServices = [
       <header>
         <div class="Center">
           <div class="site-logo">
-            <a href={`${baseUrl}/`}><img src="/templatemo_473_november/logo/Logo%20moderne%20de%20CAPITUNE%20avec%20halo%20lumineux.png" alt="CAPITUNE" /></a>
+            <a href={`${baseUrl}/`}><img src="/logo/capitune.png" alt="CAPITUNE" /></a>
           </div>
           <div id="mobile_sec">
             <div class="mobile"><i class="fa fa-bars"></i><i class="fa fa-times"></i></div>
@@ -104,11 +127,21 @@ const landingServices = [
                   <li><a href="#services">Services</a><span class="menu-item-bg"></span></li>
                   <li><a href="#app-mobile">Application</a><span class="menu-item-bg"></span></li>
                   <li><a href="#contact">Contact</a><span class="menu-item-bg"></span></li>
-                  <li><a href={`${baseUrl}/connexion`}>Connexion</a><span class="menu-item-bg"></span></li>
+                  <!-- Menu mobile : Connexion reste ici -->
+                  <li class="mobile-only-nav-item"><a href={`${baseUrl}/connexion`}>Connexion</a><span class="menu-item-bg"></span></li>
                 </ul>
               </nav>
             </div>
           </div>
+          <!-- Bouton Connexion coin droit (desktop) -->
+          <a href={`${baseUrl}/connexion`} class="header-cta-connexion desktop-only-cta">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Connexion
+          </a>
           <div class="clear"></div>
         </div>
       </header>
