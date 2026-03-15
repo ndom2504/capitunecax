@@ -2,75 +2,13 @@
 import MainLayout from "../../layouts/main.astro";
 import { HeaderNav } from "../../components/HeaderNav";
 import { FooterCustom } from "../../components/FooterCustom";
-import CvCreator from "../../components/carriere/CvCreator";
-
-const isApp = Astro.url.searchParams.get('source') === 'app';
-
-const service = Astro.url.searchParams.get("service") ?? "";
 
 // Affichage conditionnel selon session
 const sessionCookie = Astro.cookies.get('capitune_session');
 const isLoggedIn = !!sessionCookie?.value;
-
-const CV_SERVICES = [
-  {
-    id: "cv_canada",
-    icon: "🍁",
-    label: "CV Canada",
-    desc: "CV standard canadien, bilingue, adapté au marché national.",
-    priceBase: 10, priceForfait: 2,
-    color: "#e8f4ec",
-    border: "#a8d5b5",
-  },
-  {
-    id: "cv_quebec",
-    icon: "⚜️",
-    label: "CV Québec",
-    desc: "Marché québécois, rédigé en français, normes du Québec.",
-    priceBase: 10, priceForfait: 2,
-    color: "#eef2fb",
-    border: "#b8caf5",
-  },
-  {
-    id: "cv_etudiant",
-    icon: "🎓",
-    label: "CV Étudiant",
-    desc: "Premier emploi ou stage au Canada — valoriser formations et bénévolat.",
-    priceBase: 8, priceForfait: 2,
-    color: "#fdf5e8",
-    border: "#f5d58a",
-  },
-  {
-    id: "cv_immigration",
-    icon: "✈️",
-    label: "CV Immigration",
-    desc: "Entrée Express, PNP — profil immigration mis en avant.",
-    priceBase: 12, priceForfait: 3,
-    color: "#fff0ec",
-    border: "#f5b8a0",
-  },
-  {
-    id: "cover_letter",
-    icon: "✉️",
-    label: "Lettre de motivation",
-    desc: "Cover letter bilingue percutante pour le marché canadien.",
-    priceBase: 10, priceForfait: 2,
-    color: "#f5eefb",
-    border: "#c9a8f5",
-  },
-  {
-    id: "letter_ircc",
-    icon: "🏛️",
-    label: "Lettre IRCC",
-    desc: "Lettre d'explication pour Immigration, Réfugiés et Citoyenneté Canada.",
-    priceBase: 15, priceForfait: 3,
-    color: "#ecf8ff",
-    border: "#90cef5",
-  },
-];
 ---
 
-<MainLayout pageClass={isApp ? 'is-mobile-app' : ''}>
+<MainLayout>
 
   {isLoggedIn ? (
     <div class="cvc-dash-topbar">
@@ -84,105 +22,19 @@ const CV_SERVICES = [
 
   <main class="cvc-page">
 
-    {!isApp ? (
-      <div class="cap-disabled-wrap">
-        <div class="cap-disabled-card">
-          <div class="cap-disabled-icon">🛠️</div>
-          <h1 class="cap-disabled-title">Fonctionnalité temporairement indisponible sur le web</h1>
-          <p class="cap-disabled-sub">
-            Le module Carrière (CV, lettres, analyse) est momentanément désactivé sur la version web.
-            Merci d’utiliser l’application mobile.
-          </p>
-          <div class="cap-disabled-actions">
-            <a class="cap-disabled-btn" href="/dashboard">Retour au dashboard</a>
-            <a class="cap-disabled-link" href="/contact">Contacter le support</a>
-          </div>
+    <div class="cap-disabled-wrap">
+      <div class="cap-disabled-card">
+        <div class="cap-disabled-icon">🛠️</div>
+        <h1 class="cap-disabled-title">Créateur de CV temporairement indisponible</h1>
+        <p class="cap-disabled-sub">
+          Le créateur de CV (CV, lettres, analyse) est momentanément désactivé.
+        </p>
+        <div class="cap-disabled-actions">
+          <a class="cap-disabled-btn" href="/dashboard">Retour au dashboard</a>
+          <a class="cap-disabled-link" href="/contact">Contacter le support</a>
         </div>
       </div>
-    ) : service ? (
-        /* ── Mode génération ── */
-        <>
-          <div class="cvc-gen-bar">
-            <a href="/carriere/cv?source=app" class="cvc-back-btn">← Choisir un autre service</a>
-            <span class="cvc-gen-service-label">
-              {CV_SERVICES.find(s => s.id === service)?.icon}
-              {CV_SERVICES.find(s => s.id === service)?.label ?? service}
-            </span>
-          </div>
-          <CvCreator client:only="react" defaultService={service} />
-        </>
-      ) : (
-        /* ── Mode landing services ── */
-        <div class="cvc-landing">
-
-        <!-- Hero -->
-        <div class="cvc-hero">
-          <span class="cvc-hero-badge">🍁 Capitune CV</span>
-          <h1 class="cvc-hero-title">Créateur de CV Canadien</h1>
-          <p class="cvc-hero-sub">
-            Choisissez le service adapté à votre profil. L'IA adapte votre CV aux normes canadiennes,
-            analyse votre compatibilité ATS et génère vos documents en quelques secondes.
-          </p>
-        </div>
-
-        <!-- Grille services -->
-        <div class="cvc-services-grid">
-          {CV_SERVICES.map(s => (
-            <a
-              href={`/carriere/cv?service=${s.id}&source=app`}
-              class="cvc-service-card"
-              style={`--card-bg:${s.color}; --card-border:${s.border};`}
-            >
-              <div class="cvc-sc-top">
-                <span class="cvc-sc-icon">{s.icon}</span>
-                <div>
-                  <p class="cvc-sc-name">{s.label}</p>
-                  <p class="cvc-sc-desc">{s.desc}</p>
-                </div>
-              </div>
-              <div class="cvc-sc-footer">
-                <div class="cvc-sc-pricing">
-                  <span class="cvc-sc-price-forfait">{s.priceForfait}$<small>/avec forfait</small></span>
-                  <span class="cvc-sc-price-base">{s.priceBase}$ sans forfait</span>
-                </div>
-                <span class="cvc-sc-cta">Commencer →</span>
-              </div>
-            </a>
-          ))}
-        </div>
-
-        <!-- Bandeau forfait -->
-        <div class="cvc-forfait-banner">
-          <div class="cvc-fb-left">
-            <p class="cvc-fb-title">🎯 Économisez jusqu'à 80% avec un forfait Capitune</p>
-            <p class="cvc-fb-sub">
-              Accès illimité à tous les services CV, lettres IRCC, diagnostic IA ATS et téléchargements PDF.
-            </p>
-          </div>
-          <a href="/tarifs" class="cvc-fb-btn">Voir les forfaits</a>
-        </div>
-
-        <!-- Comment ça marche -->
-        <div class="cvc-steps">
-          <h2 class="cvc-steps-title">Comment ça fonctionne ?</h2>
-          <div class="cvc-steps-grid">
-            {[
-              { n: "1", label: "Choisissez un service", desc: "CV Canada, Québec, immigration ou lettre de motivation." },
-              { n: "2", label: "Importez votre CV", desc: "Copiez-collez le texte ou importez un PDF / DOCX." },
-              { n: "3", label: "Analyse IA instantanée", desc: "Score ATS, compétences clés, programmes recommandés." },
-              { n: "4", label: "Générez & téléchargez", desc: "CV optimisé en format canadien + téléchargement PDF avec votre forfait." },
-            ].map(step => (
-              <div class="cvc-step">
-                <div class="cvc-step-num">{step.n}</div>
-                <p class="cvc-step-label">{step.label}</p>
-                <p class="cvc-step-desc">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    )}
+    </div>
   </main>
 
   {!isLoggedIn && <FooterCustom client:only="react" />}

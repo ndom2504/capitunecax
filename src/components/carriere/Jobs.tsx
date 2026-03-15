@@ -76,7 +76,7 @@ export default function Jobs({ isMobileApp = false, mode = "full" }) {
 
   const handleOptimizeForJob = (jobTitle) => {
     if (mode === "jobs") {
-      window.location.href = "/carriere/cv?job=" + encodeURIComponent(jobTitle);
+      alert("Le créateur de CV est temporairement indisponible.");
       return;
     }
     setJobQuery(jobTitle);

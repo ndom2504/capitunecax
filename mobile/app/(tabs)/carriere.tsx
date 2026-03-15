@@ -27,14 +27,6 @@ const CARRIER_TABS = [
     comingSoon: false,
   },
   {
-    id: 'cv',
-    title: 'Créateur de CV Canadien',
-    desc: 'Adaptez votre CV au format canadien pour maximiser vos chances de recrutement.',
-    icon: 'document-text',
-    color: '#3b82f6',
-    comingSoon: false,
-  },
-  {
     id: 'match',
     title: 'Système de Match',
     desc: 'Découvrez votre taux de compatibilité avec les différents programmes et provinces.',
@@ -86,8 +78,6 @@ export default function CarriereScreen() {
                   router.push('/carriere/etudes' as any);
                 } else if (tab.id === 'emploi') {
                   router.push('/carriere/emplois-cv' as any);
-                } else if (tab.id === 'cv') {
-                  router.push('/carriere/cv' as any);
                 } else {
                   alert('Cette section sera bientôt disponible !');
                 }
