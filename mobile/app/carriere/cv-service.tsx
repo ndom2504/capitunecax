@@ -39,34 +39,6 @@ export default function CvServiceScreen() {
   const service = params.service ?? 'cv_canada';
   const svc     = CV_SERVICES[service] ?? CV_SERVICES.cv_canada;
 
-  // Fonctionnalité masquée temporairement
-  let cvFeatureEnabled = false;
-  if (!cvFeatureEnabled) {
-    return (
-      <SafeAreaView style={styles.root} edges={['bottom']}>
-        <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-            <Ionicons name="chevron-back" size={24} color={Colors.text} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{svc.label}</Text>
-          <View style={styles.resetBtn} />
-        </View>
-
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <View style={styles.disabledCard}>
-            <Text style={styles.disabledIcon}>🛠️</Text>
-            <Text style={styles.disabledTitle}>Créateur de CV indisponible</Text>
-            <Text style={styles.disabledSub}>
-              Cette fonctionnalité est temporairement désactivée.
-            </Text>
-            <TouchableOpacity style={styles.primaryBtn} onPress={() => router.back()} activeOpacity={0.85}>
-              <Text style={styles.primaryBtnText}>Retour</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
 
   const [cvText,            setCvText]            = useState('');
   const [targetJob,         setTargetJob]          = useState('');
@@ -481,16 +453,4 @@ const styles = StyleSheet.create({
   paywallBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ff9408', borderRadius: 12, paddingVertical: 13, gap: 8, marginTop: 4 },
   paywallBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
-  disabledCard: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    gap: 10,
-  },
-  disabledIcon: { fontSize: 34 },
-  disabledTitle: { fontSize: 16, fontWeight: '800', color: Colors.text, textAlign: 'center' },
-  disabledSub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 18 },
 });

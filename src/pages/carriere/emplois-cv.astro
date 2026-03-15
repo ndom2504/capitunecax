@@ -1,4 +1,4 @@
-﻿---
+---
 import Layout from '../../layouts/main.astro';
 import Jobs from '../../components/carriere/Jobs.tsx';
 
@@ -20,24 +20,7 @@ const isApp = Astro.url.searchParams.get('source') === 'app';
 
   <!-- Contenu interactif React -->
   <div class="cap-page-body">
-    {isApp ? (
-      <Jobs client:only="react" isMobileApp={isApp} mode="jobs" />
-    ) : (
-      <div class="cap-disabled-wrap">
-        <div class="cap-disabled-card">
-          <div class="cap-disabled-icon">🛠️</div>
-          <h2 class="cap-disabled-title">Fonctionnalité temporairement indisponible sur le web</h2>
-          <p class="cap-disabled-sub">
-            Le module Carrière est momentanément désactivé sur la version web.
-            Merci d’utiliser l’application mobile.
-          </p>
-          <div class="cap-disabled-actions">
-            <a class="cap-disabled-btn" href="/dashboard">Retour au dashboard</a>
-            <a class="cap-disabled-link" href="/contact">Contacter le support</a>
-          </div>
-        </div>
-      </div>
-    )}
+    <Jobs client:only="react" isMobileApp={isApp} mode="jobs" />
   </div>
 
 </Layout>
