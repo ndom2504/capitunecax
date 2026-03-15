@@ -34,14 +34,6 @@ const CARRIER_TABS = [
     color: '#3b82f6',
     comingSoon: false,
   },
-  {
-    id: 'match',
-    title: 'Système de Match',
-    desc: 'Découvrez votre taux de compatibilité avec les différents programmes et provinces.',
-    icon: 'git-network',
-    color: '#8b5cf6',
-    comingSoon: true,
-  },
 ];
 
 export default function CarriereScreen() {
