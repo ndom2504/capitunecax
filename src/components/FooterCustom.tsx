@@ -1,115 +1,167 @@
-import React from 'react';
+﻿import React from 'react';
 import { baseUrl } from '../lib/base-url';
-import { servicesCatalog } from '../lib/service-catalog';
-import { getContactAddressLines, publicConfig } from '../lib/public-config';
+import { publicConfig } from '../lib/public-config';
 
 export function FooterCustom() {
   const currentYear = new Date().getFullYear();
-  const addressLines = getContactAddressLines();
-  const locationLine = addressLines[addressLines.length - 1] ?? 'Montréal, QC, Canada';
 
   return (
-    <footer className="bg-muted/30 border-t border-border">
-      <div className="mx-auto max-w-6xl px-4 md:px-6 py-12">
-        <div className="grid gap-8 md:grid-cols-4 mb-8">
-          {/* Brand */}
-          <div className="md:col-span-1">
-            <div className="text-2xl md:text-3xl font-bold text-primary font-heading leading-none">CAPITUNE</div>
-            <p className="text-muted-foreground text-sm mt-3 leading-relaxed">
-              Votre partenaire de confiance pour votre projet au Canada
-            </p>
+    <>
+      <style>{`
+        .cap-footer {
+          background: #0a1628;
+          border-top: 1px solid rgba(255,255,255,0.07);
+          padding: 56px 24px 28px;
+          color: #fff;
+        }
+        .cap-footer-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .cap-footer-grid {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1.5fr;
+          gap: 40px;
+          margin-bottom: 40px;
+        }
+        @media (max-width: 900px) { .cap-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
+        @media (max-width: 560px) { .cap-footer-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+        .cap-footer-brand img { height: 36px; width: auto; margin-bottom: 14px; }
+        .cap-footer-brand p { color: rgba(255,255,255,0.55); font-size: 14px; line-height: 1.65; margin: 0 0 20px; max-width: 280px; }
+        .cap-footer-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #ff9408;
+          color: #fff;
+          font-weight: 700;
+          font-size: 13px;
+          padding: 10px 20px;
+          border-radius: 50px;
+          text-decoration: none;
+          transition: background .2s;
+        }
+        .cap-footer-cta:hover { background: #e07800; }
+
+        .cap-footer-col-title {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.4);
+          margin: 0 0 18px;
+        }
+        .cap-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+        .cap-footer-links a {
+          color: rgba(255,255,255,0.6);
+          text-decoration: none;
+          font-size: 14px;
+          transition: color .18s;
+        }
+        .cap-footer-links a:hover { color: #ff9408; }
+
+        .cap-footer-contact { display: flex; flex-direction: column; gap: 12px; }
+        .cap-footer-contact-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 13px;
+          color: rgba(255,255,255,0.6);
+          line-height: 1.5;
+        }
+        .cap-footer-contact-item svg { flex-shrink: 0; color: #ff9408; margin-top: 1px; }
+        .cap-footer-contact-item a { color: rgba(255,255,255,0.6); text-decoration: none; }
+        .cap-footer-contact-item a:hover { color: #ff9408; }
+
+        .cap-footer-bottom {
+          border-top: 1px solid rgba(255,255,255,0.08);
+          padding-top: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 14px;
+        }
+        .cap-footer-bottom p { font-size: 13px; color: rgba(255,255,255,0.35); margin: 0; }
+        .cap-footer-legal { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .cap-footer-legal a { font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; transition: color .18s; }
+        .cap-footer-legal a:hover { color: #ff9408; }
+      `}</style>
+
+      <footer className="cap-footer">
+        <div className="cap-footer-inner">
+          <div className="cap-footer-grid">
+
+            {/* Brand */}
+            <div className="cap-footer-brand">
+              <img src="/logo/capitune.png" alt="CAPITUNE" />
+              <p>Votre partenaire de confiance pour votre projet d'immigration et d'installation au Canada.</p>
+              <a href={`${baseUrl}/connexion`} className="cap-footer-cta">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                AccÃ©der Ã  mon espace
+              </a>
+            </div>
+
+            {/* Navigation */}
+            <div>
+              <div className="cap-footer-col-title">Navigation</div>
+              <ul className="cap-footer-links">
+                <li><a href={`${baseUrl}/`}>Accueil</a></li>
+                <li><a href={`${baseUrl}/a-propos`}>Ã€ propos</a></li>
+                <li><a href={`${baseUrl}/#services`}>Services</a></li>
+                <li><a href={`${baseUrl}/contact`}>Contact</a></li>
+                <li><a href={`${baseUrl}/support`}>Support</a></li>
+              </ul>
+            </div>
+
+            {/* LÃ©gal */}
+            <div>
+              <div className="cap-footer-col-title">LÃ©gal</div>
+              <ul className="cap-footer-links">
+                <li><a href={`${baseUrl}/mentions-legales`}>Mentions lÃ©gales</a></li>
+                <li><a href={`${baseUrl}/confidentialite`}>ConfidentialitÃ©</a></li>
+                <li><a href={`${baseUrl}/support`}>Centre d'aide</a></li>
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <div className="cap-footer-col-title">Contact</div>
+              <div className="cap-footer-contact">
+                <div className="cap-footer-contact-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                  <a href={`mailto:${publicConfig.contactEmail}`}>{publicConfig.contactEmail}</a>
+                </div>
+                <div className="cap-footer-contact-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.44 2 2 0 0 1 3.58 2.24h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l1.03-1.03a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <a href={`tel:${publicConfig.contactPhone}`}>{publicConfig.contactPhone}</a>
+                </div>
+                <div className="cap-footer-contact-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="15" height="15"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>93 Rue des Castels, LÃ©vis<br />QC G6V 2B8, Canada</span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          {/* Navigation */}
-          <div>
-            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Navigation</div>
-            <ul className="space-y-2">
-              <li>
-                <a href={`${baseUrl}/`} className="text-muted-foreground hover:text-primary transition text-sm">
-                  Accueil
-                </a>
-              </li>
-              <li>
-                <a href={`${baseUrl}/#services`} className="text-muted-foreground hover:text-primary transition text-sm">
-                  Services
-                </a>
-              </li>
-              <li>
-                <a href={`${baseUrl}/a-propos`} className="text-muted-foreground hover:text-primary transition text-sm">
-                  À propos
-                </a>
-              </li>
-              <li>
-                <a href={`${baseUrl}/contact`} className="text-muted-foreground hover:text-primary transition text-sm">
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Nos services</div>
-            <ul className="space-y-2">
-              {servicesCatalog.map((service) => (
-                <li key={service.id} className="text-muted-foreground text-sm">
-                  {service.name}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <div className="text-xs font-semibold tracking-wider uppercase text-foreground/90 mb-4">Contact</div>
-            <ul className="space-y-2">
-              <li className="text-muted-foreground text-sm">
-                📧 {publicConfig.contactEmail}
-              </li>
-              <li className="text-muted-foreground text-sm">
-                📞 {publicConfig.contactPhone}
-              </li>
-              <li className="text-muted-foreground text-sm">
-                📍 {locationLine}
-              </li>
-            </ul>
-            
-            {/* Social Media */}
-            <div className="flex gap-3 mt-4">
-              <a href="#" className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20 transition" aria-label="Facebook">
-                <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </a>
-              <a href="#" className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20 transition" aria-label="LinkedIn">
-                <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-              </a>
-              <a href="#" className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20 transition" aria-label="Twitter">
-                <svg className="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                </svg>
-              </a>
+          {/* Bottom */}
+          <div className="cap-footer-bottom">
+            <p>Â© {currentYear} CAPITUNE â€” Export Monde Prestige Inc. Tous droits rÃ©servÃ©s.</p>
+            <div className="cap-footer-legal">
+              <a href={`${baseUrl}/mentions-legales`}>Mentions lÃ©gales</a>
+              <a href={`${baseUrl}/confidentialite`}>Politique de confidentialitÃ©</a>
+              <a href={`${baseUrl}/support`}>Centre d'aide</a>
             </div>
           </div>
         </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © {currentYear} CAPITUNE. Tous droits réservés.
-          </p>
-          <div className="flex gap-6">
-            <a href={`${baseUrl}/confidentialite`} className="text-sm text-muted-foreground hover:text-primary transition">
-              Politique de confidentialité
-            </a>
-            <a href="#" className="text-sm text-muted-foreground hover:text-primary transition">
-              Conditions d'utilisation
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }
+
