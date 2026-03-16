@@ -67,7 +67,9 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
            LIMIT 1`
         )
         .bind(id)
-        .first<any>();
+        .first<any>()
+        .catch(() => null);
+        
       if (!current) return json({ error: 'Post introuvable' }, 404);
 
       const title = body.title !== undefined ? String(body.title ?? '').trim().slice(0, 120) : String(current.title ?? '');
@@ -81,14 +83,31 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
       if (title.length < 3) return json({ error: 'Titre trop court' }, 400);
       if (content.length < 10) return json({ error: 'Contenu trop court' }, 400);
 
-      await db
-        .prepare(
-          `UPDATE inside_posts
-           SET title = ?, content = ?, media_type = ?, media_url = ?, link_url = ?, link_label = ?, is_hidden = ?, updated_at = ?
-           WHERE id = ?`
-        )
-        .bind(title, content, mediaType, mediaUrl, linkUrl, linkLabel, hidden, nowIso, id)
-        .run();
+      // Essayer avec link_label d'abord (après migration)
+      try {
+        await db
+          .prepare(
+            `UPDATE inside_posts
+             SET title = ?, content = ?, media_type = ?, media_url = ?, link_url = ?, link_label = ?, is_hidden = ?, updated_at = ?
+             WHERE id = ?`
+          )
+          .bind(title, content, mediaType, mediaUrl, linkUrl, linkLabel, hidden, nowIso, id)
+          .run();
+      } catch (altErr: any) {
+        // Si la colonne link_label n'existe pas encore, fallback sans elle
+        if (String(altErr).includes('link_label') || String(altErr).includes('no such column')) {
+          await db
+            .prepare(
+              `UPDATE inside_posts
+               SET title = ?, content = ?, media_type = ?, media_url = ?, link_url = ?, is_hidden = ?, updated_at = ?
+               WHERE id = ?`
+            )
+            .bind(title, content, mediaType, mediaUrl, linkUrl, hidden, nowIso, id)
+            .run();
+        } else {
+          throw altErr;
+        }
+      }
 
       return json({ ok: true });
     }
@@ -103,7 +122,8 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
       FROM inside_posts
       WHERE id = ${id}
       LIMIT 1
-    `;
+    `.catch(() => []);
+    
     const current = rows?.[0];
     if (!current) return json({ error: 'Post introuvable' }, 404);
 
@@ -118,12 +138,27 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     if (title.length < 3) return json({ error: 'Titre trop court' }, 400);
     if (content.length < 10) return json({ error: 'Contenu trop court' }, 400);
 
-    await sql`
-      UPDATE inside_posts
-      SET title = ${title}, content = ${content}, media_type = ${mediaType}, media_url = ${mediaUrl},
-          link_url = ${linkUrl}, link_label = ${linkLabel}, is_hidden = ${hidden}, updated_at = ${nowIso}::timestamptz
-      WHERE id = ${id}
-    `;
+    // Essayer avec link_label d'abord (après migration)
+    try {
+      await sql`
+        UPDATE inside_posts
+        SET title = ${title}, content = ${content}, media_type = ${mediaType}, media_url = ${mediaUrl},
+            link_url = ${linkUrl}, link_label = ${linkLabel}, is_hidden = ${hidden}, updated_at = ${nowIso}::timestamptz
+        WHERE id = ${id}
+      `;
+    } catch (altErr: any) {
+      // Si la colonne link_label n'existe pas encore, fallback sans elle
+      if (String(altErr).includes('link_label') || String(altErr).includes('column')) {
+        await sql`
+          UPDATE inside_posts
+          SET title = ${title}, content = ${content}, media_type = ${mediaType}, media_url = ${mediaUrl},
+              link_url = ${linkUrl}, is_hidden = ${hidden}, updated_at = ${nowIso}::timestamptz
+          WHERE id = ${id}
+        `;
+      } else {
+        throw altErr;
+      }
+    }
 
     return json({ ok: true });
   } catch (err) {

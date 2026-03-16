@@ -93,7 +93,23 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
            ORDER BY created_at DESC
            LIMIT 50`
         )
-        .all<any>();
+        .all<any>()
+        .catch(async (err: any) => {
+          // Fallback sans link_label si la colonne n'existe pas
+          if (String(err).includes('link_label') || String(err).includes('no such column')) {
+            const fallback = await db
+              .prepare(
+                `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden
+                 FROM inside_posts
+                 ${includeHidden ? '' : 'WHERE (is_hidden IS NULL OR is_hidden = 0)'}
+                 ORDER BY created_at DESC
+                 LIMIT 50`
+              )
+              .all<any>();
+            return fallback;
+          }
+          throw err;
+        });
 
       return json({ posts: (results ?? []).map(asPost) });
     }
@@ -101,24 +117,52 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
     const sql = await getNeonSqlClient();
     if (!sql) return json({ posts: [], persisted: false });
 
-    const rows = includeHidden
-      ? await sql<any>`
-          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
-                 (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                 is_hidden
-          FROM inside_posts
-          ORDER BY created_at DESC
-          LIMIT 50
-        `
-      : await sql<any>`
-          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
-                 (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                 is_hidden
-          FROM inside_posts
-          WHERE is_hidden IS NOT TRUE
-          ORDER BY created_at DESC
-          LIMIT 50
-        `;
+    let rows: any[];
+    try {
+      rows = includeHidden
+        ? await sql<any>`
+            SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
+                   (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                   is_hidden
+            FROM inside_posts
+            ORDER BY created_at DESC
+            LIMIT 50
+          `
+        : await sql<any>`
+            SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
+                   (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                   is_hidden
+            FROM inside_posts
+            WHERE is_hidden IS NOT TRUE
+            ORDER BY created_at DESC
+            LIMIT 50
+          `;
+    } catch (err: any) {
+      // Fallback sans link_label si la colonne n'existe pas
+      if (String(err).includes('link_label') || String(err).includes('column')) {
+        rows = includeHidden
+          ? await sql<any>`
+              SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
+                     (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                     is_hidden
+              FROM inside_posts
+              ORDER BY created_at DESC
+              LIMIT 50
+            `
+          : await sql<any>`
+              SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
+                     (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
+                     is_hidden
+              FROM inside_posts
+              WHERE is_hidden IS NOT TRUE
+              ORDER BY created_at DESC
+              LIMIT 50
+            `;
+      } else {
+        throw err;
+      }
+    }
+    
     return json({ posts: (rows ?? []).map(asPost) });
   } catch (err) {
     console.error('Inside GET error:', err);
@@ -172,20 +216,50 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
 
   try {
     if (db) {
-      await db
-        .prepare(
-          `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, linkUrl, linkLabel, nowIso, nowIso, 0)
-        .run();
+      // Essayer avec link_label d'abord (après migration)
+      try {
+        await db
+          .prepare(
+            `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          )
+          .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, linkUrl, linkLabel, nowIso, nowIso, 0)
+          .run();
+      } catch (altErr: any) {
+        // Si la colonne link_label n'existe pas encore, fallback sans elle
+        if (String(altErr).includes('link_label') || String(altErr).includes('no such column')) {
+          await db
+            .prepare(
+              `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            )
+            .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, linkUrl, nowIso, nowIso, 0)
+            .run();
+        } else {
+          throw altErr;
+        }
+      }
     } else {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
-      await sql`
-        INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
-        VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${linkUrl}, ${linkLabel}, ${nowIso}, ${nowIso}, false)
-      `;
+      
+      // Essayer avec link_label d'abord (après migration)
+      try {
+        await sql`
+          INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
+          VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${linkUrl}, ${linkLabel}, ${nowIso}, ${nowIso}, false)
+        `;
+      } catch (altErr: any) {
+        // Si la colonne link_label n'existe pas encore, fallback sans elle
+        if (String(altErr).includes('link_label') || String(altErr).includes('column')) {
+          await sql`
+            INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden)
+            VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${linkUrl}, ${nowIso}, ${nowIso}, false)
+          `;
+        } else {
+          throw altErr;
+        }
+      }
     }
 
     const post: InsidePostApi = {
