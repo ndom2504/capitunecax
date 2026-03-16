@@ -1,6 +1,7 @@
 ﻿---
 import MainLayout from '../layouts/main.astro';
 import { baseUrl } from '../lib/base-url';
+import { FirebasePhoneAuth } from '../components/FirebasePhoneAuth';
 import '../styles/auth.css';
 ---
 
@@ -35,6 +36,16 @@ import '../styles/auth.css';
       <div class="auth-form-header">
         <h1 class="auth-form-title">Connexion</h1>
         <p class="auth-form-sub">Connectez-vous à votre espace Capitune.</p>
+      </div>
+
+      <!-- Onglets d'authentification -->
+      <div class="auth-tabs">
+        <button class="auth-tab auth-tab--active" data-tab="email">
+          <span>📧</span> Email
+        </button>
+        <button class="auth-tab" data-tab="sms">
+          <span>📱</span> SMS
+        </button>
       </div>
 
       <!-- Erreur / Succès -->
@@ -75,8 +86,10 @@ import '../styles/auth.css';
         </label>
       </div>
 
-      <!-- Formulaire -->
-      <form id="loginForm" class="auth-form">
+      <!-- Contenu des onglets -->
+      <div id="email-tab" class="auth-tab-content auth-tab-content--active">
+        <!-- Formulaire email/password -->
+        <form id="loginForm" class="auth-form">
         <div class="auth-field-group">
           <label class="auth-label">Email</label>
           <input type="email" id="email" required placeholder="votre@email.com" class="auth-input" />
@@ -93,13 +106,13 @@ import '../styles/auth.css';
           <a href="#" class="auth-link-muted">Mot de passe oublié ?</a>
         </div>
         <button type="submit" class="auth-btn-primary">Se connecter →</button>
-      </form>
+        </form>
 
-      <p class="auth-switch">Pas de compte ? <a href={`${baseUrl}/inscription`} class="auth-link-orange">Créer un compte</a></p>
+        <p class="auth-switch">Pas de compte ? <a href={`${baseUrl}/inscription`} class="auth-link-orange">Créer un compte</a></p>
 
-      <div class="auth-divider"><span>ou continuer avec</span></div>
+        <div class="auth-divider"><span>ou continuer avec</span></div>
 
-      <div class="auth-social-row">
+        <div class="auth-social-row">
         <button type="button" id="googleLoginBtn" class="auth-social-btn">
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -118,6 +131,13 @@ import '../styles/auth.css';
           </svg>
           Microsoft
         </button>
+        </div>
+      </div><!-- fin email-tab -->
+
+      <!-- Onglet SMS -->
+      <div id="sms-tab" class="auth-tab-content" style="display:none;">
+        <FirebasePhoneAuth client:only="react" />
+        <p class="auth-switch" style="margin-top:20px;">Pas de compte ? <a href={`${baseUrl}/inscription`} class="auth-link-orange">Créer un compte</a></p>
       </div>
 
     </div>
@@ -266,6 +286,30 @@ import '../styles/auth.css';
   }
   (window as any).resendVerifyEmail = resendVerifyEmail;
   document.getElementById('resend-verify-btn')?.addEventListener('click', resendVerifyEmail);
+
+  // Gestion des onglets (email vs SMS)
+  document.querySelectorAll('.auth-tab').forEach((tab) => {
+    tab.addEventListener('click', (e) => {
+      const tabName = (e.currentTarget as HTMLElement).getAttribute('data-tab');
+      if (!tabName) return;
+
+      // Désactiver tous les onglets et contenus
+      document.querySelectorAll('.auth-tab').forEach((t) => t.classList.remove('auth-tab--active'));
+      document.querySelectorAll('.auth-tab-content').forEach((c) => {
+        (c as HTMLElement).style.display = 'none';
+        c.classList.remove('auth-tab-content--active');
+      });
+
+      // Activer l'onglet sélectionné
+      (e.currentTarget as HTMLElement).classList.add('auth-tab--active');
+      const content = document.getElementById(`${tabName}-tab`);
+      if (content) {
+        content.style.display = 'block';
+        content.classList.add('auth-tab-content--active');
+      }
+    });
+  });
+
 </script>
 
 <style is:global>
