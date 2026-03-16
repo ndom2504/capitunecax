@@ -7,6 +7,9 @@ interface FirebasePhoneAuthProps {
   onError?: (error: string) => void;
 }
 
+// Stocker le verifier globalement pour éviter les re-renders multiples
+let globalRecaptchaVerifier: RecaptchaVerifier | null = null;
+
 export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps) {
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
@@ -19,11 +22,18 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
 
   const auth = getFirebaseAuth();
 
-  // Initialiser RecaptchaVerifier
-  // Firebase charge automatiquement le script reCAPTCHA
+  // Initialiser RecaptchaVerifier une seule fois
   useEffect(() => {
     if (!auth) return;
 
+    // Réutiliser le verifier global s'il existe déjà
+    if (globalRecaptchaVerifier) {
+      recaptchaVerifierRef.current = globalRecaptchaVerifier;
+      console.log('[reCAPTCHA] Réutilisation du verifier existant');
+      return;
+    }
+
+    // Créer une nouvelle instance seulement si elle n'existe pas
     if (!recaptchaVerifierRef.current) {
       try {
         recaptchaVerifierRef.current = new RecaptchaVerifier(
@@ -34,22 +44,19 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
           }
         );
 
+        // Stocker dans la variable globale
+        globalRecaptchaVerifier = recaptchaVerifierRef.current;
+
         console.log('[reCAPTCHA] Initialisé avec succès');
       } catch (err) {
         console.error('[reCAPTCHA init error]', err);
-        setErrorMsg('Erreur initialisation reCAPTCHA. Vérifiez votre connexion et rechargez la page.');
+        setErrorMsg('Erreur initialisation reCAPTCHA. Rechargez la page.');
       }
     }
 
+    // Ne pas nettoyer le verifier au démontage pour éviter les erreurs
     return () => {
-      if (recaptchaVerifierRef.current) {
-        try {
-          recaptchaVerifierRef.current.clear();
-          recaptchaVerifierRef.current = null;
-        } catch (e) {
-          console.error('[reCAPTCHA cleanup error]', e);
-        }
-      }
+      // Laisser le verifier actif globalement
     };
   }, [auth]);
 
@@ -97,28 +104,7 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
           ? 'Numéro invalide. Format: +1 XXX XXX XXXX'
           : err.message || 'Erreur lors de l\'envoi du code.'
       );
-      // Recréer reCAPTCHA en cas d'erreur (elle est consommée après l'erreur)
-      if (recaptchaVerifierRef.current) {
-        try {
-          recaptchaVerifierRef.current.clear();
-        } catch (e) {
-          console.error('[reCAPTCHA clear error]', e);
-        }
-      }
-      recaptchaVerifierRef.current = null;
-      
-      // Recréer une nouvelle instance de RecaptchaVerifier
-      try {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(
-          auth,
-          'firebase-phone-recaptcha',
-          { size: 'invisible' }
-        );
-        console.log('[reCAPTCHA] Recréé après erreur');
-      } catch (e) {
-        console.error('[reCAPTCHA recreate error]', e);
-        setErrorMsg('Erreur reCAPTCHA. Rechargez la page.');
-      }
+      // Le verifier est réutilisable - pas besoin de recréer
     } finally {
       setLoading(false);
     }
