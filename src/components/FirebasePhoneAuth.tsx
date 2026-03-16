@@ -14,80 +14,40 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const confirmResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   const auth = getFirebaseAuth();
 
-  // Charger le script reCAPTCHA de Google manuellement
+  // Initialiser RecaptchaVerifier
+  // Firebase charge automatiquement le script reCAPTCHA
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Vérifier si le script est déjà chargé
-    if ((window as any).grecaptcha) {
-      console.log('[reCAPTCHA] Script déjà disponible');
-      setRecaptchaLoaded(true);
-      return;
-    }
-
-    // Charger le script reCAPTCHA v3
-    const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      console.log('[reCAPTCHA] Script chargé avec succès');
-      // La variable globale grecaptcha devrait maintenant être disponible
-      if ((window as any).grecaptcha) {
-        setRecaptchaLoaded(true);
-      } else {
-        console.error('[reCAPTCHA] Script chargé mais grecaptcha non disponible');
-      }
-    };
-
-    script.onerror = () => {
-      console.error('[reCAPTCHA] Erreur lors du chargement du script');
-      setErrorMsg('Erreur de chargement de reCAPTCHA. Vérifiez votre connexion.');
-    };
-
-    // Ajouter le script au document
-    document.head.appendChild(script);
-
-    return () => {
-      // Ne pas supprimer le script, il peut être réutilisé
-    };
-  }, []);
-
-  // Initialiser RecaptchaVerifier une fois que le script est prêt
-  useEffect(() => {
-    if (!auth || !firebaseConfigPublic.apiKey || !recaptchaLoaded) {
-      return;
-    }
+    if (!auth) return;
 
     if (!recaptchaVerifierRef.current) {
       try {
-        console.log('[reCAPTCHA] Création du RecaptchaVerifier...');
+        // Mode test pour développement (SMS non requis)
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+          (auth as any).settings.appVerificationDisabledForTesting = true;
+          console.log('[reCAPTCHA] Mode test activé pour localhost');
+        }
+
         recaptchaVerifierRef.current = new RecaptchaVerifier(
           'firebase-phone-recaptcha',
           {
             size: 'invisible',
-            callback: (token: string) => {
-              console.log('[reCAPTCHA] Token généré');
-            },
           },
           auth
         );
-        console.log('[reCAPTCHA] RecaptchaVerifier créé avec succès');
+
+        console.log('[reCAPTCHA] Initialisé avec succès');
       } catch (err) {
         console.error('[reCAPTCHA init error]', err);
-        setErrorMsg('Erreur initialisation reCAPTCHA. Rechargez la page.');
+        setErrorMsg('Erreur initialisation reCAPTCHA. Vérifiez votre connexion et rechargez la page.');
       }
     }
 
     return () => {
-      // Nettoyage au démontage
       if (recaptchaVerifierRef.current) {
         try {
           recaptchaVerifierRef.current.clear();
@@ -97,7 +57,7 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
         }
       }
     };
-  }, [auth, recaptchaLoaded]);
+  }, [auth]);
 
   const formatPhone = (value: string) => {
     // Accepter +1 (Canada) ou reformatter
@@ -192,14 +152,6 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
     return (
       <div style={{ padding: '16px', background: '#ffebee', color: '#c62828', borderRadius: '8px' }}>
         Firebase non configuré. Vérifiez PUBLIC_FIREBASE_API_KEY dans .env.
-      </div>
-    );
-  }
-
-  if (!recaptchaLoaded) {
-    return (
-      <div style={{ padding: '16px', background: '#fff3e0', color: '#e65100', borderRadius: '8px' }}>
-        ⏳ Chargement du formulaire SMS... Veuillez patienter.
       </div>
     );
   }
