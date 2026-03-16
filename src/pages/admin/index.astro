@@ -693,11 +693,38 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         </div>
       </div>
 
-      <div class="mini-stats-grid">
-        <div class="traffic-card traffic-kpi"><div class="traffic-card-body"><div class="traffic-kpi-icon"><i class="fa fa-eye"></i></div><div class="traffic-kpi-label">Pages vues</div><div class="traffic-kpi-value" id="traffic-pageviews">—</div><div class="traffic-sub" id="traffic-pageviews-sub">sur la période</div></div></div>
-        <div class="traffic-card traffic-kpi"><div class="traffic-card-body"><div class="traffic-kpi-icon"><i class="fa fa-arrow-pointer"></i></div><div class="traffic-kpi-label">Clics</div><div class="traffic-kpi-value" id="traffic-clicks">—</div><div class="traffic-sub">liens et boutons</div></div></div>
-        <div class="traffic-card traffic-kpi"><div class="traffic-card-body"><div class="traffic-kpi-icon"><i class="fa fa-users"></i></div><div class="traffic-kpi-label">Visiteurs estimés</div><div class="traffic-kpi-value" id="traffic-visitors">—</div><div class="traffic-sub">sessions distinctes</div></div></div>
-        <div class="traffic-card traffic-kpi"><div class="traffic-card-body"><div class="traffic-kpi-icon"><i class="fa fa-layer-group"></i></div><div class="traffic-kpi-label">Zones suivies</div><div class="traffic-kpi-value" id="traffic-zones">—</div><div class="traffic-sub" id="traffic-pages-sub">pages trackées : —</div></div></div>
+      <div class="table-wrap traffic-table">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:25%">Métrique</th>
+              <th style="width:25%">Valeur</th>
+              <th style="width:50%">Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-eye" style="color:var(--accent);font-size:16px"></i> <strong>Pages vues</strong></div></td>
+              <td><div class="traffic-kpi-value" id="traffic-pageviews" style="font-size:24px">—</div></td>
+              <td><span class="muted-cell" id="traffic-pageviews-sub">Nombre total de pages vues sur la période</span></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-arrow-pointer" style="color:var(--accent);font-size:16px"></i> <strong>Clics</strong></div></td>
+              <td><div class="traffic-kpi-value" id="traffic-clicks" style="font-size:24px">—</div></td>
+              <td><span class="muted-cell">Clics sur liens et boutons du site</span></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-users" style="color:var(--accent);font-size:16px"></i> <strong>Visiteurs estimés</strong></div></td>
+              <td><div class="traffic-kpi-value" id="traffic-visitors" style="font-size:24px">—</div></td>
+              <td><span class="muted-cell">Nombre de sessions distinctes (visiteurs uniques)</span></td>
+            </tr>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-layer-group" style="color:var(--accent);font-size:16px"></i> <strong>Zones suivies</strong></div></td>
+              <td><div class="traffic-kpi-value" id="traffic-zones" style="font-size:24px">—</div></td>
+              <td><span class="muted-cell" id="traffic-pages-sub">Pages trackées et sections avec interactions détectées</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="traffic-hero">
@@ -763,6 +790,10 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
             <div id="traffic-top-countries"><div class="spinner"></div></div>
           </div>
         </div>
+      </div>
+
+      <div class="section-header" style="margin-top:26px">
+        <div class="section-title">Détails et historique</div>
       </div>
 
       <div class="traffic-grid">
