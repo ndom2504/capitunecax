@@ -42,6 +42,7 @@ type InsidePost = {
   authorName: string;
   authorAvatarKey?: string;
   linkUrl?: string;
+  linkLabel?: string;
   media?: InsideMedia;
   reactions: Record<ReactionKey, number>;
 };
@@ -115,6 +116,7 @@ export default function InsideScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
+  const [linkLabel, setLinkLabel] = useState('');
   const [publishing, setPublishing] = useState(false);
 
   const canPublish = useMemo(() => title.trim().length >= 3 && content.trim().length >= 10, [title, content]);
@@ -148,6 +150,7 @@ export default function InsideScreen() {
     authorName: String(p.authorName ?? 'Admin'),
     authorAvatarKey: p.authorAvatarKey ? String(p.authorAvatarKey) : undefined,
     linkUrl: String((p as any)?.linkUrl ?? ''),
+    linkLabel: String((p as any)?.linkLabel ?? 'Ouvrir le lien'),
     media: toMedia(p),
     reactions: { like: 0, fire: 0, clap: 0 },
   });
@@ -282,6 +285,7 @@ export default function InsideScreen() {
         title: title.trim(),
         content: content.trim(),
         linkUrl: normalizeLink(linkUrl) ?? '',
+        linkLabel: linkLabel.trim() || 'Ouvrir le lien',
       };
       const res = await insideApi.publish(token, payload);
       if (res.error) {
@@ -298,6 +302,7 @@ export default function InsideScreen() {
           title: payload.title,
           content: payload.content,
           linkUrl: payload.linkUrl || undefined,
+          linkLabel: payload.linkLabel,
           createdAt: new Date().toISOString(),
           authorName: user?.name ?? 'Admin',
           reactions: { like: 0, fire: 0, clap: 0 },
@@ -308,6 +313,7 @@ export default function InsideScreen() {
       setTitle('');
       setContent('');
       setLinkUrl('');
+      setLinkLabel('');
       Alert.alert('Publié', 'Votre publication est visible dans Inside.');
     } finally {
       setPublishing(false);
@@ -498,18 +504,6 @@ export default function InsideScreen() {
 
               <View style={styles.postInnerContent}>
                 <Text style={styles.postContent}>{item.content}</Text>
-
-                {normalizeLink(item.linkUrl) && (
-                  <TouchableOpacity
-                    style={styles.linkBtn}
-                    activeOpacity={0.85}
-                    onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
-                    accessibilityLabel="Ouvrir le lien de la publication"
-                  >
-                    <Ionicons name="link" size={16} color={Colors.orange} />
-                    <Text style={styles.linkBtnText}>Ouvrir le lien</Text>
-                  </TouchableOpacity>
-                )}
               </View>
 
               {item.media?.kind === 'video' && (
@@ -556,6 +550,18 @@ export default function InsideScreen() {
                     <Text style={styles.reactEmoji}>👏</Text>
                     <Text style={styles.reactCount}>{item.reactions.clap ?? 0}</Text>
                   </TouchableOpacity>
+
+                  {normalizeLink(item.linkUrl) && (
+                    <TouchableOpacity
+                      style={styles.linkBtn}
+                      activeOpacity={0.85}
+                      onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
+                      accessibilityLabel={`${item.linkLabel || 'Ouvrir le lien'}`}
+                    >
+                      <Ionicons name="link" size={16} color={Colors.orange} />
+                      <Text style={styles.linkBtnText}>{item.linkLabel || 'Ouvrir le lien'}</Text>
+                    </TouchableOpacity>
+                  )}
 
                   <View style={{ flex: 1 }} />
                 </View>

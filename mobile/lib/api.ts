@@ -248,6 +248,7 @@ export type InsidePostDto = {
   mediaType?: string;
   mediaUrl?: string;
   linkUrl?: string;
+  linkLabel?: string;
   isHidden?: boolean;
 };
 
@@ -259,7 +260,7 @@ export const insideApi = {
 
   publish: (
     token: string,
-    payload: { title: string; content: string; mediaType?: string; mediaUrl?: string; linkUrl?: string },
+    payload: { title: string; content: string; mediaType?: string; mediaUrl?: string; linkUrl?: string; linkLabel?: string },
   ) =>
     request<{ ok?: boolean; post?: InsidePostDto; persisted?: boolean; error?: string }>(
       '/api/inside',

@@ -26,6 +26,7 @@ type InsidePostApi = {
   mediaType?: string;
   mediaUrl?: string;
   linkUrl?: string;
+  linkLabel?: string;
   isHidden?: boolean;
 };
 
@@ -54,6 +55,7 @@ function asPost(row: any): InsidePostApi {
     mediaType: String(row.media_type ?? row.mediaType ?? ''),
     mediaUrl: String(row.media_url ?? row.mediaUrl ?? ''),
     linkUrl: String(row.link_url ?? row.linkUrl ?? ''),
+    linkLabel: String(row.link_label ?? row.linkLabel ?? 'Ouvrir le lien'),
     isHidden: Boolean(
       (row.is_hidden ?? row.isHidden ?? 0) === true ||
         String(row.is_hidden ?? row.isHidden ?? '0') === '1' ||
@@ -85,7 +87,7 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
     if (db) {
       const { results } = await db
         .prepare(
-          `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden
+          `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden
            FROM inside_posts
            ${includeHidden ? '' : 'WHERE (is_hidden IS NULL OR is_hidden = 0)'}
            ORDER BY created_at DESC
@@ -101,7 +103,7 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
 
     const rows = includeHidden
       ? await sql<any>`
-          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
+          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
                  (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
                  is_hidden
           FROM inside_posts
@@ -109,7 +111,7 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
           LIMIT 50
         `
       : await sql<any>`
-          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
+          SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
                  (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
                  is_hidden
           FROM inside_posts
@@ -150,6 +152,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
     mediaType?: string;
     mediaUrl?: string;
     linkUrl?: string;
+    linkLabel?: string;
   };
 
   const title = String(body.title ?? '').trim().slice(0, 120);
@@ -157,6 +160,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const mediaType = String(body.mediaType ?? '').trim().slice(0, 40);
   const mediaUrl = String(body.mediaUrl ?? '').trim().slice(0, 500);
   const linkUrl = String(body.linkUrl ?? '').trim().slice(0, 500);
+  const linkLabel = String(body.linkLabel ?? 'Ouvrir le lien').trim().slice(0, 80);
 
   if (title.length < 3) return json({ error: 'Titre trop court' }, 400);
   if (content.length < 10) return json({ error: 'Contenu trop court' }, 400);
@@ -170,17 +174,17 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
     if (db) {
       await db
         .prepare(
-          `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
-        .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, linkUrl, nowIso, nowIso, 0)
+        .bind(id, user.id, authorName, authorAvatarKey, title, content, mediaType, mediaUrl, linkUrl, linkLabel, nowIso, nowIso, 0)
         .run();
     } else {
       const sql = await getNeonSqlClient();
       if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
       await sql`
-        INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden)
-        VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${linkUrl}, ${nowIso}, ${nowIso}, false)
+        INSERT INTO inside_posts (id, author_user_id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden)
+        VALUES (${id}, ${user.id}, ${authorName}, ${authorAvatarKey}, ${title}, ${content}, ${mediaType}, ${mediaUrl}, ${linkUrl}, ${linkLabel}, ${nowIso}, ${nowIso}, false)
       `;
     }
 
@@ -194,6 +198,7 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
       mediaType,
       mediaUrl,
       linkUrl,
+      linkLabel,
     };
     return json({ ok: true, post });
   } catch (err) {

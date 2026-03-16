@@ -597,6 +597,18 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
             </div>
 
             <div class="inside-field inside-full">
+              <label for="inside-link-url">Lien d'action (optionnel)</label>
+              <input class="inside-input" id="inside-link-url" name="linkUrl" type="url" placeholder="https://example.com ou www.example.com" />
+              <span class="inside-span">URL complète du lien de redirection (optionnel).</span>
+            </div>
+
+            <div class="inside-field inside-full">
+              <label for="inside-link-label">Texte du bouton d'action</label>
+              <input class="inside-input" id="inside-link-label" name="linkLabel" maxlength="80" placeholder="Ex: S'inscrire, En savoir plus, Participer…" value="Ouvrir le lien" />
+              <span class="inside-span">Le texte qui apparaîtra sur le bouton (max 80 caractères). Laisse vide pour utiliser le texte par défaut.</span>
+            </div>
+
+            <div class="inside-field inside-full">
               <label for="inside-media-file">Média (optionnel)</label>
               <input class="inside-input" type="file" id="inside-media-file" name="mediaFile" accept="image/*,video/*" />
               <span class="inside-span">Importe une image ou une vidéo (max 8 Mo). Pas de lien externe.</span>
@@ -627,12 +639,13 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
               <th>Statut</th>
               <th>Titre</th>
               <th>Média</th>
+              <th>Bouton d'action</th>
               <th>Aperçu</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="inside-posts-body" data-loaded="0">
-            <tr><td colspan="6"><div class="spinner"></div></td></tr>
+            <tr><td colspan="7"><div class="spinner"></div></td></tr>
           </tbody>
         </table>
       </div>
@@ -1875,7 +1888,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     if (!tbody) return;
     if (!force && tbody.dataset.loaded) return;
 
-    tbody.innerHTML = '<tr><td colspan="6"><div class="spinner"></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7"><div class="spinner"></div></td></tr>';
 
     try {
       const r = await fetch('/api/inside?includeHidden=1', { method: 'GET' });
@@ -1884,7 +1897,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
 
       if (!r.ok) {
         var msg = (d && d.error) ? String(d.error) : ('Erreur (' + r.status + ')');
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">' + esc(msg) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">' + esc(msg) + '</td></tr>';
         toast('Inside: ' + msg, true);
         return;
       }
@@ -1892,7 +1905,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       var posts = (d && d.posts) ? d.posts : [];
       _insidePosts = posts || [];
       if (!posts || !posts.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucune publication</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Aucune publication</td></tr>';
         tbody.dataset.loaded = '1';
         return;
       }
@@ -1906,6 +1919,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         var content = String(p.content || '');
         var mediaType = String(p.mediaType || p.media_type || '');
         var mediaUrl = String(p.mediaUrl || p.media_url || '');
+        var linkUrl = String(p.linkUrl || p.link_url || '');
+        var linkLabel = String(p.linkLabel || p.link_label || '');
         var isHidden = !!(p.isHidden || p.is_hidden);
 
         var mediaCell = '—';
@@ -1914,6 +1929,11 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           mediaCell = '<a class="inside-link" href="' + esc(mediaUrl) + '" target="_blank" rel="noreferrer">' + esc(label) + '</a>';
         } else if (mediaType) {
           mediaCell = esc(mediaType);
+        }
+
+        var buttonCell = '—';
+        if (linkUrl) {
+          buttonCell = '<a class="inside-link" title="' + esc(linkUrl) + '" href="' + esc(linkUrl) + '" target="_blank" rel="noreferrer"><i class="fa fa-link" style="margin-right:6px"></i>' + esc(linkLabel || 'Ouvrir le lien') + '</a>';
         }
 
         var statusPill = isHidden
@@ -1930,6 +1950,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           + '<td>' + statusPill + '</td>'
           + '<td><div style="font-weight:700">' + esc(truncateText(title, 70)) + '</div></td>'
           + '<td>' + mediaCell + '</td>'
+          + '<td style="font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis">' + buttonCell + '</td>'
           + '<td><div class="msg-preview">' + esc(truncateText(content, 140)) + '</div></td>'
           + '<td style="white-space:nowrap">' + actions + '</td>'
           + '</tr>';
@@ -1938,7 +1959,7 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       tbody.dataset.loaded = '1';
     } catch (err) {
       console.warn('[Admin] inside list failed', err);
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Erreur de connexion</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Erreur de connexion</td></tr>';
     }
   }
 
@@ -1952,9 +1973,13 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   function clearInsideForm() {
     var t = document.getElementById('inside-title');
     var c = document.getElementById('inside-content');
+    var lu = document.getElementById('inside-link-url');
+    var ll = document.getElementById('inside-link-label');
     var mf = document.getElementById('inside-media-file');
     if (t) t.value = '';
     if (c) c.value = '';
+    if (lu) lu.value = '';
+    if (ll) ll.value = 'Ouvrir le lien';
     if (mf) mf.value = '';
     setInsideResult('', false);
     setInsideEditId('');
@@ -1995,6 +2020,12 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
       }
 
       var payload = { title: title, content: content };
+      var linkUrl = String((document.getElementById('inside-link-url') || {}).value || '').trim();
+      var linkLabel = String((document.getElementById('inside-link-label') || {}).value || '').trim();
+      
+      if (linkUrl) payload.linkUrl = linkUrl;
+      if (linkLabel) payload.linkLabel = linkLabel;
+      
       if (file) {
         payload.mediaType = mediaType;
         payload.mediaUrl = mediaUrl;
@@ -2075,6 +2106,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           if (p) {
             document.getElementById('inside-title').value = String(p.title || '');
             document.getElementById('inside-content').value = String(p.content || '');
+            document.getElementById('inside-link-url').value = String(p.linkUrl || p.link_url || '');
+            document.getElementById('inside-link-label').value = String(p.linkLabel || p.link_label || 'Ouvrir le lien');
             setInsideEditId(String(p.id || ''));
             setInsideResult('Mode édition: ' + truncateText(String(p.title || ''), 40), false);
           }

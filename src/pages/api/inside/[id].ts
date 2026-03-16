@@ -49,6 +49,8 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     content?: string;
     mediaType?: string;
     mediaUrl?: string;
+    linkUrl?: string;
+    linkLabel?: string;
     hidden?: boolean;
   };
   if (!body) return json({ error: 'Payload invalide' }, 400);
@@ -59,7 +61,7 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     if (db) {
       const current = await db
         .prepare(
-          `SELECT id, title, content, media_type, media_url, is_hidden
+          `SELECT id, title, content, media_type, media_url, link_url, link_label, is_hidden
            FROM inside_posts
            WHERE id = ?
            LIMIT 1`
@@ -72,6 +74,8 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
       const content = body.content !== undefined ? String(body.content ?? '').trim().slice(0, 5000) : String(current.content ?? '');
       const mediaType = body.mediaType !== undefined ? String(body.mediaType ?? '').trim().slice(0, 40) : String(current.media_type ?? '');
       const mediaUrl = body.mediaUrl !== undefined ? String(body.mediaUrl ?? '').trim().slice(0, 500) : String(current.media_url ?? '');
+      const linkUrl = body.linkUrl !== undefined ? String(body.linkUrl ?? '').trim().slice(0, 500) : String(current.link_url ?? '');
+      const linkLabel = body.linkLabel !== undefined ? String(body.linkLabel ?? '').trim().slice(0, 80) : String(current.link_label ?? '');
       const hidden = body.hidden !== undefined ? (body.hidden ? 1 : 0) : (toBool(current.is_hidden) ? 1 : 0);
 
       if (title.length < 3) return json({ error: 'Titre trop court' }, 400);
@@ -80,10 +84,10 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
       await db
         .prepare(
           `UPDATE inside_posts
-           SET title = ?, content = ?, media_type = ?, media_url = ?, is_hidden = ?, updated_at = ?
+           SET title = ?, content = ?, media_type = ?, media_url = ?, link_url = ?, link_label = ?, is_hidden = ?, updated_at = ?
            WHERE id = ?`
         )
-        .bind(title, content, mediaType, mediaUrl, hidden, nowIso, id)
+        .bind(title, content, mediaType, mediaUrl, linkUrl, linkLabel, hidden, nowIso, id)
         .run();
 
       return json({ ok: true });
@@ -95,7 +99,7 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     if (!sql) return json({ error: 'Configuration base de données manquante' }, 500);
 
     const rows = await sql<any>`
-      SELECT id, title, content, media_type, media_url, is_hidden
+      SELECT id, title, content, media_type, media_url, link_url, link_label, is_hidden
       FROM inside_posts
       WHERE id = ${id}
       LIMIT 1
@@ -107,6 +111,8 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     const content = body.content !== undefined ? String(body.content ?? '').trim().slice(0, 5000) : String(current.content ?? '');
     const mediaType = body.mediaType !== undefined ? String(body.mediaType ?? '').trim().slice(0, 40) : String(current.media_type ?? '');
     const mediaUrl = body.mediaUrl !== undefined ? String(body.mediaUrl ?? '').trim().slice(0, 500) : String(current.media_url ?? '');
+    const linkUrl = body.linkUrl !== undefined ? String(body.linkUrl ?? '').trim().slice(0, 500) : String(current.link_url ?? '');
+    const linkLabel = body.linkLabel !== undefined ? String(body.linkLabel ?? '').trim().slice(0, 80) : String(current.link_label ?? '');
     const hidden = body.hidden !== undefined ? !!body.hidden : !!current.is_hidden;
 
     if (title.length < 3) return json({ error: 'Titre trop court' }, 400);
@@ -115,7 +121,7 @@ export const PATCH: APIRoute = async ({ cookies, locals, params, request }) => {
     await sql`
       UPDATE inside_posts
       SET title = ${title}, content = ${content}, media_type = ${mediaType}, media_url = ${mediaUrl},
-          is_hidden = ${hidden}, updated_at = ${nowIso}::timestamptz
+          link_url = ${linkUrl}, link_label = ${linkLabel}, is_hidden = ${hidden}, updated_at = ${nowIso}::timestamptz
       WHERE id = ${id}
     `;
 
