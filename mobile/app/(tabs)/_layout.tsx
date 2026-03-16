@@ -46,10 +46,10 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* ── 3. Inside (masqué pour les pros) ── */}
+      {/* ── 3. Inside (Communauté CAPITUNE) ── */}
       <Tabs.Screen
         name="inside"
-        options={isPro ? { href: null } : {
+        options={{
           tabBarLabel: 'Inside',
           tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
         }}
