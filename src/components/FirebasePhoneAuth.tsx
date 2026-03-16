@@ -26,12 +26,6 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
 
     if (!recaptchaVerifierRef.current) {
       try {
-        // Mode test pour développement (SMS non requis)
-        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-          (auth as any).settings.appVerificationDisabledForTesting = true;
-          console.log('[reCAPTCHA] Mode test activé pour localhost');
-        }
-
         recaptchaVerifierRef.current = new RecaptchaVerifier(
           'firebase-phone-recaptcha',
           {
