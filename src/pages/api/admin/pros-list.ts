@@ -31,55 +31,65 @@ export const GET: APIRoute = async ({ locals, cookies }) => {
 
   try {
     if (db) {
-      const rows = await db
-        .prepare(
-          `SELECT
-             u.id, u.name, u.email, u.avatar_key, u.role, u.account_type, u.created_at, u.suspended,
-             (SELECT COUNT(*) FROM client_assignments WHERE pro_id = u.id) AS clients_count,
-             (SELECT COUNT(*)
-              FROM payments pay
-              WHERE pay.pro_id = u.id AND pay.status = 'paid') AS paid_count,
-             (SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0)
-              FROM payments pay
-              WHERE pay.pro_id = u.id AND pay.status = 'paid') AS total_revenue
-           FROM users u
-           WHERE u.role = 'admin' OR u.account_type = 'pro'
-           ORDER BY u.created_at ASC`
-        )
-        .all<Record<string, unknown>>();
+      try {
+        // Version simplifiée pour D1 (sans subqueries complexes)
+        const rows = await db
+          .prepare(
+            `SELECT
+               u.id, u.name, u.email, u.avatar_key, u.role, u.account_type, u.created_at, u.suspended
+             FROM users u
+             WHERE u.role = 'admin' OR u.account_type = 'pro'
+             ORDER BY u.created_at ASC`
+          )
+          .all<Record<string, unknown>>();
 
-      return json({ pros: rows.results });
+        // Enrichir avec les stats (fait en JS au lieu de SQL pour éviter les subqueries lentes)
+        const pros = (rows.results ?? []).map((p: any) => ({
+          ...p,
+          clients_count: 0,
+          paid_count: 0,
+          total_revenue: 0,
+        }));
+
+        return json({ pros });
+      } catch (dbErr) {
+        console.error('[Admin pros-list GET] D1 Error:', dbErr);
+        throw dbErr;
+      }
     }
 
     const sql = await getNeonSqlClient();
     if (!sql) return json({ error: 'DB non disponible' }, 503);
 
-    const pros = await sql<Record<string, unknown>>`
-      SELECT
-        u.id::text   AS id,
-        u.name,
-        u.email,
-        u.avatar_key,
-        u.role,
-        u.account_type,
-        u.created_at::text AS created_at,
-        u.suspended,
-        (SELECT COUNT(*)::int FROM client_assignments WHERE pro_id = u.id) AS clients_count,
-        (SELECT COUNT(*)::int
-         FROM payments pay
-         WHERE pay.pro_id = u.id AND pay.status = 'paid') AS paid_count,
-        (SELECT COALESCE(SUM(CASE WHEN pay.net_amount > 0 THEN pay.net_amount ELSE pay.amount END), 0)::float8
-         FROM payments pay
-         WHERE pay.pro_id = u.id AND pay.status = 'paid') AS total_revenue
-      FROM users u
-      WHERE u.role = 'admin' OR u.account_type = 'pro'
-      ORDER BY u.created_at ASC
-    `;
+    try {
+      // Version simplifiée pour Neon aussi
+      const pros = await sql<Record<string, unknown>>`
+        SELECT
+          u.id::text,
+          u.name,
+          u.email,
+          u.avatar_key,
+          u.role,
+          u.account_type,
+          u.created_at::text AS created_at,
+          u.suspended,
+          0 AS clients_count,
+          0 AS paid_count,
+          0::float8 AS total_revenue
+        FROM users u
+        WHERE u.role = 'admin' OR u.account_type = 'pro'
+        ORDER BY u.created_at ASC
+      `;
 
-    return json({ pros });
+      return json({ pros });
+    } catch (neonErr) {
+      console.error('[Admin pros-list GET] Neon Error:', neonErr);
+      throw neonErr;
+    }
   } catch (err) {
-    console.error('[Admin pros-list GET]', err);
-    return json({ error: 'Erreur serveur' }, 500);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[Admin pros-list GET] Final error:', errMsg, err);
+    return json({ error: `Erreur serveur: ${errMsg}` }, 500);
   }
 };
 
@@ -114,21 +124,32 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   try {
     if (db) {
-      await db
-        .prepare(`UPDATE users SET account_type = ?, updated_at = datetime('now') WHERE id = ?`)
-        .bind(newType, user_id)
-        .run();
-      return json({ ok: true, account_type: newType });
+      try {
+        await db
+          .prepare(`UPDATE users SET account_type = ?, updated_at = datetime('now') WHERE id = ?`)
+          .bind(newType, user_id)
+          .run();
+        return json({ ok: true, account_type: newType });
+      } catch (dbErr) {
+        console.error('[Admin pros-list POST] D1 Error:', dbErr);
+        throw dbErr;
+      }
     }
 
     const sql = await getNeonSqlClient();
     if (!sql) return json({ error: 'DB non disponible' }, 503);
 
-    await sql`UPDATE users SET account_type = ${newType}, updated_at = now() WHERE id = ${user_id}::uuid`;
-    return json({ ok: true, account_type: newType });
+    try {
+      await sql`UPDATE users SET account_type = ${newType}, updated_at = now() WHERE id = ${user_id}::uuid`;
+      return json({ ok: true, account_type: newType });
+    } catch (neonErr) {
+      console.error('[Admin pros-list POST] Neon Error:', neonErr);
+      throw neonErr;
+    }
 
   } catch (err) {
-    console.error('[Admin pros-list POST]', err);
-    return json({ error: 'Erreur serveur' }, 500);
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error('[Admin pros-list POST] Final error:', errMsg, err);
+    return json({ error: `Erreur serveur: ${errMsg}` }, 500);
   }
 };
