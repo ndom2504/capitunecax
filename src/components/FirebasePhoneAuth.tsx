@@ -27,11 +27,11 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
     if (!recaptchaVerifierRef.current) {
       try {
         recaptchaVerifierRef.current = new RecaptchaVerifier(
+          auth,
           'firebase-phone-recaptcha',
           {
             size: 'invisible',
-          },
-          auth
+          }
         );
 
         console.log('[reCAPTCHA] Initialisé avec succès');
@@ -98,8 +98,27 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
           : err.message || 'Erreur lors de l\'envoi du code.'
       );
       // Recréer reCAPTCHA en cas d'erreur (elle est consommée après l'erreur)
-      recaptchaVerifierRef.current?.clear();
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {
+          console.error('[reCAPTCHA clear error]', e);
+        }
+      }
       recaptchaVerifierRef.current = null;
+      
+      // Recréer une nouvelle instance de RecaptchaVerifier
+      try {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(
+          auth,
+          'firebase-phone-recaptcha',
+          { size: 'invisible' }
+        );
+        console.log('[reCAPTCHA] Recréé après erreur');
+      } catch (e) {
+        console.error('[reCAPTCHA recreate error]', e);
+        setErrorMsg('Erreur reCAPTCHA. Rechargez la page.');
+      }
     } finally {
       setLoading(false);
     }
