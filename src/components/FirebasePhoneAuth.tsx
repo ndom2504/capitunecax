@@ -14,44 +14,15 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const confirmResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   const auth = getFirebaseAuth();
 
-  // 1. Charger le script reCAPTCHA depuis Google
+  // Initialiser reCAPTCHA au montage
+  // RecaptchaVerifier charge automatiquement le script reCAPTCHA
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Vérifier si grecaptcha est déjà chargé
-    if ((window as any).grecaptcha) {
-      setRecaptchaReady(true);
-      return;
-    }
-
-    // Charger le script reCAPTCHA
-    const script = document.createElement('script');
-    script.src = 'https://www.gstatic.com/recaptcha/releases/v3_Ll3aMlQXRz8TgnHhIURJlH4m/recaptcha__en.js';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      console.log('[reCAPTCHA] Script chargé');
-      setRecaptchaReady(true);
-    };
-    script.onerror = () => {
-      console.error('[reCAPTCHA] Erreur chargement script');
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      // Nettoyage optionnel
-    };
-  }, []);
-
-  // 2. Initialiser reCAPTCHA une fois le script prêt
-  useEffect(() => {
-    if (!auth || !firebaseConfigPublic.apiKey || !recaptchaReady) {
+    if (!auth || !firebaseConfigPublic.apiKey) {
       return;
     }
 
@@ -70,14 +41,21 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
         console.log('[reCAPTCHA] Initialisé avec succès');
       } catch (err) {
         console.error('[reCAPTCHA init]', err);
-        setErrorMsg('Erreur initialisation reCAPTCHA. Rechargez la page.');
+        setErrorMsg('Erreur initialisation reCAPTCHA. Vérifiez votre connexion et rechargez la page.');
       }
     }
 
     return () => {
-      // Optionnel : nettoyer reCAPTCHA à la désinscription
+      // Nettoyage au démontage
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {
+          // Ignorer les erreurs de nettoyage
+        }
+      }
     };
-  }, [auth, recaptchaReady]);
+  }, [auth]);
 
   const formatPhone = (value: string) => {
     // Accepter +1 (Canada) ou reformatter
@@ -172,14 +150,6 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
     return (
       <div style={{ padding: '16px', background: '#ffebee', color: '#c62828', borderRadius: '8px' }}>
         Firebase non configuré. Vérifiez PUBLIC_FIREBASE_API_KEY dans .env.
-      </div>
-    );
-  }
-
-  if (!recaptchaReady) {
-    return (
-      <div style={{ padding: '16px', background: '#fff3e0', color: '#e65100', borderRadius: '8px' }}>
-        Chargement du formulaire SMS... Veuillez patienter.
       </div>
     );
   }
