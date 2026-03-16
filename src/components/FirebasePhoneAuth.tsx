@@ -14,15 +14,47 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const confirmResultRef = useRef<ConfirmationResult | null>(null);
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
 
   const auth = getFirebaseAuth();
 
-  // Initialiser reCAPTCHA au montage
-  // RecaptchaVerifier charge automatiquement le script reCAPTCHA
+  // Étape 1: Attendre que le script reCAPTCHA soit disponible dans le DOM
   useEffect(() => {
-    if (!auth || !firebaseConfigPublic.apiKey) {
+    if (typeof window === 'undefined') return;
+
+    // Vérifier si grecaptcha est déjà disponible
+    if ((window as any).grecaptcha) {
+      setRecaptchaLoaded(true);
+      return;
+    }
+
+    // Attendre que grecaptcha soit chargé (Firebase le charge dynamiquement)
+    // On utilise un polling simple
+    const checkInterval = setInterval(() => {
+      if ((window as any).grecaptcha) {
+        console.log('[reCAPTCHA] Script disponible');
+        setRecaptchaLoaded(true);
+        clearInterval(checkInterval);
+      }
+    }, 100);
+
+    // Timeout après 10 secondes
+    const timeout = setTimeout(() => {
+      clearInterval(checkInterval);
+      console.warn('[reCAPTCHA] Timeout d\'attente du script');
+    }, 10000);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+    };
+  }, []);
+
+  // Étape 2: Initialiser RecaptchaVerifier une fois que grecaptcha est disponible
+  useEffect(() => {
+    if (!auth || !firebaseConfigPublic.apiKey || !recaptchaLoaded) {
       return;
     }
 
@@ -55,7 +87,7 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
         }
       }
     };
-  }, [auth]);
+  }, [auth, recaptchaLoaded]);
 
   const formatPhone = (value: string) => {
     // Accepter +1 (Canada) ou reformatter
@@ -150,6 +182,14 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
     return (
       <div style={{ padding: '16px', background: '#ffebee', color: '#c62828', borderRadius: '8px' }}>
         Firebase non configuré. Vérifiez PUBLIC_FIREBASE_API_KEY dans .env.
+      </div>
+    );
+  }
+
+  if (!recaptchaLoaded) {
+    return (
+      <div style={{ padding: '16px', background: '#fff3e0', color: '#e65100', borderRadius: '8px' }}>
+        ⏳ Chargement du formulaire SMS... Veuillez patienter.
       </div>
     );
   }
