@@ -20,39 +20,47 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
 
   const auth = getFirebaseAuth();
 
-  // Étape 1: Attendre que le script reCAPTCHA soit disponible dans le DOM
+  // Charger le script reCAPTCHA de Google manuellement
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Vérifier si grecaptcha est déjà disponible
+    // Vérifier si le script est déjà chargé
     if ((window as any).grecaptcha) {
+      console.log('[reCAPTCHA] Script déjà disponible');
       setRecaptchaLoaded(true);
       return;
     }
 
-    // Attendre que grecaptcha soit chargé (Firebase le charge dynamiquement)
-    // On utilise un polling simple
-    const checkInterval = setInterval(() => {
-      if ((window as any).grecaptcha) {
-        console.log('[reCAPTCHA] Script disponible');
-        setRecaptchaLoaded(true);
-        clearInterval(checkInterval);
-      }
-    }, 100);
+    // Charger le script reCAPTCHA v3
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+    script.async = true;
+    script.defer = true;
 
-    // Timeout après 10 secondes
-    const timeout = setTimeout(() => {
-      clearInterval(checkInterval);
-      console.warn('[reCAPTCHA] Timeout d\'attente du script');
-    }, 10000);
+    script.onload = () => {
+      console.log('[reCAPTCHA] Script chargé avec succès');
+      // La variable globale grecaptcha devrait maintenant être disponible
+      if ((window as any).grecaptcha) {
+        setRecaptchaLoaded(true);
+      } else {
+        console.error('[reCAPTCHA] Script chargé mais grecaptcha non disponible');
+      }
+    };
+
+    script.onerror = () => {
+      console.error('[reCAPTCHA] Erreur lors du chargement du script');
+      setErrorMsg('Erreur de chargement de reCAPTCHA. Vérifiez votre connexion.');
+    };
+
+    // Ajouter le script au document
+    document.head.appendChild(script);
 
     return () => {
-      clearInterval(checkInterval);
-      clearTimeout(timeout);
+      // Ne pas supprimer le script, il peut être réutilisé
     };
   }, []);
 
-  // Étape 2: Initialiser RecaptchaVerifier une fois que grecaptcha est disponible
+  // Initialiser RecaptchaVerifier une fois que le script est prêt
   useEffect(() => {
     if (!auth || !firebaseConfigPublic.apiKey || !recaptchaLoaded) {
       return;
@@ -60,20 +68,21 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
 
     if (!recaptchaVerifierRef.current) {
       try {
+        console.log('[reCAPTCHA] Création du RecaptchaVerifier...');
         recaptchaVerifierRef.current = new RecaptchaVerifier(
           'firebase-phone-recaptcha',
           {
             size: 'invisible',
-            callback: () => {
-              console.log('[reCAPTCHA] Validé');
+            callback: (token: string) => {
+              console.log('[reCAPTCHA] Token généré');
             },
           },
           auth
         );
-        console.log('[reCAPTCHA] Initialisé avec succès');
+        console.log('[reCAPTCHA] RecaptchaVerifier créé avec succès');
       } catch (err) {
-        console.error('[reCAPTCHA init]', err);
-        setErrorMsg('Erreur initialisation reCAPTCHA. Vérifiez votre connexion et rechargez la page.');
+        console.error('[reCAPTCHA init error]', err);
+        setErrorMsg('Erreur initialisation reCAPTCHA. Rechargez la page.');
       }
     }
 
@@ -82,8 +91,9 @@ export function FirebasePhoneAuth({ onSuccess, onError }: FirebasePhoneAuthProps
       if (recaptchaVerifierRef.current) {
         try {
           recaptchaVerifierRef.current.clear();
+          recaptchaVerifierRef.current = null;
         } catch (e) {
-          // Ignorer les erreurs de nettoyage
+          console.error('[reCAPTCHA cleanup error]', e);
         }
       }
     };
