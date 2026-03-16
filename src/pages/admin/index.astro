@@ -119,6 +119,38 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     .traffic-note { color:var(--muted); font-size:12px; margin-bottom:16px; max-width:760px; line-height:1.55; }
     .muted-cell { color: var(--muted); font-size: 12px; }
 
+    /* Tableau KPI spécifique */
+    .traffic-kpi-table {
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.005)) !important;
+      border: 1px solid rgba(82,136,255,.15) !important;
+      box-shadow: inset 0 1px 0 rgba(255,148,8,.08), 0 8px 24px rgba(0,0,0,.26) !important;
+    }
+    .traffic-kpi-table thead { background: rgba(82,136,255,.08); }
+    .traffic-kpi-table th { 
+      padding: 12px 16px !important;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,148,8,.95);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .traffic-kpi-table tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      transition: background 0.2s ease;
+    }
+    .traffic-kpi-table tbody tr:hover {
+      background: rgba(82,136,255,.06);
+    }
+    .traffic-kpi-table tbody td {
+      padding: 14px 16px !important;
+      font-size: 13px;
+    }
+    .traffic-kpi-table strong {
+      font-weight: 700;
+      color: var(--text);
+    }
+
     .traffic-kpi { position:relative; min-height:116px; }
     .traffic-kpi-icon {
       width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
@@ -693,34 +725,34 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
         </div>
       </div>
 
-      <div class="table-wrap traffic-table">
-        <table>
+      <div class="table-wrap">
+        <table class="traffic-kpi-table">
           <thead>
             <tr>
-              <th style="width:25%">Métrique</th>
-              <th style="width:25%">Valeur</th>
-              <th style="width:50%">Description</th>
+              <th>📊 Métrique</th>
+              <th>📈 Valeur</th>
+              <th>📋 Description</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-eye" style="color:var(--accent);font-size:16px"></i> <strong>Pages vues</strong></div></td>
-              <td><div class="traffic-kpi-value" id="traffic-pageviews" style="font-size:24px">—</div></td>
+              <td><i class="fa fa-eye" style="color:var(--accent);margin-right:8px"></i> <strong>Pages vues</strong></td>
+              <td style="font-size:20px;font-weight:700;color:var(--accent)" id="traffic-pageviews">—</td>
               <td><span class="muted-cell" id="traffic-pageviews-sub">Nombre total de pages vues sur la période</span></td>
             </tr>
             <tr>
-              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-arrow-pointer" style="color:var(--accent);font-size:16px"></i> <strong>Clics</strong></div></td>
-              <td><div class="traffic-kpi-value" id="traffic-clicks" style="font-size:24px">—</div></td>
+              <td><i class="fa fa-arrow-pointer" style="color:var(--accent);margin-right:8px"></i> <strong>Clics</strong></td>
+              <td style="font-size:20px;font-weight:700;color:var(--accent)" id="traffic-clicks">—</td>
               <td><span class="muted-cell">Clics sur liens et boutons du site</span></td>
             </tr>
             <tr>
-              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-users" style="color:var(--accent);font-size:16px"></i> <strong>Visiteurs estimés</strong></div></td>
-              <td><div class="traffic-kpi-value" id="traffic-visitors" style="font-size:24px">—</div></td>
+              <td><i class="fa fa-users" style="color:var(--accent);margin-right:8px"></i> <strong>Visiteurs estimés</strong></td>
+              <td style="font-size:20px;font-weight:700;color:var(--accent)" id="traffic-visitors">—</td>
               <td><span class="muted-cell">Nombre de sessions distinctes (visiteurs uniques)</span></td>
             </tr>
             <tr>
-              <td><div style="display:flex;align-items:center;gap:10px"><i class="fa fa-layer-group" style="color:var(--accent);font-size:16px"></i> <strong>Zones suivies</strong></div></td>
-              <td><div class="traffic-kpi-value" id="traffic-zones" style="font-size:24px">—</div></td>
+              <td><i class="fa fa-layer-group" style="color:var(--accent);margin-right:8px"></i> <strong>Zones suivies</strong></td>
+              <td style="font-size:20px;font-weight:700;color:var(--accent)" id="traffic-zones">—</td>
               <td><span class="muted-cell" id="traffic-pages-sub">Pages trackées et sections avec interactions détectées</span></td>
             </tr>
           </tbody>
