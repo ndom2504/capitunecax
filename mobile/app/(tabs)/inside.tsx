@@ -716,9 +716,9 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 40, height: 40, borderRadius: 20 },
   avatarInitial: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  author: { fontSize: 13, fontWeight: '800', color: Colors.text },
+  author: { fontSize: 14, fontWeight: '800', color: Colors.text },
   date: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
-  postTitle: { fontSize: 15, fontWeight: '800', color: Colors.text, marginBottom: 8 },
+  postTitle: { fontSize: 18, fontWeight: '800', color: Colors.text, marginBottom: 8 },
   videoWrap: {
     backgroundColor: '#000',
     borderWidth: 0,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  postContent: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19 },
+  postContent: { fontSize: 16, color: Colors.textSecondary, lineHeight: 23 },
 
   linkBtn: {
     marginTop: 10,
