@@ -3,7 +3,7 @@
  *
  * Stratégie:
  * - En prod Cloudflare: on réutilise le KV binding `SESSION` (déjà requis par l'adapter)
- *   pour stocker des clés `presence:<userId>` avec un TTL court.
+ *   pour stocker des clés `presence:<userId>:<deviceId>` avec un TTL court.
  * - En environnement sans KV: fallback best-effort.
  *
  * POST /api/presence  -> ping (auth requis)
@@ -43,7 +43,19 @@ function getPresenceKv(locals: Parameters<APIRoute>[0]['locals']): any | null {
   return kv;
 }
 
-export const POST: APIRoute = async ({ cookies, locals }) => {
+// Générer un deviceId basé sur le user-agent (pour multi-device counting)
+function getDeviceId(request: Request): string {
+  const ua = String(request.headers.get('user-agent') ?? '').slice(0, 20);
+  // Simple hash: somme des charCodes
+  let hash = 0;
+  for (let i = 0; i < ua.length; i++) {
+    hash = ((hash << 5) - hash) + ua.charCodeAt(i);
+    hash = hash & hash; // Force 32-bit
+  }
+  return Math.abs(hash).toString(36).slice(0, 8);
+}
+
+export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const token = getSessionToken(cookies);
   if (!token) return json({ error: 'Non connecté' }, 401);
 
@@ -56,12 +68,13 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
     return json({ ok: true, persisted: false });
   }
 
-  const key = `${PRESENCE_PREFIX}${user.id}`;
+  const deviceId = getDeviceId(request);
+  const key = `${PRESENCE_PREFIX}${user.id}:${deviceId}`;
   await kv.put(key, String(Date.now()), { expirationTtl: PRESENCE_TTL_SECONDS });
   return json({ ok: true, persisted: true, ttl: PRESENCE_TTL_SECONDS });
 };
 
-export const GET: APIRoute = async ({ cookies, locals }) => {
+export const GET: APIRoute = async ({ cookies, locals, request }) => {
   const token = getSessionToken(cookies);
   if (!token) return json({ connected: 0, meOnline: false, persisted: false });
 
@@ -74,7 +87,8 @@ export const GET: APIRoute = async ({ cookies, locals }) => {
     return json({ connected: 1, meOnline: true, persisted: false });
   }
 
-  const meKey = `${PRESENCE_PREFIX}${user.id}`;
+  const deviceId = getDeviceId(request);
+  const meKey = `${PRESENCE_PREFIX}${user.id}:${deviceId}`;
   const meVal = await kv.get(meKey);
   const meOnline = !!meVal;
 

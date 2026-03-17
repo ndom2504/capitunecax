@@ -91,7 +91,7 @@ export default function InsideScreen() {
   const router = useRouter();
   const isPro = user?.account_type === 'pro';
   const isAdmin = user?.role === 'admin';
-  const canPublish = isPro || isAdmin;
+  const userCanPublish = isPro || isAdmin;
   const insets = useSafeAreaInsets();
 
   const [posts, setPosts] = useState<InsidePost[]>(DEMO_POSTS);
@@ -122,7 +122,7 @@ export default function InsideScreen() {
   const [linkLabel, setLinkLabel] = useState('');
   const [publishing, setPublishing] = useState(false);
 
-  const canPublish = useMemo(() => title.trim().length >= 3 && content.trim().length >= 10, [title, content]);
+  const contentValid = useMemo(() => title.trim().length >= 3 && content.trim().length >= 10, [title, content]);
 
   const normalizeMediaUrl = (raw?: string | null): string | null => {
     const url = String(raw ?? '').trim();
@@ -442,7 +442,7 @@ export default function InsideScreen() {
         </View>
       </Modal>
 
-      {canPublish && (
+      {userCanPublish && (
         <View style={styles.composerCard}>
           <Text style={styles.composerTitle}>Publier une mise à jour</Text>
           <TextInput
@@ -474,9 +474,9 @@ export default function InsideScreen() {
             maxLength={500}
           />
           <TouchableOpacity
-            style={[styles.publishBtn, (title.trim().length < 3 || content.trim().length < 10 || publishing) && styles.publishBtnDisabled]}
+            style={[styles.publishBtn, (!contentValid || publishing) && styles.publishBtnDisabled]}
             onPress={publish}
-            disabled={title.trim().length < 3 || content.trim().length < 10 || publishing}
+            disabled={!contentValid || publishing}
             activeOpacity={0.85}
           >
             {publishing ? (
