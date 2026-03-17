@@ -2669,10 +2669,11 @@ const proSvcList = [
           const nextBtn = document.getElementById('proNextBtn');
 
           if (searchInput) {
+            let searchTimer = null;
             searchInput.addEventListener('input', function() {
               proState.search = this.value;
-              const timer = setTimeout(() => { loadProClients(1); }, 250);
-              searchInput._timer = timer;
+              if (searchTimer) clearTimeout(searchTimer);
+              searchTimer = setTimeout(() => { loadProClients(1); }, 250);
             });
           }
 
