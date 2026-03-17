@@ -23,6 +23,8 @@ type InsidePostApi = {
   updatedAt?: string;
   authorName: string;
   authorAvatarKey?: string;
+  authorId?: string;
+  authorAccountType?: string;
   mediaType?: string;
   mediaUrl?: string;
   linkUrl?: string;
@@ -52,6 +54,8 @@ function asPost(row: any): InsidePostApi {
     updatedAt: String(row.updated_at ?? row.updatedAt ?? ''),
     authorName: String(row.author_name ?? row.authorName ?? ''),
     authorAvatarKey: String(row.author_avatar_key ?? row.authorAvatarKey ?? ''),
+    authorId: String(row.author_user_id ?? row.authorId ?? ''),
+    authorAccountType: String(row.account_type ?? ''),
     mediaType: String(row.media_type ?? row.mediaType ?? ''),
     mediaUrl: String(row.media_url ?? row.mediaUrl ?? ''),
     linkUrl: String(row.link_url ?? row.linkUrl ?? ''),
@@ -80,17 +84,20 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
   const user = await getUserFromSessionFullAny(db, token);
   if (!user) return json({ error: 'Session expirée' }, 401);
   const isAdmin = String((user as any)?.role ?? '') === 'admin';
+  const isPro = String((user as any)?.account_type ?? '') === 'pro';
+  const canManage = isAdmin || isPro;
   const url = new URL(request.url);
-  const includeHidden = url.searchParams.get('includeHidden') === '1' && isAdmin;
+  const includeHidden = url.searchParams.get('includeHidden') === '1' && canManage;
 
   try {
     if (db) {
       const { results } = await db
         .prepare(
-          `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label, created_at, updated_at, is_hidden
-           FROM inside_posts
-           ${includeHidden ? '' : 'WHERE (is_hidden IS NULL OR is_hidden = 0)'}
-           ORDER BY created_at DESC
+          `SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url, p.link_label, p.created_at, p.updated_at, p.is_hidden, u.account_type
+           FROM inside_posts p
+           LEFT JOIN users u ON p.author_user_id = u.id
+           ${includeHidden ? '' : 'WHERE (p.is_hidden IS NULL OR p.is_hidden = 0)'}
+           ORDER BY p.created_at DESC
            LIMIT 50`
         )
         .all<any>()
@@ -99,10 +106,11 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
           if (String(err).includes('link_label') || String(err).includes('no such column')) {
             const fallback = await db
               .prepare(
-                `SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, created_at, updated_at, is_hidden
-                 FROM inside_posts
-                 ${includeHidden ? '' : 'WHERE (is_hidden IS NULL OR is_hidden = 0)'}
-                 ORDER BY created_at DESC
+                `SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url, p.created_at, p.updated_at, p.is_hidden, u.account_type
+                 FROM inside_posts p
+                 LEFT JOIN users u ON p.author_user_id = u.id
+                 ${includeHidden ? '' : 'WHERE (p.is_hidden IS NULL OR p.is_hidden = 0)'}
+                 ORDER BY p.created_at DESC
                  LIMIT 50`
               )
               .all<any>();
@@ -121,20 +129,22 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
     try {
       rows = includeHidden
         ? await sql<any>`
-            SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
-                   (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                   is_hidden
-            FROM inside_posts
-            ORDER BY created_at DESC
+            SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url, p.link_label,
+                   (p.created_at::timestamptz) AS created_at, (p.updated_at::timestamptz) AS updated_at,
+                   p.is_hidden, u.account_type
+            FROM inside_posts p
+            LEFT JOIN users u ON p.author_user_id = u.id
+            ORDER BY p.created_at DESC
             LIMIT 50
           `
         : await sql<any>`
-            SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url, link_label,
-                   (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                   is_hidden
-            FROM inside_posts
-            WHERE is_hidden IS NOT TRUE
-            ORDER BY created_at DESC
+            SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url, p.link_label,
+                   (p.created_at::timestamptz) AS created_at, (p.updated_at::timestamptz) AS updated_at,
+                   p.is_hidden, u.account_type
+            FROM inside_posts p
+            LEFT JOIN users u ON p.author_user_id = u.id
+            WHERE p.is_hidden IS NOT TRUE
+            ORDER BY p.created_at DESC
             LIMIT 50
           `;
     } catch (err: any) {
@@ -142,20 +152,22 @@ export const GET: APIRoute = async ({ cookies, locals, request }) => {
       if (String(err).includes('link_label') || String(err).includes('column')) {
         rows = includeHidden
           ? await sql<any>`
-              SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
-                     (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                     is_hidden
-              FROM inside_posts
-              ORDER BY created_at DESC
+              SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url,
+                     (p.created_at::timestamptz) AS created_at, (p.updated_at::timestamptz) AS updated_at,
+                     p.is_hidden, u.account_type
+              FROM inside_posts p
+              LEFT JOIN users u ON p.author_user_id = u.id
+              ORDER BY p.created_at DESC
               LIMIT 50
             `
           : await sql<any>`
-              SELECT id, author_name, author_avatar_key, title, content, media_type, media_url, link_url,
-                     (created_at::timestamptz) AS created_at, (updated_at::timestamptz) AS updated_at,
-                     is_hidden
-              FROM inside_posts
-              WHERE is_hidden IS NOT TRUE
-              ORDER BY created_at DESC
+              SELECT p.id, p.author_name, p.author_avatar_key, p.author_user_id, p.title, p.content, p.media_type, p.media_url, p.link_url,
+                     (p.created_at::timestamptz) AS created_at, (p.updated_at::timestamptz) AS updated_at,
+                     p.is_hidden, u.account_type
+              FROM inside_posts p
+              LEFT JOIN users u ON p.author_user_id = u.id
+              WHERE p.is_hidden IS NOT TRUE
+              ORDER BY p.created_at DESC
               LIMIT 50
             `;
       } else {
@@ -176,19 +188,23 @@ export const POST: APIRoute = async ({ cookies, locals, request }) => {
   const token = getToken(request, cookies);
   if (!token) return json({ error: 'Non connecté' }, 401);
 
-  // Mode sans DB: on accepte si admin, mais on ne persiste pas.
+  // Mode sans DB: on accepte si admin ou pro, mais on ne persiste pas.
   if (!db && !useNeon) {
     const user = await getUserFromSessionAny(null, token);
     if (!user) return json({ error: 'Session expirée' }, 401);
     const isAdmin = String((user as any)?.role ?? '') === 'admin';
-    if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
+    const isPro = String((user as any)?.account_type ?? '') === 'pro';
+    const canPublish = isAdmin || isPro;
+    if (!canPublish) return json({ error: 'Accès refusé' }, 403);
     return json({ ok: true, persisted: false });
   }
 
   const user = await getUserFromSessionFullAny(db, token);
   if (!user) return json({ error: 'Session expirée' }, 401);
   const isAdmin = String((user as any)?.role ?? '') === 'admin';
-  if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
+  const isPro = String((user as any)?.account_type ?? '') === 'pro';
+  const canPublish = isAdmin || isPro;
+  if (!canPublish) return json({ error: 'Accès refusé' }, 403);
 
   const body = (await request.json()) as {
     title?: string;

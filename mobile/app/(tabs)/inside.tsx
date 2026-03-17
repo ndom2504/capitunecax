@@ -41,6 +41,8 @@ type InsidePost = {
   createdAt: string;
   authorName: string;
   authorAvatarKey?: string;
+  authorId?: string;
+  authorAccountType?: string;
   linkUrl?: string;
   linkLabel?: string;
   media?: InsideMedia;
@@ -149,6 +151,8 @@ export default function InsideScreen() {
     createdAt: String(p.createdAt ?? new Date().toISOString()),
     authorName: String(p.authorName ?? 'Admin'),
     authorAvatarKey: p.authorAvatarKey ? String(p.authorAvatarKey) : undefined,
+    authorId: p.authorId ? String(p.authorId) : undefined,
+    authorAccountType: p.authorAccountType ? String(p.authorAccountType) : undefined,
     linkUrl: String((p as any)?.linkUrl ?? ''),
     linkLabel: String((p as any)?.linkLabel ?? 'Ouvrir le lien'),
     media: toMedia(p),
@@ -270,6 +274,19 @@ export default function InsideScreen() {
     );
   };
 
+  const handleContactPro = (post: InsidePost) => {
+    if (!user?.id || !post.authorId) {
+      Alert.alert('Erreur', 'Impossible de contacter ce professionnel.');
+      return;
+    }
+    // Navigate to messages or create a conversation with the PRO
+    // For now, open the messages screen
+    router.push({
+      pathname: '/dashboard',
+      params: { tab: 'messages' },
+    });
+  };
+
   const publish = async () => {
     if (!isAdmin) return;
     if (!canPublish || publishing) return;
@@ -358,7 +375,7 @@ export default function InsideScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.contactBtn}
+            style={styles.notificationBtn}
             activeOpacity={0.85}
             onPress={openMessages}
             accessibilityLabel="Ouvrir la messagerie"
@@ -551,20 +568,32 @@ export default function InsideScreen() {
                     <Text style={styles.reactCount}>{item.reactions.clap ?? 0}</Text>
                   </TouchableOpacity>
 
-                  {normalizeLink(item.linkUrl) && (
-                    <TouchableOpacity
-                      style={styles.linkBtn}
-                      activeOpacity={0.85}
-                      onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
-                      accessibilityLabel={`${item.linkLabel || 'Ouvrir le lien'}`}
-                    >
-                      <Ionicons name="link" size={16} color={Colors.orange} />
-                      <Text style={styles.linkBtnText}>{item.linkLabel || 'Ouvrir le lien'}</Text>
-                    </TouchableOpacity>
-                  )}
-
                   <View style={{ flex: 1 }} />
                 </View>
+
+                {normalizeLink(item.linkUrl) && (
+                  <TouchableOpacity
+                    style={styles.linkBtn}
+                    activeOpacity={0.85}
+                    onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
+                    accessibilityLabel={`${item.linkLabel || 'Ouvrir le lien'}`}
+                  >
+                    <Ionicons name="link" size={18} color="#fff" />
+                    <Text style={styles.linkBtnText}>{item.linkLabel || 'Ouvrir le lien'}</Text>
+                  </TouchableOpacity>
+                )}
+
+                {item.authorAccountType === 'pro' && user?.account_type !== 'pro' && user?.role !== 'admin' && (
+                  <TouchableOpacity
+                    style={styles.contactBtn}
+                    activeOpacity={0.85}
+                    onPress={() => handleContactPro(item)}
+                    accessibilityLabel={`Contacter ${item.authorName}`}
+                  >
+                    <Ionicons name="call" size={18} color="#fff" />
+                    <Text style={styles.contactBtnText}>Contacter {item.authorName}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
@@ -640,7 +669,7 @@ const styles = StyleSheet.create({
   meAvatarImg: { width: 36, height: 36, borderRadius: 18 },
   meAvatarInitial: { fontSize: 14, fontWeight: '900', color: Colors.text },
 
-  contactBtn: {
+  notificationBtn: {
     width: 36,
     height: 36,
     borderRadius: 12,
@@ -751,19 +780,30 @@ const styles = StyleSheet.create({
   postContent: { fontSize: 16, color: Colors.textSecondary, lineHeight: 23 },
 
   linkBtn: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.orange,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    backgroundColor: Colors.offWhite,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
   },
-  linkBtnText: { fontSize: 12, fontWeight: '800', color: Colors.text },
+  linkBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
+
+  contactBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.accent,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  contactBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
   reactionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
   reactBtn: {

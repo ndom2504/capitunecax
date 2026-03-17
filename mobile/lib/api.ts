@@ -245,6 +245,8 @@ export type InsidePostDto = {
   updatedAt?: string;
   authorName: string;
   authorAvatarKey?: string;
+  authorId?: string;
+  authorAccountType?: string;
   mediaType?: string;
   mediaUrl?: string;
   linkUrl?: string;

@@ -629,7 +629,14 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           <div class="section-title">Dernières publications</div>
           <span class="inside-span">Aperçu des 50 derniers posts (lecture seule).</span>
         </div>
-        <button class="btn-sm" id="btn-inside-refresh" type="button"><i class="fa fa-rotate"></i> Rafraîchir</button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="segmented" title="Filtrer par bouton d'action">
+            <button class="seg-btn active" id="filter-all" data-filter="all"><i class="fa fa-list"></i> Tous</button>
+            <button class="seg-btn" id="filter-with-link" data-filter="with-link"><i class="fa fa-link"></i> Avec bouton</button>
+            <button class="seg-btn" id="filter-no-link" data-filter="no-link"><i class="fa fa-ban"></i> Sans bouton</button>
+          </div>
+          <button class="btn-sm" id="btn-inside-refresh" type="button"><i class="fa fa-rotate"></i> Rafraîchir</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -1945,7 +1952,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
           + '<button class="btn-sm" data-inside-action="toggleHidden" data-hidden="' + (isHidden ? '1' : '0') + '" data-id="' + esc(String(p.id || '')) + '">' + (isHidden ? '<i class="fa fa-eye"></i> Afficher' : '<i class="fa fa-eye-slash"></i> Masquer') + '</button> '
           + '<button class="btn-sm" data-inside-action="delete" data-id="' + esc(String(p.id || '')) + '" style="background: rgba(231,76,60,.15); color: var(--red)"><i class="fa fa-trash"></i></button>';
 
-        html += '<tr>'
+        var hasLink = linkUrl ? 'with-link' : 'no-link';
+        html += '<tr data-filter="' + hasLink + '" data-filter-tag="' + hasLink + '">'
           + '<td style="white-space:nowrap;color:var(--muted);font-size:12px">' + esc(date) + '</td>'
           + '<td>' + statusPill + '</td>'
           + '<td><div style="font-weight:700">' + esc(truncateText(title, 70)) + '</div></td>'
@@ -1968,6 +1976,21 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
     if (!el) return;
     el.textContent = text || '';
     el.style.color = isError ? 'var(--red)' : 'var(--muted)';
+  }
+
+  function applyInsideFilter(filter) {
+    var tbody = document.getElementById('inside-table') || {};
+    var rows = tbody.querySelectorAll('tr[data-filter-tag]') || [];
+    rows.forEach(function(row) {
+      var tag = row.getAttribute('data-filter-tag');
+      if (filter === 'all') {
+        row.style.display = '';
+      } else if (filter === tag) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
   }
 
   function clearInsideForm() {
@@ -2179,6 +2202,21 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   if (insideEditCancel) insideEditCancel.addEventListener('click', function() { clearInsideForm(); });
   var insideRefresh = document.getElementById('btn-inside-refresh');
   if (insideRefresh) insideRefresh.addEventListener('click', function() { loadInsidePosts(true); });
+
+  // Filter for Inside posts (with/without action button)
+  var filterBtns = document.querySelectorAll('[id^="filter-"]');
+  filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      // Update active state
+      filterBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      // Apply filter
+      var filter = btn.getAttribute('data-filter');
+      applyInsideFilter(filter);
+    });
+  });
+
   var trafficRefresh = document.getElementById('btn-traffic-refresh');
   if (trafficRefresh) trafficRefresh.addEventListener('click', function() { _trafficLoaded = false; loadWebTraffic(true); });
   var trafficDays = document.getElementById('traffic-days');
