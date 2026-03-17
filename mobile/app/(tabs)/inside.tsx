@@ -116,6 +116,7 @@ export default function InsideScreen() {
   });
 
   // Composer (admin & pro)
+  const [composerOpen, setComposerOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -443,52 +444,92 @@ export default function InsideScreen() {
       </Modal>
 
       {userCanPublish && (
-        <View style={styles.composerCard}>
-          <Text style={styles.composerTitle}>Publier une mise à jour</Text>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Titre (ex: Mise à jour programmes…)"
-            placeholderTextColor={Colors.textMuted}
-            maxLength={120}
-          />
-          <TextInput
-            style={[styles.input, styles.inputMultiline]}
-            value={content}
-            onChangeText={setContent}
-            placeholder="Texte…"
-            placeholderTextColor={Colors.textMuted}
-            multiline
-            maxLength={2000}
-          />
-          <TextInput
-            style={styles.input}
-            value={linkUrl}
-            onChangeText={setLinkUrl}
-            placeholder="Lien (optionnel) — ex: https://..."
-            placeholderTextColor={Colors.textMuted}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[styles.publishBtn, (!contentValid || publishing) && styles.publishBtnDisabled]}
-            onPress={publish}
-            disabled={!contentValid || publishing}
-            activeOpacity={0.85}
-          >
-            {publishing ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="send" size={16} color="#fff" />
-                <Text style={styles.publishBtnText}>Publier</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+        <>
+          {!composerOpen ? (
+            // Version réduite : simple input
+            <TouchableOpacity 
+              style={styles.composerMinimal} 
+              activeOpacity={0.8}
+              onPress={() => setComposerOpen(true)}
+            >
+              <View style={styles.composerMinimalLeft}>
+                {getAvatarSource(user?.avatar) ? (
+                  <Image source={getAvatarSource(user?.avatar) as any} style={styles.composerMinimalAvatar} />
+                ) : (
+                  <Text style={styles.composerMinimalAvatarText}>{(user?.name ?? 'U')[0].toUpperCase()}</Text>
+                )}
+              </View>
+              <TextInput
+                style={styles.composerMinimalInput}
+                placeholder="Quoi de neuf ?"
+                placeholderTextColor={Colors.textMuted}
+                editable={false}
+              />
+            </TouchableOpacity>
+          ) : (
+            // Version complète : formulaire
+            <View style={styles.composerCard}>
+              <View style={styles.composerHeader}>
+                <Text style={styles.composerTitle}>Publier une mise à jour</Text>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setComposerOpen(false);
+                    setTitle('');
+                    setContent('');
+                    setLinkUrl('');
+                    setLinkLabel('');
+                  }}
+                  style={styles.composerCloseBtn}
+                >
+                  <Ionicons name="close" size={18} color={Colors.text} />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.input}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Titre (ex: Mise à jour programmes…)"
+                placeholderTextColor={Colors.textMuted}
+                maxLength={120}
+              />
+              <TextInput
+                style={[styles.input, styles.inputMultiline]}
+                value={content}
+                onChangeText={setContent}
+                placeholder="Texte…"
+                placeholderTextColor={Colors.textMuted}
+                multiline
+                maxLength={2000}
+              />
+              <TextInput
+                style={styles.input}
+                value={linkUrl}
+                onChangeText={setLinkUrl}
+                placeholder="Lien (optionnel) — ex: https://..."
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[styles.publishBtn, (!contentValid || publishing) && styles.publishBtnDisabled]}
+                onPress={publish}
+                disabled={!contentValid || publishing}
+                activeOpacity={0.85}
+              >
+                {publishing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="send" size={16} color="#fff" />
+                    <Text style={styles.publishBtnText}>Publier</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
       )}
 
       {loading ? (
@@ -708,6 +749,59 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 10,
   },
+  composerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  composerCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Colors.offWhite,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  composerMinimal: {
+    marginHorizontal: 16,
+    marginVertical: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...UI.cardShadow,
+  },
+  composerMinimalLeft: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  composerMinimalAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  composerMinimalAvatarText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  composerMinimalInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.text,
+    padding: 0,
+  },
   composerTitle: { fontSize: 14, fontWeight: '800', color: Colors.text },
   input: {
     backgroundColor: Colors.offWhite,
@@ -783,7 +877,7 @@ const styles = StyleSheet.create({
 
   linkBtn: {
     marginTop: 12,
-    marginHorizontal: -16,
+    alignSelf: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.orange,
@@ -792,13 +886,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    width: '100%',
+    minWidth: '100%',
   },
   linkBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
   contactBtn: {
     marginTop: 12,
-    marginHorizontal: -16,
+    alignSelf: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.accent,
@@ -807,11 +901,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    width: '100%',
+    minWidth: '100%',
   },
   contactBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
-  reactionsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+  reactionsRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 10, 
+    marginTop: 12,
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
   reactBtn: {
     flexDirection: 'row',
     alignItems: 'center',
