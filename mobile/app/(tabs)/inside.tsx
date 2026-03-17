@@ -543,6 +543,9 @@ export default function InsideScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
           viewabilityConfig={viewabilityConfig.current}
           onViewableItemsChanged={onViewableItemsChanged.current}
+          scrollEnabled={true}
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={true}
           renderItem={({ item }) => (
             <View style={styles.postCard}>
               <View style={styles.postInner}>
@@ -559,14 +562,36 @@ export default function InsideScreen() {
                     <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
                   </View>
                   {isPro && (
-                    <TouchableOpacity
-                      style={styles.postMenuBtn}
-                      activeOpacity={0.7}
-                      onPress={() => setActiveMenuPostId(activeMenuPostId === item.id ? null : item.id)}
-                      accessibilityLabel="Plus d'options"
-                    >
-                      <Ionicons name="ellipsis-vertical" size={18} color={Colors.text} />
-                    </TouchableOpacity>
+                    <View style={styles.postMenuContainer}>
+                      <TouchableOpacity
+                        style={styles.postMenuBtn}
+                        activeOpacity={0.7}
+                        onPress={() => setActiveMenuPostId(activeMenuPostId === item.id ? null : item.id)}
+                        accessibilityLabel="Plus d'options"
+                      >
+                        <Ionicons name="ellipsis-vertical" size={18} color={Colors.text} />
+                      </TouchableOpacity>
+                      {activeMenuPostId === item.id && (
+                        <View style={styles.postOptionsMenuPopup}>
+                          <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Enregistrer', 'Publication enregistrée'); setActiveMenuPostId(null); }}>
+                            <Ionicons name="bookmark-outline" size={16} color={Colors.text} />
+                            <Text style={styles.optionText}>Enregistrer</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Partager', 'Partage en cours...'); setActiveMenuPostId(null); }}>
+                            <Ionicons name="share-social-outline" size={16} color={Colors.text} />
+                            <Text style={styles.optionText}>Partager</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Signaler', 'Contenu signalé'); setActiveMenuPostId(null); }}>
+                            <Ionicons name="flag-outline" size={16} color={Colors.text} />
+                            <Text style={styles.optionText}>Signaler</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={[styles.optionItem, styles.optionItemDanger]} activeOpacity={0.7} onPress={() => { Alert.alert('Supprimer', 'Publication supprimée'); setPosts(prev => prev.filter(p => p.id !== item.id)); setActiveMenuPostId(null); }}>
+                            <Ionicons name="trash-outline" size={16} color={Colors.error} />
+                            <Text style={[styles.optionText, { color: Colors.error }]}>Supprimer</Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
                   )}
                 </View>
 
@@ -647,27 +672,6 @@ export default function InsideScreen() {
                     >
                       <Ionicons name="call" size={18} color="#fff" />
                       <Text style={styles.contactBtnText}>Contacter {item.authorName}</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                {isPro && activeMenuPostId === item.id && (
-                  <View style={styles.postOptionsMenu}>
-                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Enregistrer', 'Publication enregistrée'); setActiveMenuPostId(null); }}>
-                      <Ionicons name="bookmark-outline" size={18} color={Colors.text} />
-                      <Text style={styles.optionText}>Enregistrer</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Partager', 'Partage en cours...'); setActiveMenuPostId(null); }}>
-                      <Ionicons name="share-social-outline" size={18} color={Colors.text} />
-                      <Text style={styles.optionText}>Partager</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Signaler', 'Contenu signalé'); setActiveMenuPostId(null); }}>
-                      <Ionicons name="flag-outline" size={18} color={Colors.text} />
-                      <Text style={styles.optionText}>Signaler</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.optionItem, styles.optionItemDanger]} activeOpacity={0.7} onPress={() => { Alert.alert('Supprimer', 'Publication supprimée'); setPosts(prev => prev.filter(p => p.id !== item.id)); setActiveMenuPostId(null); }}>
-                      <Ionicons name="trash-outline" size={18} color={Colors.error} />
-                      <Text style={[styles.optionText, { color: Colors.error }]}>Supprimer</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -866,11 +870,23 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    overflow: 'visible',
   },
-  postInner: { paddingHorizontal: 16, paddingTop: 14 },
+  postInner: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8, overflow: 'visible' },
   postInnerContent: { paddingHorizontal: 16, paddingBottom: 12 },
   postInnerActions: { paddingHorizontal: 16, paddingBottom: 14 },
-  postTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, justifyContent: 'space-between' },
+  postTop: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12, 
+    marginBottom: 10, 
+    justifyContent: 'space-between',
+    position: 'relative',
+  },
+  postMenuContainer: {
+    position: 'relative',
+    alignItems: 'flex-end',
+  },
   postMenuBtn: {
     width: 32,
     height: 32,
@@ -878,6 +894,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgLight,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  postOptionsMenuPopup: {
+    position: 'absolute',
+    top: 36,
+    right: 0,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    ...UI.cardShadow,
+    zIndex: 9999,
+    minWidth: 160,
+    elevation: 20,
+    pointerEvents: 'auto',
   },
   avatar: {
     width: 40,
@@ -971,8 +1002,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -980,7 +1011,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   optionText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: Colors.text,
   },
