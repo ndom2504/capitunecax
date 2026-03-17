@@ -1979,7 +1979,8 @@ const isSuperAdmin = adminUser?.email ? isSuperAdminEmail(adminUser.email) : fal
   }
 
   function applyInsideFilter(filter) {
-    var tbody = document.getElementById('inside-table') || {};
+    var tbody = document.getElementById('inside-posts-body');
+    if (!tbody) return;
     var rows = tbody.querySelectorAll('tr[data-filter-tag]') || [];
     rows.forEach(function(row) {
       var tag = row.getAttribute('data-filter-tag');

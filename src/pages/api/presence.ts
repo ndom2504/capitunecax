@@ -22,8 +22,17 @@ function json(data: unknown, status = 200) {
   });
 }
 
-function getSessionToken(cookies: Parameters<APIRoute>[0]['cookies']): string {
-  return String(cookies.get('capitune_session')?.value ?? '').trim();
+function getSessionToken(cookies: Parameters<APIRoute>[0]['cookies'], request: Request): string {
+  // Essayer les cookies d'abord (web)
+  const cookieToken = String(cookies.get('capitune_session')?.value ?? '').trim();
+  if (cookieToken) return cookieToken;
+  
+  // Fallback: header Authorization (mobile)
+  const authHeader = request.headers.get('Authorization') ?? '';
+  if (authHeader.startsWith('Bearer ')) {
+    return authHeader.slice(7).trim();
+  }
+  return '';
 }
 
 function getPresenceKv(locals: Parameters<APIRoute>[0]['locals']): any | null {

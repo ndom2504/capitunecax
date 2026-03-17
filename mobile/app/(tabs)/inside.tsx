@@ -90,7 +90,8 @@ export default function InsideScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const isPro = user?.account_type === 'pro';
-  const isAdmin = user?.role === 'admin' && !isPro;
+  const isAdmin = user?.role === 'admin';
+  const canPublish = isPro || isAdmin;
   const insets = useSafeAreaInsets();
 
   const [posts, setPosts] = useState<InsidePost[]>(DEMO_POSTS);
@@ -114,7 +115,7 @@ export default function InsideScreen() {
     }
   });
 
-  // Composer (admin)
+  // Composer (admin & pro)
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -288,8 +289,9 @@ export default function InsideScreen() {
   };
 
   const publish = async () => {
-    if (!isAdmin) return;
-    if (!canPublish || publishing) return;
+    if (!isPro && !isAdmin) return;
+    const canPublishContent = title.trim().length >= 3 && content.trim().length >= 10;
+    if (!canPublishContent || publishing) return;
 
     setPublishing(true);
     try {
@@ -440,7 +442,7 @@ export default function InsideScreen() {
         </View>
       </Modal>
 
-      {isAdmin && (
+      {canPublish && (
         <View style={styles.composerCard}>
           <Text style={styles.composerTitle}>Publier une mise à jour</Text>
           <TextInput
@@ -472,9 +474,9 @@ export default function InsideScreen() {
             maxLength={500}
           />
           <TouchableOpacity
-            style={[styles.publishBtn, (!canPublish || publishing) && styles.publishBtnDisabled]}
+            style={[styles.publishBtn, (title.trim().length < 3 || content.trim().length < 10 || publishing) && styles.publishBtnDisabled]}
             onPress={publish}
-            disabled={!canPublish || publishing}
+            disabled={title.trim().length < 3 || content.trim().length < 10 || publishing}
             activeOpacity={0.85}
           >
             {publishing ? (
@@ -583,7 +585,7 @@ export default function InsideScreen() {
                   </TouchableOpacity>
                 )}
 
-                {item.authorAccountType === 'pro' && user?.account_type !== 'pro' && user?.role !== 'admin' && (
+                {item.authorAccountType === 'pro' && user?.account_type === 'client' && (
                   <TouchableOpacity
                     style={styles.contactBtn}
                     activeOpacity={0.85}
