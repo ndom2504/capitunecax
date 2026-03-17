@@ -2,7 +2,6 @@
 // CAPITUNE  Espace Client Dashboard
 import { packagesCatalog, servicesCatalog } from '../lib/service-catalog';
 import { getUserFromSessionAny } from '../lib/db';
-import ProClientList from '../components/ProClientList';
 
 // Vérification session côté serveur
 const session = Astro.cookies.get('capitune_session');
@@ -1622,8 +1621,74 @@ const proSvcList = [
           </>
         )}
         {isProMode && (
-          <div class="dash-container" style="padding: 20px;">
-            <ProClientList />
+          <div id="proClientsBlock">
+            <div class="dash-container">
+              <!-- Portefeuille -->
+              <div class="stats-grid" style="margin-bottom:32px;">
+                <div class="stat-card" id="walletCard">
+                  <div class="stat-label"><i class="fa fa-wallet"></i> Portefeuille</div>
+                  <div class="stat-value" id="proWalletTotal">—</div>
+                  <div class="stat-sub">Revenus totaux</div>
+                </div>
+              </div>
+
+              <!-- Stats PRO -->
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-label">Clients assignés</div>
+                  <div class="stat-value" id="proClientsCount">0</div>
+                  <div class="stat-sub">Vous gérez</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Dossiers</div>
+                  <div class="stat-value" id="proDossiersCount">0</div>
+                  <div class="stat-sub">Projets actifs</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Propositions</div>
+                  <div class="stat-value" id="proPropositionsCount">0</div>
+                  <div class="stat-sub">En attente</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-label">Actifs</div>
+                  <div class="stat-value" id="proActifsCount">0</div>
+                  <div class="stat-sub">En cours</div>
+                </div>
+              </div>
+
+              <!-- Recherche -->
+              <div style="margin: 32px 0;">
+                <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #1a1a2e;">
+                  <i class="fa fa-search"></i> Rechercher un client
+                </h3>
+                <input 
+                  type="text"
+                  id="proSearchInput"
+                  placeholder="Entrez le nom ou l'email du client..."
+                  style="width: 100%; padding: 12px 16px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit;"
+                />
+              </div>
+
+              <!-- Liste clients -->
+              <div style="margin-top: 32px;">
+                <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px; color: #1a1a2e;">
+                  <i class="fa fa-users"></i> Mes clients
+                </h3>
+                <div id="proClientsList" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                  <div style="text-align: center; color: #999;">
+                    <i class="fa fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                    Chargement...
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pagination -->
+              <div id="proPagination" style="margin-top: 24px; text-align: center; display: none;">
+                <button id="proPrevBtn" style="padding: 8px 16px; margin: 0 8px; border: 1.5px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">← Précédent</button>
+                <span id="proPageInfo" style="margin: 0 16px; color: #666;"></span>
+                <button id="proNextBtn" style="padding: 8px 16px; margin: 0 8px; border: 1.5px solid #ddd; border-radius: 8px; background: white; cursor: pointer;">Suivant →</button>
+              </div>
+            </div>
           </div>
         )}
       </section>
@@ -2399,7 +2464,242 @@ const proSvcList = [
           }
         }
 
-        document.addEventListener('DOMContentLoaded', function() { initCapRef(); });
+        // ===== PRO CLIENT LIST =====
+        let proState = {
+          clients: [],
+          page: 1,
+          pages: 1,
+          search: '',
+          walletTotal: 0,
+          loading: false
+        };
+
+        function formatCad(amount) {
+          if (amount === null || amount === undefined) return '—';
+          return new Intl.NumberFormat('fr-CA', {
+            style: 'currency',
+            currency: 'CAD',
+            maximumFractionDigits: 2,
+          }).format(amount);
+        }
+
+        async function loadProClients(page = 1) {
+          proState.loading = true;
+          renderProClients();
+          
+          try {
+            const params = new URLSearchParams({ scope: 'me', page: String(page) });
+            if (proState.search) params.set('q', proState.search);
+            
+            const res = await fetch(`/api/admin/clients?${params.toString()}`, {
+              method: 'GET',
+              credentials: 'include',
+            });
+
+            if (!res.ok) throw new Error('Erreur de chargement');
+            const data = await res.json();
+            
+            proState.clients = data.clients || [];
+            proState.pages = data.pages || 1;
+            proState.page = page;
+          } catch (err) {
+            console.error('Pro clients load error:', err);
+            proState.clients = [];
+          }
+          
+          proState.loading = false;
+          renderProClients();
+        }
+
+        async function loadProWallet() {
+          let total = 0;
+          let currentPage = 1;
+          let maxPages = 1;
+
+          for (;;) {
+            try {
+              const params = new URLSearchParams({ scope: 'me', page: String(currentPage) });
+              const res = await fetch(`/api/admin/clients?${params.toString()}`, {
+                method: 'GET',
+                credentials: 'include',
+              });
+
+              if (!res.ok) break;
+              const data = await res.json();
+              maxPages = data.pages || 1;
+              const rows = data.clients || [];
+              total += rows.reduce((acc, c) => acc + Number(c.total_paid || 0), 0);
+
+              if (currentPage >= maxPages) break;
+              currentPage += 1;
+            } catch (err) {
+              break;
+            }
+          }
+
+          proState.walletTotal = total;
+          const walletEl = document.getElementById('proWalletTotal');
+          if (walletEl) walletEl.textContent = formatCad(total);
+        }
+
+        function getStatusPill(status) {
+          const s = String(status || '').toLowerCase();
+          const labels = {
+            'proposition': 'Proposition',
+            'demarre': 'Démarré',
+            'en_cours': 'En cours',
+            'soumis': 'Soumis',
+            'annule': 'Annulé'
+          };
+          const colors = {
+            'proposition': '#ffc107',
+            'demarre': '#28a745',
+            'en_cours': '#17a2b8',
+            'soumis': '#6f42c1',
+            'annule': '#dc3545'
+          };
+          
+          const label = labels[s] || '';
+          const color = colors[s] || '#999';
+          return label ? `<span style="display:inline-block; background:${color}20; color:${color}; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">${label}</span>` : '';
+        }
+
+        function getInitials(name, email) {
+          const displayName = (name || email || 'C').trim();
+          return displayName[0]?.toUpperCase() || 'C';
+        }
+
+        function renderProClients() {
+          const container = document.getElementById('proClientsList');
+          const pagEl = document.getElementById('proPagination');
+          if (!container) return;
+
+          // Calcul stats
+          const counts = proState.clients.reduce((acc, c) => {
+            const st = String(c.project_status || '').toLowerCase();
+            if (st && st !== 'annule') acc.withProject += 1;
+            if (st === 'proposition') acc.propositions += 1;
+            if (st === 'demarre' || st === 'en_cours') acc.actifs += 1;
+            return acc;
+          }, { withProject: 0, propositions: 0, actifs: 0 });
+
+          // Update stats
+          document.getElementById('proClientsCount').textContent = proState.clients.length;
+          document.getElementById('proDossiersCount').textContent = counts.withProject;
+          document.getElementById('proPropositionsCount').textContent = counts.propositions;
+          document.getElementById('proActifsCount').textContent = counts.actifs;
+
+          if (proState.loading) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>';
+            if (pagEl) pagEl.style.display = 'none';
+            return;
+          }
+
+          if (proState.clients.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="fa fa-inbox fa-2x" style="display:block;margin-bottom:12px;"></i>Aucun client assigné pour le moment.</div>';
+            if (pagEl) pagEl.style.display = 'none';
+            return;
+          }
+
+          // Render clients list
+          const html = proState.clients.map(client => {
+            const displayName = (client.name || client.email || 'Client').trim();
+            const preview = (client.last_msg || 'Aucun message').slice(0, 80);
+            const statusPill = getStatusPill(client.project_status);
+            const initials = getInitials(client.name, client.email);
+            
+            return `
+              <div style="
+                background: white;
+                border: 1.5px solid #ddd;
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 12px;
+                display: flex;
+                gap: 12px;
+                align-items: flex-start;
+                cursor: pointer;
+                transition: all 0.2s;
+              " 
+              onmouseover="this.style.borderColor='var(--cap-orange)'; this.style.backgroundColor='#fff9f0';"
+              onmouseout="this.style.borderColor='#ddd'; this.style.backgroundColor='white';">
+                <div style="
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg, var(--cap-orange), #e67e00);
+                  color: white;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: bold;
+                  font-size: 16px;
+                  flex-shrink: 0;
+                ">${initials}</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <strong style="color: #1a1a2e;">${displayName}</strong>
+                    ${statusPill}
+                  </div>
+                  <div style="color: #666; font-size: 13px; line-height: 1.4; max-height: 40px; overflow: hidden; text-overflow: ellipsis;">${preview}</div>
+                </div>
+                <div style="color: #999; flex-shrink: 0;">
+                  <i class="fa fa-chevron-right"></i>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          container.innerHTML = html;
+
+          // Pagination
+          if (proState.pages > 1) {
+            pagEl.style.display = 'block';
+            document.getElementById('proPageInfo').textContent = `Page ${proState.page} sur ${proState.pages}`;
+            document.getElementById('proPrevBtn').disabled = proState.page <= 1;
+            document.getElementById('proNextBtn').disabled = proState.page >= proState.pages;
+          } else {
+            pagEl.style.display = 'none';
+          }
+        }
+
+        function initProClients() {
+          const searchInput = document.getElementById('proSearchInput');
+          const prevBtn = document.getElementById('proPrevBtn');
+          const nextBtn = document.getElementById('proNextBtn');
+
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              proState.search = this.value;
+              const timer = setTimeout(() => { loadProClients(1); }, 250);
+              searchInput._timer = timer;
+            });
+          }
+
+          if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+              if (proState.page > 1) loadProClients(proState.page - 1);
+            });
+          }
+
+          if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+              if (proState.page < proState.pages) loadProClients(proState.page + 1);
+            });
+          }
+
+          loadProClients(1);
+          loadProWallet();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() { 
+          initCapRef();
+          // Initialiser les clients PRO si on est en mode PRO
+          const isProMode = {isProMode ? 'true' : 'false'};
+          if (isProMode === 'true') {
+            initProClients();
+          }
+        });
       </script>
 
       <!-- ===== ONGLET 6 : NOTRE ÉQUIPE ===== -->
