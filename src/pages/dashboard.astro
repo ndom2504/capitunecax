@@ -2,6 +2,7 @@
 // CAPITUNE  Espace Client Dashboard
 import { packagesCatalog, servicesCatalog } from '../lib/service-catalog';
 import { getUserFromSessionAny } from '../lib/db';
+import ProClientList from '../components/ProClientList';
 
 // Vérification session côté serveur
 const session = Astro.cookies.get('capitune_session');
@@ -1301,13 +1302,15 @@ const proSvcList = [
 
       <!-- ===== ONGLET 1 : PROJET ===== -->
       <section class="tab-section" id="tab-projet">
-        <div class="tab-hero">
-          <div class="tab-hero-inner">
-            <h1><i class="fa fa-folder-open"></i> Mon Profil Projet</h1>
-            <p>Décrivez votre projet d immigration  votre conseiller CAPITUNE s occupe du reste.</p>
-          </div>
-        </div>
-        <div id="capiWizard" style="display:none">
+        {!isProMode && (
+          <>
+            <div class="tab-hero">
+              <div class="tab-hero-inner">
+                <h1><i class="fa fa-folder-open"></i> Mon Profil Projet</h1>
+                <p>Décrivez votre projet d immigration  votre conseiller CAPITUNE s occupe du reste.</p>
+              </div>
+            </div>
+            <div id="capiWizard" style="display:none">
           <div class="capi-wizard">
             <div class="capi-wiz-header" id="capiWizHeader">
               <button class="capi-wiz-back" onclick="capiBack()">&#8592;</button>
@@ -1616,6 +1619,13 @@ const proSvcList = [
           </div>
         </div>
         </div><!-- /projFormMode -->
+          </>
+        )}
+        {isProMode && (
+          <div class="dash-container" style="padding: 20px;">
+            <ProClientList />
+          </div>
+        )}
       </section>
 
       <!-- ===== ONGLET 2 : SERVICES ===== -->
