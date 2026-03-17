@@ -471,6 +471,7 @@ export default function DashboardScreen() {
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
 
+              {!isPro && (
               <TouchableOpacity
                 style={styles.careerBtn}
                 activeOpacity={0.85}
@@ -485,6 +486,7 @@ export default function DashboardScreen() {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
+              )}
 
               {/* Raccourcis */}
               <Text style={styles.sectionTitle}>Accès rapide</Text>
