@@ -122,6 +122,7 @@ export default function InsideScreen() {
   const [linkUrl, setLinkUrl] = useState('');
   const [linkLabel, setLinkLabel] = useState('');
   const [publishing, setPublishing] = useState(false);
+  const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
 
   const contentValid = useMemo(() => title.trim().length >= 3 && content.trim().length >= 10, [title, content]);
 
@@ -557,6 +558,16 @@ export default function InsideScreen() {
                     <Text style={styles.author}>{item.authorName}</Text>
                     <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
                   </View>
+                  {isPro && (
+                    <TouchableOpacity
+                      style={styles.postMenuBtn}
+                      activeOpacity={0.7}
+                      onPress={() => setActiveMenuPostId(activeMenuPostId === item.id ? null : item.id)}
+                      accessibilityLabel="Plus d'options"
+                    >
+                      <Ionicons name="ellipsis-vertical" size={18} color={Colors.text} />
+                    </TouchableOpacity>
+                  )}
                 </View>
 
                 <Text style={styles.postTitle}>{item.title}</Text>
@@ -610,32 +621,55 @@ export default function InsideScreen() {
                     <Text style={styles.reactEmoji}>👏</Text>
                     <Text style={styles.reactCount}>{item.reactions.clap ?? 0}</Text>
                   </TouchableOpacity>
-
-                  <View style={{ flex: 1 }} />
                 </View>
 
                 {normalizeLink(item.linkUrl) && (
-                  <TouchableOpacity
-                    style={styles.linkBtn}
-                    activeOpacity={0.85}
-                    onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
-                    accessibilityLabel={`${item.linkLabel || 'Ouvrir le lien'}`}
-                  >
-                    <Ionicons name="link" size={18} color="#fff" />
-                    <Text style={styles.linkBtnText}>{item.linkLabel || 'Ouvrir le lien'}</Text>
-                  </TouchableOpacity>
+                  <View style={styles.linkBtnContainer}>
+                    <TouchableOpacity
+                      style={styles.linkBtn}
+                      activeOpacity={0.85}
+                      onPress={() => Linking.openURL(normalizeLink(item.linkUrl) as string)}
+                      accessibilityLabel={`${item.linkLabel || 'Ouvrir le lien'}`}
+                    >
+                      <Ionicons name="link" size={18} color="#fff" />
+                      <Text style={styles.linkBtnText}>{item.linkLabel || 'Ouvrir le lien'}</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
 
                 {item.authorAccountType === 'pro' && user?.account_type === 'client' && (
-                  <TouchableOpacity
-                    style={styles.contactBtn}
-                    activeOpacity={0.85}
-                    onPress={() => handleContactPro(item)}
-                    accessibilityLabel={`Contacter ${item.authorName}`}
-                  >
-                    <Ionicons name="call" size={18} color="#fff" />
-                    <Text style={styles.contactBtnText}>Contacter {item.authorName}</Text>
-                  </TouchableOpacity>
+                  <View style={styles.contactBtnContainer}>
+                    <TouchableOpacity
+                      style={styles.contactBtn}
+                      activeOpacity={0.85}
+                      onPress={() => handleContactPro(item)}
+                      accessibilityLabel={`Contacter ${item.authorName}`}
+                    >
+                      <Ionicons name="call" size={18} color="#fff" />
+                      <Text style={styles.contactBtnText}>Contacter {item.authorName}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {isPro && activeMenuPostId === item.id && (
+                  <View style={styles.postOptionsMenu}>
+                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Enregistrer', 'Publication enregistrée'); setActiveMenuPostId(null); }}>
+                      <Ionicons name="bookmark-outline" size={18} color={Colors.text} />
+                      <Text style={styles.optionText}>Enregistrer</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Partager', 'Partage en cours...'); setActiveMenuPostId(null); }}>
+                      <Ionicons name="share-social-outline" size={18} color={Colors.text} />
+                      <Text style={styles.optionText}>Partager</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.optionItem} activeOpacity={0.7} onPress={() => { Alert.alert('Signaler', 'Contenu signalé'); setActiveMenuPostId(null); }}>
+                      <Ionicons name="flag-outline" size={18} color={Colors.text} />
+                      <Text style={styles.optionText}>Signaler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.optionItem, styles.optionItemDanger]} activeOpacity={0.7} onPress={() => { Alert.alert('Supprimer', 'Publication supprimée'); setPosts(prev => prev.filter(p => p.id !== item.id)); setActiveMenuPostId(null); }}>
+                      <Ionicons name="trash-outline" size={18} color={Colors.error} />
+                      <Text style={[styles.optionText, { color: Colors.error }]}>Supprimer</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             </View>
@@ -836,7 +870,15 @@ const styles = StyleSheet.create({
   postInner: { paddingHorizontal: 16, paddingTop: 14 },
   postInnerContent: { paddingHorizontal: 16, paddingBottom: 12 },
   postInnerActions: { paddingHorizontal: 16, paddingBottom: 14 },
-  postTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  postTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10, justifyContent: 'space-between' },
+  postMenuBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.bgLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   avatar: {
     width: 40,
     height: 40,
@@ -875,9 +917,11 @@ const styles = StyleSheet.create({
   },
   postContent: { fontSize: 16, color: Colors.textSecondary, lineHeight: 23 },
 
-  linkBtn: {
+  linkBtnContainer: {
     marginTop: 12,
-    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  linkBtn: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.orange,
@@ -886,13 +930,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minWidth: '100%',
+    width: '100%',
   },
   linkBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
-  contactBtn: {
+  contactBtnContainer: {
     marginTop: 12,
-    alignSelf: 'center',
+    alignItems: 'center',
+  },
+  contactBtn: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.accent,
@@ -901,7 +947,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    minWidth: '100%',
+    width: '100%',
   },
   contactBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
@@ -912,6 +958,31 @@ const styles = StyleSheet.create({
     marginTop: 12,
     justifyContent: 'center',
     flexWrap: 'wrap',
+  },
+  postOptionsMenu: {
+    marginTop: 12,
+    backgroundColor: Colors.bgLight,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  optionItemDanger: {
+    borderBottomWidth: 0,
+  },
+  optionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.text,
   },
   reactBtn: {
     flexDirection: 'row',
