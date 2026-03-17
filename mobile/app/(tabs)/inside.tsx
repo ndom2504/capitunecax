@@ -783,6 +783,7 @@ const styles = StyleSheet.create({
 
   linkBtn: {
     marginTop: 12,
+    marginHorizontal: -16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.orange,
@@ -791,11 +792,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    width: '100%',
   },
   linkBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
   contactBtn: {
     marginTop: 12,
+    marginHorizontal: -16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.accent,
@@ -804,6 +807,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    width: '100%',
   },
   contactBtnText: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
 
