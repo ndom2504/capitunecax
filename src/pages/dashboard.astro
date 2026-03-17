@@ -2963,24 +2963,52 @@ const proSvcList = [
       <section class="tab-section" id="tab-documents">
         <div class="tab-hero">
           <div class="tab-hero-inner">
-            <h1><i class="fa fa-file-text-o"></i> Mes Documents</h1>
-            <p>Suivez l'état de vos documents et déposez les pièces requises pour votre dossier.</p>
+            <h1><i class="fa fa-file-text-o"></i> Documents</h1>
+            <p>{isProMode ? 'Accédez aux documents de vos clients assignés.' : 'Suivez l\'état de vos documents et déposez les pièces requises.'}</p>
           </div>
         </div>
-        <div class="tab-content-body">
-          <!-- Filtres -->
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
-            <button class="doc-filter-btn active" data-filter="all" onclick="filterDocs('all',this)"><i class="fa fa-list"></i> Tous</button>
-            <button class="doc-filter-btn" data-filter="validated" onclick="filterDocs('validated',this)"><i class="fa fa-check-circle" style="color:#28a745"></i> Validés</button>
-            <button class="doc-filter-btn" data-filter="pending" onclick="filterDocs('pending',this)"><i class="fa fa-clock-o" style="color:#ffc107"></i> En attente</button>
-            <button class="doc-filter-btn" data-filter="rejected" onclick="filterDocs('rejected',this)"><i class="fa fa-times-circle" style="color:#dc3545"></i> Refusés</button>
-            <button class="doc-filter-btn" data-filter="missing" onclick="filterDocs('missing',this)"><i class="fa fa-exclamation-triangle" style="color:#fd7e14"></i> Manquants</button>
+
+        {isProMode ? (
+          <div class="dash-container">
+            <!-- Espace PRO -->
+            <div style="background:linear-gradient(135deg,#e3f2fd,#f3e5f5);border:2px solid #2196f3;border-radius:14px;padding:28px;display:flex;align-items:flex-start;gap:18px;margin-bottom:32px;">
+              <div style="flex-shrink:0;">
+                <i class="fa fa-info-circle" style="font-size:1.8rem;color:#2196f3;"></i>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:6px;">Espace Pro</div>
+                <div style="font-size:13px;color:#555;line-height:1.6;">Pour consulter les documents d'un client, ouvrez son dossier depuis le <strong>Projet</strong> (liste de clients) ou la <strong>Messagerie</strong>.</div>
+              </div>
+              <button class="btn-submit-projet" type="button" onclick="switchTab('projet')" style="padding:10px 20px;font-size:13px;white-space:nowrap;flex-shrink:0;">
+                <i class="fa fa-folder-open"></i> Aller au Projet
+              </button>
+            </div>
+
+            <!-- Stats PRO rapides -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label"><i class="fa fa-file-text-o"></i> Dossiers avec documents</div>
+                <div class="stat-value" id="proDocsCount">—</div>
+                <div class="stat-sub">Parmi vos clients assignés</div>
+              </div>
+            </div>
           </div>
-          <!-- Liste documents -->
-          <div id="documentsChecklist">
-            <div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>
+        ) : (
+          <div class="tab-content-body">
+            <!-- Filtres CLIENT -->
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+              <button class="doc-filter-btn active" data-filter="all" onclick="filterDocs('all',this)"><i class="fa fa-list"></i> Tous</button>
+              <button class="doc-filter-btn" data-filter="validated" onclick="filterDocs('validated',this)"><i class="fa fa-check-circle" style="color:#28a745"></i> Validés</button>
+              <button class="doc-filter-btn" data-filter="pending" onclick="filterDocs('pending',this)"><i class="fa fa-clock-o" style="color:#ffc107"></i> En attente</button>
+              <button class="doc-filter-btn" data-filter="rejected" onclick="filterDocs('rejected',this)"><i class="fa fa-times-circle" style="color:#dc3545"></i> Refusés</button>
+              <button class="doc-filter-btn" data-filter="missing" onclick="filterDocs('missing',this)"><i class="fa fa-exclamation-triangle" style="color:#fd7e14"></i> Manquants</button>
+            </div>
+            <!-- Liste documents CLIENT -->
+            <div id="documentsChecklist">
+              <div style="text-align:center;padding:40px;color:#888;"><i class="fa fa-spinner fa-spin fa-2x"></i><br>Chargement...</div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       <!-- ===== ONGLET 7 : PARAMÈTRES ===== -->
