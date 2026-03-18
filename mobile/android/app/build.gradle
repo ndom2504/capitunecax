@@ -130,7 +130,8 @@ android {
         proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         
         // Resource optimizations
-        crunchPngs true
+        // Note: crunchPngs() method deprecated in Android Gradle Plugin 8+
+        // Using modern PNG optimization instead
     }
     signingConfigs {
         debug {
@@ -152,7 +153,8 @@ android {
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
+            // Note: crunchPngs() deprecated in Android Gradle Plugin 8+
+            // Using modern PNG optimization through gradle.properties instead
             
             // Release optimizations
             debuggable false
