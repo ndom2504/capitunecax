@@ -1,0 +1,45 @@
+export default {
+  expo: {
+    name: "CAPITUNE",
+    slug: "capitune-mobile",
+    version: "1.0.1",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "light",
+    splash: {
+      image: "./assets/icon.mp4",
+      resizeMode: "contain",
+      backgroundColor: "#1f4b6e"
+    },
+    ios: {
+      supportsTablet: false,
+      bundleIdentifier: "com.capitune.mobile"
+    },
+    android: {
+      package: "com.capitune.mobile",
+      adaptiveIcon: {
+        foregroundImage: "./assets/adaptive-icon.png",
+        backgroundColor: "#1f4b6e"
+      }
+    },
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/favicon.png"
+    },
+    plugins: [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/notification-icon.png",
+          color: "#e87722"
+        }
+      ]
+    ],
+    extra: {
+      apiBaseUrl: "https://www.capitune.com"
+    }
+  }
+};

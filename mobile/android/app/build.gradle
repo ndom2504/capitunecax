@@ -109,29 +109,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.capitune.mobile"
+    namespace 'com.capitune.mobile'
     defaultConfig {
-        applicationId "com.capitune.mobile"
+        applicationId 'com.capitune.mobile'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        versionCode 1
         versionName "1.0.1"
-        
-        // Resolving gradle conflicts
-        vectorDrawables.useSupportLibrary = true
-        multiDexEnabled true
-        
-        // Optimizations for build
-        ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        }
-        
-        // Proguard optimizations
-        proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-        
-        // Resource optimizations
-        // Note: crunchPngs() method deprecated in Android Gradle Plugin 8+
-        // Using modern PNG optimization instead
     }
     signingConfigs {
         debug {
@@ -144,7 +128,6 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            debuggable true
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
@@ -153,14 +136,7 @@ android {
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            // Note: crunchPngs() deprecated in Android Gradle Plugin 8+
-            // Using modern PNG optimization through gradle.properties instead
-            
-            // Release optimizations
-            debuggable false
-            jniDebuggable false
-            renderscriptDebuggable false
-            zipAlignEnabled true
+            crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
     packagingOptions {
