@@ -514,6 +514,44 @@ export default function DashboardScreen() {
                 ))}
               </View>
 
+              {/* Messages récents (Pro uniquement) */}
+              {isPro && (
+                <View style={{ marginTop: 16 }}>
+                  <Text style={styles.sectionTitle}>Messages récents</Text>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
+                      backgroundColor: Colors.surface,
+                      borderWidth: 1,
+                      borderColor: Colors.border,
+                      borderRadius: 18,
+                      padding: 14,
+                      ...UI.cardShadow,
+                    }}
+                    activeOpacity={0.85}
+                    onPress={() => router.push('/(tabs)/messagerie' as any)}
+                  >
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 14,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: Colors.primary + '18',
+                    }}>
+                      <Ionicons name="chatbubble-ellipses" size={20} color={Colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '800', color: Colors.text }}>Messagerie</Text>
+                      <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2 }}>Consultez et répondez aux messages</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Vidéos (Accueil) */}
               <Text style={[styles.sectionTitle, { marginTop: 18 }]}>Vidéos</Text>
               <View style={styles.videosGrid}>

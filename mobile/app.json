@@ -2,18 +2,21 @@
   "expo": {
     "name": "Capitune",
     "slug": "capitune-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.mp4",
       "resizeMode": "contain",
       "backgroundColor": "#1f4b6e"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.capitune.mobile"
+      "bundleIdentifier": "com.capitune.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -44,7 +47,13 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://www.capitune.com"
+      "apiBaseUrl": "https://www.capitune.com",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "a7f242ed-f3dd-4857-9980-ff9f77952d54"
+      }
     }
   }
 }

@@ -20,6 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Timer de sécurité pour éviter que l'auth ne bloque pas
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      setIsLoading(false);
+    }, 10000); // 10 secondes maximum
+
+    return () => clearTimeout(safetyTimer);
+  }, []);
+
   const syncAvatarFromProfile = async (sessionToken: string, sessionUser: UserInfo) => {
     // On ne synchronise l'avatar qu'une seule fois au démarrage, sans bloquer.
     // On utilise setTimeout pour ne pas être dans le chemin critique du rendu initial.

@@ -19,6 +19,7 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest', // Ajout pour CSRF protection
     ...(options.headers as Record<string, string> ?? {}),
   };
   if (sessionToken) {

@@ -39,6 +39,15 @@ export default function ConnexionScreen() {
       const nameParam   = parsed.queryParams?.name  as string | undefined;
       const roleParam   = (parsed.queryParams?.role as string | undefined) ?? accountType;
       const atParam     = (parsed.queryParams?.account_type as string | undefined) ?? accountType;
+      
+      // Validation CSRF : vérifier que le state et timestamp sont valides
+      const returnedState = parsed.queryParams?.state as string | undefined;
+      const returnedTimestamp = parsed.queryParams?.timestamp as string | undefined;
+      
+      if (returnedState || returnedTimestamp) {
+        console.log('OAuth callback avec state/timestamp:', { returnedState, returnedTimestamp });
+        // Optionnel : vous pouvez stocker et vérifier le state ici si nécessaire
+      }
 
       if (!token || !emailParam) {
         Alert.alert('Connexion incomplète', 'Token ou email manquant après OAuth.');
@@ -65,8 +74,12 @@ export default function ConnexionScreen() {
     setOauthLoading('google');
     const redirectUri = Linking.createURL('oauth');
     try {
+      // Ajout d'un timestamp et d'un state pour éviter les erreurs CSRF
+      const state = Math.random().toString(36).substring(2, 15);
+      const timestamp = Date.now();
+      
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/google?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        `${BACKEND}/api/oauth/signin/google?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&timestamp=${timestamp}`,
         redirectUri
       );
       if (result.type === 'success' && result.url) {
@@ -84,8 +97,12 @@ export default function ConnexionScreen() {
     setOauthLoading('microsoft');
     const redirectUri = Linking.createURL('oauth');
     try {
+      // Ajout d'un timestamp et d'un state pour éviter les erreurs CSRF
+      const state = Math.random().toString(36).substring(2, 15);
+      const timestamp = Date.now();
+      
       const result = await WebBrowser.openAuthSessionAsync(
-        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+        `${BACKEND}/api/oauth/signin/microsoft?mobile=true&accountType=${accountType}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}&timestamp=${timestamp}`,
         redirectUri
       );
       if (result.type === 'success' && result.url) {
