@@ -130,7 +130,16 @@ export default function ConnexionScreen() {
     }
 
     if (!result.ok) {
-      Alert.alert('Connexion échouée', result.message ?? 'Identifiants incorrects.');
+      // Message d'erreur amélioré pour les doublons
+      if (result.message?.includes('Email déjà utilisé') || result.message?.includes('already exists')) {
+        Alert.alert(
+          'Email déjà utilisé',
+          'Cet email est déjà utilisé pour un compte CAPITUNE. Un seul compte par email est autorisé.',
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else {
+        Alert.alert('Connexion échouée', result.message ?? 'Identifiants incorrects.');
+      }
       return;
     }
 
