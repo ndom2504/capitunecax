@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { dashboardApi, proApi, type ProClientRow, type ProjectData } from '../../lib/api';
 import { useRouter } from 'expo-router';
 import { getAvatarSource } from '../../lib/avatar';
+import IconMenu from '../../components/IconMenu';
 
 const STEPS_LABELS = [
   'Analyse du profil',
@@ -381,10 +382,11 @@ export default function DashboardScreen() {
       {isPro ? (
         <ProDashboard name={user?.name ?? 'Pro'} avatarKey={user?.avatar ?? null} />
       ) : (
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
-        >
+        <IconMenu />
+      )}
+    </SafeAreaView>
+  );
+}
           {/* En-tête */}
           <View style={styles.header}>
             <Text style={styles.welcome}>Bienvenue sur CAPITUNE</Text>
