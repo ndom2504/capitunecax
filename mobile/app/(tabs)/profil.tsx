@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,69 @@ export default function ProfilScreen() {
   const [loadingProfile, setLoadingProfile] = useState(false); // pas de spinner au démarrage
   const [saving, setSaving] = useState(false);
   const [pickingAvatar, setPickingAvatar] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [loadingBiometric, setLoadingBiometric] = useState(false);
+
+  // Vérifier la disponibilité de la biométrie au chargement
+  useEffect(() => {
+    const checkBiometric = async () => {
+      try {
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        
+        setBiometricAvailable(hasHardware && isEnrolled && (supportedTypes?.length || 0) > 0);
+      } catch {
+        setBiometricAvailable(false);
+      }
+    };
+    
+    checkBiometric();
+  }, []);
+
+  const handleBiometricToggle = async () => {
+    if (!biometricAvailable) {
+      Alert.alert('Biométrie non disponible', 'Votre appareil ne supporte pas l\'authentification biométrique ou elle n\'est pas configurée.');
+      return;
+    }
+
+    if (!token) {
+      Alert.alert('Connexion requise', 'Connectez-vous pour activer la biométrie.');
+      return;
+    }
+
+    setLoadingBiometric(true);
+    try {
+      if (biometricEnabled) {
+        // Désactiver la biométrie
+        setBiometricEnabled(false);
+        Alert.alert('Biométrie désactivée', 'L\'authentification biométrique a été désactivée.');
+      } else {
+        // Activer la biométrie - demander d'abord de s'authentifier
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: 'Authentifiez-vous pour activer la biométrie',
+          fallbackLabel: 'Utiliser le mot de passe',
+          cancelLabel: 'Annuler',
+        });
+
+        if (result.success) {
+          setBiometricEnabled(true);
+          Alert.alert('Biométrie activée', 'L\'authentification biométrique est maintenant activée pour un accès rapide.');
+        } else {
+          Alert.alert('Échec', 'L\'authentification biométrique a échoué.');
+        }
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la configuration de la biométrie.');
+    } finally {
+      setLoadingBiometric(false);
+    }
+  };
+
+  const handlePrivacyPolicy = () => {
+    router.push('/privacy-policy' as any);
+  };
 
   const handlePickAvatar = async () => {
     if (pickingAvatar) return;
@@ -76,7 +140,7 @@ export default function ProfilScreen() {
       setDraft(d => ({ ...d, avatar_key: dataUri }));
 
       // Mise à jour immédiate dans l'app (Dashboard/Inside/etc.)
-      if (user) {
+      if (user && token) {
         const nextUser: UserInfo = { ...user, avatar: dataUri };
         await saveSession(token, nextUser);
         setUser(nextUser);
@@ -373,7 +437,12 @@ export default function ProfilScreen() {
         <View style={styles.card}>
           <MenuItem icon="lock-closed" label="Changer le mot de passe" onPress={() => Alert.alert('À venir', 'Modification du mot de passe bientôt disponible.')} />
           <View style={styles.divider} />
-          <MenuItem icon="phone-portrait" label="Biométrie" value="Face ID / Empreinte" onPress={() => Alert.alert('À venir', 'Biométrie bientôt disponible.')} />
+          <MenuItem 
+            icon="phone-portrait" 
+            label="Biométrie" 
+            value={biometricEnabled ? "Activé" : "Désactivé"}
+            onPress={handleBiometricToggle}
+          />
         </View>
 
         {/* Section : Support */}
@@ -394,7 +463,7 @@ export default function ProfilScreen() {
           <MenuItem
             icon="shield-checkmark"
             label="Politique de confidentialité"
-            onPress={() => Linking.openURL('https://www.capitune.com/confidentialite')}
+            onPress={handlePrivacyPolicy}
           />
         </View>
 

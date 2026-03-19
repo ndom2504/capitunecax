@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator
 } from 'react-native';
-import { useRouter, Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
+import { useRouter, Link } from 'expo-router';
 import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '../../context/AuthContext';
+import { getSession } from '../../lib/auth';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
-import { useAuth } from '../../context/AuthContext';
 import type { UserInfo } from '../../lib/api';
 
 const BACKEND = 'https://www.capitune.com';
@@ -135,6 +136,18 @@ export default function ConnexionScreen() {
 
     // Redirect selon le type renvoyé par le serveur (ou le toggle si absent)
     const at = result.accountType ?? accountType;
+    
+    // Vérifier la compatibilité du compte
+    const session = await getSession();
+    if (session && session.user.account_type !== at) {
+      Alert.alert(
+        'Type de compte incompatible',
+        `Ce compte est déjà utilisé comme ${session.user.account_type === 'pro' ? 'Professionnel' : 'Client'}. Vous ne pouvez pas utiliser le même compte pour les deux types.`,
+        [{ text: 'OK', style: 'default' }]
+      );
+      return;
+    }
+    
     router.replace(homeRoute(at) as any);
   };
 

@@ -1,6 +1,5 @@
 node_modules/
 .expo/
-assets/
 dist/
 build/
 *.orig.*
@@ -27,3 +26,11 @@ start-tunnel.ps1
 # generated audit outputs
 scripts/audit-autonomie-urls.json
 scripts/audit-autonomie-urls.txt
+
+# Keep icon.png but ignore other assets temporarily
+!assets/icon.png
+assets/splash-icon.png
+assets/adaptive-icon.png
+assets/favicon.png
+assets/notification-icon.png
+assets/agent-capi.png
