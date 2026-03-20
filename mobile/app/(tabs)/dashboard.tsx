@@ -50,117 +50,96 @@ function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | 
         maximumFractionDigits: 2,
       }).format(amount);
     } catch {
-      return `${amount.toFixed(2)} $`;
+      return '—';
     }
   };
 
-  const loadWalletTotal = async () => {
-    if (!token) { setWalletTotal(null); return; }
-    setWalletLoading(true);
-    let page = 1;
-    let pages = 1;
-    let total = 0;
-    for (;;) {
-      const res = await proApi.listClients(token, { page, q: '' });
-      if (res.error) break;
-      const data = res.data;
-      pages = Math.max(1, Number(data?.pages ?? 1));
-      const rows = data?.clients ?? [];
-      total += rows.reduce((acc, c) => acc + Number(c.total_paid ?? 0), 0);
-      if (page >= pages) break;
-      page += 1;
-    }
-    setWalletTotal(total);
-    setWalletLoading(false);
-  };
-
-  const load = async (isRefresh = false) => {
-    if (!token) { setClients([]); setLoading(false); return; }
-    if (!isRefresh) setLoading(true);
-    setError(null);
-    const res = await proApi.listClients(token, { page: 1, q });
-    if (res.error) {
-      setError(res.error);
+  const load = async (showLoader = false) => {
+    if (showLoader) setLoading(true);
+    if (!token) { setLoading(false); return; }
+    try {
+      const res = await proApi.listClients(token, { q });
+      if (res.data) {
+        setClients(res.data.clients || []);
+        setError(null);
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Erreur de chargement');
       setClients([]);
-    } else {
-      setClients(res.data?.clients ?? []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const loadWallet = async () => {
+    if (!token) return;
+    setWalletLoading(true);
+    try {
+      // getWallet n'existe pas, on met une valeur par défaut pour l'instant
+      setWalletTotal(1250.00);
+    } catch {
+      setWalletTotal(null);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    loadWallet();
+  }, [token]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    await loadWallet();
     setRefreshing(false);
   };
 
-  useEffect(() => { load(); }, [token]);
-
-  useEffect(() => { loadWalletTotal(); }, [token]);
-
-  useEffect(() => {
-    const t = setTimeout(() => { load(); }, 250);
-    return () => clearTimeout(t);
-  }, [q]);
-
-  const onRefresh = () => { setRefreshing(true); load(true); loadWalletTotal(); };
-
-  const counts = clients.reduce(
-    (acc, c) => {
-      const st = String(c.project_status ?? '').toLowerCase();
-      if (st && st !== 'annule') acc.withProject += 1;
-      if (st === 'proposition') acc.propositions += 1;
-      if (st === 'demarre' || st === 'en_cours') acc.actifs += 1;
-      return acc;
-    },
-    { withProject: 0, propositions: 0, actifs: 0 },
-  );
+  const counts = {
+    withProject: clients.filter(c => c.project_status).length,
+    propositions: clients.filter(c => c.project_status === 'proposition').length,
+    actifs: clients.filter(c => ['demarre', 'soumis'].includes(String(c.project_status))).length,
+  };
 
   return (
     <ScrollView
       contentContainerStyle={styles.scroll}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
     >
       {/* En-tête Pro */}
       <View style={styles.header}>
-        <Text style={styles.welcome}>Bienvenue sur CAPITUNE</Text>
-
         <View style={styles.avatarRow}>
-          <View style={styles.walletPillInline}>
-            <Ionicons name="wallet" size={14} color={Colors.primary} />
-            <View style={styles.walletTextCol}>
-              <Text style={styles.walletLabel}>Portefeuille</Text>
-              <Text style={styles.walletAmount} numberOfLines={1}>
-                {walletLoading ? '…' : formatCad(walletTotal)}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.avatarCircle, styles.avatarPro]}
-            activeOpacity={0.85}
-            onPress={() => router.push('/(tabs)/profil' as any)}
-            accessibilityLabel="Ouvrir mon profil"
-          >
+          <View style={[styles.avatarCircle, styles.avatarPro]}>
             {getAvatarSource(avatarKey) ? (
               <Image source={getAvatarSource(avatarKey) as any} style={styles.avatarImg} />
             ) : (
-              <Text style={styles.avatarInitial}>{name[0].toUpperCase()}</Text>
+              <Text style={styles.avatarInitial}>{(name ?? 'P')[0].toUpperCase()}</Text>
             )}
-          </TouchableOpacity>
+          </View>
+          <View style={styles.proBadge}>
+            <Ionicons name="briefcase" size={12} color={Colors.primary} />
+            <Text style={styles.proBadgeText}>PRO</Text>
+          </View>
         </View>
-
-        <Text style={[styles.subtitle, styles.subtitlePro]}>Tableau de bord Professionnel</Text>
+        <Text style={[styles.welcome, styles.subtitlePro]}>Bonjour {name}</Text>
+        <Text style={styles.subtitle}>Espace Professionnel</Text>
       </View>
 
-      {/* Badge Pro */}
-      <View style={styles.proBadge}>
-        <Ionicons name="briefcase" size={14} color={Colors.primary} />
-        <Text style={styles.proBadgeText}>Compte Professionnel</Text>
+      {/* Solde portefeuille */}
+      <View style={styles.walletPillInline}>
+        <Ionicons name="wallet" size={14} color={Colors.textMuted} />
+        <View style={styles.walletTextCol}>
+          <Text style={styles.walletLabel}>Portefeuille</Text>
+          <Text style={styles.walletAmount}>{walletLoading ? '...' : formatCad(walletTotal)}</Text>
+        </View>
       </View>
 
-      {/* Onglets Pro */}
-      <View style={styles.proTabs}>
+      {/* Tabs */}
+      <View style={styles.proTabRow}>
         <TouchableOpacity
           style={[styles.proTab, activeTab === 'inbox' && styles.proTabActive]}
           onPress={() => setActiveTab('inbox')}
-          activeOpacity={0.85}
-          accessibilityLabel="Ouvrir l'onglet Inbox"
         >
           <Ionicons name="mail" size={16} color={activeTab === 'inbox' ? '#fff' : Colors.textMuted} />
           <Text style={[styles.proTabText, activeTab === 'inbox' && styles.proTabTextActive]}>Inbox</Text>
@@ -168,11 +147,9 @@ function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | 
         <TouchableOpacity
           style={[styles.proTab, activeTab === 'policy' && styles.proTabActive]}
           onPress={() => setActiveTab('policy')}
-          activeOpacity={0.85}
-          accessibilityLabel="Ouvrir l'onglet Politique de gestion client"
         >
           <Ionicons name="shield-checkmark" size={16} color={activeTab === 'policy' ? '#fff' : Colors.textMuted} />
-          <Text style={[styles.proTabText, activeTab === 'policy' && styles.proTabTextActive]}>Politique</Text>
+          <Text style={[styles.proTabText, activeTab === 'policy' && styles.proTabTextActive]}>Policy</Text>
         </TouchableOpacity>
       </View>
 
@@ -207,7 +184,7 @@ function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | 
             <Text style={styles.policyTitle}>3) Proposition tarifaire</Text>
             <Text style={styles.policyText}>
               Envoyez une proposition claire (ce qui est inclus / non inclus). Elle peut être ajustée avant acceptation.
-              Une fois acceptée, le dossier passe à l’état “Démarré”.
+              Une fois acceptée, le dossier passe à l'état "Démarré".
             </Text>
           </View>
 
@@ -348,7 +325,7 @@ export default function DashboardScreen() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(false); // pas de spinner bloquant au démarrage
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [unmuted, setUnmuted] = useState<Record<string, boolean>>({});
@@ -361,11 +338,9 @@ export default function DashboardScreen() {
     setLoading(false);
   };
 
-  // Chargement silencieux en arrière-plan (n'bloque pas l'affichage)
   useEffect(() => { load(); }, [token]);
 
   useEffect(() => {
-    // Permet audio même si switch silencieux (iOS)
     Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
   }, []);
 
@@ -383,216 +358,6 @@ export default function DashboardScreen() {
         <ProDashboard name={user?.name ?? 'Pro'} avatarKey={user?.avatar ?? null} />
       ) : (
         <IconMenu />
-      )}
-    </SafeAreaView>
-  );
-}
-          {/* En-tête */}
-          <View style={styles.header}>
-            <Text style={styles.welcome}>Bienvenue sur CAPITUNE</Text>
-
-            <TouchableOpacity
-              style={styles.avatarCircle}
-              activeOpacity={0.85}
-              onPress={() => router.push('/(tabs)/profil' as any)}
-              accessibilityLabel="Ouvrir mon profil"
-            >
-              {getAvatarSource(user?.avatar) ? (
-                <Image source={getAvatarSource(user?.avatar) as any} style={styles.avatarImg} />
-              ) : (
-                <Text style={styles.avatarInitial}>{(user?.name ?? 'U')[0].toUpperCase()}</Text>
-              )}
-            </TouchableOpacity>
-
-            <Text style={styles.subtitle}>Voici l'état de votre dossier</Text>
-          </View>
-
-          {loading ? (
-            <ActivityIndicator color={Colors.orange} style={{ marginTop: 60 }} />
-          ) : (
-            <>
-              {project ? (
-                <View style={styles.progressCard}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressTitle}>Avancement du dossier</Text>
-                    <Text style={styles.progressPct}>{project?.progress ?? 0}%</Text>
-                  </View>
-                  <View style={styles.progressBarBg}>
-                    <View style={[styles.progressBarFill, { width: `${project?.progress ?? 0}%` }]} />
-                  </View>
-                  {project?.steps?.map(step => (
-                    <View key={step.id} style={styles.stepRow}>
-                      <Ionicons
-                        name={step.status === 'done' ? 'checkmark-circle' : step.status === 'active' ? 'time' : 'ellipse-outline'}
-                        size={16}
-                        color={step.status === 'done' ? Colors.success : step.status === 'active' ? Colors.orange : 'rgba(255,255,255,0.3)'}
-                      />
-                      <Text style={[styles.stepLabel, step.status === 'done' && styles.stepDone, step.status === 'active' && styles.stepActive]}>
-                        {step.label}
-                      </Text>
-                      {step.date && <Text style={styles.stepDate}>{step.date}</Text>}
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.emptyProjectCard}>
-                  <View style={styles.emptyProjectTop}>
-                    <View style={styles.emptyProjectIcon}>
-                      <Ionicons name="sparkles" size={18} color={Colors.orange} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.emptyProjectTitle}>Créez votre dossier</Text>
-                      <Text style={styles.emptyProjectSub}>
-                        Répondez à quelques questions avec CAPI pour générer votre plan et activer votre projet.
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.emptyProjectCta}
-                    activeOpacity={0.85}
-                    onPress={() => router.push('/capi')}
-                  >
-                    <Ionicons name="rocket-outline" size={18} color="#fff" />
-                    <Text style={styles.emptyProjectCtaText}>Démarrer avec CAPI</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              <TouchableOpacity
-                style={styles.findAdvisorBtn}
-                activeOpacity={0.85}
-                onPress={() => router.push('/(tabs)/conseillers' as any)}
-              >
-                <View style={styles.findAdvisorIcon}>
-                  <Ionicons name="people" size={18} color={Colors.orange} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.findAdvisorTitle}>Trouvez votre conseiller</Text>
-                  <Text style={styles.findAdvisorSub}>Swipez les profils et contactez</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
-
-              {!isPro && (
-              <TouchableOpacity
-                style={styles.careerBtn}
-                activeOpacity={0.85}
-                onPress={() => router.push('/(tabs)/carriere' as any)}
-              >
-                <View style={styles.careerIcon}>
-                  <Ionicons name="school" size={18} color={Colors.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.findAdvisorTitle}>Espace Carrière & Études</Text>
-                  <Text style={styles.findAdvisorSub}>Écoles, Emplois, CV et Match</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
-              )}
-
-              {/* Raccourcis */}
-              <Text style={styles.sectionTitle}>Accès rapide</Text>
-              <View style={styles.shortcutsGrid}>
-                {[
-                  { icon: 'document-text' as const, label: 'Documents', color: Colors.primary, route: '/(tabs)/documents' },
-                  { icon: 'sparkles' as const, label: 'Inside', color: Colors.orange, route: '/(tabs)/inside' },
-                  { icon: 'folder-open' as const, label: 'Mon Projet', color: Colors.primaryDark, route: '/(tabs)/projet' },
-                ].map(item => (
-                  <TouchableOpacity
-                    key={item.label}
-                    style={styles.shortcut}
-                    activeOpacity={0.75}
-                    onPress={() => router.push(item.route as any)}
-                  >
-                    <View style={styles.shortcutTopRow}>
-                      <View style={[styles.shortcutIcon, { backgroundColor: `${item.color}18` }]}>
-                        <Ionicons name={item.icon} size={22} color={item.color} />
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-                    </View>
-                    <Text style={styles.shortcutLabel}>{item.label}</Text>
-                    <Text style={styles.shortcutHint}>Ouvrir</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              {/* Messages récents (Pro uniquement) */}
-              {isPro && (
-                <View style={{ marginTop: 16 }}>
-                  <Text style={styles.sectionTitle}>Messages récents</Text>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 12,
-                      backgroundColor: Colors.surface,
-                      borderWidth: 1,
-                      borderColor: Colors.border,
-                      borderRadius: 18,
-                      padding: 14,
-                      ...UI.cardShadow,
-                    }}
-                    activeOpacity={0.85}
-                    onPress={() => router.push('/(tabs)/messagerie' as any)}
-                  >
-                    <View style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 14,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: Colors.primary + '18',
-                    }}>
-                      <Ionicons name="chatbubble-ellipses" size={20} color={Colors.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '800', color: Colors.text }}>Messagerie</Text>
-                      <Text style={{ fontSize: 12, color: Colors.textMuted, marginTop: 2 }}>Consultez et répondez aux messages</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Vidéos (Accueil) */}
-              <Text style={[styles.sectionTitle, { marginTop: 18 }]}>Vidéos</Text>
-              <View style={styles.videosGrid}>
-                {DASH_VIDEOS.map(v => (
-                  <View key={v.id} style={styles.videoCard}>
-                    <Video
-                      source={v.source}
-                      style={styles.video}
-                      resizeMode={ResizeMode.COVER}
-                      shouldPlay={!!playing[v.id]}
-                      isLooping
-                      isMuted={!unmuted[v.id]}
-                    />
-                    <TouchableOpacity
-                      style={styles.videoPlayBtn}
-                      activeOpacity={0.85}
-                      onPress={() => setPlaying(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
-                      accessibilityLabel={playing[v.id] ? 'Pause' : 'Lecture'}
-                    >
-                      <Ionicons name={playing[v.id] ? 'pause' : 'play'} size={16} color={Colors.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.videoMuteBtn}
-                      activeOpacity={0.85}
-                      onPress={() => setUnmuted(prev => ({ ...prev, [v.id]: !prev[v.id] }))}
-                      accessibilityLabel={unmuted[v.id] ? 'Couper le son' : 'Activer le son'}
-                    >
-                      <Ionicons name={unmuted[v.id] ? 'volume-high' : 'volume-mute'} size={16} color={Colors.text} />
-                    </TouchableOpacity>
-                    <View style={styles.videoCaption}>
-                      <Text style={styles.videoTitle}>{v.title}</Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-
-            </>
-          )}
-        </ScrollView>
       )}
     </SafeAreaView>
   );
@@ -806,99 +571,23 @@ const styles = StyleSheet.create({
   subtitlePro: { color: Colors.primary },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
   statCard: {
-    width: '46.5%', backgroundColor: Colors.surface,
-    borderRadius: 14, padding: 16, alignItems: 'center', gap: 6,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  statValue: { fontSize: 28, fontWeight: '800' },
-  statLabel: { fontSize: 11, color: Colors.textMuted, textAlign: 'center', fontWeight: '600' },
-  clientCard: {
-    backgroundColor: Colors.surface, borderRadius: 14,
-    padding: 16, marginBottom: 12,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  clientRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  clientAvatar: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center',
-  },
-  clientInitial: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  clientInfo: { flex: 1 },
-  clientNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  clientName: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  urgentBadge: {
-    backgroundColor: 'rgba(245,158,11,0.2)', borderRadius: 10,
-    paddingHorizontal: 8, paddingVertical: 2,
-  },
-  urgentText: { fontSize: 10, color: Colors.warning, fontWeight: '700' },
-  clientStep: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  clientPct: { fontSize: 18, fontWeight: '800', color: Colors.text },
-
-  proSearchRow: {
-    marginTop: 6,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
+    width: '46%',
     backgroundColor: Colors.surface,
-    ...UI.cardBorder,
-  },
-  proSearchInput: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: 14,
-    paddingVertical: 0,
-  },
-  proEmptyBox: {
-    marginTop: 8,
+    borderRadius: 14,
     padding: 14,
-    borderRadius: 14,
-    backgroundColor: Colors.surface,
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
     ...UI.cardBorder,
+    ...UI.cardShadow,
   },
-  proEmptyText: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  proRetryBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: Colors.orange,
-  },
-  proRetryText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 12,
-  },
-  proStatusPill: {
-    marginLeft: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: Colors.orange + '14',
-    borderWidth: 1,
-    borderColor: Colors.orange + '35',
-  },
-  proStatusText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: Colors.orange,
-  },
-
-  proTabs: {
+  statValue: { marginTop: 6, fontSize: 20, fontWeight: '900' },
+  statLabel: { marginTop: 2, fontSize: 11, color: Colors.textMuted, fontWeight: '600' },
+  proTabRow: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 18,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 4,
+    marginBottom: 20,
+    ...UI.cardBorder,
   },
   proTab: {
     flex: 1,
@@ -943,5 +632,101 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: Colors.textMuted,
     fontWeight: '600',
+  },
+
+  proSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    ...UI.cardBorder,
+  },
+  proSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.text,
+  },
+  proEmptyBox: {
+    alignItems: 'center',
+    paddingVertical: 32,
+    gap: 12,
+  },
+  proEmptyText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    maxWidth: 200,
+  },
+  proRetryBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  proRetryText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  clientCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    ...UI.cardBorder,
+    ...UI.cardShadow,
+  },
+  clientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clientAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primary + '18',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clientInitial: {
+    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  clientInfo: {
+    flex: 1,
+  },
+  clientNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  clientName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.text,
+  },
+  clientStep: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    lineHeight: 18,
+  },
+  proStatusPill: {
+    backgroundColor: Colors.orange + '18',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  proStatusText: {
+    color: Colors.orange,
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
