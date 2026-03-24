@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/Layout.astro'
+import Layout from '../../layouts/Layout.astro'
 import { getUserFromSessionFullAny } from '../lib/auth'
 
 const user = await getUserFromSessionFullAny(Astro.cookies)
