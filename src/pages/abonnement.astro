@@ -1,17 +1,22 @@
 ---
 import MainLayout from '../layouts/main.astro'
-import { getUserFromSessionFullAny } from '../lib/auth'
+import { getUserFromSessionAny } from '../lib/db'
 
-const user = await getUserFromSessionFullAny(Astro.cookies)
-
-// Rediriger si non connecté
-if (!user) {
-  return Astro.redirect('/connexion')
+// Vérification session côté serveur
+const session = Astro.cookies.get('capitune_session');
+if (!session?.value) {
+  return Astro.redirect('/connexion');
 }
 
-// Vérifier si c'est un client
-if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
-  return Astro.redirect('/admin')
+// Rediriger les comptes pro/admin vers l'espace pro
+const db = ((Astro.locals.runtime?.env as Env | undefined)?.DB ?? null);
+const sessionUser = await getUserFromSessionAny(db, session.value);
+if (!sessionUser) {
+  return Astro.redirect('/connexion');
+}
+
+if (sessionUser.account_type === 'pro' || sessionUser.email?.includes('@capitune.com')) {
+  return Astro.redirect('/admin');
 }
 
 // Get URL parameters
@@ -227,11 +232,11 @@ const upgrade = urlParams.get('upgrade') === 'true'
               <div class="form-row">
                 <div class="form-group">
                   <label>Nom complet</label>
-                  <input type="text" name="fullName" value="${user.name}" required>
+                  <input type="text" name="fullName" value="${sessionUser.name}" required>
                 </div>
                 <div class="form-group">
                   <label>Email</label>
-                  <input type="email" name="email" value="${user.email}" required>
+                  <input type="email" name="email" value="${sessionUser.email}" required>
                 </div>
               </div>
             </div>

@@ -1,17 +1,22 @@
 ---
 import MainLayout from '../layouts/main.astro'
-import { getUserFromSessionFullAny } from '../lib/auth'
+import { getUserFromSessionAny } from '../lib/db'
 
-const user = await getUserFromSessionFullAny(Astro.cookies)
-
-// Rediriger si non connecté
-if (!user) {
-  return Astro.redirect('/connexion')
+// Vérification session côté serveur
+const session = Astro.cookies.get('capitune_session');
+if (!session?.value) {
+  return Astro.redirect('/connexion');
 }
 
-// Vérifier si c'est un client (pas admin)
-if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
-  return Astro.redirect('/admin')
+// Rediriger les comptes pro/admin vers l'espace pro
+const db = ((Astro.locals.runtime?.env as Env | undefined)?.DB ?? null);
+const sessionUser = await getUserFromSessionAny(db, session.value);
+if (!sessionUser) {
+  return Astro.redirect('/connexion');
+}
+
+if (sessionUser.account_type === 'pro' || sessionUser.email?.includes('@capitune.com')) {
+  return Astro.redirect('/admin');
 }
 ---
 
@@ -23,7 +28,7 @@ if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
         <div class="header-content">
           <div class="welcome-section">
             <h1>Mes Projets</h1>
-            <p>Bonjour {user.name}, gérez vos projets d'immigration</p>
+            <p>Bonjour {sessionUser.name}, gérez vos projets d'immigration</p>
           </div>
           <div class="header-actions">
             <button class="btn-primary" onclick="openCreateModal()">
