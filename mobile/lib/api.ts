@@ -147,26 +147,22 @@ export const dashboardApi = {
 
   getPayments: (token: string) =>
     request<{ payments: Payment[] }>('/api/payments', {}, token),
+
+  publish: (token: string, payload: { title: string; content: string }) =>
+    request<{ ok?: boolean; error?: string }>('/api/publish', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }, token),
 };
 
 // -- Pro (inbox + gestion dossier) -------------------------------------------
 
 export type ProClientRow = {
   id: string;
-  name?: string | null;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone?: string | null;
-  avatar_key?: string | null;
-  suspended?: number | boolean | null;
-  project_id?: string | null;
-  project_type?: string | null;
-  project_status?: string | null;
-  project_updated?: string | null;
-  last_msg?: string | null;
-  last_msg_at?: string | null;
-  msg_count?: number | null;
-  paid_count?: number | null;
-  total_paid?: number | null;
+  project_status?: string;
 };
 
 export type ProClientDetails = {
@@ -197,6 +193,9 @@ export const proApi = {
 
   getClient: (token: string, clientId: string) =>
     request<ProClientDetails>(`/api/admin/client/${encodeURIComponent(clientId)}`, {}, token),
+
+  getDossiers: (token: string) =>
+    request<ProClientRow[]>('/api/pro/dossiers', {}, token),
 
   reply: (token: string, payload: { user_id: string; content: string }) =>
     request<{ ok?: boolean; error?: string }>(

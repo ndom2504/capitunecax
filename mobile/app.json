@@ -15,7 +15,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.capitune.mobile",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "android": {
@@ -23,7 +26,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1f4b6e"
       },
-      "package": "com.capitune.mobile"
+      "package": "com.capitune.mobile",
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "bundler": "metro",

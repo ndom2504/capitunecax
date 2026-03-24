@@ -20,13 +20,14 @@ export default function ProfilScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   // Pré-remplissage immédiat depuis le contexte Auth (déjà chargé)
-  const [draft, setDraft] = useState<UserProfileUpdate>({
+  const [draft, setDraft] = useState<UserProfileUpdate & { banner_key?: string }>({
     name: user?.name ?? '',
     avatar_key: user?.avatar ?? '',
   });
   const [loadingProfile, setLoadingProfile] = useState(false); // pas de spinner au démarrage
   const [saving, setSaving] = useState(false);
   const [pickingAvatar, setPickingAvatar] = useState(false);
+  const [pickingBanner, setPickingBanner] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [loadingBiometric, setLoadingBiometric] = useState(false);
@@ -152,6 +153,66 @@ export default function ProfilScreen() {
     }
   };
 
+  const pickBanner = useCallback(async () => {
+    if (!token) {
+      Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+      return;
+    }
+
+    setPickingBanner(true);
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          'Autorisation requise',
+          "Activez l'accès aux photos pour importer votre bannière.",
+          [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Ouvrir les réglages', onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9], // Format bannière
+        quality: 0.7,
+        base64: true,
+      });
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+      const base64 = asset?.base64;
+      const mime = asset?.mimeType ?? 'image/jpeg';
+
+      if (!base64) {
+        Alert.alert('Erreur', "Impossible de lire l'image.");
+        return;
+      }
+
+      const dataUri = `data:${mime};base64,${base64}`;
+      if (dataUri.length > 512000) { // 500KB pour bannière
+        Alert.alert('Image trop lourde', 'Choisissez une image plus petite (limite ~500 Ko).');
+        return;
+      }
+
+      setDraft(d => ({ ...d, banner_key: dataUri }));
+
+      // Mise à jour immédiate dans l'app (Dashboard)
+      if (user && token) {
+        const nextUser: UserInfo & { banner?: string } = { ...user, banner: dataUri };
+        await saveSession(token, nextUser);
+        setUser(nextUser);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', `Impossible d'ouvrir la galerie. ${String(e)}`);
+    } finally {
+      setPickingBanner(false);
+    }
+  }, [token]);
+
   const canSave = useMemo(() => {
     if (!profile) return false;
     const nextName = String(draft.name ?? profile.name).trim();
@@ -237,6 +298,25 @@ export default function ProfilScreen() {
 
         {/* Avatar + nom */}
         <View style={styles.profileBlock}>
+          {/* Bannière de fond style story Facebook */}
+          <TouchableOpacity
+            style={styles.bannerContainer}
+            activeOpacity={0.85}
+            onPress={pickBanner}
+          >
+            {draft.banner_key ? (
+              <Image source={{ uri: draft.banner_key }} style={styles.bannerImage} />
+            ) : (
+              <View style={styles.bannerPlaceholder}>
+                <Ionicons name="image" size={32} color={Colors.textMuted} />
+                <Text style={styles.bannerPlaceholderText}>Ajouter une bannière</Text>
+              </View>
+            )}
+            <View style={styles.bannerEditBadge}>
+              <Ionicons name="camera" size={16} color="#fff" />
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.avatarCircle}
             activeOpacity={0.85}
@@ -517,6 +597,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 4, borderRadius: 20,
   },
   roleText: { fontSize: 12, color: Colors.text, fontWeight: '700' },
+  bannerContainer: {
+    width: '100%',
+    height: 120,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  bannerPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.surface,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerPlaceholderText: {
+    fontSize: 14,
+    color: Colors.textMuted,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  bannerEditBadge: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionTitle: { fontSize: 12, fontWeight: '700', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 20 },
   card: {
     ...UI.card,

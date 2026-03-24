@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" viewBox="0 0 892 1600" width="768" height="1376" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond -->
+  <rect width="892" height="1600" fill="#1F386E"/>
+  
+  <!-- C principal (cercle extérieur) -->
+  <circle cx="446" cy="800" r="280" fill="#ffffff" opacity="0.95"/>
+  
+  <!-- Lettre C stylisée -->
+  <path d="M 446 520 
+           C 320 520, 220 620, 220 746
+           C 220 872, 320 972, 446 972
+           C 520 972, 582 938, 620 880
+           L 580 840
+           C 550 880, 500 900, 446 900
+           C 360 900, 290 830, 290 746
+           C 290 662, 360 592, 446 592
+           C 500 592, 550 612, 580 652
+           L 620 612
+           C 582 554, 520 520, 446 520 Z" 
+        fill="#1F386E"/>
+  
+  <!-- Point orange pour le style moderne -->
+  <circle cx="640" cy="680" r="24" fill="#FB9923"/>
+  
+  <!-- Ondulation moderne en bas -->
+  <path d="M 100 1200 Q 200 1150, 300 1200 T 500 1200 Q 600 1150, 700 1200 T 892 1200 L 892 1600 L 100 1600 Z" 
+        fill="#FB9923" opacity="0.15"/>
+  
+  <!-- Éléments décoratifs -->
+  <circle cx="180" cy="300" r="12" fill="#ffffff" opacity="0.6"/>
+  <circle cx="712" cy="320" r="8" fill="#FB9923" opacity="0.8"/>
+  <circle cx="750" cy="450" r="6" fill="#ffffff" opacity="0.4"/>
+  <circle cx="140" cy="500" r="10" fill="#FB9923" opacity="0.6"/>
+</svg>

@@ -1,0 +1,1273 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { getUserFromSessionFullAny } from '../lib/auth'
+
+const user = await getUserFromSessionFullAny(Astro.cookies)
+
+// Rediriger si non connecté
+if (!user) {
+  return Astro.redirect('/connexion')
+}
+
+// Vérifier si c'est un client
+if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
+  return Astro.redirect('/admin')
+}
+---
+
+<Layout title="Documents - Capitune">
+  <main class="documents-page">
+    <!-- Header -->
+    <section class="page-header">
+      <div class="container">
+        <div class="header-content">
+          <div class="breadcrumb">
+            <a href="/projets">Mes Projets</a>
+            <span>/</span>
+            <span>Documents</span>
+          </div>
+          <h1>📁 Mes Documents</h1>
+          <div class="progress-info">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">
+              0 / 0 documents requis validés
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="filter-section">
+      <div class="container">
+        <div class="category-filters">
+          <button class="filter-btn active" data-category="all" onclick="filterDocuments('all')">
+            <i class="fas fa-th"></i>
+            Tous
+          </button>
+          <button class="filter-btn" data-category="passport" onclick="filterDocuments('passport')">
+            <i class="fas fa-id-card"></i>
+            Passeport
+          </button>
+          <button class="filter-btn" data-category="diploma" onclick="filterDocuments('diploma')">
+            <i class="fas fa-graduation-cap"></i>
+            Diplômes
+          </button>
+          <button class="filter-btn" data-category="financial" onclick="filterDocuments('financial')">
+            <i class="fas fa-dollar-sign"></i>
+            Financiers
+          </button>
+          <button class="filter-btn" data-category="other" onclick="filterDocuments('other')">
+            <i class="fas fa-file"></i>
+            Autres
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Alert for missing documents -->
+    <section class="alert-section" id="alertSection" style="display: none;">
+      <div class="container">
+        <div class="alert-box warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">
+            <h3>Documents requis manquants</h3>
+            <p id="alertText">0 document(s) requis manquant(s)</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Documents List -->
+    <section class="documents-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Mes documents</h2>
+          <div class="section-actions">
+            <button class="btn-secondary" onclick="downloadAll()">
+              <i class="fas fa-download"></i>
+              Télécharger tout
+            </button>
+            <button class="btn-primary" onclick="openUploadModal()">
+              <i class="fas fa-plus"></i>
+              Ajouter un document
+            </button>
+          </div>
+        </div>
+
+        <div id="documentsList" class="documents-grid">
+          <!-- Documents will be loaded here -->
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>Aucun document</h3>
+            <p>Commencez par téléverser vos documents requis</p>
+            <button class="btn-primary" onclick="openUploadModal()">
+              <i class="fas fa-upload"></i>
+              Téléverser mon premier document
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Ajouter un document</h2>
+          <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="uploadForm" class="upload-form">
+            <div class="form-group">
+              <label>Type de document</label>
+              <select name="category" required>
+                <option value="">Sélectionnez un type</option>
+                <option value="passport">Passeport</option>
+                <option value="diploma">Diplôme</option>
+                <option value="financial">Preuve financière</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Nom du document</label>
+              <input type="text" name="documentName" placeholder="Ex: Passeport - Page 2" required>
+            </div>
+
+            <div class="form-group">
+              <label>Fichier</label>
+              <div class="file-upload-area" id="fileUploadArea">
+                <input type="file" id="fileInput" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                <div class="file-drop-zone">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <h4>Glissez-déposez votre fichier ici</h4>
+                  <p>ou cliquez pour parcourir</p>
+                  <small>Formats acceptés: PDF, JPG, PNG (max 10MB)</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Description (optionnel)</label>
+              <textarea name="description" rows="3" placeholder="Ajoutez une description ou des notes..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" onclick="closeUploadModal()">
+                Annuler
+              </button>
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-upload"></i>
+                Téléverser
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Document Preview Modal -->
+    <div id="previewModal" class="modal">
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h2 id="previewTitle">Aperçu du document</h2>
+          <button class="close-btn" onclick="closePreviewModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="document-preview">
+            <div class="preview-header">
+              <div class="document-info">
+                <h3 id="previewDocumentName"></h3>
+                <div class="document-meta">
+                  <span id="previewCategory"></span>
+                  <span id="previewSize"></span>
+                  <span id="previewDate"></span>
+                </div>
+              </div>
+              <div class="preview-actions">
+                <button class="btn-secondary" onclick="downloadDocument()">
+                  <i class="fas fa-download"></i>
+                  Télécharger
+                </button>
+                <button class="btn-secondary" onclick="deleteDocument()">
+                  <i class="fas fa-trash"></i>
+                  Supprimer
+                </button>
+              </div>
+            </div>
+            
+            <div class="preview-content">
+              <div id="previewViewer">
+                <!-- Document preview will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .documents-page {
+      min-height: 100vh;
+      background: var(--bg-light);
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      padding: 3rem 0;
+    }
+
+    .breadcrumb {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .breadcrumb a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .breadcrumb span {
+      margin: 0 0.5rem;
+    }
+
+    .header-content h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .progress-info {
+      max-width: 400px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #00FF9D;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .filter-section {
+      padding: 2rem 0;
+      background: white;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .category-filters {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: 25px;
+      background: white;
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .filter-btn.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .alert-section {
+      padding: 2rem 0;
+    }
+
+    .alert-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-box.warning {
+      background: var(--warning-color) + '20';
+      border: 2px solid var(--warning-color);
+      color: var(--warning-color);
+    }
+
+    .alert-box i {
+      font-size: 1.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .alert-content h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-content p {
+      margin: 0;
+    }
+
+    .documents-section {
+      padding: 3rem 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .documents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+
+    .document-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .document-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .document-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .document-info {
+      flex: 1;
+    }
+
+    .document-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .document-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--primary-color) + '20';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+
+    .document-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .document-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+    }
+
+    .status-pending {
+      background: var(--warning-color);
+    }
+
+    .status-uploaded {
+      background: var(--text-secondary);
+    }
+
+    .status-validated {
+      background: var(--success-color);
+    }
+
+    .status-rejected {
+      background: var(--error-color);
+    }
+
+    .document-details {
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .comment-box {
+      background: var(--warning-color) + '10';
+      border-left: 4px solid var(--warning-color);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .comment-box.warning {
+      background: var(--error-color) + '10';
+      border-left-color: var(--error-color);
+    }
+
+    .comment-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .comment-content i {
+      color: var(--warning-color);
+      margin-top: 0.25rem;
+    }
+
+    .comment-content.warning i {
+      color: var(--error-color);
+    }
+
+    .comment-text {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--warning-color);
+      line-height: 1.5;
+    }
+
+    .comment-content.warning .comment-text {
+      color: var(--error-color);
+    }
+
+    .document-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .upload-btn {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .reupload-btn {
+      background: var(--warning-color);
+      color: white;
+    }
+
+    .view-btn {
+      background: var(--bg-light);
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-color);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 0;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    .modal-content.large {
+      max-width: 900px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-light);
+      color: var(--text-color);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .upload-form {
+      max-width: 100%;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .file-upload-area {
+      position: relative;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .file-drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-drop-zone:hover {
+      border-color: var(--primary-color);
+      background: var(--primary-color) + '5';
+    }
+
+    .file-drop-zone i {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+
+    .file-drop-zone h4 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .file-drop-zone p {
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .file-drop-zone small {
+      color: var(--text-muted);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .document-preview {
+      max-width: 100%;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .document-info h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .document-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .preview-content {
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 2rem;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #previewViewer {
+      max-width: 100%;
+      max-height: 600px;
+    }
+
+    #previewViewer img {
+      max-width: 100%;
+      max-height: 600px;
+      border-radius: 8px;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content h1 {
+        font-size: 2rem;
+      }
+
+      .category-filters {
+        padding-bottom: 1rem;
+      }
+
+      .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .section-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .documents-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .document-actions {
+        flex-direction: column;
+      }
+
+      .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+      }
+
+      .preview-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .preview-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+    }
+  </style>
+</Layout>
+
+<script>
+  let documents = [];
+  let filteredDocuments = [];
+  let selectedCategory = 'all';
+  let selectedDocument = null;
+
+  // Load documents on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadDocuments();
+    updateProgress();
+  });
+
+  async function loadDocuments() {
+    try {
+      const response = await fetch('/api/documents/list');
+      const data = await response.json();
+      
+      if (data.ok) {
+        documents = data.documents || [];
+        filteredDocuments = [...documents];
+        renderDocuments();
+        updateProgress();
+        updateAlert();
+      }
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      // Load mock data for demo
+      loadMockDocuments();
+    }
+  }
+
+  function loadMockDocuments() {
+    documents = [
+      {
+        id: '1',
+        category: 'passport',
+        name: 'Passeport',
+        fileName: 'passport.pdf',
+        status: 'uploaded',
+        uploadedAt: '2024-03-15',
+        required: true,
+        size: '2.4 MB'
+      },
+      {
+        id: '2',
+        category: 'diploma',
+        name: 'Diplôme Bac',
+        fileName: 'bac_diplome.pdf',
+        status: 'validated',
+        uploadedAt: '2024-03-14',
+        required: true,
+        size: '1.8 MB',
+        comment: 'Document validé par votre conseiller'
+      },
+      {
+        id: '3',
+        category: 'financial',
+        name: 'Relevé bancaire',
+        fileName: 'bank_statement.pdf',
+        status: 'rejected',
+        uploadedAt: '2024-03-13',
+        required: true,
+        size: '3.2 MB',
+        comment: 'Solde insuffisant, merci de fournir un relevé plus récent avec un minimum de $10,000 CAD'
+      },
+      {
+        id: '4',
+        category: 'other',
+        name: 'Lettre de motivation',
+        fileName: 'motivation_letter.pdf',
+        status: 'pending',
+        required: false,
+        size: '0.8 MB'
+      }
+    ];
+    
+    filteredDocuments = [...documents];
+    renderDocuments();
+    updateProgress();
+    updateAlert();
+  }
+
+  function renderDocuments() {
+    const documentsList = document.getElementById('documentsList');
+    
+    if (filteredDocuments.length === 0) {
+      documentsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>Aucun document</h3>
+          <p>${selectedCategory === 'all' 
+            ? 'Aucun document requis pour le moment' 
+            : `Aucun document dans la catégorie ${getCategoryName(selectedCategory)}`
+          }</p>
+          <button class="btn-primary" onclick="openUploadModal()">
+            <i class="fas fa-upload"></i>
+            Téléverser mon premier document
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    documentsList.innerHTML = filteredDocuments.map(doc => `
+      <div class="document-card">
+        <div class="document-header">
+          <div class="document-info">
+            <div class="document-title">
+              <div class="document-icon">
+                <i class="fas ${getCategoryIcon(doc.category)}"></i>
+              </div>
+              <div>
+                <div class="document-name">${doc.name}</div>
+                ${doc.required ? '<small style="color: var(--error-color);">Obligatoire</small>' : ''}
+              </div>
+            </div>
+            <div class="document-meta">
+              <span>${doc.fileName || ''}</span>
+              ${doc.uploadedAt ? `<span>Téléversé le ${new Date(doc.uploadedAt).toLocaleDateString('fr-FR')}</span>` : ''}
+              ${doc.size ? `<span>${doc.size}</span>` : ''}
+            </div>
+          </div>
+          <div class="status-badge status-${doc.status}">
+            ${getStatusText(doc.status)}
+          </div>
+        </div>
+
+        ${doc.comment ? `
+          <div class="comment-box ${doc.status === 'rejected' ? 'warning' : ''}">
+            <div class="comment-content ${doc.status === 'rejected' ? 'warning' : ''}">
+              <i class="fas fa-${doc.status === 'rejected' ? 'exclamation-circle' : 'info-circle'}"></i>
+              <div class="comment-text">${doc.comment}</div>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="document-actions">
+          ${doc.status === 'pending' ? `
+            <button class="action-btn upload-btn" onclick="uploadDocument('${doc.id}')">
+              <i class="fas fa-cloud-upload"></i>
+              Téléverser
+            </button>
+          ` : ''}
+          
+          ${doc.status === 'rejected' ? `
+            <button class="action-btn reupload-btn" onclick="reuploadDocument('${doc.id}')">
+              <i class="fas fa-redo"></i>
+              Téléverser à nouveau
+            </button>
+          ` : ''}
+          
+          ${doc.fileName ? `
+            <button class="action-btn view-btn" onclick="previewDocument('${doc.id}')">
+              <i class="fas fa-eye"></i>
+              Voir
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function getCategoryIcon(category) {
+    const iconMap = {
+      'passport': 'fa-id-card',
+      'diploma': 'fa-graduation-cap',
+      'financial': 'fa-dollar-sign',
+      'other': 'fa-file'
+    };
+    return iconMap[category] || 'fa-file';
+  }
+
+  function getCategoryName(category) {
+    const nameMap = {
+      'passport': 'Passeport',
+      'diploma': 'Diplômes',
+      'financial': 'Preuves financières',
+      'other': 'Autres'
+    };
+    return nameMap[category] || 'Autres';
+  }
+
+  function getStatusText(status) {
+    const statusMap = {
+      'pending': '📄 À téléverser',
+      'uploaded': '⏳ En attente de validation',
+      'validated': '✅ Validé',
+      'rejected': '❌ À corriger'
+    };
+    return statusMap[status] || 'Inconnu';
+  }
+
+  function updateProgress() {
+    const requiredDocs = documents.filter(doc => doc.required);
+    const validatedDocs = requiredDocs.filter(doc => doc.status === 'validated');
+    const percentage = requiredDocs.length > 0 ? Math.round((validatedDocs.length / requiredDocs.length) * 100) : 0;
+
+    document.getElementById('progressFill').style.width = `${percentage}%`;
+    document.getElementById('progressText').textContent = `${validatedDocs.length} / ${requiredDocs.length} documents requis validés`;
+  }
+
+  function updateAlert() {
+    const missingDocs = documents.filter(doc => doc.required && doc.status !== 'validated');
+    const alertSection = document.getElementById('alertSection');
+    const alertText = document.getElementById('alertText');
+
+    if (missingDocs.length > 0) {
+      alertSection.style.display = 'block';
+      alertText.textContent = `${missingDocs.length} document(s) requis manquant(s)`;
+    } else {
+      alertSection.style.display = 'none';
+    }
+  }
+
+  function filterDocuments(category) {
+    selectedCategory = category;
+    
+    // Update filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelector(`[data-category="${category}"]`).classList.add('active');
+
+    // Filter documents
+    if (category === 'all') {
+      filteredDocuments = [...documents];
+    } else {
+      filteredDocuments = documents.filter(doc => doc.category === category);
+    }
+
+    renderDocuments();
+  }
+
+  function openUploadModal() {
+    document.getElementById('uploadModal').classList.add('active');
+  }
+
+  function closeUploadModal() {
+    document.getElementById('uploadModal').classList.remove('active');
+    document.getElementById('uploadForm').reset();
+  }
+
+  function openPreviewModal() {
+    document.getElementById('previewModal').classList.add('active');
+  }
+
+  function closePreviewModal() {
+    document.getElementById('previewModal').classList.remove('active');
+  }
+
+  function previewDocument(documentId) {
+    selectedDocument = documents.find(doc => doc.id === documentId);
+    if (!selectedDocument) return;
+
+    // Populate preview modal
+    document.getElementById('previewTitle').textContent = selectedDocument.name;
+    document.getElementById('previewDocumentName').textContent = selectedDocument.name;
+    document.getElementById('previewCategory').textContent = getCategoryName(selectedDocument.category);
+    document.getElementById('previewSize').textContent = selectedDocument.size || '';
+    document.getElementById('previewDate').textContent = selectedDocument.uploadedAt 
+      ? `Téléversé le ${new Date(selectedDocument.uploadedAt).toLocaleDateString('fr-FR')}` 
+      : '';
+
+    // Load preview (mock for demo)
+    const previewViewer = document.getElementById('previewViewer');
+    if (selectedDocument.fileName?.endsWith('.pdf')) {
+      previewViewer.innerHTML = `
+        <div style="text-align: center;">
+          <i class="fas fa-file-pdf" style="font-size: 4rem; color: var(--error-color); margin-bottom: 1rem;"></i>
+          <p>Aperçu PDF non disponible</p>
+          <button class="btn-primary" onclick="downloadDocument()" style="margin-top: 1rem;">
+            <i class="fas fa-download"></i>
+            Télécharger pour voir
+          </button>
+        </div>
+      `;
+    } else {
+      previewViewer.innerHTML = `
+        <img src="/images/documents/${selectedDocument.fileName}" alt="${selectedDocument.name}" />
+      `;
+    }
+
+    openPreviewModal();
+  }
+
+  function uploadDocument(documentId) {
+    // Open upload modal with pre-filled document info
+    const doc = documents.find(d => d.id === documentId);
+    if (doc) {
+      document.querySelector('select[name="category"]').value = doc.category;
+      document.querySelector('input[name="documentName"]').value = doc.name;
+      openUploadModal();
+    }
+  }
+
+  function reuploadDocument(documentId) {
+    uploadDocument(documentId);
+  }
+
+  function downloadDocument() {
+    if (!selectedDocument) return;
+    
+    // Mock download
+    const link = document.createElement('a');
+    link.href = `/api/documents/download/${selectedDocument.id}`;
+    link.download = selectedDocument.fileName || selectedDocument.name;
+    link.click();
+  }
+
+  function deleteDocument() {
+    if (!selectedDocument) return;
+
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${selectedDocument.name}" ?`)) {
+      // Mock delete
+      documents = documents.filter(doc => doc.id !== selectedDocument.id);
+      filteredDocuments = filteredDocuments.filter(doc => doc.id !== selectedDocument.id);
+      
+      closePreviewModal();
+      renderDocuments();
+      updateProgress();
+      updateAlert();
+      
+      alert('Document supprimé avec succès');
+    }
+  }
+
+  function downloadAll() {
+    if (documents.length === 0) {
+      alert('Aucun document à télécharger');
+      return;
+    }
+
+    // Mock download all
+    documents.forEach(doc => {
+      if (doc.fileName) {
+        const link = document.createElement('a');
+        link.href = `/api/documents/download/${doc.id}`;
+        link.download = doc.fileName;
+        link.click();
+      }
+    });
+  }
+
+  // File upload handling
+  const fileUploadArea = document.getElementById('fileUploadArea');
+  const fileInput = document.getElementById('fileInput');
+
+  fileUploadArea.addEventListener('click', () => fileInput.click());
+
+  fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.querySelector('.file-drop-zone').style.borderColor = 'var(--primary-color)';
+  });
+
+  fileUploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    fileUploadArea.querySelector('.file-drop-zone').style.borderColor = 'var(--border-color)';
+  });
+
+  fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileUploadArea.querySelector('.file-drop-zone').style.borderColor = 'var(--border-color)';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      fileInput.files = files;
+      updateFileDisplay(files[0]);
+    }
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      updateFileDisplay(e.target.files[0]);
+    }
+  });
+
+  function updateFileDisplay(file) {
+    const dropZone = fileUploadArea.querySelector('.file-drop-zone');
+    dropZone.innerHTML = `
+      <i class="fas fa-file" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+      <h4>${file.name}</h4>
+      <p>${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+      <small>Cliquez pour changer de fichier</small>
+    `;
+  }
+
+  // Handle form submission
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const fileData = {
+      category: formData.get('category'),
+      name: formData.get('documentName'),
+      description: formData.get('description'),
+      file: formData.get('file')
+    };
+
+    try {
+      // Show loading state
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Téléversement...';
+      submitBtn.disabled = true;
+
+      // Mock upload
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Add to documents list
+      const newDoc = {
+        id: Date.now().toString(),
+        category: fileData.category,
+        name: fileData.name,
+        fileName: fileData.file.name,
+        status: 'uploaded',
+        uploadedAt: new Date().toISOString().split('T')[0],
+        required: fileData.category === 'passport' || fileData.category === 'diploma',
+        size: (fileData.file.size / 1024 / 1024).toFixed(2) + ' MB'
+      };
+
+      documents.push(newDoc);
+      filteredDocuments = [...documents];
+
+      closeUploadModal();
+      renderDocuments();
+      updateProgress();
+      updateAlert();
+
+      alert('Document téléversé avec succès !');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Erreur lors du téléversement');
+    } finally {
+      // Reset button
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+      e.target.classList.remove('active');
+    }
+  });
+</script>

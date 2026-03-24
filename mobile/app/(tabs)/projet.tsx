@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../../constants/Colors';
 import { UI } from '../../constants/UI';
 import { dashboardApi, proApi, type Payment, type ProClientRow } from '../../lib/api';
@@ -48,73 +50,52 @@ export default function ProjetScreen() {
     if (!isRefresh) setLoading(true);
     setError(null);
     try {
-      if (!token) {
-        setClients([]);
-        return;
-      }
-      const res = await proApi.listClients(token, { page: 1, q });
+      const res = await proApi.getDossiers(token || '');
       if (res.error) {
         setError(res.error);
-        setClients([]);
       } else {
-        setClients(res.data?.clients ?? []);
+        setClients(res.data || []);
       }
-    } catch (e) {
-      setError('Impossible de charger les dossiers.');
-      setClients([]);
+    } catch (err) {
+      setError('Erreur de chargement');
     } finally {
-      setLoading(false);
+      if (!isRefresh) setLoading(false);
       setRefreshing(false);
     }
-  }, [token, q]);
+  }, [token]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadPro(true);
+  }, [loadPro]);
 
   useEffect(() => {
-    if (!isPro) return;
-    const t = setTimeout(() => { loadPro(); }, 250);
-    return () => clearTimeout(t);
-  }, [isPro, q, loadPro]);
+    loadPro();
+  }, [loadPro]);
 
-  const load = useCallback(async (isRefresh = false) => {
-    if (!isRefresh) setLoading(true);
+  const publish = async (title: string, content: string) => {
+    if (!token) return;
     try {
-      const token = await AsyncStorage.getItem('auth_token');
-      const localRaw = await AsyncStorage.getItem(LOCAL_PROJECT_KEY);
-      const localProject = localRaw ? (() => { try { return JSON.parse(localRaw); } catch { return null; } })() : null;
-
-      if (!token) {
-        setProject(localProject);
-        setPayments([]);
-        return;
+      const res = await dashboardApi.publish(token, { title, content });
+      if (res.error) {
+        Alert.alert('Erreur', res.error);
+      } else {
+        Alert.alert('Publié', 'Votre publication a été partagée');
       }
-
-      const res = await dashboardApi.getProject(token);
-      const backendProject = res.data?.project ?? null;
-      setProject(backendProject ?? localProject);
-
-      const payRes = await dashboardApi.getPayments(token);
-      setPayments(payRes.data?.payments ?? []);
     } catch (err) {
-      console.log('MonProjet load error:', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      Alert.alert('Erreur', 'Impossible de publier');
     }
-  }, []);
-
-  useFocusEffect(useCallback(() => {
-    if (isPro) {
-      loadPro();
-    } else {
-      load();
-    }
-  }, [isPro, load, loadPro]));
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    if (isPro) loadPro(true);
-    else load(true);
   };
 
+  const openSupport = () => {
+    Linking.openURL('https://capitune.com/support');
+  };
+
+  const openCAPI = () => {
+    router.push('/(tabs)/dashboard' as any);
+  };
+
+  // Mode Pro: liste des dossiers assignés
   if (isPro) {
     const dossiers = clients.filter(c => {
       const st = String(c.project_status ?? '').toLowerCase();
@@ -122,97 +103,136 @@ export default function ProjetScreen() {
     });
 
     return (
-      <SafeAreaView style={styles.root} edges={['top']}>
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 28 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
-        >
-          <View style={styles.proHeader}>
-            <Text style={styles.proTitle}>Projet</Text>
-            <Text style={styles.proSubtitle}>Dossiers assignés</Text>
-          </View>
-
-          <View style={styles.proSearchRow}>
-            <Ionicons name="search" size={16} color={Colors.textMuted} />
-            <TextInput
-              style={styles.proSearchInput}
-              value={q}
-              onChangeText={setQ}
-              placeholder="Rechercher un client…"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
-            />
-          </View>
-
-          {loading ? (
-            <ActivityIndicator color={Colors.orange} style={{ marginTop: 24 }} />
-          ) : error ? (
-            <View style={styles.proEmptyBox}>
-              <Ionicons name="alert-circle" size={18} color={Colors.error} />
-              <Text style={styles.proEmptyText}>{error}</Text>
-              <TouchableOpacity style={styles.proRetryBtn} onPress={() => loadPro()} activeOpacity={0.85}>
-                <Text style={styles.proRetryText}>Réessayer</Text>
-              </TouchableOpacity>
-            </View>
-          ) : dossiers.length === 0 ? (
-            <View style={styles.proEmptyBox}>
-              <Ionicons name="folder-open" size={18} color={Colors.textMuted} />
-              <Text style={styles.proEmptyText}>Aucun dossier pour le moment.</Text>
-            </View>
-          ) : (
-            dossiers.map((c) => {
-              const displayName = (c.name || c.email || 'Client').trim();
-              const preview = (c.last_msg || 'Aucun message').slice(0, 80);
-              const status = String(c.project_status || '').toLowerCase();
-              const statusLabel = status === 'proposition'
-                ? 'Proposition'
-                : status === 'demarre'
-                  ? 'Démarré'
-                  : status === 'soumis'
-                    ? 'Soumis'
-                    : status ? status : '';
-
-              return (
-                <TouchableOpacity
-                  key={c.id}
-                  style={styles.proClientCard}
-                  activeOpacity={0.85}
-                  onPress={() => router.push({
-                    pathname: '/(tabs)/messagerie' as any,
-                    params: { mode: 'pro', clientId: c.id, clientName: displayName, clientEmail: c.email },
-                  })}
-                >
-                  <View style={styles.proClientRow}>
-                    <View style={styles.proClientAvatar}>
-                      <Text style={styles.proClientInitial}>{(displayName[0] || 'C').toUpperCase()}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Text style={styles.proClientName} numberOfLines={1}>{displayName}</Text>
-                        {statusLabel ? (
-                          <View style={styles.proStatusPill}>
-                            <Text style={styles.proStatusText}>{statusLabel}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                      <Text style={styles.proClientPreview} numberOfLines={2}>{preview}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                  </View>
+      <>
+        <StatusBar style="light" backgroundColor={Colors.primary} />
+        <SafeAreaView style={styles.root}>
+          
+          {/* HEADER */}
+          <LinearGradient
+            colors={['#1e3a8a', '#143FA8']}
+            style={styles.headerGradient}
+          >
+            <View style={styles.header}>
+              <View style={styles.headerCenter}>
+                <Text style={styles.title}>PROJET</Text>
+                <Text style={styles.subtitle}>Dossiers assignés</Text>
+              </View>
+              <View style={styles.headerRight}>
+                <TouchableOpacity style={styles.iconButton}>
+                  <Ionicons name="search" size={20} color="#fff" />
                 </TouchableOpacity>
-              );
-            })
-          )}
-        </ScrollView>
-      </SafeAreaView>
+                <TouchableOpacity style={styles.iconButton}>
+                  <Ionicons name="notifications-outline" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </LinearGradient>
+
+          {/* BARRES */}
+          <View style={styles.barsContainer}>
+            <View style={styles.bar}>
+              <Text style={styles.barText}>📋 Étapes</Text>
+            </View>
+            <View style={styles.bar}>
+              <Text style={styles.barText}>📄 Documents</Text>
+            </View>
+            <View style={styles.bar}>
+              <Text style={styles.barText}>💼 Services</Text>
+            </View>
+            <View style={styles.bar}>
+              <Text style={styles.barText}>👤 Conseiller</Text>
+            </View>
+          </View>
+
+          <ScrollView
+            style={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
+          >
+            <View style={styles.proSearchRow}>
+              <Ionicons name="search" size={16} color={Colors.textMuted} />
+              <TextInput
+                style={styles.proSearchInput}
+                value={q}
+                onChangeText={setQ}
+                placeholder="Rechercher un client…"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            {loading ? (
+              <ActivityIndicator color={Colors.orange} style={{ marginTop: 24 }} />
+            ) : error ? (
+              <View style={styles.proEmptyBox}>
+                <Ionicons name="alert-circle" size={18} color={Colors.error} />
+                <Text style={styles.proEmptyText}>{error}</Text>
+                <TouchableOpacity style={styles.proRetryBtn} onPress={() => loadPro()} activeOpacity={0.85}>
+                  <Ionicons name="refresh" size={14} color="#fff" />
+                  <Text style={styles.proRetryText}>Réessayer</Text>
+                </TouchableOpacity>
+              </View>
+            ) : dossiers.length === 0 ? (
+              <View style={styles.proEmptyBox}>
+                <Ionicons name="folder-open" size={18} color={Colors.textMuted} />
+                <Text style={styles.proEmptyText}>Aucun dossier pour le moment.</Text>
+              </View>
+            ) : (
+              dossiers.map((c, idx) => {
+                const displayName = c.first_name + ' ' + c.last_name;
+                const statusKey = String(c.project_status ?? '').toLowerCase();
+                const statusLabel = STATUS_CFG[statusKey]?.label;
+                const statusColor = STATUS_CFG[statusKey]?.color;
+                const statusIcon = STATUS_CFG[statusKey]?.icon;
+
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={styles.proClientCard}
+                    activeOpacity={0.85}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(tabs)/dashboard',
+                        params: {
+                          mode: 'pro',
+                          clientId: c.id,
+                          clientName: displayName,
+                          clientEmail: c.email,
+                        },
+                      } as any)
+                    }
+                  >
+                    <View style={styles.proClientRow}>
+                      <View style={styles.proClientAvatar}>
+                        <Text style={styles.proClientInitial}>{(displayName[0] || 'C').toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={styles.proClientName} numberOfLines={1}>{displayName}</Text>
+                          {statusLabel ? (
+                            <View style={styles.proStatusPill}>
+                              <Text style={styles.proStatusText}>{statusLabel}</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                        <Text style={styles.proClientPreview}>{c.email}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </ScrollView>
+        </SafeAreaView>
+      </>
     );
   }
 
+  // Mode Client: affichage du projet individuel
   if (loading) {
     return (
-      <SafeAreaView style={styles.root} edges={['top']}>
+      <SafeAreaView style={styles.root}>
         <View style={styles.loadingBox}>
           <ActivityIndicator size="large" color={Colors.orange} />
         </View>
@@ -222,99 +242,105 @@ export default function ProjetScreen() {
 
   if (!project) {
     return (
-      <SafeAreaView style={styles.root} edges={['top']}>
+      <SafeAreaView style={styles.root}>
         <View style={styles.emptyBox}>
           <Text style={{ fontSize: 52 }}>📋</Text>
           <Text style={styles.emptyTitle}>Aucun projet actif</Text>
           <Text style={styles.emptySubtitle}>
-            Démarrez avec CAPITUNE pour créer votre projet d'immigration personnalisé.
+            Commencez votre projet via CAPI pour suivre votre progression.
           </Text>
-          <TouchableOpacity
-            style={styles.capiBtn}
-            onPress={() => router.push('/capi')}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="rocket-outline" size={18} color="#fff" />
-            <Text style={styles.capiBtnText}>Démarrer avec CAPITUNE</Text>
+          <TouchableOpacity style={styles.capiBtn} activeOpacity={0.85} onPress={openCAPI}>
+            <Text style={styles.capiBtnText}>Commencer avec CAPI</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  const steps: any[] = project.steps ?? [];
-  const documents: any[] = project.documents ?? [];
-  const services: any[] = project.services ?? [];
-  const advisor = project.advisor;
+  const steps = project.steps || [];
   const completedSteps = steps.filter((s: any) => s.status === 'completed').length;
   const progress = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0;
 
-  const openSupport = () => {
-    Linking.openURL('mailto:equipe@capitune.com?subject=Paiement%20CAPITUNE');
-  };
-
-  const handlePayNow = (p: Payment) => {
-    Alert.alert(
-      'Paiement',
-      `Le paiement in-app est en cours d'intégration.\n\nFacture: ${p.label}\nMontant: ${p.amount} ${p.currency ?? 'CAD'}`,
-      [
-        { text: 'OK' },
-        { text: 'Contacter le support', onPress: openSupport },
-      ],
-    );
-  };
-
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Mon Projet</Text>
-          <Text style={styles.headerSub} numberOfLines={1}>{project.programme ?? project.title ?? 'Dossier immigration'}</Text>
-        </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
-          <Ionicons name="refresh-outline" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Barre de progression globale */}
-      <View style={styles.progressSection}>
-        <View style={styles.progressTop}>
-          <Text style={styles.progressLabel}>Avancement global</Text>
-          <Text style={styles.progressPct}>{progress}%</Text>
-        </View>
-        <View style={styles.progressBarOuter}>
-          <View style={[styles.progressBarInner, { width: `${progress}%` }]} />
-        </View>
-        <Text style={styles.progressNote}>{completedSteps} / {steps.length} étapes complétées</Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.tabsRow}>
-        {TABS.map(tab => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-            activeOpacity={0.85}
-          >
-            <Ionicons name={tab.icon} size={14} color={activeTab === tab.key ? Colors.orange : Colors.textMuted} />
-            <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <ScrollView
-        style={styles.scroll}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.orange} />}
+    <SafeAreaView style={styles.root}>
+      <StatusBar style="light" backgroundColor={Colors.primary} />
+      
+      {/* HEADER */}
+      <LinearGradient
+        colors={['#1e3a8a', '#143FA8']}
+        style={styles.headerGradient}
       >
-        {/* === ÉTAPES === */}
-        {activeTab === 'etapes' && (
-          <View style={styles.content}>
-            {steps.length === 0 ? (
+        <View style={styles.header}>
+          <View style={styles.headerCenter}>
+            <Text style={styles.title}>PROJET</Text>
+            <Text style={styles.subtitle}>Mon projet</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="search" size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="notifications-outline" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* BARRES */}
+      <View style={styles.barsContainer}>
+        <View style={styles.bar}>
+          <Text style={styles.barText}>📋 Étapes</Text>
+        </View>
+        <View style={styles.bar}>
+          <Text style={styles.barText}>📄 Documents</Text>
+        </View>
+        <View style={styles.bar}>
+          <Text style={styles.barText}>💼 Services</Text>
+        </View>
+        <View style={styles.bar}>
+          <Text style={styles.barText}>👤 Conseiller</Text>
+        </View>
+      </View>
+
+      {/* Contenu du projet */}
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Barre de progression globale */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressTop}>
+            <Text style={styles.progressLabel}>Avancement global</Text>
+            <Text style={styles.progressPct}>{progress}%</Text>
+          </View>
+          <View style={styles.progressBarOuter}>
+            <View style={[styles.progressBarInner, { width: `${progress}%` }]} />
+          </View>
+          <Text style={styles.progressNote}>{completedSteps} / {steps.length} étapes complétées</Text>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabsRow}>
+          {TABS.map(tab => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={tab.icon}
+                size={16}
+                color={activeTab === tab.key ? Colors.orange : Colors.textMuted}
+              />
+              <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Contenu selon tab active */}
+        <View style={styles.content}>
+          {activeTab === 'etapes' && (
+            steps.length === 0 ? (
               <Text style={styles.emptyText}>Aucune étape définie pour l'instant.</Text>
             ) : (
               steps.map((step: any, idx: number) => {
@@ -348,174 +374,104 @@ export default function ProjetScreen() {
                   </View>
                 );
               })
-            )}
+            )
+          )}
 
-            {/* Paiements (intégré dans le projet) */}
-            {payments.length > 0 && (
-              <View style={styles.paymentsCard}>
-                <View style={styles.paymentsHeader}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.paymentsTitle}>Paiements</Text>
-                    <Text style={styles.paymentsSub}>Les paiements se débloquent quand une étape est validée.</Text>
-                  </View>
-                  <Ionicons name="card-outline" size={18} color={Colors.textMuted} />
-                </View>
+          {activeTab === 'documents' && (
+            <Text style={styles.emptyText}>Aucun document trouvé.</Text>
+          )}
 
-                {(() => {
-                  const pending = payments.filter(p => p.status === 'pending');
-                  const paidCount = payments.filter(p => p.status === 'paid').length;
-                  const unlockedCount = Math.max(0, completedSteps - paidCount);
+          {activeTab === 'services' && (
+            <Text style={styles.emptyText}>Aucun service actif.</Text>
+          )}
 
-                  if (pending.length === 0) {
-                    return <Text style={styles.paymentsEmpty}>Aucun paiement en attente.</Text>;
-                  }
-
-                  return pending.map((p, i) => {
-                    const enabled = i < unlockedCount;
-                    return (
-                      <View key={p.id} style={styles.paymentRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.paymentLabel} numberOfLines={2}>{p.label}</Text>
-                          <Text style={styles.paymentMeta}>{p.amount} {p.currency ?? 'CAD'} · {enabled ? 'Disponible' : 'Verrouillé'}</Text>
-                        </View>
-                        {enabled ? (
-                          <TouchableOpacity style={styles.payBtn} activeOpacity={0.85} onPress={() => handlePayNow(p)}>
-                            <Text style={styles.payBtnText}>Payer</Text>
-                          </TouchableOpacity>
-                        ) : (
-                          <View style={styles.lockedPill}>
-                            <Ionicons name="lock-closed" size={14} color={Colors.textMuted} />
-                          </View>
-                        )}
-                      </View>
-                    );
-                  });
-                })()}
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* === DOCUMENTS === */}
-        {activeTab === 'documents' && (
-          <View style={styles.content}>
-            {documents.length === 0 ? (
-              <Text style={styles.emptyText}>Aucun document trouvé.</Text>
-            ) : (
-              documents.map((doc: any, idx: number) => {
-                const isDone = doc.status === 'provided' || doc.received;
-                return (
-                  <View key={doc.id ?? idx} style={styles.docCard}>
-                    <View style={[styles.docIconBox, { backgroundColor: isDone ? Colors.success + '15' : Colors.orange + '15' }]}>
-                      <Ionicons
-                        name={isDone ? 'checkmark-circle' : 'document-outline'}
-                        size={20}
-                        color={isDone ? Colors.success : Colors.orange}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.docTitle}>{doc.document_name ?? doc.name ?? 'Document'}</Text>
-                      <Text style={styles.docStatus}>{isDone ? 'Reçu' : 'À fournir'}</Text>
-                    </View>
-                    {!isDone && (
-                      <TouchableOpacity
-                        style={styles.uploadBtn}
-                        activeOpacity={0.85}
-                        onPress={() => router.push('/(tabs)/documents')}
-                      >
-                        <Ionicons name="cloud-upload-outline" size={16} color={Colors.orange} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })
-            )}
-          </View>
-        )}
-
-        {/* === SERVICES === */}
-        {activeTab === 'services' && (
-          <View style={styles.content}>
-            {services.length === 0 ? (
-              <View style={styles.emptyServicesBox}>
-                <Text style={styles.emptyText}>Aucun service actif.</Text>
-                <TouchableOpacity style={styles.addServiceBtn} activeOpacity={0.85}>
-                  <Ionicons name="add-circle-outline" size={16} color={Colors.orange} />
-                  <Text style={styles.addServiceText}>Ajouter des services</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              services.map((svc: any, idx: number) => (
-                <View key={svc.id ?? idx} style={styles.serviceCard}>
-                  <View style={styles.serviceIconBox}>
-                    <Ionicons name="briefcase-outline" size={20} color={Colors.orange} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.serviceTitle}>{svc.name ?? svc.nom}</Text>
-                    <Text style={styles.serviceStatus}>{svc.status === 'active' ? 'Actif' : 'En attente'}</Text>
-                  </View>
-                  {svc.amount && (
-                    <Text style={styles.serviceAmount}>{svc.amount} $</Text>
-                  )}
-                </View>
-              ))
-            )}
-          </View>
-        )}
-
-        {/* === CONSEILLER === */}
-        {activeTab === 'conseiller' && (
-          <View style={styles.content}>
-            {!advisor ? (
-              <View style={styles.noAdvisorBox}>
-                <Text style={{ fontSize: 40 }}>👨‍💼</Text>
-                <Text style={styles.noAdvisorTitle}>Aucun conseiller assigné</Text>
-                <Text style={styles.noAdvisorSub}>
-                  Un conseiller sera assigné après la création de votre projet via CAPI.
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.advisorCard}>
-                <View style={styles.advisorAvatar}>
-                  <Text style={styles.advisorInitial}>{(advisor.name ?? advisor.nom ?? 'C')[0]}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.advisorName}>{advisor.name ?? advisor.nom}</Text>
-                  <Text style={styles.advisorTitle}>{advisor.title ?? advisor.titre}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.msgBtn}
-                  activeOpacity={0.85}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(tabs)/messagerie',
-                      params: {
-                        advisorName: String(advisor.name ?? advisor.nom ?? 'Conseiller'),
-                        advisorAvatarKey: String(advisor.avatar_key ?? advisor.avatarKey ?? ''),
-                        prefill: '1',
-                      },
-                    } as any)
-                  }
-                  accessibilityLabel="Contacter mon conseiller"
-                >
-                  <Ionicons name="sparkles-outline" size={20} color={Colors.orange} />
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
-
-        <View style={{ height: 30 }} />
+          {activeTab === 'conseiller' && (
+            <Text style={styles.emptyText}>Aucun conseiller assigné</Text>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
-  proHeader: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  proTitle: { fontSize: 22, fontWeight: '800', color: Colors.text },
-  proSubtitle: { marginTop: 2, fontSize: 12, fontWeight: '700', color: Colors.textMuted },
+  root: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+
+  // Header styles (adaptés du dashboard)
+  headerGradient: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: -0.5,
+  },
+
+  subtitle: {
+    color: '#cbd5f5',
+    fontSize: 14,
+    marginTop: 2,
+  },
+
+  headerRight: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Barres styles
+  barsContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  bar: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f8fafc',
+    marginHorizontal: 5,
+  },
+
+  barText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e3a8a',
+  },
+
+  // Styles existants (conservés)
   proSearchRow: {
     marginTop: 6,
     marginHorizontal: 20,
@@ -598,10 +554,6 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', lineHeight: 22 },
   capiBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.orange, borderRadius: 14, paddingVertical: 14, paddingHorizontal: 24, gap: 8, marginTop: 8 },
   capiBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  header: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: Colors.text },
-  headerSub: { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
-  refreshBtn: { marginTop: 4, padding: 8 },
   progressSection: { marginHorizontal: 20, marginBottom: 16, backgroundColor: Colors.surface, borderRadius: 16, padding: 16, ...UI.cardBorder, ...UI.cardShadow },
   progressTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   progressLabel: { fontSize: 13, fontWeight: '600', color: Colors.text },
@@ -617,7 +569,6 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: 20 },
   emptyText: { fontSize: 14, color: Colors.textMuted, textAlign: 'center', paddingVertical: 20 },
-  // Étapes
   stepRow: { flexDirection: 'row', gap: 14 },
   stepLeft: { alignItems: 'center', width: 34 },
   stepDotOuter: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, justifyContent: 'center', alignItems: 'center' },
@@ -630,42 +581,4 @@ const styles = StyleSheet.create({
   stepDesc: { fontSize: 12, color: Colors.textMuted, marginBottom: 6, lineHeight: 17 },
   dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dueDate: { fontSize: 11, color: Colors.textMuted },
-  // Documents
-  docCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, ...UI.cardBorder, ...UI.cardShadow },
-  docIconBox: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  docTitle: { fontSize: 13, fontWeight: '600', color: Colors.text },
-  docStatus: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  uploadBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: Colors.orange + '15', justifyContent: 'center', alignItems: 'center' },
-  // Services
-  emptyServicesBox: { alignItems: 'center', gap: 14, paddingVertical: 20 },
-  addServiceBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.orange, paddingVertical: 10, paddingHorizontal: 20 },
-  addServiceText: { fontSize: 14, fontWeight: '600', color: Colors.orange },
-  serviceCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12, ...UI.cardBorder, ...UI.cardShadow },
-  serviceIconBox: { width: 42, height: 42, borderRadius: 12, backgroundColor: Colors.orange + '15', justifyContent: 'center', alignItems: 'center' },
-  serviceTitle: { fontSize: 13, fontWeight: '600', color: Colors.text },
-  serviceStatus: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  serviceAmount: { fontSize: 14, fontWeight: '700', color: Colors.orange },
-  // Conseiller
-  noAdvisorBox: { alignItems: 'center', gap: 12, paddingVertical: 32 },
-  noAdvisorTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  noAdvisorSub: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', lineHeight: 20 },
-  advisorCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 16, padding: 18, gap: 14, ...UI.cardBorder, ...UI.cardShadow },
-  advisorAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.orange + '25', justifyContent: 'center', alignItems: 'center' },
-  advisorInitial: { fontSize: 26, fontWeight: '800', color: Colors.orange },
-  advisorName: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  advisorTitle: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  msgBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: Colors.orange + '15', justifyContent: 'center', alignItems: 'center' },
-
-  // Paiements (dans Projet)
-  paymentsCard: { marginTop: 10, backgroundColor: Colors.surface, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: Colors.border, ...UI.cardShadow },
-  paymentsHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
-  paymentsTitle: { fontSize: 14, fontWeight: '800', color: Colors.text },
-  paymentsSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2, lineHeight: 17 },
-  paymentsEmpty: { fontSize: 13, color: Colors.textMuted, paddingVertical: 6 },
-  paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderTopWidth: 1, borderTopColor: Colors.border },
-  paymentLabel: { fontSize: 13, fontWeight: '700', color: Colors.text },
-  paymentMeta: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  payBtn: { backgroundColor: Colors.orange, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14 },
-  payBtnText: { color: '#fff', fontSize: 12, fontWeight: '800' },
-  lockedPill: { width: 36, height: 36, borderRadius: 10, backgroundColor: Colors.offWhite, borderWidth: 1, borderColor: Colors.border, justifyContent: 'center', alignItems: 'center' },
 });

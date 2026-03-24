@@ -1,0 +1,1133 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { getUserFromSessionFullAny } from '../lib/auth'
+
+const user = await getUserFromSessionFullAny(Astro.cookies)
+
+// Rediriger si non connecté
+if (!user) {
+  return Astro.redirect('/connexion')
+}
+
+// Vérifier si c'est un client (pas admin)
+if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
+  return Astro.redirect('/admin')
+}
+---
+
+<Layout title="Mes Projets - Capitune">
+  <main class="projects-page">
+    <!-- Header -->
+    <section class="page-header">
+      <div class="container">
+        <div class="header-content">
+          <div class="welcome-section">
+            <h1>Mes Projets</h1>
+            <p>Bonjour {user.name}, gérez vos projets d'immigration</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="openCreateModal()">
+              <i class="fas fa-plus"></i>
+              Créer un nouveau projet
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects List -->
+    <section class="projects-section">
+      <div class="container">
+        <div id="projectsList" class="projects-grid">
+          <!-- Projects will be loaded here -->
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <h3>Aucun projet créé</h3>
+            <p>Commencez par créer votre premier projet d'immigration</p>
+            <button class="btn-primary" onclick="openCreateModal()">
+              <i class="fas fa-plus"></i>
+              Créer mon premier projet
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Create Project Modal -->
+    <div id="createModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Choisissez votre mode</h2>
+          <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="mode-cards">
+            <div class="mode-card" onclick="selectMode('pro')">
+              <div class="mode-icon">
+                <i class="fas fa-business"></i>
+              </div>
+              <div class="mode-content">
+                <h3>🏢 Professionnel</h3>
+                <p>Accompagnement personnalisé par un expert de l'immigration</p>
+                <ul>
+                  <li>Conseiller dédié</li>
+                  <li>Suivi personnalisé</li>
+                  <li>Validation documents</li>
+                  <li>Messagerie directe</li>
+                </ul>
+              </div>
+              <div class="mode-action">
+                <button class="btn-primary">Commencer</button>
+              </div>
+            </div>
+
+            <div class="mode-card" onclick="selectMode('autonomous')">
+              <div class="mode-icon">
+                <i class="fas fa-rocket"></i>
+              </div>
+              <div class="mode-content">
+                <h3>🚀 Autonomie guidée</h3>
+                <p>Self-service avec outils intégrés et recommandations</p>
+                <ul>
+                  <li>Guides pas à pas</li>
+                  <li>Checklists automatiques</li>
+                  <li>Outils de calcul</li>
+                  <li>Ressources gratuites</li>
+                </ul>
+              </div>
+              <div class="mode-action">
+                <button class="btn-secondary">Commencer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Profile Modal -->
+    <div id="profileModal" class="modal">
+      <div class="modal-content large">
+        <div class="modal-header">
+          <h2>Créer mon profil d'immigration</h2>
+          <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="profileForm" class="profile-form">
+            <input type="hidden" id="projectMode" name="mode">
+            
+            <!-- Location -->
+            <div class="form-section">
+              <h3>📍 Où êtes-vous actuellement ?</h3>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="location" value="outside" checked>
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-globe"></i>
+                    <div>
+                      <strong>Je suis HORS Canada</strong>
+                      <p>Je souhaite immigrer au Canada depuis l'étranger</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="location" value="inside">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-flag"></i>
+                    <div>
+                      <strong>Je suis DÉJÀ au Canada</strong>
+                      <p>Je souhaite régulariser ma situation ou changer de statut</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Goal -->
+            <div class="form-section">
+              <h3>🎯 Quel est votre objectif ?</h3>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="goal" value="work" checked>
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-briefcase"></i>
+                    <div>
+                      <strong>Travail</strong>
+                      <p>Permis de travail, emploi, PMR</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="goal" value="study">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-school"></i>
+                    <div>
+                      <strong>Études</strong>
+                      <p>Permis d'études, écoles, bourses</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="goal" value="family">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-heart"></i>
+                    <div>
+                      <strong>Famille</strong>
+                      <p>Parrainage, conjoint, enfants</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="goal" value="business">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-business"></i>
+                    <div>
+                      <strong>Affaires</strong>
+                      <p>Entrepreneur, investisseur, travailleur autonome</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="goal" value="residence">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-home"></i>
+                    <div>
+                      <strong>Résidence permanente</strong>
+                      <p>Entrée express, parrainage provincial</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Budget -->
+            <div class="form-section">
+              <h3>💰 Budget estimé</h3>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="budget" value="$5,000-$10,000" checked>
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-cash"></i>
+                    <div>
+                      <strong>$5,000 - $10,000</strong>
+                      <p>Budget limité, options économiques</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="budget" value="$10,000-$20,000">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-wallet"></i>
+                    <div>
+                      <strong>$10,000 - $20,000</strong>
+                      <p>Budget standard, bonnes options</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="budget" value="$20,000+">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-card"></i>
+                    <div>
+                      <strong>$20,000+</strong>
+                      <p>Budget confortable, toutes options</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Family Situation -->
+            <div class="form-section">
+              <h3>👥 Situation familiale</h3>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="family" value="single" checked>
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-person"></i>
+                    <div>
+                      <strong>Seul(e)</strong>
+                      <p>Candidat individuel</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="family" value="couple">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-heart"></i>
+                    <div>
+                      <strong>En couple</strong>
+                      <p>Marié ou conjoint de fait</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="family" value="family">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-happy"></i>
+                    <div>
+                      <strong>Avec enfants</strong>
+                      <p>Famille avec enfants à charge</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="form-section">
+              <h3>📅 Quand souhaitez-vous partir ?</h3>
+              <div class="radio-group">
+                <label class="radio-option">
+                  <input type="radio" name="timeline" value="3months" checked>
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-calendar"></i>
+                    <div>
+                      <strong>Dans 3 mois</strong>
+                      <p>Urgent, traitement prioritaire</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="timeline" value="6months">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-calendar-number"></i>
+                    <div>
+                      <strong>Dans 6 mois</strong>
+                      <p>Délai raisonnable</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="timeline" value="1year">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-calendar-outline"></i>
+                    <div>
+                      <strong>Dans 1 an</strong>
+                      <p>Délai confortable</p>
+                    </div>
+                  </div>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="timeline" value="flexible">
+                  <span class="radio-custom"></span>
+                  <div class="radio-content">
+                    <i class="fas fa-sync"></i>
+                    <div>
+                      <strong>Flexible</strong>
+                      <p>Sans contrainte de temps</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="form-section">
+              <h3>📋 Résumé de votre projet</h3>
+              <div class="summary-card">
+                <div id="summaryContent">
+                  <!-- Summary will be updated dynamically -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" onclick="closeProfileModal()">
+                Annuler
+              </button>
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-check-circle"></i>
+                Enregistrer et créer mon projet
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .projects-page {
+      min-height: 100vh;
+      background: var(--bg-light);
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      padding: 3rem 0;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .welcome-section h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-section p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .projects-section {
+      padding: 3rem 0;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .project-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .project-title h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .project-date {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .status-created { background: var(--warning-color); }
+    .status-profile { background: var(--text-secondary); }
+    .status-advisor { background: var(--primary-color); }
+    .status-subscribed { background: var(--success-color); }
+
+    .project-details {
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .primary-action {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .secondary-action {
+      background: var(--bg-light);
+      color: var(--primary-color);
+      border: 2px solid var(--primary-color);
+    }
+
+    .upsell-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--primary-color) + '15';
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      color: var(--primary-color);
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .upsell-btn:hover {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-color);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 0;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    .modal-content.large {
+      max-width: 800px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-light);
+      color: var(--text-color);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .mode-cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .mode-card {
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mode-card:hover {
+      border-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    }
+
+    .mode-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary-color) + '20';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-icon i {
+      font-size: 2rem;
+      color: var(--primary-color);
+    }
+
+    .mode-content h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-color);
+    }
+
+    .mode-content p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-content ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .mode-content li {
+      padding: 0.5rem 0;
+      color: var(--text-secondary);
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    .mode-content li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--success-color);
+      font-weight: bold;
+    }
+
+    .mode-action {
+      margin-top: 2rem;
+    }
+
+    .profile-form {
+      max-width: 600px;
+    }
+
+    .form-section {
+      margin-bottom: 3rem;
+    }
+
+    .form-section h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-color);
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .radio-option {
+      display: flex;
+      align-items: flex-start;
+      padding: 1.5rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .radio-option:hover {
+      border-color: var(--primary-color);
+    }
+
+    .radio-option input[type="radio"] {
+      display: none;
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-custom {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-custom:after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .radio-custom {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      margin-right: 1rem;
+      margin-top: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .radio-content {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .radio-content i {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary-color) + '20';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+      flex-shrink: 0;
+    }
+
+    .radio-content strong {
+      display: block;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.25rem;
+    }
+
+    .radio-content p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .summary-card {
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-label {
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .summary-value {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+      }
+
+      .mode-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .radio-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</Layout>
+
+<script>
+  let selectedMode = '';
+  let projects = [];
+
+  // Load projects on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadProjects();
+    updateSummary();
+  });
+
+  async function loadProjects() {
+    try {
+      const response = await fetch('/api/projects/list');
+      const data = await response.json();
+      
+      if (data.ok) {
+        projects = data.projects || [];
+        renderProjects();
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    }
+  }
+
+  function renderProjects() {
+    const projectsList = document.getElementById('projectsList');
+    
+    if (projects.length === 0) {
+      projectsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>Aucun projet créé</h3>
+          <p>Commencez par créer votre premier projet d'immigration</p>
+          <button class="btn-primary" onclick="openCreateModal()">
+            <i class="fas fa-plus"></i>
+            Créer mon premier projet
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    projectsList.innerHTML = projects.map(project => `
+      <div class="project-card">
+        <div class="project-header">
+          <div class="project-title">
+            <h3>${project.title}</h3>
+            <div class="project-date">Créé le ${new Date(project.createdAt).toLocaleDateString('fr-FR')}</div>
+          </div>
+          <div class="status-badge status-${project.status}">
+            ${getStatusText(project.status)}
+          </div>
+        </div>
+
+        <div class="project-details">
+          <div class="detail-row">
+            <i class="fas fa-briefcase"></i>
+            <span>Mode: ${project.mode === 'pro' ? '🏢 Professionnel' : '🚀 Autonomie guidée'}</span>
+          </div>
+          <div class="detail-row">
+            <i class="fas fa-cash"></i>
+            <span>Budget: ${project.budget}</span>
+          </div>
+          <div class="detail-row">
+            <i class="fas fa-location"></i>
+            <span>Lieu: ${project.location}</span>
+          </div>
+        </div>
+
+        <div class="project-actions">
+          <button class="action-btn primary-action" onclick="handleNextAction('${project.id}', '${project.status}', '${project.mode}')">
+            ${getNextActionText(project.status, project.mode)}
+          </button>
+          <button class="action-btn secondary-action" onclick="editProject('${project.id}')">
+            Modifier
+          </button>
+        </div>
+
+        ${project.mode === 'autonomous' && project.status !== 'subscribed' ? `
+          <button class="upsell-btn" onclick="upgradeToPro('${project.id}')">
+            <i class="fas fa-rocket"></i>
+            Passer en mode PRO 🚀
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+
+  function getStatusText(status) {
+    const statusMap = {
+      'created': 'Profil à compléter',
+      'profile_filled': 'Profil complété',
+      'advisor_selected': 'Conseiller choisi',
+      'subscribed': 'Abonnement actif',
+      'documents_uploaded': 'Documents envoyés',
+      'in_progress': 'Dossier en cours'
+    };
+    return statusMap[status] || 'Statut inconnu';
+  }
+
+  function getNextActionText(status, mode) {
+    const actionMap = {
+      'created': 'Compléter mon profil',
+      'profile_filled': mode === 'pro' ? 'Choisir un conseiller' : 'Voir les recommandations',
+      'advisor_selected': "S'abonner pour continuer",
+      'subscribed': 'Envoyer mes documents',
+      'documents_uploaded': 'Suivre mon dossier'
+    };
+    return actionMap[status] || 'Voir les détails';
+  }
+
+  function handleNextAction(projectId, status, mode) {
+    const routes = {
+      'created': '/projects/create-profile',
+      'profile_filled': mode === 'pro' ? '/team' : '/projects/recommendations',
+      'advisor_selected': '/subscription',
+      'subscribed': '/documents',
+      'documents_uploaded': '/messages'
+    };
+    
+    const route = routes[status];
+    if (route) {
+      window.location.href = route + '?project=' + projectId;
+    }
+  }
+
+  function editProject(projectId) {
+    window.location.href = `/projects/edit?id=${projectId}`;
+  }
+
+  function upgradeToPro(projectId) {
+    window.location.href = `/subscription?upgrade=true&project=${projectId}`;
+  }
+
+  function openCreateModal() {
+    document.getElementById('createModal').classList.add('active');
+  }
+
+  function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('active');
+  }
+
+  function selectMode(mode) {
+    selectedMode = mode;
+    document.getElementById('projectMode').value = mode;
+    closeCreateModal();
+    openProfileModal();
+  }
+
+  function openProfileModal() {
+    document.getElementById('profileModal').classList.add('active');
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('active');
+  }
+
+  function updateSummary() {
+    const form = document.getElementById('profileForm');
+    const formData = new FormData(form);
+    
+    const summary = {
+      mode: selectedMode,
+      location: formData.get('location'),
+      goal: formData.get('goal'),
+      budget: formData.get('budget'),
+      family: formData.get('family'),
+      timeline: formData.get('timeline')
+    };
+
+    const summaryContent = document.getElementById('summaryContent');
+    summaryContent.innerHTML = `
+      <div class="summary-row">
+        <span class="summary-label">Mode:</span>
+        <span class="summary-value">${summary.mode === 'pro' ? '🏢 Professionnel' : '🚀 Autonomie guidée'}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Lieu:</span>
+        <span class="summary-value">${summary.location === 'inside' ? 'Déjà au Canada' : 'Hors Canada'}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Objectif:</span>
+        <span class="summary-value">${getGoalText(summary.goal)}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Budget:</span>
+        <span class="summary-value">${summary.budget}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Situation:</span>
+        <span class="summary-value">${getFamilyText(summary.family)}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Délai:</span>
+        <span class="summary-value">${getTimelineText(summary.timeline)}</span>
+      </div>
+    `;
+  }
+
+  function getGoalText(goal) {
+    const goalMap = {
+      'work': 'Travail',
+      'study': 'Études',
+      'family': 'Famille',
+      'business': 'Affaires',
+      'residence': 'Résidence permanente'
+    };
+    return goalMap[goal] || goal;
+  }
+
+  function getFamilyText(family) {
+    const familyMap = {
+      'single': 'Seul(e)',
+      'couple': 'En couple',
+      'family': 'Avec enfants'
+    };
+    return familyMap[family] || family;
+  }
+
+  function getTimelineText(timeline) {
+    const timelineMap = {
+      '3months': 'Dans 3 mois',
+      '6months': 'Dans 6 mois',
+      '1year': 'Dans 1 an',
+      'flexible': 'Flexible'
+    };
+    return timelineMap[timeline] || timeline;
+  }
+
+  // Update summary when form changes
+  document.getElementById('profileForm').addEventListener('change', updateSummary);
+
+  // Handle form submission
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const projectData = {
+      mode: formData.get('mode'),
+      location: formData.get('location'),
+      goal: formData.get('goal'),
+      budget: formData.get('budget'),
+      family: formData.get('family'),
+      timeline: formData.get('timeline')
+    };
+
+    try {
+      const response = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData)
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        closeProfileModal();
+        // Reload projects
+        await loadProjects();
+        // Show success message
+        alert('Projet créé avec succès !');
+        
+        // Redirect based on mode
+        if (projectData.mode === 'pro') {
+          window.location.href = '/team';
+        } else {
+          window.location.href = '/projects/recommendations';
+        }
+      } else {
+        alert('Erreur: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error creating project:', error);
+      alert('Erreur lors de la création du projet');
+    }
+  });
+
+  // Close modals when clicking outside
+  window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+      e.target.classList.remove('active');
+    }
+  });
+</script>

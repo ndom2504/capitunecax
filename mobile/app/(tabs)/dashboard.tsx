@@ -1,732 +1,1164 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Image,
-  RefreshControl, ActivityIndicator,
-  TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio, ResizeMode, Video } from 'expo-av';
-import { Colors } from '../../constants/Colors';
-import { UI } from '../../constants/UI';
-import { useAuth } from '../../context/AuthContext';
-import { dashboardApi, proApi, type ProClientRow, type ProjectData } from '../../lib/api';
 import { useRouter } from 'expo-router';
-import { getAvatarSource } from '../../lib/avatar';
-import IconMenu from '../../components/IconMenu';
+import { useAuth } from '../../context/AuthContext';
+import { Colors } from '../../constants/Colors';
+import { StatusBar } from 'expo-status-bar';
+import { RefreshControl } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STEPS_LABELS = [
-  'Analyse du profil',
-  'Montage du dossier',
-  'Révision',
-  'Dépôt officiel',
-  'Décision',
-];
+// Données mockées pour Capitune
+const mockData = {
+  stats: {
+    clients: 24,
+    dossiers: 18,
+    success: 92,
+    revenue: 3200000,
+  },
+  performance: {
+    processed: 45,
+    avgTime: 3.2,
+    conversion: 68,
+  },
+  alerts: {
+    late: 3,
+    unpaid: 2,
+    urgent: 4,
+  },
+  upcoming: [
+    { name: "Jean Dupont", step: "Signature contrat" },
+    { name: "Marie Laurent", step: "Validation dossier" },
+    { name: "Paul Martin", step: "Documents requis" },
+  ],
+};
 
-const DASH_VIDEOS = [
-  { id: 'prep', title: 'Préparation du départ', source: require('../../assets/videos/preparation-depart.mp4') },
-  { id: 'integ', title: 'Intégration au Canada', source: require('../../assets/videos/integration-canada.mp4') },
-] as const;
-
-// ── Tableau de bord Professionnel ─────────────────────────────────────────────
-function ProDashboard({ name, avatarKey }: { name: string; avatarKey?: string | null }) {
-  const router = useRouter();
-  const { token } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inbox' | 'policy'>('inbox');
-  const [q, setQ] = useState('');
-  const [clients, setClients] = useState<ProClientRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [walletTotal, setWalletTotal] = useState<number | null>(null);
-  const [walletLoading, setWalletLoading] = useState(false);
-
-  const formatCad = (amount: number | null): string => {
-    if (amount === null) return '—';
-    try {
-      return new Intl.NumberFormat('fr-CA', {
-        style: 'currency',
-        currency: 'CAD',
-        maximumFractionDigits: 2,
-      }).format(amount);
-    } catch {
-      return '—';
+// Carte KPI Premium (sans gradient)
+function StatCard({ title, value, percent, type = 'line' }: {
+  title: string;
+  value: string | number;
+  percent: number;
+  type?: 'line' | 'bar' | 'circle';
+}) {
+  const renderChart = () => {
+    if (type === 'circle') {
+      return (
+        <View style={cardStyles.circle}>
+          <Text style={cardStyles.circleText}>{value}%</Text>
+        </View>
+      );
     }
-  };
 
-  const load = async (showLoader = false) => {
-    if (showLoader) setLoading(true);
-    if (!token) { setLoading(false); return; }
-    try {
-      const res = await proApi.listClients(token, { q });
-      if (res.data) {
-        setClients(res.data.clients || []);
-        setError(null);
-      }
-    } catch (e: any) {
-      setError(e?.message || 'Erreur de chargement');
-      setClients([]);
-    } finally {
-      setLoading(false);
+    if (type === 'bar') {
+      return (
+        <View style={cardStyles.barChart}>
+          {[40, 65, 45, 80, 55, 70].map((height, i) => (
+            <View key={i} style={[cardStyles.bar, { height: `${height}%` }]} />
+          ))}
+        </View>
+      );
     }
-  };
 
-  const loadWallet = async () => {
-    if (!token) return;
-    setWalletLoading(true);
-    try {
-      // getWallet n'existe pas, on met une valeur par défaut pour l'instant
-      setWalletTotal(1250.00);
-    } catch {
-      setWalletTotal(null);
-    } finally {
-      setWalletLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    load();
-    loadWallet();
-  }, [token]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await load();
-    await loadWallet();
-    setRefreshing(false);
-  };
-
-  const counts = {
-    withProject: clients.filter(c => c.project_status).length,
-    propositions: clients.filter(c => c.project_status === 'proposition').length,
-    actifs: clients.filter(c => ['demarre', 'soumis'].includes(String(c.project_status))).length,
+    // Line chart (default)
+    return (
+      <View style={cardStyles.lineChart}>
+        <View style={cardStyles.lineCurve} />
+        <View style={cardStyles.linePoints}>
+          {[20, 45, 30, 70, 50, 85].map((height, i) => (
+            <View key={i} style={[cardStyles.point, { top: `${100 - height}%` }]} />
+          ))}
+        </View>
+      </View>
+    );
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scroll}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+    <LinearGradient
+      colors={['#143FA8', '#1E63D6']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={cardStyles.card}
     >
-      {/* En-tête Pro */}
-      <View style={styles.header}>
-        <View style={styles.avatarRow}>
-          <View style={[styles.avatarCircle, styles.avatarPro]}>
-            {getAvatarSource(avatarKey) ? (
-              <Image source={getAvatarSource(avatarKey) as any} style={styles.avatarImg} />
-            ) : (
-              <Text style={styles.avatarInitial}>{(name ?? 'P')[0].toUpperCase()}</Text>
-            )}
-          </View>
-          <View style={styles.proBadge}>
-            <Ionicons name="briefcase" size={12} color={Colors.primary} />
-            <Text style={styles.proBadgeText}>PRO</Text>
-          </View>
-        </View>
-        <Text style={[styles.welcome, styles.subtitlePro]}>Bonjour {name}</Text>
-        <Text style={styles.subtitle}>Espace Professionnel</Text>
-      </View>
-
-      {/* Solde portefeuille */}
-      <View style={styles.walletPillInline}>
-        <Ionicons name="wallet" size={14} color={Colors.textMuted} />
-        <View style={styles.walletTextCol}>
-          <Text style={styles.walletLabel}>Portefeuille</Text>
-          <Text style={styles.walletAmount}>{walletLoading ? '...' : formatCad(walletTotal)}</Text>
+      <View style={alertStyles.header}>
+        <Text style={alertStyles.title}>{title}</Text>
+        <View style={alertStyles.icon}>
+          <Ionicons name="warning" size={16} color="#fff" />
         </View>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.proTabRow}>
-        <TouchableOpacity
-          style={[styles.proTab, activeTab === 'inbox' && styles.proTabActive]}
-          onPress={() => setActiveTab('inbox')}
-        >
-          <Ionicons name="mail" size={16} color={activeTab === 'inbox' ? '#fff' : Colors.textMuted} />
-          <Text style={[styles.proTabText, activeTab === 'inbox' && styles.proTabTextActive]}>Inbox</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.proTab, activeTab === 'policy' && styles.proTabActive]}
-          onPress={() => setActiveTab('policy')}
-        >
-          <Ionicons name="shield-checkmark" size={16} color={activeTab === 'policy' ? '#fff' : Colors.textMuted} />
-          <Text style={[styles.proTabText, activeTab === 'policy' && styles.proTabTextActive]}>Policy</Text>
-        </TouchableOpacity>
-      </View>
+      <Text style={alertStyles.value}>{value}</Text>
 
-      {activeTab === 'policy' ? (
-        <>
-          <Text style={styles.sectionTitle}>Politique de gestion client</Text>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>Objectif</Text>
-            <Text style={styles.policyText}>
-              Garantir un suivi clair, rapide et traçable: chaque échange doit mener à une prochaine action.
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>1) Assignation & périmètre</Text>
-            <Text style={styles.policyText}>
-              Vous ne voyez que les clients qui vous sont assignés. Toute action (message, proposition, mise à jour)
-              se fait dans ce périmètre.
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>2) Messagerie</Text>
-            <Text style={styles.policyText}>
-              Réponses courtes et concrètes. Structure recommandée: (a) contexte, (b) décision, (c) prochaine étape.
-              Évitez les promesses: annoncez un délai si vous devez vérifier.
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>3) Proposition tarifaire</Text>
-            <Text style={styles.policyText}>
-              Envoyez une proposition claire (ce qui est inclus / non inclus). Elle peut être ajustée avant acceptation.
-              Une fois acceptée, le dossier passe à l'état "Démarré".
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>4) Statuts & suivi</Text>
-            <Text style={styles.policyText}>
-              Statuts clés: Soumis → Proposition → Démarré. Gardez les informations à jour et ajoutez des étapes/services
-              uniquement quand cela aide la compréhension du client.
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>5) Confidentialité</Text>
-            <Text style={styles.policyText}>
-              Ne partagez jamais de données sensibles en clair (numéros, scans complets) dans la messagerie.
-              Utilisez les documents pour les pièces justificatives et restez factuel.
-            </Text>
-          </View>
-
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>Bonnes pratiques</Text>
-            <Text style={styles.policyText}>• Une action par message (max 3 points)</Text>
-            <Text style={styles.policyText}>• Toujours une prochaine étape</Text>
-            <Text style={styles.policyText}>• Ton professionnel, empathique, sans jargon</Text>
-          </View>
-        </>
-      ) : (
-        <>
-          {/* Vue d'ensemble */}
-          <Text style={styles.sectionTitle}>Inbox</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Ionicons name="people" size={22} color={Colors.primary} />
-              <Text style={[styles.statValue, { color: Colors.primary }]}>{clients.length}</Text>
-              <Text style={styles.statLabel}>Clients assignés</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="folder-open" size={22} color={Colors.orange} />
-              <Text style={[styles.statValue, { color: Colors.orange }]}>{counts.withProject}</Text>
-              <Text style={styles.statLabel}>Dossiers</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="file-tray" size={22} color={Colors.warning} />
-              <Text style={[styles.statValue, { color: Colors.warning }]}>{counts.propositions}</Text>
-              <Text style={styles.statLabel}>Propositions</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Ionicons name="checkmark-circle" size={22} color={Colors.success} />
-              <Text style={[styles.statValue, { color: Colors.success }]}>{counts.actifs}</Text>
-              <Text style={styles.statLabel}>Actifs</Text>
-            </View>
-          </View>
-
-          {/* Recherche */}
-          <View style={styles.proSearchRow}>
-            <Ionicons name="search" size={16} color={Colors.textMuted} />
-            <TextInput
-              style={styles.proSearchInput}
-              value={q}
-              onChangeText={setQ}
-              placeholder="Rechercher un client…"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
-            />
-          </View>
-
-          {/* Liste clients */}
-          <Text style={styles.sectionTitle}>Clients</Text>
-          {loading ? (
-            <ActivityIndicator color={Colors.orange} style={{ marginTop: 20 }} />
-          ) : error ? (
-            <View style={styles.proEmptyBox}>
-              <Ionicons name="alert-circle" size={18} color={Colors.error} />
-              <Text style={styles.proEmptyText}>{error}</Text>
-              <TouchableOpacity style={styles.proRetryBtn} onPress={() => load()} activeOpacity={0.85}>
-                <Text style={styles.proRetryText}>Réessayer</Text>
-              </TouchableOpacity>
-            </View>
-          ) : clients.length === 0 ? (
-            <View style={styles.proEmptyBox}>
-              <Ionicons name="mail-open" size={18} color={Colors.textMuted} />
-              <Text style={styles.proEmptyText}>Aucun client assigné pour le moment.</Text>
-            </View>
-          ) : (
-            clients.map((c) => {
-              const displayName = (c.name || c.email || 'Client').trim();
-              const preview = (c.last_msg || 'Aucun message').slice(0, 80);
-              const status = String(c.project_status || '').toLowerCase();
-              const statusLabel = status === 'proposition'
-                ? 'Proposition'
-                : status === 'demarre'
-                  ? 'Démarré'
-                  : status === 'soumis'
-                    ? 'Soumis'
-                    : status ? status : '';
-
-              return (
-                <TouchableOpacity
-                  key={c.id}
-                  style={styles.clientCard}
-                  activeOpacity={0.85}
-                  onPress={() => router.push({
-                    pathname: '/(tabs)/messagerie' as any,
-                    params: { mode: 'pro', clientId: c.id, clientName: displayName, clientEmail: c.email },
-                  })}
-                >
-                  <View style={styles.clientRow}>
-                    <View style={styles.clientAvatar}>
-                      <Text style={styles.clientInitial}>{(displayName[0] || 'C').toUpperCase()}</Text>
-                    </View>
-                    <View style={styles.clientInfo}>
-                      <View style={styles.clientNameRow}>
-                        <Text style={styles.clientName} numberOfLines={1}>{displayName}</Text>
-                        {statusLabel ? (
-                          <View style={styles.proStatusPill}>
-                            <Text style={styles.proStatusText}>{statusLabel}</Text>
-                          </View>
-                        ) : null}
-                      </View>
-                      <Text style={styles.clientStep} numberOfLines={2}>{preview}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
-        </>
-      )}
-    </ScrollView>
+      <Text style={alertStyles.action}>Action requise</Text>
+    </LinearGradient>
   );
 }
 
-// ── Tableau de bord Client ─────────────────────────────────────────────────────
-export default function DashboardScreen() {
-  const { user, token } = useAuth();
+// Carte Action Premium (avec gradient)
+function ActionCard({ title, icon, color = '#143FA8', onPress }: {
+  title: string;
+  icon: React.ReactNode;
+  color?: string;
+  onPress?: () => void;
+}) {
+  return (
+    <TouchableOpacity style={actionStyles.card} onPress={onPress}>
+      <LinearGradient
+        colors={[color, `${color}DD`]}
+        style={actionStyles.iconContainer}
+      >
+        {icon}
+      </LinearGradient>
+      <Text style={actionStyles.title}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// Client Item Premium
+function ClientItem({ name, step }: { name: string; step: string }) {
   const router = useRouter();
-  const [project, setProject] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [playing, setPlaying] = useState<Record<string, boolean>>({});
-  const [unmuted, setUnmuted] = useState<Record<string, boolean>>({});
 
-  const load = async (showLoader = false) => {
-    if (showLoader) setLoading(true);
-    if (!token) { setLoading(false); return; }
-    const res = await dashboardApi.getProject(token);
-    if (res.data?.project) setProject(res.data.project);
-    setLoading(false);
-  };
+  return (
+    <TouchableOpacity style={clientStyles.card} onPress={() => router.push('/(tabs)/inside')}>
+      <View style={clientStyles.avatar}>
+        <Text style={clientStyles.avatarText}>
+          {name.slice(0, 2).toUpperCase()}
+        </Text>
+      </View>
 
-  useEffect(() => { load(); }, [token]);
+      <View style={clientStyles.info}>
+        <Text style={clientStyles.name}>{name}</Text>
+        <Text style={clientStyles.step}>Étape: {step}</Text>
+      </View>
 
-  useEffect(() => {
-    Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
-  }, []);
+      <View style={clientStyles.arrow}>
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </View>
+    </TouchableOpacity>
+  );
+}
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  };
+export default function Dashboard() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [data, setData] = React.useState(mockData);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // États pour les nouvelles fonctionnalités
+  const [headerNotifications, setHeaderNotifications] = React.useState<Array<{
+    id: string;
+    title: string;
+    message: string;
+    time: string;
+    type: 'urgent' | 'info' | 'message' | 'publication' | 'admin';
+  }>>([]);
+  const [headerUnreadCount, setHeaderUnreadCount] = React.useState(0);
+
+  // État simplifié pour éviter les boucles
+const [isLoading, setIsLoading] = React.useState(false);
+const [apiError, setApiError] = React.useState<string | null>(null);
+const [dashboardData, setDashboardData] = React.useState(mockData);
+
+// Fonction pour charger les données avec gestion d'erreur robuste
+const loadDashboardData = React.useCallback(async () => {
+    // Éviter les appels multiples
+    if (isLoading) return;
+
+    setIsLoading(true);
+    setApiError(null);
+
+    try {
+      const token = await AsyncStorage.getItem('capitune_session');
+      if (!token) {
+        setApiError('Non connecté');
+        return;
+      }
+
+      const response = await fetch('https://api.capitune.com/dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.ok) {
+        const isPro = user?.account_type === 'pro';
+        if (isPro && result.pro) {
+          setDashboardData({
+            stats: {
+              clients: result.pro.clients || 0,
+              dossiers: result.pro.projects_total || 0,
+              success: Math.round((result.pro.projects_completed / result.pro.projects_total) * 100) || 0,
+              revenue: result.pro.revenue_paid || 0,
+            },
+            performance: {
+              processed: result.pro.projects_completed || 0,
+              avgTime: result.pro.processing_rate || 0,
+              conversion: result.pro.reactivity_rate || 0,
+            },
+            alerts: {
+              late: result.pro.pending_conversations || 0,
+              unpaid: 0,
+              urgent: 0,
+            },
+            upcoming: [],
+          });
+        } else if (!isPro && result.client) {
+          setDashboardData({
+            stats: {
+              clients: 0,
+              dossiers: result.client.my_requests_total || 0,
+              success: 0,
+              revenue: result.client.my_revenue_paid || 0,
+            },
+            performance: {
+              processed: 0,
+              avgTime: 0,
+              conversion: 0,
+            },
+            alerts: {
+              late: 0,
+              unpaid: 0,
+              urgent: 0,
+            },
+            upcoming: [],
+          });
+        }
+      } else {
+        setApiError(result.error || 'Erreur inconnue');
+      }
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+      setApiError(err instanceof Error ? err.message : 'Erreur de connexion');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+// Timeout pour éviter les boucles infinies
+const timeoutId = React.useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Ajouter de nouvelles fonctionnalités au dashboard
+const [selectedPeriod, setSelectedPeriod] = React.useState('week'); // Par défaut: semaine
+const [notifications, setNotifications] = React.useState<Array<{
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'urgent' | 'info' | 'message' | 'publication' | 'admin';
+}>>([]);
+const [unreadCount, setUnreadCount] = React.useState(0);
+
+// Fonctions pour les nouvelles fonctionnalités du header
+const loadHeaderNotifications = React.useCallback(async () => {
+  try {
+    const token = await AsyncStorage.getItem('capitune_session');
+    if (!token) return;
+
+    const response = await fetch('https://api.capitune.com/api/notifications', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setHeaderNotifications(data.notifications || []);
+      setHeaderUnreadCount(data.unreadCount || 0);
+    }
+  } catch (error) {
+    console.error('Header notifications error:', error);
+  }
+}, []);
+
+const handleProjectsPress = React.useCallback(() => {
+  router.push('/(tabs)/documents');
+}, [router]);
+
+const handleNotificationsPress = React.useCallback(() => {
+  router.push('/(tabs)/inside');
+}, [router]);
+
+// Fonctions pour les boutons d'action rapide
+const handleAddDocument = React.useCallback(() => {
+  router.push('/(tabs)/documents');
+}, [router]);
+
+const handleNewFolder = React.useCallback(() => {
+  router.push('/(tabs)/messagerie');
+}, [router]);
+
+const handleSendMessage = React.useCallback(() => {
+  router.push('/(tabs)/messagerie');
+}, [router]);
+
+const handlePlanRDV = React.useCallback(() => {
+  router.push('/(tabs)/rendezvous');
+}, [router]);
+
+const handleRapportMensuel = React.useCallback(() => {
+  router.push('/(tabs)/rapport-mensuel');
+}, [router]);
+
+const onRefresh = React.useCallback(() => {
+  setRefreshing(true);
+  loadDashboardData().finally(() => setRefreshing(false));
+}, [loadDashboardData]);
+
+// Charger les notifications header au montage
+React.useEffect(() => {
+  loadHeaderNotifications();
+}, [loadHeaderNotifications]);
 
   const isPro = user?.account_type === 'pro';
 
+  // Fonctions utilitaires pour devise
+  const getCurrencySymbol = (currency?: string) => {
+    switch (currency?.toUpperCase()) {
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'XAF': return 'XAF';
+      case 'CAD':
+      default: return '';
+    }
+  };
+
+  const formatRevenue = (amount: number, currency?: string) => {
+    const currencyCode = currency?.toUpperCase() || 'CAD';
+    const symbol = getCurrencySymbol(currency);
+
+    if (currencyCode === 'CAD') {
+      return `$${amount.toLocaleString()} CAD`;
+    }
+
+    return `${symbol}${amount.toLocaleString()} ${currencyCode}`;
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar style="light" backgroundColor={Colors.primary} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Chargement du dashboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar style="light" backgroundColor={Colors.primary} />
+        <View style={styles.errorContainer}>
+          <Ionicons name="warning" size={48} color="#DC2626" />
+          <Text style={styles.errorText}>{apiError}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadDashboardData}>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isPro) {
+    return (
+      <SafeAreaView style={styles.root}>
+        <StatusBar style="light" backgroundColor={Colors.primary} />
+
+        {/* HEADER */}
+        <LinearGradient
+          colors={['#143FA8', '#1E63D6']}
+          style={styles.headerGradient}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>MON DOSSIER</Text>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity style={styles.iconButton}>
+                <Ionicons name="grid-outline" size={24} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton}>
+                <Ionicons name="notifications-outline" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* CONTENU CLIENT */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          {/* KPI PRINCIPAUX CLIENT */}
+          <View style={styles.row}>
+            <StatCard title="Dossiers en cours" value="3" percent={12} type="bar" />
+            <StatCard title="Progression" value="72" percent={8} type="circle" />
+          </View>
+
+          <View style={styles.row}>
+            <StatCard title="Documents" value="12" percent={15} type="line" />
+            <StatCard title="Rendez-vous" value="2" percent={5} type="bar" />
+          </View>
+
+          {/* ÉTAT DU DOSSIER */}
+          <Text style={styles.section}>État du dossier</Text>
+          <LinearGradient
+            colors={['#143FA8', '#1E63D6']}
+            style={statusCard.statusCard}
+          >
+            <Text style={statusCard.statusTitle}>Immigration Canada</Text>
+            <View style={statusCard.progressContainer}>
+              <View style={statusCard.progressBar}>
+                <View style={[statusCard.progressFill, { width: '72%' }]} />
+              </View>
+              <Text style={statusCard.progressPercent}>72%</Text>
+            </View>
+            <Text style={statusCard.statusSub}>Étape actuelle: Validation documents</Text>
+          </LinearGradient>
+
+          {/* ACTIONS CLIENT */}
+          <Text style={styles.section}>Actions rapides</Text>
+          <View style={styles.row}>
+            <ActionCard
+              title="Téléverser"
+              icon={<Ionicons name="cloud-upload" size={24} color="#fff" />}
+              color="#059669"
+            />
+            <ActionCard
+              title="Prendre RDV"
+              icon={<Ionicons name="calendar" size={24} color="#fff" />}
+              color="#7C3AED"
+            />
+          </View>
+
+          {/* ALERTES CLIENT */}
+          <Text style={styles.section}>Alertes</Text>
+          <View style={styles.row}>
+            <AlertCard title="Documents manquants" value={3} color="yellow" />
+            <AlertCard title="Paiement en cours" value={1} color="red" />
+          </View>
+
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
-      {isPro ? (
-        <ProDashboard name={user?.name ?? 'Pro'} avatarKey={user?.avatar ?? null} />
-      ) : (
-        <IconMenu />
-      )}
+    <SafeAreaView style={styles.root}>
+      <StatusBar style="light" backgroundColor={Colors.primary} />
+
+      {/* HEADER */}
+      <LinearGradient
+        colors={['#143FA8', '#1E63D6']}
+        style={styles.headerGradient}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>TABLEAU DE BORD</Text>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity style={styles.iconButton} onPress={handleProjectsPress}>
+              <Ionicons name="folder" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton} onPress={handleNotificationsPress}>
+              <Ionicons name="notifications" size={24} color="#fff" />
+              {headerUnreadCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{headerUnreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* CONTENU PRO */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* KPI PRINCIPAUX */}
+        <View style={styles.row}>
+          <StatCard title="Clients actifs" value={data.stats.clients} percent={12} type="line" />
+          <StatCard title="Dossiers" value={data.stats.dossiers} percent={8} type="bar" />
+        </View>
+
+        <View style={styles.row}>
+          <StatCard title="Succès" value={data.stats.success} percent={3} type="circle" />
+          <StatCard
+            title="Revenus"
+            value={formatRevenue(data.stats.revenue, (user as any)?.currency_code)}
+            percent={15}
+            type="line"
+          />
+        </View>
+
+        {/* PERFORMANCE */}
+        <Text style={styles.section}>Performance</Text>
+        <View style={styles.row}>
+          <StatCard title="Traités/mois" value={mockData.performance.processed} percent={20} type="bar" />
+          <StatCard title="Temps moyen" value={`${mockData.performance.avgTime}`} percent={5} type="line" />
+        </View>
+        <View style={styles.row}>
+          <StatCard title="Conversion" value={mockData.performance.conversion} percent={12} type="circle" />
+          <StatCard title="Score qualité" value="A+" percent={8} type="bar" />
+        </View>
+
+        {/* ALERTES */}
+        <Text style={styles.section}>Alertes ⚠️</Text>
+        <View style={styles.row}>
+          <AlertCard title="Dossiers en retard" value={data.alerts.late} color="red" />
+          <AlertCard title="Paiements en cours" value={data.alerts.unpaid} color="yellow" />
+        </View>
+        <View style={styles.row}>
+          <AlertCard title="Actions urgentes" value={mockData.alerts.urgent} color="red" />
+          <AlertCard title="Messages non lus" value={7} color="orange" />
+        </View>
+
+        {/* ACTIONS RAPIDES */}
+        <Text style={styles.section}>Actions rapides</Text>
+        <View style={styles.row}>
+          <ActionCard
+            title="Nouveau dossier"
+            icon={<Ionicons name="folder" size={24} color="#fff" />}
+            color="#143FA8"
+            onPress={handleNewFolder}
+          />
+          <ActionCard
+            title="Ajouter document"
+            icon={<Ionicons name="document" size={24} color="#fff" />}
+            color="#059669"
+            onPress={handleAddDocument}
+          />
+        </View>
+        <View style={styles.row}>
+          <ActionCard
+            title="Envoyer message"
+            icon={<Ionicons name="mail" size={24} color="#fff" />}
+            color="#7C3AED"
+            onPress={handleSendMessage}
+          />
+          <ActionCard
+            title="Planifier RDV"
+            icon={<Ionicons name="calendar" size={24} color="#fff" />}
+            color="#DC2626"
+            onPress={handlePlanRDV}
+          />
+        </View>
+
+        {/* CLIENTS RÉCENTS */}
+        <Text style={styles.section}>Clients récents</Text>
+        {mockData.upcoming.map((client, index) => (
+          <ClientItem key={index} {...client} />
+        ))}
+
+        {/* NOTIFICATIONS */}
+        <Text style={styles.section}>Notifications</Text>
+        <View style={styles.notificationsContainer}>
+          {notifications.slice(0, 3).map((notification, index) => (
+            <TouchableOpacity key={index} style={styles.notificationItem}>
+              <View style={styles.notificationIcon}>
+                <Ionicons
+                  name={notification.type === 'urgent' ? 'warning' : 'information-circle'}
+                  size={20}
+                  color={notification.type === 'urgent' ? '#DC2626' : '#143FA8'}
+                />
+              </View>
+              <View style={styles.notificationContent}>
+                <Text style={styles.notificationTitle}>{notification.title}</Text>
+                <Text style={styles.notificationMessage}>{notification.message}</Text>
+                <Text style={styles.notificationTime}>{notification.time}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* PÉRIODE SÉLECTEUR */}
+        <View style={styles.periodSelector}>
+          <Text style={styles.periodLabel}>Période:</Text>
+          <TouchableOpacity
+            style={[styles.periodButton, selectedPeriod === 'day' && styles.periodButtonActive]}
+            onPress={() => setSelectedPeriod('day')}
+          >
+            <Text style={styles.periodButtonText}>Aujourd'hui</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.periodButton, selectedPeriod === 'week' && styles.periodButtonActive]}
+            onPress={() => setSelectedPeriod('week')}
+          >
+            <Text style={styles.periodButtonText}>Semaine</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* RAPPORT MENSUEL */}
+        <Text style={styles.section}>Rapport mensuel</Text>
+        <TouchableOpacity style={reportCard.reportCard} onPress={handleRapportMensuel}>
+          <LinearGradient
+            colors={['#143FA8', '#1E63D6']}
+            style={reportCard.reportIcon}
+          >
+            <Ionicons name="bar-chart" size={24} color="#fff" />
+          </LinearGradient>
+          <View style={reportCard.reportInfo}>
+            <Text style={reportCard.reportTitle}>Voir le rapport complet</Text>
+            <Text style={reportCard.reportSub}>Performance du mois dernier</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.bgLight },
-  scroll: { padding: 20 },
+  root: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+
+  headerGradient: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+
   header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 10,
-  },
-  welcome: { fontSize: 22, fontWeight: '800', color: Colors.text, textAlign: 'center' },
-  subtitle: { fontSize: 13, color: Colors.textMuted, marginTop: 3 },
-  avatarCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: Colors.orange, justifyContent: 'center', alignItems: 'center',
-  },
-  avatarRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 6,
   },
-  walletPillInline: {
-    minWidth: 150,
-    maxWidth: 190,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 14,
-    backgroundColor: Colors.surface,
-    marginTop: -12,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  walletLabel: { fontSize: 10, fontWeight: '900', color: Colors.textMuted },
-  walletTextCol: { alignItems: 'center' },
-  walletAmount: { marginTop: 2, fontSize: 12, fontWeight: '900', color: Colors.text, textAlign: 'center' },
-  avatarImg: { width: 64, height: 64, borderRadius: 32 },
-  avatarInitial: { color: '#fff', fontSize: 24, fontWeight: '800' },
-  progressCard: {
-    backgroundColor: Colors.primary,
-    borderRadius: 18, padding: 20, marginBottom: 28,
-  },
-  progressHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
-  },
-  progressTitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: '600' },
-  progressPct: { color: Colors.orangeLight, fontSize: 26, fontWeight: '800' },
-  progressBarBg: {
-    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 6, height: 8, marginBottom: 18,
-  },
-  progressBarFill: {
-    height: '100%', borderRadius: 6,
-    backgroundColor: Colors.orange,
-  },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  stepLabel: { flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.45)' },
-  stepDone: { color: 'rgba(255,255,255,0.75)' },
-  stepActive: { color: Colors.orangeLight, fontWeight: '700' },
-  stepDate: { fontSize: 11, color: 'rgba(255,255,255,0.35)' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 14 },
-  shortcutsGrid: { flexDirection: 'row', gap: 12 },
-  shortcut: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 14,
-    gap: 8,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  shortcutTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  shortcutIcon: { width: 46, height: 46, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  shortcutLabel: { fontSize: 13, fontWeight: '800', color: Colors.text },
-  shortcutHint: { fontSize: 11, color: Colors.textMuted, fontWeight: '600' },
 
-  videosGrid: { gap: 12 },
-  videoCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...UI.cardShadow,
-  },
-  video: { width: '100%', height: 210, backgroundColor: '#000' },
-  videoPlayBtn: {
-    position: 'absolute',
-    left: 12,
-    bottom: 44,
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  videoMuteBtn: {
-    position: 'absolute',
-    right: 12,
-    bottom: 44,
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  videoCaption: { paddingHorizontal: 14, paddingVertical: 10 },
-  videoTitle: { fontSize: 13, fontWeight: '800', color: Colors.text },
-
-  emptyProjectCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 22,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    ...UI.cardShadow,
-  },
-  emptyProjectTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  emptyProjectIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: Colors.orange + '18',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyProjectTitle: { fontSize: 16, fontWeight: '800', color: Colors.text },
-  emptyProjectSub: { fontSize: 12, color: Colors.textMuted, marginTop: 4, lineHeight: 18 },
-  emptyProjectCta: {
-    marginTop: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.orange,
-    borderRadius: 14,
-    paddingVertical: 12,
-  },
-  emptyProjectCtaText: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  // Pro
-  findAdvisorBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 18,
-    padding: 14,
-    marginTop: 16,
-    marginBottom: 8,
-    ...UI.cardShadow,
-  },
-  findAdvisorIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.orange + '18',
-    borderWidth: 1,
-    borderColor: Colors.orange + '35',
-  },
-  findAdvisorTitle: { fontSize: 14, fontWeight: '900', color: Colors.text },
-  findAdvisorSub: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  careerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 8,
-    ...UI.cardShadow,
-  },
-  careerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary + '18',
-    borderWidth: 1,
-    borderColor: Colors.primary + '35',
-  },
-  avatarPro: { backgroundColor: Colors.primary },
-  proBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: Colors.primary + '14',
-    borderWidth: 1, borderColor: Colors.primary + '35',
-    borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6,
-    alignSelf: 'center', marginBottom: 24,
-  },
-  proBadgeText: { color: Colors.primary, fontSize: 12, fontWeight: '700' },
-  subtitlePro: { color: Colors.primary },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
-  statCard: {
-    width: '46%',
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    alignItems: 'center',
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  statValue: { marginTop: 6, fontSize: 20, fontWeight: '900' },
-  statLabel: { marginTop: 2, fontSize: 11, color: Colors.textMuted, fontWeight: '600' },
-  proTabRow: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 20,
-    ...UI.cardBorder,
-  },
-  proTab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: Colors.surface,
-    ...UI.cardBorder,
-  },
-  proTabActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  proTabText: {
-    fontSize: 12,
+  title: {
+    fontSize: 20,
     fontWeight: '800',
-    color: Colors.textMuted,
-  },
-  proTabTextActive: {
     color: '#fff',
+    letterSpacing: -0.5,
   },
 
-  policyCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
+  headerIcons: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  policyTitle: {
-    fontSize: 13,
-    fontWeight: '900',
-    color: Colors.text,
+
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  policyText: {
-    marginTop: 6,
-    fontSize: 12,
-    lineHeight: 18,
-    color: Colors.textMuted,
+
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 120,
+  },
+
+  section: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+    marginTop: 24,
+  },
+
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+
+  // Loading et Error styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+  },
+
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280',
+    marginTop: 20,
+  },
+
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 40,
+  },
+
+  errorText: {
+    fontSize: 16,
+    color: '#DC2626',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+
+  retryButton: {
+    backgroundColor: '#143FA8',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
 
-  proSearchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-    ...UI.cardBorder,
-  },
-  proSearchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.text,
-  },
-  proEmptyBox: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    gap: 12,
-  },
-  proEmptyText: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    textAlign: 'center',
-    maxWidth: 200,
-  },
-  proRetryBtn: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  proRetryText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  clientCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    ...UI.cardBorder,
-    ...UI.cardShadow,
-  },
-  clientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  clientAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.primary + '18',
+  // Header notification badge styles
+  notificationBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#DC2626',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  clientInitial: {
-    color: Colors.primary,
-    fontSize: 16,
-    fontWeight: '800',
+
+  notificationBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '600',
   },
-  clientInfo: {
+
+  // Notifications styles
+  notificationsContainer: {
+    marginBottom: 20,
+  },
+
+  notificationItem: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+
+  notificationIcon: {
+    marginRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  notificationContent: {
     flex: 1,
   },
-  clientNameRow: {
+
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+
+  notificationMessage: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+
+  notificationTime: {
+    fontSize: 12,
+    color: '#9CA3AF',
+  },
+
+  // Period selector styles
+  periodSelector: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+
+  periodLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginRight: 16,
+  },
+
+  periodButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
+  },
+
+  periodButtonActive: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#143FA8',
+  },
+
+  periodButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+});
+
+// Card Styles
+const cardStyles = StyleSheet.create({
+  card: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 6,
+    height: 140,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+
+  title: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.8,
+    fontWeight: '600',
+  },
+
+  value: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+
+  percent: {
+    color: '#00FF9D',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // Circle
+  circle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 5,
+    borderColor: '#4DA6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 4,
+  },
+
+  circleText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
+  // Line Chart
+  lineChart: {
+    height: 40,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+
+  lineCurve: {
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
+    position: 'absolute',
+    top: '50%',
+    left: '10%',
+    right: '10%',
+    transform: [{ skewY: '-5deg' }],
+  },
+
+  linePoints: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: '10%',
+  },
+
+  point: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#fff',
+  },
+
+  // Bar Chart
+  barChart: {
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: '10%',
+  },
+
+  bar: {
+    width: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 2,
+  },
+});
+
+// Alert Styles
+const alertStyles = StyleSheet.create({
+  card: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 6,
+    height: 100,
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  title: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  icon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  value: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  action: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+});
+
+// Action Styles
+const actionStyles = StyleSheet.create({
+  card: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 6,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    textAlign: 'center',
+  },
+});
+
+// Client Styles
+const clientStyles = StyleSheet.create({
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E3A8A',
+  },
+
+  info: {
+    flex: 1,
+  },
+
+  name: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
     marginBottom: 2,
   },
-  clientName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.text,
+
+  step: {
+    fontSize: 14,
+    color: '#6B7280',
   },
-  clientStep: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    lineHeight: 18,
+
+  arrow: {
+    padding: 8,
   },
-  proStatusPill: {
-    backgroundColor: Colors.orange + '18',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+});
+
+// Status Card
+const statusCard = StyleSheet.create({
+  statusCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
-  proStatusText: {
-    color: Colors.orange,
-    fontSize: 10,
+
+  statusTitle: {
+    fontSize: 16,
     fontWeight: '700',
+    color: '#fff',
+    marginBottom: 16,
   },
+
+  progressContainer: {
+    marginBottom: 12,
+  },
+
+  progressBar: {
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#00FF9D',
+    borderRadius: 4,
+  },
+
+  progressPercent: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'right',
+  },
+
+  statusSub: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+});
+
+// Report Card
+const reportCard = StyleSheet.create({
+  reportCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+
+  reportIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+
+  reportInfo: {
+    flex: 1,
+  },
+
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+
+  reportSub: {
+    fontSize: 14,
+    color: '#6B7280',
+  },r
 });

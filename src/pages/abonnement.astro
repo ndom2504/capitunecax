@@ -1,0 +1,1008 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { getUserFromSessionFullAny } from '../lib/auth'
+
+const user = await getUserFromSessionFullAny(Astro.cookies)
+
+// Rediriger si non connecté
+if (!user) {
+  return Astro.redirect('/connexion')
+}
+
+// Vérifier si c'est un client
+if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
+  return Astro.redirect('/admin')
+}
+
+// Get URL parameters
+const urlParams = Astro.url.searchParams
+const advisorId = urlParams.get('advisor')
+const projectId = urlParams.get('project')
+const upgrade = urlParams.get('upgrade') === 'true'
+---
+
+<Layout title="Abonnement - Capitune">
+  <main class="subscription-page">
+    <!-- Header -->
+    <section class="page-header">
+      <div class="container">
+        <div class="header-content">
+          <div class="breadcrumb">
+            <a href="/projets">Mes Projets</a>
+            <span>/</span>
+            <a href="/equipe">Équipe</a>
+            <span>/</span>
+            <span>Abonnement</span>
+          </div>
+          <h1>Débloquez l'Accompagnement Professionnel</h1>
+          <p>Accédez à un expert dédié pour votre projet d'immigration</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Value Proposition -->
+    <section class="value-section">
+      <div class="container">
+        <div class="value-content">
+          <div class="value-icon">
+            <i class="fas fa-rocket"></i>
+          </div>
+          <h2>Passez au niveau supérieur</h2>
+          <p>Accédez à un accompagnement personnalisé par un expert de l'immigration</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section">
+      <div class="container">
+        <h2>✅ Ce que vous débloquez</h2>
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="feature-content">
+              <h3>Accès conseiller</h3>
+              <p>Expert dédié à votre dossier</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <div class="feature-content">
+              <h3>Messagerie illimitée</h3>
+              <p>Communication directe 24/7</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="feature-content">
+              <h3>Validation documents</h3>
+              <p>Review et corrections expertes</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="feature-content">
+              <h3>Suivi personnalisé</h3>
+              <p>Tableau de bord en temps réel</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="feature-content">
+              <h3>Garantie de service</h3>
+              <p>Support prioritaire garanti</p>
+            </div>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="feature-content">
+              <h3>RDV prioritaires</h3>
+              <p>Créneaux réservés</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing-section">
+      <div class="container">
+        <h2>💰 Choisissez votre formule</h2>
+        
+        <div class="pricing-grid">
+          <div class="plan-card" id="monthly-plan">
+            <div class="plan-header">
+              <h3>Mensuel</h3>
+              <div class="plan-price">
+                <span class="amount">$29.99</span>
+                <span class="period">/mois</span>
+              </div>
+              <p class="plan-description">Sans engagement</p>
+            </div>
+            <div class="plan-features">
+              <ul>
+                <li><i class="fas fa-check"></i> Accès conseiller dédié</li>
+                <li><i class="fas fa-check"></i> Messagerie illimitée</li>
+                <li><i class="fas fa-check"></i> Validation documents</li>
+                <li><i class="fas fa-check"></i> Suivi personnalisé</li>
+                <li><i class="fas fa-check"></i> Support 24/7</li>
+              </ul>
+            </div>
+            <div class="plan-footer">
+              <div class="plan-total">Total: $359.88/an</div>
+              <button class="btn-primary plan-button" onclick="selectPlan('monthly')">
+                Choisir cette formule
+              </button>
+            </div>
+          </div>
+
+          <div class="plan-card featured" id="yearly-plan">
+            <div class="plan-badge">Économisez $60</div>
+            <div class="plan-header">
+              <h3>Annuel</h3>
+              <div class="plan-price">
+                <span class="amount">$24.99</span>
+                <span class="period">/mois</span>
+              </div>
+              <p class="plan-description">Facturé annuellement</p>
+            </div>
+            <div class="plan-features">
+              <ul>
+                <li><i class="fas fa-check"></i> Accès conseiller dédié</li>
+                <li><i class="fas fa-check"></i> Messagerie illimitée</li>
+                <li><i class="fas fa-check"></i> Validation documents</li>
+                <li><i class="fas fa-check"></i> Suivi personnalisé</li>
+                <li><i class="fas fa-check"></i> Support 24/7</li>
+                <li><i class="fas fa-check"></i> <strong>2 mois gratuits</strong></li>
+                <li><i class="fas fa-check"></i> <strong>Consultation prioritaire</strong></li>
+              </ul>
+            </div>
+            <div class="plan-footer">
+              <div class="plan-total">Total: $299.88/an</div>
+              <button class="btn-primary plan-button" onclick="selectPlan('yearly')">
+                Choisir cette formule
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust Elements -->
+    <section class="trust-section">
+      <div class="container">
+        <div class="trust-grid">
+          <div class="trust-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>Annulation à tout moment</span>
+          </div>
+          <div class="trust-item">
+            <i class="fas fa-lock"></i>
+            <span>Paiement sécurisé</span>
+          </div>
+          <div class="trust-item">
+            <i class="fas fa-headset"></i>
+            <span>Support 24/7</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Payment Form -->
+    <section class="payment-section" id="paymentSection" style="display: none;">
+      <div class="container">
+        <div class="payment-card">
+          <h2>Finaliser votre abonnement</h2>
+          
+          <div class="selected-plan">
+            <div class="plan-summary">
+              <h3 id="selectedPlanName">Formule Mensuelle</h3>
+              <div class="plan-price-summary">
+                <span id="selectedPlanPrice">$29.99</span>
+                <span>/mois</span>
+              </div>
+            </div>
+          </div>
+
+          <form id="paymentForm" class="payment-form">
+            <div class="form-section">
+              <h3>Informations personnelles</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nom complet</label>
+                  <input type="text" name="fullName" value="${user.name}" required>
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" name="email" value="${user.email}" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Méthode de paiement</h3>
+              <div class="payment-methods">
+                <label class="payment-method active">
+                  <input type="radio" name="paymentMethod" value="card" checked>
+                  <div class="method-icon">
+                    <i class="fas fa-credit-card"></i>
+                  </div>
+                  <div class="method-info">
+                    <strong>Carte de crédit</strong>
+                    <p>Visa, Mastercard, American Express</p>
+                  </div>
+                </label>
+                
+                <label class="payment-method">
+                  <input type="radio" name="paymentMethod" value="paypal">
+                  <div class="method-icon">
+                    <i class="fab fa-paypal"></i>
+                  </div>
+                  <div class="method-info">
+                    <strong>PayPal</strong>
+                    <p>Paiement sécurisé via PayPal</p>
+                  </div>
+                </label>
+              </div>
+
+              <div class="card-details" id="cardDetails">
+                <div class="form-group">
+                  <label>Numéro de carte</label>
+                  <input type="text" name="cardNumber" placeholder="1234 5678 9012 3456" required>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Date d'expiration</label>
+                    <input type="text" name="expiry" placeholder="MM/AA" required>
+                  </div>
+                  <div class="form-group">
+                    <label>CVV</label>
+                    <input type="text" name="cvv" placeholder="123" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Nom sur la carte</label>
+                  <input type="text" name="cardName" placeholder="Jean Dupont" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Adresse de facturation</h3>
+              <div class="form-group">
+                <label>Adresse</label>
+                <input type="text" name="address" required>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Ville</label>
+                  <input type="text" name="city" required>
+                </div>
+                <div class="form-group">
+                  <label>Code postal</label>
+                  <input type="text" name="postalCode" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Pays</label>
+                <select name="country" required>
+                  <option value="">Sélectionnez un pays</option>
+                  <option value="CA">Canada</option>
+                  <option value="FR">France</option>
+                  <option value="US">États-Unis</option>
+                  <option value="MA">Maroc</option>
+                  <option value="DZ">Algérie</option>
+                  <option value="TN">Tunisie</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="terms-section">
+              <label class="checkbox-label">
+                <input type="checkbox" name="terms" required>
+                <span class="checkbox-custom"></span>
+                <span>J'accepte les <a href="/conditions-generales" target="_blank">conditions générales</a> et la <a href="/politique-confidentialite" target="_blank">politique de confidentialité</a></span>
+              </label>
+            </div>
+
+            <div class="payment-actions">
+              <button type="button" class="btn-secondary" onclick="backToPlans()">
+                Retour aux formules
+              </button>
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-lock"></i>
+                S'abonner et payer
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    .subscription-page {
+      min-height: 100vh;
+      background: var(--bg-light);
+    }
+
+    .page-header {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      padding: 3rem 0;
+    }
+
+    .breadcrumb {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .breadcrumb a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .breadcrumb span {
+      margin: 0 0.5rem;
+    }
+
+    .header-content h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .header-content p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+
+    .value-section {
+      padding: 4rem 0;
+      background: white;
+    }
+
+    .value-content {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .value-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: var(--primary-color) + '20';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2rem;
+    }
+
+    .value-icon i {
+      font-size: 3rem;
+      color: var(--primary-color);
+    }
+
+    .value-content h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+
+    .value-content p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .features-section {
+      padding: 4rem 0;
+    }
+
+    .features-section h2 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 3rem;
+      color: var(--text-color);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-item {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-item:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--primary-color) + '20';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-icon i {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    .feature-content h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-content p {
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .pricing-section {
+      padding: 4rem 0;
+      background: white;
+    }
+
+    .pricing-section h2 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 3rem;
+      color: var(--text-color);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .plan-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .plan-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .plan-card.featured {
+      border: 2px solid var(--primary-color);
+      transform: scale(1.05);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: var(--success-color);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .plan-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .plan-header h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+
+    .plan-price {
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price .amount {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .plan-price .period {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+    }
+
+    .plan-description {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .plan-features {
+      margin-bottom: 2rem;
+    }
+
+    .plan-features ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    .plan-features li:last-child {
+      border-bottom: none;
+    }
+
+    .plan-features li i {
+      color: var(--success-color);
+      font-size: 1rem;
+    }
+
+    .plan-footer {
+      text-align: center;
+    }
+
+    .plan-total {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .plan-button {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .trust-section {
+      padding: 2rem 0;
+      background: var(--bg-light);
+    }
+
+    .trust-grid {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .trust-item i {
+      color: var(--success-color);
+      font-size: 1.2rem;
+    }
+
+    .payment-section {
+      padding: 4rem 0;
+      background: white;
+    }
+
+    .payment-card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 3rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .payment-card h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      color: var(--text-color);
+    }
+
+    .selected-plan {
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .plan-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .plan-summary h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .plan-price-summary {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .payment-form {
+      max-width: 100%;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .form-section h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+      border-color: var(--primary-color);
+    }
+
+    .payment-method.active {
+      border-color: var(--primary-color);
+      background: var(--primary-color) + '10';
+    }
+
+    .payment-method input[type="radio"] {
+      display: none;
+    }
+
+    .method-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--bg-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--primary-color);
+    }
+
+    .method-info strong {
+      display: block;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 0.25rem;
+    }
+
+    .method-info p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .card-details {
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .terms-section {
+      margin-bottom: 2rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkbox-custom {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkbox-custom:after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 6px;
+      width: 6px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .checkbox-label a {
+      color: var(--primary-color);
+      text-decoration: underline;
+    }
+
+    .payment-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pricing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plan-card.featured {
+        transform: none;
+      }
+
+      .trust-grid {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .payment-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</Layout>
+
+<script>
+  let selectedPlan = 'monthly';
+  let selectedAdvisor = '${advisorId}';
+  let selectedProject = '${projectId}';
+
+  function selectPlan(plan) {
+    selectedPlan = plan;
+    showPaymentSection();
+    updatePlanSummary();
+  }
+
+  function showPaymentSection() {
+    document.getElementById('paymentSection').style.display = 'block';
+    document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function backToPlans() {
+    document.getElementById('paymentSection').style.display = 'none';
+    document.querySelector('.pricing-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function updatePlanSummary() {
+    const planName = document.getElementById('selectedPlanName');
+    const planPrice = document.getElementById('selectedPlanPrice');
+
+    if (selectedPlan === 'monthly') {
+      planName.textContent = 'Formule Mensuelle';
+      planPrice.textContent = '$29.99';
+    } else {
+      planName.textContent = 'Formule Annuel (Recommandé)';
+      planPrice.textContent = '$24.99';
+    }
+  }
+
+  // Handle payment method change
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const cardDetails = document.getElementById('cardDetails');
+      if (e.target.value === 'card') {
+        cardDetails.style.display = 'block';
+      } else {
+        cardDetails.style.display = 'none';
+      }
+    });
+  });
+
+  // Handle form submission
+  document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const paymentData = {
+      plan: selectedPlan,
+      advisorId: selectedAdvisor,
+      projectId: selectedProject,
+      fullName: formData.get('fullName'),
+      email: formData.get('email'),
+      paymentMethod: formData.get('paymentMethod'),
+      cardNumber: formData.get('cardNumber'),
+      expiry: formData.get('expiry'),
+      cvv: formData.get('cvv'),
+      cardName: formData.get('cardName'),
+      address: formData.get('address'),
+      city: formData.get('city'),
+      postalCode: formData.get('postalCode'),
+      country: formData.get('country'),
+      terms: formData.get('terms')
+    };
+
+    try {
+      // Show loading state
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Traitement en cours...';
+      submitBtn.disabled = true;
+
+      const response = await fetch('/api/subscription/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        // Redirect to success page or messages
+        if (selectedAdvisor) {
+          window.location.href = `/messages?advisor=${selectedAdvisor}&subscription=success`;
+        } else {
+          window.location.href = '/projets?subscription=success';
+        }
+      } else {
+        throw new Error(result.error || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      
+      // Reset button
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.innerHTML = originalText;
+      submitBtn.disabled = false;
+
+      alert('Erreur lors du paiement: ' + error.message);
+    }
+  });
+
+  // Format card number input
+  document.querySelector('input[name="cardNumber"]')?.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+    e.target.value = formattedValue;
+  });
+
+  // Format expiry date input
+  document.querySelector('input[name="expiry"]')?.addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    e.target.value = value;
+  });
+</script>

@@ -1,0 +1,15 @@
+// Le problème est dans la structure JSX du FlatList
+// Il faut corriger les lignes 872-874
+
+// Structure actuelle (incorrecte):
+//           )}
+//         />
+//       )}
+
+// Structure correcte:
+//           )}
+//         />
+//       )}
+
+// Le problème semble être que le ListEmptyComponent n'est pas correctement fermé
+// Il faut vérifier la structure complète du FlatList

@@ -1,0 +1,39 @@
+// Le problème principal est que la structure JSX est cassée
+// Il faut reconstruire la fin du composant correctement
+
+// Structure correcte à partir de la ligne 864 :
+                )}
+              </View>
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Ionicons name="sparkles-outline" size={36} color={Colors.textMuted} />
+              <Text style={styles.emptyTitle}>Aucune publication</Text>
+              <Text style={styles.emptySub}>Les mises à jour apparaîtront ici.</Text>
+            </View>
+          }
+        />
+      )}
+
+      {/* Bulle messagerie (conversation Pro) */}
+      <TouchableOpacity
+        style={[styles.msgFab, { bottom: Math.max(6, insets.bottom + 36) }]}
+        activeOpacity={0.9}
+        onPress={openMessages}
+        accessibilityLabel="Ouvrir la messagerie avec mon conseiller"
+      >
+        <Ionicons name="chatbubble-ellipses" size={22} color={Colors.surface} />
+        {unreadCount > 0 && (
+          <View style={styles.msgFabBadge}>
+            <Text style={styles.msgFabBadgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  // ... le reste des styles existants ...
+});

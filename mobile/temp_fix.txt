@@ -1,0 +1,31 @@
+// Il y a une erreur de syntaxe dans le fichier around line 865
+// Le problème semble être avec la structure JSX du ListEmptyComponent
+// Je vais créer une version corrigée du segment problématique
+
+// Segment à remplacer (lignes 864-875) :
+//               </View>
+//             </View>
+//           )}
+//           ListEmptyComponent={
+//             <View style={styles.emptyBox}>
+//               <Ionicons name="sparkles-outline" size={36} color={Colors.textMuted} />
+//               <Text style={styles.emptyTitle}>Aucune publication</Text>
+//               <Text style={styles.emptySub}>Les mises à jour apparaîtront ici.</Text>
+//             </View>
+//           }
+//         />
+//       )}
+
+// Version corrigée :
+              </View>
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Ionicons name="sparkles-outline" size={36} color={Colors.textMuted} />
+              <Text style={styles.emptyTitle}>Aucune publication</Text>
+              <Text style={styles.emptySub}>Les mises à jour apparaîtront ici.</Text>
+            </View>
+          }
+        />
+      )}
