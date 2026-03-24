@@ -1020,6 +1020,9 @@ const proSvcList = [
                 <li class="dash-nav-item active" data-tab="inside">
                   <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
                 </li>
+                <li class="dash-nav-item">
+                  <a href="/projets" style="color: rgba(255,255,255,0.75);"><i class="fa fa-folder-open"></i> Mes Projets</a>
+                </li>
                 <li class="dash-nav-item" data-tab="projet">
                   <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Projet</a>
                 </li>
@@ -1040,6 +1043,9 @@ const proSvcList = [
               <>
                 <li class="dash-nav-item active" data-tab="inside">
                   <a href="#" onclick="switchTab('inside'); return false;"><i class="fa fa-newspaper-o"></i> Inside</a>
+                </li>
+                <li class="dash-nav-item">
+                  <a href="/projets" style="color: rgba(255,255,255,0.75);"><i class="fa fa-folder-open"></i> Mes Projets</a>
                 </li>
                 <li class="dash-nav-item" data-tab="projet">
                   <a href="#" onclick="switchTab('projet'); return false;"><i class="fa fa-folder-open"></i> Mon Projet</a>
@@ -2839,6 +2845,50 @@ const proSvcList = [
                 </button>
                 <button class="fb-composer-action" onclick="openInsideCompose()">
                   <i class="fa fa-sticky-note" style="color:#f39c12;"></i> Activité
+                </button>
+              </div>
+            </div>
+
+            <!-- 🎉 NOUVEAUTÉS : Flow Client Amélioré -->
+            <div style="margin: 20px 0; background: linear-gradient(135deg, #ff9408, #e67e00); border-radius: 16px; padding: 20px; color: white; box-shadow: 0 4px 20px rgba(255, 148, 8, 0.3);">
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🚀</div>
+                <div>
+                  <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Nouveau : Flow Client Simplifié !</h3>
+                  <p style="margin: 4px 0 0; opacity: 0.9; font-size: 14px;">Accompagnement guidé du début à la fin</p>
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 12px;">
+                  <div style="font-size: 16px; margin-bottom: 4px;">📋</div>
+                  <div style="font-weight: 600; margin-bottom: 2px;">Projets Guidés</div>
+                  <div style="font-size: 12px; opacity: 0.8;">Mode PRO/Autonome</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 12px;">
+                  <div style="font-size: 16px; margin-bottom: 4px;">👥</div>
+                  <div style="font-weight: 600; margin-bottom: 2px;">Conseillers</div>
+                  <div style="font-size: 12px; opacity: 0.8;">Choisissez votre expert</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 12px;">
+                  <div style="font-size: 16px; margin-bottom: 4px;">📁</div>
+                  <div style="font-weight: 600; margin-bottom: 2px;">Documents</div>
+                  <div style="font-size: 12px; opacity: 0.8;">Suivi en temps réel</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 12px;">
+                  <div style="font-size: 16px; margin-bottom: 4px;">💬</div>
+                  <div style="font-weight: 600; margin-bottom: 2px;">Messagerie</div>
+                  <div style="font-size: 12px; opacity: 0.8;">Chat avec conseiller</div>
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="/projets" style="background: white; color: #ff9408; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.3s ease;">
+                  <i class="fa fa-rocket"></i>
+                  Découvrir Mes Projets
+                </a>
+                <button onclick="this.parentElement.parentElement.style.display='none'" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                  Masquer
                 </button>
               </div>
             </div>
