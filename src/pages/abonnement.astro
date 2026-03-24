@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/main.astro'
+import MainLayout from '../layouts/main.astro'
 import { getUserFromSessionFullAny } from '../lib/auth'
 
 const user = await getUserFromSessionFullAny(Astro.cookies)
@@ -21,7 +21,7 @@ const projectId = urlParams.get('project')
 const upgrade = urlParams.get('upgrade') === 'true'
 ---
 
-<Layout title="Abonnement - Capitune">
+<MainLayout title="Abonnement - Capitune">
   <main class="subscription-page">
     <!-- Header -->
     <section class="page-header">
@@ -880,7 +880,7 @@ const upgrade = urlParams.get('upgrade') === 'true'
       }
     }
   </style>
-</Layout>
+</MainLayout>
 
 <script>
   let selectedPlan = 'monthly';

@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/main.astro'
+import MainLayout from '../layouts/main.astro'
 import { getUserFromSessionFullAny } from '../lib/auth'
 
 const user = await getUserFromSessionFullAny(Astro.cookies)
@@ -15,7 +15,7 @@ if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
 }
 ---
 
-<Layout title="Équipe - Capitune">
+<MainLayout title="Équipe - Capitune">
   <main class="team-page">
     <!-- Header -->
     <section class="page-header">
@@ -722,7 +722,7 @@ if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
       }
     }
   </style>
-</Layout>
+</MainLayout>
 
 <script>
   let advisors = [];

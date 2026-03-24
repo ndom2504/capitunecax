@@ -1,5 +1,5 @@
 ---
-import Layout from '../../layouts/main.astro'
+import MainLayout from '../layouts/main.astro'
 import { getUserFromSessionFullAny } from '../lib/auth'
 
 const user = await getUserFromSessionFullAny(Astro.cookies)
@@ -15,7 +15,7 @@ if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
 }
 ---
 
-<Layout title="Documents - Capitune">
+<MainLayout title="Documents - Capitune">
   <main class="documents-page">
     <!-- Header -->
     <section class="page-header">
@@ -822,7 +822,7 @@ if (user.account_type === 'pro' || user.email?.includes('@capitune.com')) {
       }
     }
   </style>
-</Layout>
+</MainLayout>
 
 <script>
   let documents = [];
